@@ -9,6 +9,8 @@ export type CommitmentAthleteFilters = {
   division?: string | null
   page?: number
   limit?: number
+  /** Whose commitments: one state's wrestlers (lib/recruiting/states.ts inState). North Carolina when none. */
+  state?: string
 }
 
 export type CommitmentAthleteListItem = {
@@ -123,8 +125,8 @@ function buildFilteredAthletesQuery(
 ) {
   let query = supabase.from("athletes").select(select, withCount ? { count: "exact" } : undefined)
   query = query.not("college", "is", null).neq("college", "").or("is_prospect.is.null,is_prospect.eq.false")
-  // North Carolina's commitments only: national profiles from other states carry a college too.
-  query = inState(query)
+  // One state's commitments (North Carolina unless asked): national profiles from other states carry a college too.
+  query = inState(query, filters.state)
 
   const yearFilter = filters.year
   if (yearFilter && yearFilter !== "all") {

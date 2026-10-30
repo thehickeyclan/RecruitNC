@@ -33,7 +33,15 @@ export type CollegeFit = {
   financialAidUrl: string | null
 }
 
-const FIT = data.fit as unknown as Record<string, CollegeFit>
+/** A web address as a link: IPEDS often leaves off the https://, which made it a page on our site. */
+const asLink = (url: string | null | undefined): string | null => {
+  const u = String(url ?? "").trim()
+  if (!u) return null
+  return /^https?:\/\//i.test(u) ? u : `https://${u.replace(/^\/+/, "")}`
+}
+const FIT = Object.fromEntries(
+  Object.entries(data.fit as unknown as Record<string, CollegeFit>).map(([id, f]) => [id, { ...f, netPriceCalculatorUrl: asLink(f.netPriceCalculatorUrl) }]),
+) as Record<string, CollegeFit>
 
 export const fitForSchool = (schoolId: string): CollegeFit | null => FIT[schoolId] ?? null
 

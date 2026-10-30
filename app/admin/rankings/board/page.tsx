@@ -73,12 +73,16 @@ type BoardAthlete = {
   nhsca_by_year: string[]
   super32_by_year: string[]
   fargo_by_year: string[]
+  journeymen_record?: string | null
+  journeymen_by_year?: string[]
   star_rating: StarRating | null
   state_placements: string[]
   nhsca_record: string | null
   toc_result: string | null
   super32_record: string | null
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  national_wins?: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  national_win_count?: number
   significant_losses: Array<{ opponent: string; result: string | null; event: string | null; standing: string; upset: boolean }>
 }
 
@@ -185,6 +189,17 @@ function ScoreBar({ breakdown, total }: { breakdown: Record<string, number>; tot
         ))}
       </div>
     </div>
+  )
+}
+
+/** When he last wrestled, on the row (Matt, 29 Oct 2026); amber after four months without a match. */
+function LastWrestled({ value }: { value: string }) {
+  const day = parseLastCompeted(value)
+  const stale = day != null && Date.now() - Date.parse(day) > 120 * 86_400_000
+  return (
+    <span className={`rounded px-1.5 py-0.5 text-[10px] ${stale ? "bg-amber-500/25 text-amber-200" : "bg-slate-800 text-slate-300"}`} title={value}>
+      Last wrestled: {value}
+    </span>
   )
 }
 
@@ -299,6 +314,7 @@ function Details({
     ["NHSCA", athlete.nhsca_by_year],
     ["Super 32", athlete.super32_by_year],
     ["Fargo", athlete.fargo_by_year],
+    ["Journeymen", athlete.journeymen_by_year ?? []],
   ]
   return (
     <div className="space-y-3 border-t border-slate-800 bg-slate-950/60 p-3 text-xs sm:p-4">
@@ -333,6 +349,25 @@ function Details({
             )}
           </div>
         ))}
+      </div>
+
+      <div className="rounded-md border border-[#A3E635]/40 bg-[#A3E635]/5 p-2">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[#A3E635]">
+          Top national wins · {athlete.national_win_count ?? 0} in all
+        </p>
+        {athlete.national_wins?.length ? (
+          <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-slate-200">
+            {athlete.national_wins.map((w, i) => (
+              <li key={`${w.opponent}-${i}`}>
+                <b className="text-white">{w.opponent}</b> <span className="text-slate-400">({w.standing})</span>
+                {w.result ? <span className="font-mono text-emerald-200"> {w.result}</span> : null}
+                {w.event ? <span className="text-slate-500"> · {w.event}</span> : null}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-1 text-slate-500">None on file: no win over a nationally ranked opponent or a national placer</p>
+        )}
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
@@ -732,6 +767,9 @@ export default function RankingBoardPage() {
               {athlete.toc_result ? <span className="rounded bg-emerald-800 px-1.5 py-0.5 text-[10px] font-bold text-white">TOC {athlete.toc_result}</span> : null}
               {athlete.super32_record ? <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-white">S32 {athlete.super32_record}</span> : null}
               {athlete.nhsca_record ? <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-white">NHSCA {athlete.nhsca_record}</span> : null}
+              {athlete.journeymen_record ? <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-white">JM {athlete.journeymen_record}</span> : null}
+              {athlete.national_win_count ? <span className="rounded bg-[#A3E635] px-1.5 py-0.5 text-[10px] font-bold text-slate-950">{athlete.national_win_count} national {athlete.national_win_count === 1 ? "win" : "wins"}</span> : null}
+              {athlete.last_competed ? <LastWrestled value={athlete.last_competed} /> : null}
               {athlete.match_count === 0 ? <span className="rounded bg-red-900 px-1.5 py-0.5 text-[10px] text-red-100">No season matches</span> : null}
             </div>
           </button>
@@ -822,7 +860,7 @@ export default function RankingBoardPage() {
             <div className="ml-auto flex flex-wrap items-center gap-2">
               <span className="text-xs text-slate-400">
                 Saved <b className="text-white">{timeAgo(draftSavedAt)}</b>
-                {state === "NC" ? (
+                {state === "NC" || canPublish ? (
                   <>
                     {" · "}Published <b className="text-white">{timeAgo(publishedAt)}</b>
                   </>

@@ -16,7 +16,16 @@ export function RankingsNav({
   current,
   isAdmin = false,
   gender = "Male",
+  state,
+  stateYears,
 }: {
+  /**
+   * Another state's published classes. North Carolina's other boards show greyed for that state,
+   * never as links to North Carolina's (Matt, 29 Oct 2026: SC's Top 75 showed NC athletes).
+   */
+  stateYears?: number[]
+  /** Another state's boards keep their state as the reader moves between classes. */
+  state?: string
   /** Whose boards these tabs switch between. The other set is one link away, never mixed in. */
   gender?: "Male" | "Female"
   /** The board being viewed: a class year, or "prospects" for the ranked list. */
@@ -27,19 +36,21 @@ export function RankingsNav({
   const years = isAdmin ? rankedClassYears(gender) : releasedClassYears(gender)
   const otherYears = isAdmin ? rankedClassYears(womens ? "Male" : "Female") : releasedClassYears(womens ? "Male" : "Female")
 
-  const tabs: Array<{ href: string; label: string; key: number | "prospects" | "top-100" | "other" }> = [
-    ...years.map((y) => ({
-      href: womens ? `/public-rankings/women/${y}` : `/public-rankings/${y}`,
+  const otherState = Boolean(state && state !== "NC")
+  const tabs: Array<{ href: string; label: string; key: number | "prospects" | "top-100" | "other"; off?: boolean }> = [
+    ...[...new Set([...years, ...(otherState ? (stateYears ?? []) : [])])].sort((a, b) => a - b).map((y) => ({
+      href: `${womens ? `/public-rankings/women/${y}` : `/public-rankings/${y}`}${state ? `?state=${state}` : ""}`,
       label: womens ? `Women's ${y}` : `Class of ${y}`,
       key: y as number,
+      off: otherState && stateYears != null && !stateYears.includes(y),
     })),
     // Classes of 2027 and 2028, reaching past each class's published cut. A men's board.
     ...(!womens && (isAdmin || PUBLIC_TOP_75_COLLEGE_RELEASED)
-      ? [{ href: "/public-rankings/college-prospects", label: "Top 75 College Prospects", key: "top-100" as const }]
+      ? [{ href: "/public-rankings/college-prospects", label: "Top 75 College Prospects", key: "top-100" as const, off: otherState }]
       : []),
     // The other set of boards, as one door: never a women's tab among the men's classes.
     ...(otherYears.length
-      ? [{ href: "/public-rankings", label: womens ? "Men's rankings →" : "Women's rankings →", key: "other" as const }]
+      ? [{ href: `/public-rankings${otherState ? `?state=${state}` : ""}`, label: womens ? "Men's rankings →" : "Women's rankings →", key: "other" as const }]
       : []),
   ]
 
@@ -48,8 +59,15 @@ export function RankingsNav({
 
   return (
     <nav className="mt-8 flex flex-wrap justify-center gap-2" aria-label="Rankings">
-      {tabs.map(({ href, label, key }) => {
+      {tabs.map(({ href, label, key, off }) => {
         const active = key === current
+        if (off) {
+          return (
+            <span key={href} aria-disabled className="cursor-not-allowed rounded-sm border border-dashed border-white/15 px-4 py-1.5 text-sm font-bold text-white/35" title="Coming soon for this state">
+              {label} · coming soon
+            </span>
+          )
+        }
         return (
           <a
             key={href}

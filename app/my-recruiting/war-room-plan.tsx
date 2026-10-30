@@ -154,14 +154,21 @@ export function WarRoomPlan({
           <Lock className="h-4 w-4 text-[#D3B574]" aria-hidden /> The plan is part of the Command Center
         </p>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">
-          Blue members get this month&apos;s steps for each wrestler, a college list that tracks every school from
+          {/* RecruitWrestlers sells the Command Center itself; Blue and /plans are NC United's (Matt, 29 Oct 2026). */}
+          <span className="ncu-only">Blue members get</span>
+          <span className="national-only">Command Center members get</span> this month&apos;s steps for each wrestler, a college list that tracks every school from
           interested to offer, coach emails drafted from verified results, the coaching staff and recruiting
           questionnaire for every program, and a schedule that tells coaches where to watch.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <a href="/plans" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+          <a href="/plans" className="ncu-only rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
             See plans
           </a>
+          <span className="national-only">
+            <a href="/command-center" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+              Join the Command Center
+            </a>
+          </span>
           <a href="/recruiting/college-map" className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5">
             See the college map
           </a>

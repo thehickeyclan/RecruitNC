@@ -1,5 +1,7 @@
 "use client"
 
+import { EMPTY_CONSENT, SignupConsent, type ConsentState } from "@/components/auth/signup-consent"
+import { checkConsent } from "@/lib/legal/consent"
 import { CoachProgramField } from "@/components/recruiting/coach-program-field"
 import type { CoachProgram } from "@/lib/recruiting/coach-program"
 import { Suspense, useEffect, useRef, useState } from "react"
@@ -53,6 +55,7 @@ function CompleteProfileForm() {
     }
   }, [presetType])
   const [cellPhone, setCellPhone] = useState("")
+  const [consent, setConsent] = useState<ConsentState>(EMPTY_CONSENT)
   const [institution, setInstitution] = useState("")
   const [program, setProgram] = useState<CoachProgram | null>(null)
   const [saving, setSaving] = useState(false)
@@ -70,6 +73,8 @@ function CompleteProfileForm() {
     setError(null)
     if (!profileType) return setError("Choose what brings you here.")
     if (needsPhone && cellPhone.replace(/\D/g, "").length < 10) return setError("Enter a 10-digit cell number.")
+    const agreed = checkConsent(consent, profileType, "google")
+    if (!agreed.ok) return setError(agreed.error)
     if (isCollegeCoach && !institution.trim()) return setError("Enter your college.")
     if (isCollegeCoach && !program) return setError("Choose the program you coach: men's, women's or both.")
 
@@ -78,7 +83,7 @@ function CompleteProfileForm() {
       const res = await fetch("/api/auth/complete-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileType, cellPhone, institution, program }),
+        body: JSON.stringify({ profileType, cellPhone, institution, program, consent }),
       })
       const data = await res.json().catch(() => ({}))
       // Already has a role: somebody signing back in through the wizard. Nothing to ask; carry on.
@@ -182,6 +187,7 @@ function CompleteProfileForm() {
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
+            <SignupConsent role={profileType || null} value={consent} onChange={setConsent} disabled={saving} />
             <Button type="submit" className="w-full" disabled={saving}>
               {saving ? "Saving…" : "Continue"}
             </Button>

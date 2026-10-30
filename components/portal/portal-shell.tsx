@@ -1,3 +1,4 @@
+import { PoweredByRw } from "@/components/recruiting/powered-by-rw"
 import Link from "next/link"
 
 import { unreadCount } from "@/lib/coach-messages"
@@ -98,7 +99,8 @@ export async function PortalShell({ active, children }: { active: PortalSection;
               </div>
             ))}
           </div>
-          <Link href="/profile" className="mt-auto shrink-0 px-3 pt-3 text-xs font-semibold text-white/45 hover:text-white">
+          <PoweredByRw className="mt-auto shrink-0 px-3 pt-3" />
+          <Link href="/profile" className="mt-3 shrink-0 px-3 text-xs font-semibold text-white/45 hover:text-white">
             Account settings
           </Link>
         </aside>

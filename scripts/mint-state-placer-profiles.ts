@@ -24,7 +24,7 @@
  * name matching a profile at a DIFFERENT school is left alone and printed — out of state we have
  * no school list to rule a namesake out, and 133 placer names already repeat nationally.
  *
- *   npx tsx scripts/mint-state-placer-profiles.ts --state SC [--season 2026] [--include-graduated] [--write]
+ *   npx tsx scripts/mint-state-placer-profiles.ts --state SC [--season 2026] [--include-qualifiers] [--include-graduated] [--write]
  */
 import fs from "fs"
 import path from "path"
@@ -56,7 +56,13 @@ const INCLUDE_GRADUATED = process.argv.includes("--include-graduated")
  * Skip placers with no class year (21 Oct 2026, VISAA 2026: 62 of 92 had none, and most of a
  * podium with no year are seniors who have left). Hold them until the year is known.
  */
-const ONLY_KNOWN = process.argv.includes("--only-with-class-year")
+/**
+ * State qualifiers who did not place, too (Matt, 30 Oct 2026: SC's launch push). The state files hold
+ * every entrant; a non-placer is a row with no place. Qualifiers are minted only with a current class
+ * year (the profile rule: never mint without one), so this flag also turns on --only-with-class-year.
+ */
+const INCLUDE_QUALIFIERS = process.argv.includes("--include-qualifiers")
+const ONLY_KNOWN = process.argv.includes("--only-with-class-year") || INCLUDE_QUALIFIERS
 const STATE = normalizeState(arg("state"))
 const SEASON = Number(arg("season", "2026"))
 const MAX_PLACE = Number(arg("max-place", "8"))
@@ -102,10 +108,12 @@ async function main() {
     ((q: { eq: (c: string, v: string) => never }) => q.eq("state", STATE)) as never,
   )
   const placers = all.filter(
-    (r) => Number(r.season) === SEASON && r.place != null && Number(r.place) >= 1 && Number(r.place) <= MAX_PLACE,
+    (r) =>
+      Number(r.season) === SEASON &&
+      ((r.place != null && Number(r.place) >= 1 && Number(r.place) <= MAX_PLACE) || (INCLUDE_QUALIFIERS && (r.place == null || Number(r.place) < 1))),
   )
   const unlinked = placers.filter((r) => !r.athlete_id)
-  console.log(`${STATE} ${SEASON} placers (top ${MAX_PLACE}): ${placers.length}, ${unlinked.length} reaching no profile`)
+  console.log(`${STATE} ${SEASON} ${INCLUDE_QUALIFIERS ? "entrants (placers and qualifiers)" : `placers (top ${MAX_PLACE})`}: ${placers.length}, ${unlinked.length} reaching no profile`)
 
   /* One person per name+school: two placements for the same wrestler make one profile. */
   const schoolOf = (r: Placer) => String(r.school_clean ?? r.school_raw ?? "").trim()
@@ -183,7 +191,7 @@ async function main() {
         is_nc_athlete: false,
         graduationyear: gradYear,
       },
-      label: `${name} — ${school}, ${r.classification} ${r.weight}, place ${r.place}${gradYear ? `, class of ${gradYear}` : ", no class year"}`,
+      label: `${name} — ${school}, ${r.classification} ${r.weight}, ${r.place ? `place ${r.place}` : "qualifier"}${gradYear ? `, class of ${gradYear}` : ", no class year"}`,
       ids: rows.map((x) => x.id),
     })
   }

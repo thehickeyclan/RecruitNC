@@ -847,7 +847,7 @@ export function CollegeProgramMap({
             <Lock className="mt-1 h-4 w-4 shrink-0 text-[#F5D985]" />
             <span>
               Filter by level, men&apos;s or women&apos;s and state, see coaching staff and save your own college list — part of the{" "}
-              <BrandName ncu="Recruiting Command Center." guild="full Command Center, coming soon." />
+              <BrandName ncu="Recruiting Command Center." guild="full Command Center, coming soon." national="Recruiting Command Center." />
             </span>
           </p>
           <Link

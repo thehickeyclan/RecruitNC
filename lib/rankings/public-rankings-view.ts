@@ -11,6 +11,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear, isWomensBoard } from "@/lib/public-rankings-cap"
 import { loadWomensNationalRanks, type WomensNationalRankRow } from "@/lib/rankings/womens-national-ranks"
 import { inState } from "@/lib/recruiting/states"
+import { loadLastCompeted } from "@/lib/prospect-last-competed"
+import { loadPublishedSnapshot } from "@/lib/rankings/ranking-snapshot"
 
 /**
  * The public read model for a class ranking — one server-side shape, the way the TOC field has one.
@@ -55,6 +57,8 @@ export type PublicRankedAthlete = {
   graduationYear: number | null
   /** Where they sat in the previous published edition, for a movement arrow. */
   previousRank: number | null
+  /** Not in the previous published edition, when there was one: the NEW tag. */
+  isNew?: boolean
   collegeCommit: string | null
   credentials: PublicRankingCredential[]
 }
@@ -213,28 +217,52 @@ async function buildPublicClassRanking(
     return { year, gender, published: false, cap, publishedAt: null, athletes: [] }
   }
 
-  // One state's board (lib/recruiting/states.ts): a state's ranks never appear on another's page.
-  const { data: rows } = await inState(
-    admin
-      .from("athletes")
-      .select(
-        // No RankWrestler column exists on `athletes`. The ranking engine reads
-        // `rankwrestler_rank`, `rank_wrestler_rank` and `rw_rank`, none of which are columns, so
-        // its rankWrestler component has always scored zero for everyone. Selecting it here made
-        // the whole query fail and the page render empty.
-        [
-          "id, name, photourl, headshot_url, highschool, wrestlingClub, weightclass, graduationyear",
-          "prospect_ranking, previous_ranking, college",
-          ...IDENTITY_COLUMNS,
-        ].join(", "),
-      ),
-    state,
-  )
+  /*
+   * Which wrestlers, in which order. North Carolina's published order is `athletes.prospect_ranking`.
+   * Another state's is its snapshot in `ranking_published` - or, before it is published, the saved
+   * draft, which is what its ranker and admins review here (Matt, 29 October 2026).
+   */
+  const snapshot = await loadPublishedSnapshot(admin, state, year, gender)
+  const columns = [
+    "id, name, photourl, headshot_url, highschool, wrestlingClub, weightclass, graduationyear",
+    "prospect_ranking, previous_ranking, college",
+    // State placements and national results outside NC are read by the wrestler's state.
+    "state, is_nc_athlete",
+    ...IDENTITY_COLUMNS,
+  ].join(", ")
+  let rows: Array<Record<string, unknown>> = []
+  const otherStateOrder = new Map<string, { rank: number; previous: number | null; isNew: boolean }>()
+  if (state === "NC") {
+    // One state's board (lib/recruiting/states.ts): a state's ranks never appear on another's page.
+    const { data } = await inState(admin.from("athletes").select(columns), state)
       .eq("graduationyear", year)
       .eq("gender", gender)
       .not("prospect_ranking", "is", null)
       .lte("prospect_ranking", cap)
       .order("prospect_ranking", { ascending: true })
+    rows = (data ?? []) as unknown as Array<Record<string, unknown>>
+  } else {
+    if (snapshot) {
+      for (const r of snapshot) if (r.rank <= cap) otherStateOrder.set(r.athlete_id, { rank: r.rank, previous: r.previous_rank, isNew: r.is_new })
+    } else if (includeUnreleased) {
+      const { data: draft } = await admin
+        .from("ranking_drafts")
+        .select("athlete_id, rank")
+        .eq("class_year", year)
+        .eq("gender", gender)
+        .eq("state", state)
+        .lte("rank", cap)
+      for (const r of draft ?? []) otherStateOrder.set(String(r.athlete_id), { rank: Number(r.rank), previous: null, isNew: false })
+    }
+    const ids = [...otherStateOrder.keys()]
+    if (ids.length) {
+      const { data } = await inState(admin.from("athletes").select(columns), state).in("id", ids)
+      rows = ((data ?? []) as unknown as Array<Record<string, unknown>>).sort(
+        (a, b) => (otherStateOrder.get(String(a.id))?.rank ?? 999) - (otherStateOrder.get(String(b.id))?.rank ?? 999),
+      )
+    }
+  }
+  const snapshotById = new Map((snapshot ?? []).map((r) => [r.athlete_id, r]))
 
   /*
    * Movement arrows are only honest once there is a released board to have moved from.
@@ -248,29 +276,45 @@ async function buildPublicClassRanking(
    * So movement is suppressed until the class is actually released. After the first real
    * release, publishes produce movement against something readers have genuinely seen.
    */
-  const showMovement = isPublicRankingsYearPublished(year, gender)
+  const showMovement = state === "NC" ? isPublicRankingsYearPublished(year, gender) : snapshot != null
 
-  const [credentials, nationalRanks] = await Promise.all([
-    loadAthleteCredentialsBatch(admin, (rows ?? []) as unknown as Array<Record<string, unknown>>),
+  const rowList = (rows ?? []) as unknown as Array<Record<string, unknown>>
+  const [credentials, nationalRanks, lastCompeted] = await Promise.all([
+    loadAthleteCredentialsBatch(admin, rowList),
     gender === "Female"
       ? loadWomensNationalRanks(admin, (rows ?? []).map((row) => String((row as unknown as Record<string, unknown>).id)))
       : Promise.resolve(new Map<string, WomensNationalRankRow[]>()),
+    // The weight shown is the one he last competed at, not the listed one (Matt, told 10+ times).
+    loadLastCompeted(admin, rowList.map((r) => String(r.id)), new Map(rowList.map((r) => [String(r.id), r.graduationyear == null ? null : Number(r.graduationyear)]))).catch(() => new Map()),
   ])
 
   const athletes: PublicRankedAthlete[] = (rows ?? []).map((row) => {
     const raw = row as unknown as Record<string, unknown>
+    const id = String(raw.id)
+    const other = otherStateOrder.get(id)
+    const rank = other ? other.rank : Number(raw.prospect_ranking)
+    /*
+     * Movement and NEW come from the snapshot of the edition on this page. North Carolina's
+     * snapshot is only trusted where it agrees with the column; before it holds an edition, the
+     * old `previous_ranking` stands in, as it always did.
+     */
+    const snap = snapshotById.get(id)
+    const fromSnapshot = snap && snap.rank === rank ? snap : null
+    const previousRank = other ? other.previous : fromSnapshot ? fromSnapshot.previous_rank : raw.previous_ranking == null ? null : Number(raw.previous_ranking)
+    const isNew = other ? other.isNew : fromSnapshot ? fromSnapshot.is_new : false
     return {
-      athleteId: String(raw.id),
-      rank: Number(raw.prospect_ranking),
+      athleteId: id,
+      rank,
       name: String(raw.name ?? "Athlete"),
       photoUrl: [raw.photourl, raw.headshot_url].find(
         (v): v is string => typeof v === "string" && v.startsWith("http"),
       ) ?? null,
       highSchool: (raw.highschool as string) || null,
       club: (raw.wrestlingClub as string) || null,
-      weightClass: raw.weightclass == null ? null : String(raw.weightclass),
+      weightClass: lastCompeted.get(id)?.weight ?? (raw.weightclass == null ? null : String(raw.weightclass)),
       graduationYear: raw.graduationyear == null ? null : Number(raw.graduationyear),
-      previousRank: !showMovement || raw.previous_ranking == null ? null : Number(raw.previous_ranking),
+      previousRank: showMovement ? previousRank : null,
+      isNew: showMovement && isNew,
       collegeCommit: (raw.college as string) || null,
       /**
        * Credentials only. Records, named quality wins and direct wins over other ranked
@@ -302,7 +346,7 @@ async function buildPublicClassRanking(
  * the page kept serving a payload built before they existed. Bump this whenever the returned
  * shape changes.
  */
-const PUBLIC_RANKING_CACHE_VERSION = "v8-published-date"
+const PUBLIC_RANKING_CACHE_VERSION = "v9-state-snapshots"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,

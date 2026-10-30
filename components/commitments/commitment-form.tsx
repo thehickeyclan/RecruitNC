@@ -126,7 +126,7 @@ export function CommitmentForm({
   }, [])
 
   const wrestlerReady = Boolean(athlete) || (noProfile && newName.trim().split(/\s+/).length >= 2 && newYear)
-  const ready = Boolean(role && wrestlerReady && collegeLabel && yourName.trim() && contactKind(contact.trim()))
+  const ready = Boolean(role && wrestlerReady && collegeLabel && photoUrl && yourName.trim() && contactKind(contact.trim()))
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -134,6 +134,7 @@ export function CommitmentForm({
     if (!role) return setError("Tell us who you are.")
     if (!wrestlerReady) return setError(noProfile ? "Add the wrestler's full name and class year." : "Find the wrestler first.")
     if (!collegeLabel) return setError("Which college did they commit to?")
+    if (!photoUrl) return setError("Add the commitment photo.")
     if (!yourName.trim()) return setError("Add your name.")
     if (!contactKind(contact.trim())) return setError("Add an email or a cell number, so we can tell you when it's live.")
 
@@ -155,6 +156,7 @@ export function CommitmentForm({
           collegeWeightClass: collegeWeight || null,
           intendedMajor: major.trim() || null,
           photoUrl: photoUrl || null,
+          photoRequired: true,
           submitterName: yourName,
           submitterRole: role,
           submitterContact: contact,
@@ -343,9 +345,42 @@ export function CommitmentForm({
       </div>
       <p className="mb-8 text-xs text-white/45">The Instagram or X post helps us confirm it in one look.</p>
 
+      {/* Required (Matt, 29 Oct 2026): every commitment goes out with its photo. */}
+      <Step n={5} label="Commitment photo" />
+      <div className="mb-8">
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) void upload(f)
+          }}
+        />
+        {photoUrl ? (
+          <div className="flex items-center gap-4 rounded-lg border border-white/10 bg-[#0A1628] p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- user upload, arbitrary dimensions */}
+            <img src={photoUrl} alt="The commitment photo" className="h-20 w-20 rounded object-cover" />
+            <button type="button" onClick={() => setPhotoUrl("")} className="text-sm font-semibold text-[#D3B574] hover:underline">
+              Choose a different photo
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => fileInput.current?.click()}
+            className="w-full rounded-lg border border-dashed border-white/20 bg-[#0A1628] px-4 py-6 text-sm text-white/60 hover:border-[#D3B574]/60 disabled:opacity-40"
+          >
+            {uploading ? "Uploading…" : "Add the commitment photo"}
+          </button>
+        )}
+      </div>
+
       {more ? (
         <>
-          <Step n={5} label="College weight" optional />
+          <Step n={6} label="College weight" optional />
           <select value={collegeWeight} onChange={(e) => setCollegeWeight(e.target.value)} className={`${INPUT} mb-6`}>
             <option value="">Not sure yet</option>
             {COLLEGE_WEIGHTS.map((w) => (
@@ -354,47 +389,16 @@ export function CommitmentForm({
               </option>
             ))}
           </select>
-          <Step n={6} label="Planned major" optional />
+          <Step n={7} label="Planned major" optional />
           <input value={major} onChange={(e) => setMajor(e.target.value)} placeholder="Kinesiology, Business, Undecided…" className={`${INPUT} mb-6`} />
-          <Step n={7} label="Signing photo" optional />
-          <div className="mb-8">
-            <input
-              ref={fileInput}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                if (f) void upload(f)
-              }}
-            />
-            {photoUrl ? (
-              <div className="flex items-center gap-4 rounded-lg border border-white/10 bg-[#0A1628] p-3">
-                {/* eslint-disable-next-line @next/next/no-img-element -- user upload, arbitrary dimensions */}
-                <img src={photoUrl} alt="The signing photo" className="h-20 w-20 rounded object-cover" />
-                <button type="button" onClick={() => setPhotoUrl("")} className="text-sm font-semibold text-[#D3B574] hover:underline">
-                  Choose a different photo
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={() => fileInput.current?.click()}
-                className="w-full rounded-lg border border-dashed border-white/20 bg-[#0A1628] px-4 py-6 text-sm text-white/60 hover:border-[#D3B574]/60 disabled:opacity-40"
-              >
-                {uploading ? "Uploading…" : "Add a photo from the signing"}
-              </button>
-            )}
-          </div>
         </>
       ) : (
         <button type="button" onClick={() => setMore(true)} className="mb-8 text-sm font-semibold text-[#D3B574] hover:underline">
-          + College weight, major or a photo (optional)
+          + College weight or major (optional)
         </button>
       )}
 
-      <Step n={more ? 8 : 5} label="Your name and how to reach you" />
+      <Step n={more ? 8 : 6} label="Your name and how to reach you" />
       <div className="mb-2 grid gap-3 sm:grid-cols-2">
         <input value={yourName} onChange={(e) => setYourName(e.target.value)} placeholder="Your name" autoComplete="name" className={INPUT} />
         <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Email or cell" autoComplete="email" className={INPUT} />

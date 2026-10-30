@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Which brand this deployment is, known at build time to server and browser alike: the
+  // RecruitWrestlers project serves recruitwrestlers.com only, so its HTML can say RecruitWrestlers
+  // from the first byte (launch review, 30 Oct 2026). NC United's build leaves it empty.
+  env: {
+    NEXT_PUBLIC_RW_PROJECT: /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "") ? "1" : "",
+  },
   async redirects() {
     return [
       {

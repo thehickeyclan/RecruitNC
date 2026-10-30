@@ -12,6 +12,8 @@
  * verified coaches see the read-only parts too). A college coach never gets the family's shell.
  */
 import type { Metadata } from "next"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { shareMetadata } from "@/lib/share-metadata"
 import { notFound } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
@@ -68,6 +70,7 @@ import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { MAJOR_FAMILIES, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { familyFocus } from "@/lib/recruiting/family-focus"
+import { isDemoFamily } from "@/lib/recruiting/demo-family"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -157,6 +160,7 @@ function Stat({ value, label, sub }: { value: string; label: string; sub?: strin
 
 export default async function SchoolPage({ params, searchParams }: Params) {
   const { id } = await params
+  const onRwHost = stagedBrandForHost((await headers()).get("host")) === "national"
   const fallParam = Number((await searchParams)?.fall) || null
   const school = SCHOOLS.get(id)
   const niche = school ? nicheFor(school.id) : null
@@ -218,7 +222,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
   const fitResult = ctx && ctx.first ? collegeFitFor(ctx, school, null) : null
   // This college's coaches looking at the family's wrestler: the reason RecruitNC exists.
   const viewed =
-    familySide && userId
+    familySide && userId && !(await isDemoFamily())
       ? ((await collegeViewsFor(admin, await familyAthleteIds(admin, userId).catch(() => [])).catch(() => new Map())).get(school.id) ?? null)
       : null
   const viewedDate = viewed ? new Date(viewed.lastViewedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : null
@@ -506,11 +510,11 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               </p>
               <ul className="mt-3 space-y-1.5 text-sm text-white/75">
                 <li>Coaching staff and emails</li>
-                <li>NC wrestlers on the roster</li>
+                <li>Wrestlers from your state on the roster</li>
                 <li>Fit for your wrestler</li>
                 <li>Save, track and email the coach</li>
               </ul>
-              <a href="/plans" className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
+              <a href={onRwHost ? "/command-center" : "/plans"} className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
                 See plans
               </a>
             </section>

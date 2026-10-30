@@ -25,6 +25,17 @@ html[data-host="national"] .auth-surface {
   background: #0B1426 !important;
 }
 
+html[data-host="national"] .auth-columns {
+  grid-template-columns: minmax(0, 28rem) !important;
+  justify-content: center;
+}
+
+html[data-host="national"] .profile-surface {
+  --primary: 82 77% 55%;
+  --primary-foreground: 222 55% 10%;
+  --ring: 82 77% 55%;
+}
+
 html[data-host="national"] .admin-layout :is(a[href="/admin/blue"], a[href^="/admin/blue/"], a[href^="/admin/blue?"], a[href="/admin/blue-interest"], a[href^="/admin/blue-interest/"], a[href^="/admin/blue-interest?"], a[href="/admin/calendar"], a[href^="/admin/calendar/"], a[href^="/admin/calendar?"], a[href="/admin/clubs"], a[href^="/admin/clubs/"], a[href^="/admin/clubs?"], a[href="/admin/customers"], a[href^="/admin/customers/"], a[href^="/admin/customers?"], a[href="/admin/custom-emoji"], a[href^="/admin/custom-emoji/"], a[href^="/admin/custom-emoji?"], a[href="/admin/expense-requests"], a[href^="/admin/expense-requests/"], a[href^="/admin/expense-requests?"], a[href="/admin/fundraising"], a[href^="/admin/fundraising/"], a[href^="/admin/fundraising?"], a[href="/admin/fundraising-ledger"], a[href^="/admin/fundraising-ledger/"], a[href^="/admin/fundraising-ledger?"], a[href="/admin/guild-credit-allocations"], a[href^="/admin/guild-credit-allocations/"], a[href^="/admin/guild-credit-allocations?"], a[href="/admin/guild-parent-link"], a[href^="/admin/guild-parent-link/"], a[href^="/admin/guild-parent-link?"], a[href="/admin/inventory"], a[href^="/admin/inventory/"], a[href^="/admin/inventory?"], a[href="/admin/messaging"], a[href^="/admin/messaging/"], a[href^="/admin/messaging?"], a[href="/admin/national-team"], a[href^="/admin/national-team/"], a[href^="/admin/national-team?"], a[href="/admin/national-team-submissions"], a[href^="/admin/national-team-submissions/"], a[href^="/admin/national-team-submissions?"], a[href="/admin/orders"], a[href^="/admin/orders/"], a[href^="/admin/orders?"], a[href="/admin/products"], a[href^="/admin/products/"], a[href^="/admin/products?"], a[href="/admin/promo-codes"], a[href^="/admin/promo-codes/"], a[href^="/admin/promo-codes?"], a[href="/admin/push-health"], a[href^="/admin/push-health/"], a[href^="/admin/push-health?"], a[href="/admin/recover-order"], a[href^="/admin/recover-order/"], a[href^="/admin/recover-order?"], a[href="/admin/reimbursements"], a[href^="/admin/reimbursements/"], a[href^="/admin/reimbursements?"], a[href="/admin/revenue"], a[href^="/admin/revenue/"], a[href^="/admin/revenue?"], a[href="/admin/scholarships"], a[href^="/admin/scholarships/"], a[href^="/admin/scholarships?"], a[href="/admin/store"], a[href^="/admin/store/"], a[href^="/admin/store?"], a[href="/admin/toc"], a[href^="/admin/toc/"], a[href^="/admin/toc?"], a[href="/admin/weekend-wars"], a[href^="/admin/weekend-wars/"], a[href^="/admin/weekend-wars?"]) {
   display: none !important;
 }
@@ -1220,6 +1231,10 @@ html[data-host="national"] .bg-\[\#13294B\]\/50 {
   background-color: rgb(21 36 59 / 0.5);
 }
 
+html[data-host="national"] .bg-\[\#13294B\]\/60 {
+  background-color: rgb(21 36 59 / 0.6);
+}
+
 html[data-host="national"] .bg-\[\#13294B\]\/80 {
   background-color: rgb(21 36 59 / 0.8);
 }
@@ -2130,6 +2145,10 @@ html[data-host="guild"] .bg-\[\#13294B\]\/40 {
 
 html[data-host="guild"] .bg-\[\#13294B\]\/50 {
   background-color: rgb(26 26 30 / 0.5);
+}
+
+html[data-host="guild"] .bg-\[\#13294B\]\/60 {
+  background-color: rgb(26 26 30 / 0.6);
 }
 
 html[data-host="guild"] .bg-\[\#13294B\]\/80 {
@@ -3814,6 +3833,10 @@ html[data-host="national"] .bg-sky-500\/15 {
   background-color: rgb(163 230 53 / 0.15);
 }
 
+html[data-host="national"] .bg-sky-500\/20 {
+  background-color: rgb(163 230 53 / 0.2);
+}
+
 html[data-host="national"] .bg-sky-500\/25 {
   background-color: rgb(163 230 53 / 0.25);
 }
@@ -3892,6 +3915,10 @@ html[data-host="national"] .hover\:border-sky-400\/60:hover {
 
 html[data-host="national"] .ring-sky-400\/30 {
   --tw-ring-color: rgb(163 230 53 / 0.3);
+}
+
+html[data-host="national"] .ring-sky-400\/40 {
+  --tw-ring-color: rgb(163 230 53 / 0.4);
 }
 
 html[data-host="national"] .text-sky-100 {

@@ -5,6 +5,7 @@ import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
 import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
 import { COACH_HOME_PATH, PORTAL_HINT_COOKIE, coachFrontDoor } from "@/lib/coach-front-door"
+import { COACH_RW_CUTOVER, NCU_PRODUCTION_HOSTS, isCoachCutoverPath } from "@/lib/recruiting/coach-cutover"
 
 const APP_ORIGIN = "https://app.ncwrestlingunited.com"
 
@@ -26,7 +27,12 @@ function isFundraisingHubPublicPath(p: string): boolean {
 /** Every response on a pre-launch brand address says: do not index. */
 export async function middleware(request: NextRequest) {
   const response = await routeRequest(request)
-  if (stagedBrandForHost(request.headers.get("host"))) {
+  /*
+   * RecruitWrestlers launched publicly (Matt, 30 Oct 2026): it is indexed and cached like any public
+   * site, each page deciding for itself (a draft or a profile still says noindex in its metadata).
+   * Only the retired Guild address, which forwards everything, stays out of search.
+   */
+  if (stagedBrandForHost(request.headers.get("host")) === "guild") {
     response.headers.set("X-Robots-Tag", "noindex, nofollow")
     response.headers.set("Cache-Control", "private, no-store")
   }
@@ -71,8 +77,20 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
   }
   if (brand) {
     if (pathname === "/robots.txt") {
-      return new NextResponse("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain", "X-Robots-Tag": "noindex, nofollow" } })
+      // Public pages are open to search; accounts, tools and staff pages are not.
+      const body =
+        brand === "national"
+          ? [
+              "User-agent: *",
+              "Allow: /",
+              ...["/admin", "/api", "/auth", "/dev", "/my-recruiting", "/my-recruits", "/coach-home", "/coach-reports", "/inbox", "/profile", "/edit-profile", "/profile-setup"].map((p) => `Disallow: ${p}`),
+              "Sitemap: https://www.recruitwrestlers.com/sitemap.xml",
+              "",
+            ].join("\n")
+          : "User-agent: *\nDisallow: /\n"
+      return new NextResponse(body, { headers: { "Content-Type": "text/plain" } })
     }
+    if (brand === "national" && pathname === "/sitemap.xml") return NextResponse.rewrite(new URL("/recruitwrestlers/sitemap.xml", request.url))
     // Launched 26 Oct 2026: the site is public; only the staff preview tools stay gated.
     if (isStaffOnlyAfterLaunch(pathname) && !isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll(), pathname))) {
       if (pathname.startsWith("/api/")) {
@@ -97,14 +115,30 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     if (isCommunityAdminPath(pathname)) {
       return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
     }
+    /*
+     * The boards live at /rankings here (Matt, 29 Oct 2026: "/rankings it should be"). The pages are
+     * app/public-rankings - a name left over from NC United, where /rankings is the Insider checkout,
+     * which stays. Old /public-rankings links move permanently; a checkout link goes to membership.
+     */
+    if (pathname === "/public-rankings" || pathname.startsWith("/public-rankings/")) {
+      return NextResponse.redirect(new URL(`${pathname.replace(/^\/public-rankings/, "/rankings")}${request.nextUrl.search}`, request.url), 308)
+    }
+    if (pathname === "/rankings" && request.nextUrl.searchParams.has("plan")) {
+      return NextResponse.redirect(new URL("/membership#insider", request.url), 307)
+    }
+    if ((pathname === "/rankings" || pathname.startsWith("/rankings/")) && !pathname.startsWith("/rankings/updates")) {
+      return NextResponse.rewrite(new URL(`${pathname.replace(/^\/rankings/, "/public-rankings")}${request.nextUrl.search}`, request.url))
+    }
     // RecruitWrestlers' own policy, not NC United's (app/recruitwrestlers/privacy).
     if (pathname === "/privacy") return NextResponse.rewrite(new URL("/recruitwrestlers/privacy", request.url))
+    if (pathname === "/terms") return NextResponse.rewrite(new URL("/recruitwrestlers/terms", request.url))
     if (pathname === "/contact") return NextResponse.rewrite(new URL("/recruitwrestlers/contact", request.url))
     if (pathname === "/about") return NextResponse.rewrite(new URL("/recruitwrestlers/about", request.url))
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
       // Nothing on recruitwrestlers.com leads to NC United (Matt's NC United sweep, 27 Oct 2026):
       // its pages, asked for here, are RecruitWrestlers' "page not found".
-      return NextResponse.rewrite(new URL("/recruitwrestlers/not-found", request.url))
+      // A real 404, not a 200 that looks like one, now that search engines read the site.
+      return NextResponse.rewrite(new URL("/recruitwrestlers/not-found", request.url), { status: 404 })
     }
   }
 
@@ -121,6 +155,27 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
         { error: refusal === 401 ? "Sign in as an admin." : "Admin access required." },
         { status: refusal, headers: { "Cache-Control": "no-store" } },
       )
+    }
+  }
+
+  /*
+   * College coaches work on RecruitWrestlers.com (lib/recruiting/coach-cutover.ts). A coach who
+   * opens the front page or a portal page on NC United's own address is handed across, signed in.
+   * Only on the production address; a partner coach asking for NC United by name stays.
+   */
+  if (
+    COACH_RW_CUTOVER &&
+    !brand &&
+    (request.method === "GET" || request.method === "HEAD") &&
+    NCU_PRODUCTION_HOSTS.has(String(request.headers.get("host") ?? "").toLowerCase().split(":")[0]!) &&
+    isCoachCutoverPath(pathname)
+  ) {
+    const door = await coachFrontDoor(request.headers, request.cookies.getAll(), request.nextUrl.searchParams.has("community"))
+    if (door.redirect) {
+      const next = pathname === "/" ? COACH_HOME_PATH : `${pathname}${request.nextUrl.search}`
+      const response = NextResponse.redirect(new URL(`/auth/rw-handoff?next=${encodeURIComponent(next)}`, request.url), 307)
+      response.headers.set("Cache-Control", "private, no-store")
+      return response
     }
   }
 

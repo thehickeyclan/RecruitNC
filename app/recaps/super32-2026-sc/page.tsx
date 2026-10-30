@@ -26,7 +26,8 @@ import { hasAnyRankingBoardGrant } from "@/lib/rankings/ranking-board-access"
 
 export const dynamic = "force-dynamic"
 
-const PUBLIC = process.env.SUPER32_SC_RECAP_PUBLIC === "1"
+// Published by Matt, 29 Oct 2026. The env switch can still force it on; it no longer holds it back.
+const PUBLIC = true
 const IMG = "/recruitwrestlers/recaps"
 /**
  * Approved photos (Matt, 25 Oct) break up the article between sections, each with the context
@@ -253,7 +254,7 @@ function UnlockPanel() {
 
 function ClaimCard() {
   return (
-    <section className="mt-10 overflow-hidden rounded-2xl border border-[#A3E635]/60 bg-gradient-to-br from-[#13294b] to-[#0b1730] text-white">
+    <section className="mt-10 overflow-hidden rounded-2xl border border-[#A3E635]/60 text-white" style={{ background: "linear-gradient(135deg, #13294b, #0b1730)" }}>
       <div className="p-6">
         <div className="text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">Every result in this recap lands on a profile</div>
         <h2 className="mt-1 text-2xl font-bold leading-tight md:text-3xl">Claim your wrestler&apos;s profile. It&apos;s free.</h2>
@@ -269,7 +270,7 @@ function ClaimCard() {
             <div className="mt-1 text-lg font-bold">Every grade + the data →</div>
             <div className="mt-1 text-xs text-[#0b1730]/80">Full rankings, the bout-by-bout file, and which college programs viewed your wrestler.</div>
           </Link>
-          <Link href="/auth/signup?type=college-coach" className="rounded-xl border border-white/30 p-4">
+          <Link href="/auth/signup?type=college-coach" className="rounded-xl border border-white/30 p-4" style={{ background: "#0b1730" }}>
             <div className="text-xs font-bold uppercase tracking-wider text-[#A3E635]">College coaches</div>
             <div className="mt-1 text-lg font-bold">Free access →</div>
             <div className="mt-1 text-xs text-[#c9d4ea]">Every profile, ranking and grade, built from verified results.</div>
@@ -359,7 +360,7 @@ export default async function Super32ScBoysRecapPage({ searchParams }: { searchP
           <Link href="/create-profile" className="group rounded-xl border border-[#A3E635]/70 bg-[#F7FEE7] p-4 hover:border-[#A3E635]">
             <div className="text-[11px] font-bold uppercase tracking-wider text-[#3F6212]">Families · free</div>
             <div className="mt-0.5 font-black text-[#0b1730]">Claim your wrestler&apos;s profile →</div>
-            <div className="text-xs text-gray-600">See his grade in this recap, every result, and how many college coaches viewed him.</div>
+            <div className="text-xs text-gray-600">Free: his own grade in this recap, every result, and how many college programs viewed his profile. Insider names the programs.</div>
           </Link>
           <Link href="/membership" className="group rounded-xl bg-[#0b1730] p-4 text-white hover:bg-[#13294b]">
             <div className="text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">Insider · $9.99/mo</div>

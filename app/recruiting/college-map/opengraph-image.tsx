@@ -8,13 +8,17 @@ import { createAdminClient } from "@/lib/supabase/admin"
  * The preview a text or post shows for the college map link: the map itself, with every program
  * on RecruitNC lit up, and the live counts. Rebuilt hourly so the numbers keep up with sign-ups.
  */
-export const alt = "College programs on RecruitNC"
+// Each deployment's own brand (launch review, 30 Oct 2026): RecruitWrestlers lime on its project.
+const RW = /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
+const BRAND = RW ? "RECRUITWRESTLERS" : "RECRUITNC"
+const DOMAIN = RW ? "RECRUITWRESTLERS.COM" : "APP.NCWRESTLINGUNITED.COM"
+export const alt = RW ? "College programs on RecruitWrestlers" : "College programs on RecruitNC"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 export const revalidate = 3600
 
-const NAVY = "#060F1F"
-const GOLD = "#E8BA5A"
+const NAVY = RW ? "#0B1426" : "#060F1F"
+const GOLD = RW ? "#A3E635" : "#E8BA5A"
 
 // The map is a Mapbox static image at a fixed centre and zoom, so each school's pixel is plain Web
 // Mercator maths and the dots land exactly on it. The centre sits west of the US so the country
@@ -113,10 +117,10 @@ export default async function Image() {
           }}
         />
         <div style={{ position: "absolute", top: 0, left: 0, width: 560, height: "100%", display: "flex", flexDirection: "column", padding: "52px 0 44px 60px" }}>
-          <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: 5, color: GOLD }}>RECRUITNC · RECRUITING PORTAL</div>
+          <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: 5, color: GOLD }}>{BRAND} · RECRUITING PORTAL</div>
           <div style={{ display: "flex", flexDirection: "column", marginTop: 22, fontSize: 60, fontWeight: 800, lineHeight: 1, letterSpacing: -1.5 }}>
             <span style={{ color: "#FFFFFF" }}>COLLEGE PROGRAMS</span>
-            <span style={{ color: GOLD }}>ON RECRUITNC</span>
+            <span style={{ color: GOLD }}>ON {BRAND}</span>
           </div>
           <div style={{ marginTop: 18, width: 110, height: 6, background: GOLD }} />
           <div style={{ display: "flex", marginTop: 40, gap: 36 }}>
@@ -131,7 +135,7 @@ export default async function Image() {
             DI · DII · DIII · NAIA · NJCAA
           </div>
           <div style={{ marginTop: "auto", fontSize: 20, fontWeight: 400, letterSpacing: 3, color: "rgba(255,255,255,0.8)" }}>
-            APP.NCWRESTLINGUNITED.COM
+            {DOMAIN}
           </div>
         </div>
       </div>

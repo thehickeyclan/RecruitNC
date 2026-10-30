@@ -32,6 +32,8 @@ export async function loadCoachViewer(admin: SupabaseClient, userId: string): Pr
   return {
     allowed: isAdmin || viewer.isCoach,
     isAdmin,
-    maySeePrivate: isAdmin || viewer.verifiedCoach,
+    // College coaches only (Matt's launch review, 30 Oct 2026): a high-school or club coach carrying
+    // the verified flag must not read a minor's contact details or academics.
+    maySeePrivate: isAdmin || (viewer.isCollegeCoach && viewer.verifiedCoach),
   }
 }

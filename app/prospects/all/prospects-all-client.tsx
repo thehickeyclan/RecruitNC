@@ -8,7 +8,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { yearFilterToApiParams } from "@/lib/prospects-directory"
 import { currentClassYears } from "@/lib/class-years"
-import { highestAchievement, type AchievementFacts } from "@/lib/prospect-achievements"
+import { highestAchievement, isAllAmerican, type AchievementFacts } from "@/lib/prospect-achievements"
 import { useCoachMode } from "@/hooks/use-coach-mode"
 import { useAuth } from "@/contexts/auth-context"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
@@ -120,9 +120,8 @@ function hasHonor(prospect: Prospect, honor: HonorPill): boolean {
   // Placed 1st to 6th at states, the champion included: lib/prospect-achievements.ts places 2-6 and
   // counts 7th and below as qualifying.
   if (honor === "state-placer") return Number.isFinite(state) && state >= 1 && state <= 6
-  const nhsca = Number(facts.bestNhscaPlace)
-  const s32 = Number(facts.bestSuper32Place)
-  return (Number.isFinite(nhsca) && nhsca >= 1 && nhsca <= 8) || (Number.isFinite(s32) && s32 >= 1 && s32 <= 8)
+  // Every national podium: Super 32, Fargo, NHSCA, Ironman, Powerade, Beast, Preps, girls' events.
+  return isAllAmerican(facts)
 }
 
 /** The state a wrestler competes in. Rows without one are North Carolina's: the directory holds no one else yet. */
@@ -135,6 +134,9 @@ function lastWeight(prospect: Prospect): string | null {
   const w = (prospect as { last_competed_weight?: string | null }).last_competed_weight
   return w && String(w).trim() ? String(w).trim() : null
 }
+
+/** Every state this viewer may open, in one list (RecruitWrestlers' default). */
+const ALL_STATES = "ALL"
 
 function stateOfProspect(prospect: Prospect): string {
   const raw = String((prospect as { state?: string | null }).state ?? "").trim().toUpperCase()
@@ -252,12 +254,19 @@ export default function ProspectsAllClient({
    * A link can open the list on a state (?state=SC, from a state page such as wrestlingguild.com/recruit/sc).
    * Only a state this viewer may open is honoured; anything else stays on North Carolina.
    */
+  /*
+   * RecruitWrestlers opens on every live state at once (Matt, 29 Oct 2026: "should show all kids
+   * 2027-2030"); NC United stays North Carolina's. One state at a time is still a pick away.
+   */
+  const defaultState = onRw && stateChoices.length > 1 ? ALL_STATES : HOME_STATE
   const stateFromLink = useRef(false)
   useEffect(() => {
     if (stateFromLink.current) return
     const asked = new URLSearchParams(window.location.search).get("state")?.toUpperCase()
     if (!asked) {
+      if (!onRw) return
       stateFromLink.current = true
+      if (stateChoices.length > 1) setStateFilter(ALL_STATES)
       return
     }
     if (stateChoices.some((s) => s.code === asked)) {
@@ -465,12 +474,13 @@ export default function ProspectsAllClient({
         if (!matchesTerm) return false
       }
 
+      // The current classes, derived each summer - the hard-coded 2026-2029 had dropped the Class of 2030.
       if (yearFilter === "active") {
         const y = prospect.graduationyear
-        if (y == null || y < 2026 || y > 2029) return false
+        if (y == null || y < CURRENT_CLASS_YEARS[0]! || y > CURRENT_CLASS_YEARS[CURRENT_CLASS_YEARS.length - 1]!) return false
       } else if (yearFilter === "graduates") {
         const y = prospect.graduationyear
-        if (y == null || y > 2025) return false
+        if (y == null || y > CURRENT_CLASS_YEARS[0]! - 1) return false
       } else if (yearFilter !== "all") {
         if (String(prospect.graduationyear || "") !== yearFilter) return false
       }
@@ -562,7 +572,7 @@ export default function ProspectsAllClient({
 
       if (honorFilters.length > 0 && !honorFilters.some((h) => hasHonor(prospect, h))) return false
 
-      if (stateFilter !== HOME_STATE && stateOfProspect(prospect) !== stateFilter) return false
+      if (stateFilter !== HOME_STATE && stateFilter !== ALL_STATES && stateOfProspect(prospect) !== stateFilter) return false
 
       return true
     })
@@ -697,7 +707,7 @@ export default function ProspectsAllClient({
     setWeightFilters([])
     setAchievementFilters([])
     setHonorFilters([])
-    setStateFilter(HOME_STATE)
+    setStateFilter(defaultState)
   }
 
   const hasActiveFilters = useMemo(() => {
@@ -710,7 +720,7 @@ export default function ProspectsAllClient({
       weightFilters.length > 0 ||
       achievementFilters.length > 0 ||
       honorFilters.length > 0 ||
-      stateFilter !== HOME_STATE
+      stateFilter !== defaultState
     )
   }, [searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, honorFilters, stateFilter])
 
@@ -777,7 +787,9 @@ export default function ProspectsAllClient({
             <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">Athlete Profiles</h1>
           </div>
           <p className="text-white/70 text-lg max-w-2xl leading-relaxed mb-8">
-            {stateFilter === HOME_STATE
+            {stateFilter === ALL_STATES
+              ? `Every wrestler in ${stateChoices.map((st) => st.name).join(" and ")}: browse by name, school, class year, state and commitment status.`
+              : stateFilter === HOME_STATE
               ? "All NC wrestlers — browse by name, school, class year, and commitment status. Create your profile and we pull in NCHSAA, NHSCA, and Super 32 results."
               : `${stateChoices.find((st) => st.code === stateFilter)?.name ?? stateFilter} state placers — browse by name, school, class year, and commitment status.`}
           </p>
@@ -913,8 +925,9 @@ export default function ProspectsAllClient({
                 <select
                   value={stateFilter}
                   onChange={(e) => setStateFilter(e.target.value)}
-                  className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
+                  className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-base sm:text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
                 >
+                  {onRw ? <option value={ALL_STATES}>All states</option> : null}
                   {stateChoices.map((st) => (
                     <option key={st.code} value={st.code}>
                       {brandHost ? st.name : `Recruit${st.code} · ${st.name}`}
@@ -939,7 +952,7 @@ export default function ProspectsAllClient({
               <select
                 value={sortBy}
                 onChange={(e) => setSortChoice(e.target.value as SortChoice)}
-                className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
+                className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-base sm:text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
               >
                 {maySeeRanking ? <option value="rank">Rank</option> : null}
                 <option value="name">Name (A to Z)</option>

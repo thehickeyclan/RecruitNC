@@ -281,7 +281,7 @@ export default function SignInPage() {
   // When stuck in iframe, cookies are blocked — show only "open in new tab"
   if (stuckInIframe) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-4">
+      <div className="min-h-screen flex items-center justify-center profile-surface bg-[#0A1628] p-4">
         <Card className="w-full max-w-md shadow-xl">
           <CardHeader>
             <CardTitle>Sign in requires full access</CardTitle>
@@ -297,7 +297,7 @@ export default function SignInPage() {
               <ArrowRight className="mr-2 h-4 w-4" />
               Open sign-in in new tab
             </Button>
-            <p className="text-xs text-center text-gray-500">
+            <p className="text-xs text-center text-muted-foreground">
               A new tab will open where you can sign in successfully.
             </p>
           </CardContent>
@@ -307,9 +307,9 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="auth-surface min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 pt-4 sm:pt-8 pb-8 px-4">
+    <div className="auth-surface min-h-screen flex items-start justify-center profile-surface bg-[#0A1628] pt-4 sm:pt-8 pb-8 px-4">
       <div className="w-full max-w-6xl mt-4 sm:mt-8">
-        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="auth-columns grid lg:grid-cols-2 gap-4 sm:gap-6">
           {/* NC United's panel on its own address; Guild Recruiting's on recruit.wrestlingguild.com (app/recruit-brand.css). */}
           <div className="ncu-only">
           {/* Prominent Registration Banner for New Users */}
@@ -383,7 +383,7 @@ export default function SignInPage() {
             <CardHeader className="text-center">
               <CardTitle className="text-xl sm:text-2xl font-bold">Sign In</CardTitle>
               <CardDescription className="text-sm sm:text-base">
-                {returnTo ? `Sign in to continue to ${returnTo}.` : "Enter your credentials to access your account."}
+                {returnTo ? "Sign in to continue where you left off." : "Enter your credentials to access your account."}
               </CardDescription>
             </CardHeader>
             <CardContent className="relative z-10">
@@ -425,7 +425,7 @@ export default function SignInPage() {
                 </div>
 
                 {error && (
-                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">
+                  <div className="text-red-200 text-sm bg-red-500/10 p-3 rounded-md border border-red-400/40">
                     {error}
                     {(error.includes("rate limit") || error.includes("429") || error.includes("Too many")) && (
                       <div className="mt-3 flex flex-col gap-2">
@@ -433,20 +433,20 @@ export default function SignInPage() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="w-full border-blue-400 text-blue-700 hover:bg-blue-50"
+                          className="w-full border-[#D3B574]/60 text-[#D3B574] hover:bg-white/5"
                           disabled={clearingCooldown}
                           onClick={clearRateLimitCooldown}
                         >
                           {clearingCooldown ? "Clearing..." : "Clear cooldown & try again"}
                         </Button>
-                        <a href="/auth/clear-cooldown" target="_top" rel="noopener" className="text-xs text-blue-600 hover:underline text-center">
+                        <a href="/auth/clear-cooldown" target="_top" rel="noopener" className="text-xs text-[#D3B574] hover:underline text-center">
                           Or open clear-cooldown page
                         </a>
                       </div>
                     )}
                     {error.includes("reset link") && (
                       <p className="mt-2 text-xs">
-                        <Link href="/auth/forgot-password" className="text-blue-600 hover:underline font-medium">
+                        <Link href="/auth/forgot-password" className="text-[#D3B574] hover:underline font-medium">
                           Request a new reset link
                         </Link>
                       </p>
@@ -466,26 +466,26 @@ export default function SignInPage() {
                   have one; below it is where somebody looks after deciding they cannot remember. */}
               <div className="mt-5">
                 <div className="mb-4 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-gray-200" />
-                  <span className="text-xs font-medium uppercase tracking-wide text-gray-400">or</span>
-                  <span className="h-px flex-1 bg-gray-200" />
+                  <span className="h-px flex-1 bg-border" />
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">or</span>
+                  <span className="h-px flex-1 bg-border" />
                 </div>
                 <GoogleSignInButton returnTo={returnTo} />
               </div>
 
               <div className="mt-4 text-center space-y-2">
-                <p className="text-xs sm:text-sm text-gray-600">
-                  <Link href="/auth/forgot-password" className="text-blue-600 hover:underline">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  <Link href="/auth/forgot-password" className="text-[#D3B574] hover:underline">
                     Forgot your password?
                   </Link>
                 </p>
-                <p className="text-xs sm:text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {"Don't have an account? "}
                   <Link
                     href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
                     target="_top"
                     rel="noopener"
-                    className="text-blue-600 hover:underline"
+                    className="text-[#D3B574] hover:underline"
                   >
                     Sign up
                   </Link>

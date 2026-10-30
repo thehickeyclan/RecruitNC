@@ -32,3 +32,26 @@ describe("highestAchievement", () => {
     expect(highestAchievement({ bestStatePlace: null, bestNhscaPlace: null }).level).toBe("dnq")
   })
 })
+
+import { aaEventLabel, placementFromRounds } from "./prospect-achievements"
+describe("national All-American events", () => {
+  it("counts the events Matt named, boys and girls, and not the qualifiers", () => {
+    for (const k of ["super32-2025", "fargo-2025-16u-fs", "nhsca-nationals-2026", "ironman-2025", "ironman-women-2025", "powerade-2025", "beast-of-the-east-2025", "national-preps-2025", "national-preps-girls-2025", "usaw-womens-nationals-2025-u17-women-s-freestyle"]) expect(aaEventLabel(k)).not.toBeNull()
+    for (const k of ["super32-early-entry-2025", "usaw-womens-nationals-2025-u15-women-s-freestyle", "journeymen-fall-classic-2025", "girls-wrestling-committee-states-2026"]) expect(aaEventLabel(k)).toBeNull()
+  })
+  it("reads the finish from the placement match", () => {
+    expect(placementFromRounds([{ round: "7th Place Match", win: false, is_bye: false }])).toBe(8)
+    expect(placementFromRounds([{ round: "1st Place Match", win: true, is_bye: false }])).toBe(1)
+    expect(placementFromRounds([{ round: "Quarterfinal", win: true, is_bye: false }])).toBe(null)
+  })
+})
+
+import { isAllAmerican } from "./prospect-achievements"
+describe("isAllAmerican", () => {
+  it("counts a podium at any national event", () => {
+    expect(isAllAmerican({ nationalPodiums: ["Fargo 2025"] })).toBe(true)
+    expect(isAllAmerican({ bestNhscaPlace: 8 })).toBe(true)
+    expect(isAllAmerican({ bestSuper32Place: 9 })).toBe(false)
+    expect(isAllAmerican({})).toBe(false)
+  })
+})

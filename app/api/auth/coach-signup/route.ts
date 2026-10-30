@@ -1,3 +1,4 @@
+import { checkConsent, type ConsentInput, type ConsentRecord } from "@/lib/legal/consent"
 import { type NextRequest, NextResponse } from "next/server"
 
 import { COACH_PROGRAM_KEY, parseCoachProgram, programPhrase } from "@/lib/recruiting/coach-program"
@@ -67,6 +68,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "One of those fields is too long." }, { status: 400 })
   }
 
+  // Consent (lib/legal/consent.ts): required when sent; an older client that sends none is recorded as null.
+  let consent: ConsentRecord | null = null
+  if (body.consent !== undefined) {
+    const agreed = checkConsent(body.consent as ConsentInput, "college-coach", "coach")
+    if (!agreed.ok) return NextResponse.json({ error: agreed.error }, { status: 400 })
+    consent = agreed.record
+  }
+
   const fullName = `${firstName} ${lastName}`
   const cellPhone = normalizePhoneForStorage(cellRaw)
   // A coach staff removed is not let in by access-first; the account is still made so the attempt
@@ -87,6 +96,7 @@ export async function POST(request: NextRequest) {
       institution: college,
       // Which site the coach signed up on: emails sent later carry that site's name.
       signup_brand: stagedBrandForHost(request.headers.get("host")) === "national" ? "recruitwrestlers" : "ncunited",
+      consent,
     },
   })
 

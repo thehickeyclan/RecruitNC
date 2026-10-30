@@ -1,6 +1,7 @@
 import { hasNameAlias, nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { recordStrength } from "@/lib/win-strength"
 import { isNationalEvent } from "@/lib/wrestling-style"
+import { nhscaLabel, type NhscaDivision } from "@/lib/nhsca-division"
 
 /**
  * Wins worth showing on a profile: the ones over somebody the reader has heard of.
@@ -106,7 +107,8 @@ export type OpponentIndex = {
   eventPlacers?: readonly EventPlacer[]
 }
 
-export type EventPlacement = { event: string; year: number; place: number; weight: number | null }
+/** `division`: NHSCA's grade division (lib/nhsca-division.ts), so a freshman title reads as one. */
+export type EventPlacement = { event: string; year: number; place: number; weight: number | null; division?: NhscaDivision | null }
 
 export type EventPlacer = {
   name: string
@@ -131,7 +133,7 @@ export function eventPlacementLabel(finishes: readonly EventPlacement[]): string
   const nhscaAA = unique.filter((f) => /nhsca/i.test(f.event))
   if (nhscaAA.length > 1) {
     const rest = unique.filter((f) => !/nhsca/i.test(f.event))
-    const years = nhscaAA.map((f) => f.year).sort().join(", ")
+    const years = [...nhscaAA].sort((a, b) => a.year - b.year).map((f) => (f.division ? `${f.year} ${f.division.toLowerCase()}` : String(f.year))).join(", ")
     const head = `${nhscaAA.length}x NHSCA All-American (${years})`
     const tail = eventPlacementLabel(rest)
     return tail ? `${head} · ${tail}` : head
@@ -143,10 +145,10 @@ export function eventPlacementLabel(finishes: readonly EventPlacement[]): string
     .slice(0, 3)
     .map((f) => {
       const at = f.weight ? ` (${f.weight})` : ""
-      if (f.place === 1) return `${f.year} ${f.event} Champion${at}`
+      if (f.place === 1) return /nhsca/i.test(f.event) ? `${nhscaLabel(f.year, f.division ?? null, "title")} Champion${at}` : `${f.year} ${f.event} Champion${at}`
       const ord = `${f.place}${ordinalSuffix(f.place)}`
       return /nhsca/i.test(f.event)
-        ? `${f.year} NHSCA All-American (${ord}${f.weight ? `, ${f.weight}` : ""})`
+        ? `${nhscaLabel(f.year, f.division ?? null, "title")} All-American (${ord}${f.weight ? `, ${f.weight}` : ""})`
         : `${f.year} ${f.event} ${ord}${at}`
     })
     .join(" · ")

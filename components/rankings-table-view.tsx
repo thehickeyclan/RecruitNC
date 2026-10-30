@@ -253,6 +253,8 @@ export function RankingsTableView({
     }
   }
 
+  // Highest accolade, as pills (Matt, 29 Oct 2026); only where the rows carry one (the athletes directory).
+  const showHonor = athletes.some((a) => a.achievement_badge)
   const sortedAthletes = [...athletes].sort((a, b) => {
     let aValue: any
     let bValue: any
@@ -370,6 +372,7 @@ export function RankingsTableView({
                   Year <SortIcon field="year" />
                 </Button>
               </TableHead>
+              {showHonor ? <TableHead className="w-[130px] text-white font-semibold">Top accolade</TableHead> : null}
               <TableHead className="w-[110px] text-white font-semibold text-center">Status</TableHead>
               <TableHead className="min-w-[180px] text-white font-semibold">
                 <Button
@@ -421,7 +424,7 @@ export function RankingsTableView({
                           : "bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100"
                       }
                     >
-                      <TableCell colSpan={canSeeWatchList ? 9 : 8} className="py-2 text-center">
+                      <TableCell colSpan={(canSeeWatchList ? 9 : 8) + (showHonor ? 1 : 0)} className="py-2 text-center">
                         <div className="flex items-center justify-center gap-3">
                           <div
                             className={`h-px flex-1 max-w-xs ${isDark ? "bg-white/20" : "bg-gray-300"}`}
@@ -547,6 +550,11 @@ export function RankingsTableView({
                     >
                       {athlete.graduation_year ?? "—"}
                     </TableCell>
+                    {showHonor ? (
+                      <TableCell>
+                        <AccoladePill badge={athlete.achievement_badge} dark={isDark} />
+                      </TableCell>
+                    ) : null}
                     <TableCell className="text-center">
                       {athlete.recruiting_status === "Committed" &&
                       athlete.college &&
@@ -648,4 +656,17 @@ export function RankingsTableView({
       )}
     </div>
   )
+}
+
+/** All-American, State Champion, State Placer, State Qualifier; nothing for the rest. */
+const ACCOLADE_STYLE: Record<string, string> = {
+  "All-American": "bg-purple-500/20 text-purple-200 ring-purple-400/40",
+  "State Champion": "bg-amber-400/20 text-amber-200 ring-amber-300/40",
+  "State Placer": "bg-sky-500/20 text-sky-200 ring-sky-400/40",
+  "State Qualifier": "bg-emerald-500/15 text-emerald-200 ring-emerald-400/30",
+}
+function AccoladePill({ badge, dark }: { badge?: string; dark: boolean }) {
+  const style = badge ? ACCOLADE_STYLE[badge] : undefined
+  if (!badge || !style) return <span className={dark ? "text-white/30" : "text-gray-400"}>—</span>
+  return <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ${style}`}>{badge === "State Champion" ? "State Champ" : badge}</span>
 }

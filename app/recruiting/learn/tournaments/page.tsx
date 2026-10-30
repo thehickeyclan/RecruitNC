@@ -4,6 +4,7 @@
  * wrestle, which is the portal's best argument for itself. A girl's family sees the women's list
  * first.
  */
+import { LearnFrame } from "@/components/recruiting/learn/learn-frame"
 import type { Metadata } from "next"
 import { AlertTriangle, Calendar, MapPin, Users } from "lucide-react"
 
@@ -64,10 +65,9 @@ export default async function TournamentsPage() {
   const lists = listsFor(focus?.gender ?? null)
 
   return (
-    <main className="min-h-screen bg-[#0A1628] px-4 py-8 text-white sm:px-6">
-      <div className="mx-auto max-w-3xl">
-        <a href="/my-recruiting#learn" className="text-xs font-semibold text-white/55 hover:text-white">
-          ← Recruiting Command Center
+    <LearnFrame signedIn={Boolean(userId)}>
+        <a href={userId ? "/my-recruiting/learn" : "/recruiting/learn"} className="text-xs font-semibold text-white/55 hover:text-white">
+          ← Learn
         </a>
         <p className="mt-4 text-[11px] font-black uppercase tracking-widest text-[#D3B574]"><BrandName /> · Recruiting Portal</p>
         <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">The tournaments college coaches watch</h1>
@@ -107,7 +107,6 @@ export default async function TournamentsPage() {
             Which tournaments 87 NC college commits wrestled
           </a>
         </p>
-      </div>
-    </main>
+    </LearnFrame>
   )
 }

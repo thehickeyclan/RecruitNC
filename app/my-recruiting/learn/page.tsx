@@ -7,6 +7,7 @@
  * and the questions families ask. Every link lands on the verified library in lib/recruiting/learn;
  * nothing on this page states a rule itself. The mock's videos are left out until we have them.
  */
+import { LearnTabs } from "@/components/recruiting/learn/learn-tabs"
 import type { LucideIcon } from "lucide-react"
 import {
   ArrowLeftRight,
@@ -47,22 +48,12 @@ const GOLD = "var(--recruit-accent)"
 const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
 const TRACKS: D1Track[] = ["men-2028", "men-2027", "women"]
 
-const TABS = [
-  { label: "Overview", href: "/my-recruiting/learn" },
-  { label: "Timeline", href: "/recruiting/learn/timeline" },
-  { label: "Rules", href: "/recruiting/learn/division-1" },
-  { label: "Academics", href: "/recruiting/learn/eligibility-center" },
-  { label: "Costs & aid", href: "/recruiting/learn/paying-for-college" },
-  { label: "Getting recruited", href: "/recruiting/learn/working-the-process" },
-  { label: "Tournaments", href: "/recruiting/learn/tournaments" },
-  { label: "FAQs", href: "/recruiting/learn/questions-families-ask" },
-]
 
 const DOORS = [
-  { image: "/focused-wrestler.png", title: "Recruiting timeline", text: "What to do each year, 8th grade to signing.", cta: "View timeline", href: "/recruiting/learn/timeline" },
-  { image: "/grappling-duel.png", title: "The rules, level by level", text: "Contact, calls, visits and what's allowed.", cta: "Learn the rules", href: "/recruiting/learn/division-1" },
+  { image: "/images/jacob-perry-ground-control.jpeg", title: "Recruiting timeline", text: "What to do each year, 8th grade to signing.", cta: "View timeline", href: "/recruiting/learn/timeline" },
+  { image: "/images/blayden-thompson-action.jpeg", title: "The rules, level by level", text: "Contact, calls, visits and what's allowed.", cta: "Learn the rules", href: "/recruiting/learn/division-1" },
   { image: "/hero-banner-nc-wrestling-arena.png", title: "What college costs", text: "Full cost, aid, and how academics lower it.", cta: "Get the guide", href: "/recruiting/learn/paying-for-college" },
-  { image: "/focused-grappler.png", title: "Find the right fit", text: "Compare colleges on fit, cost and roster.", cta: "Compare colleges", href: "/recruiting/compare" },
+  { image: "/images/braylon-butts-action.jpeg", title: "Find the right fit", text: "Compare colleges on fit, cost and roster.", cta: "Compare colleges", href: "/recruiting/compare" },
 ]
 
 const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
@@ -174,18 +165,7 @@ export default async function CommandCenterLearn() {
           </div>
         </section>
 
-        {/* Tabs */}
-        <nav aria-label="Learn sections" className="-mx-4 mt-4 overflow-x-auto border-b border-white/10 px-4 sm:mx-0 sm:px-0">
-          <ul className="flex gap-6 whitespace-nowrap text-sm font-semibold">
-            {TABS.map((t, i) => (
-              <li key={t.label}>
-                <a href={t.href} className={`block border-b-2 py-3 ${i === 0 ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-white/65 hover:text-white"}`}>
-                  {t.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <LearnTabs className="mt-4" />
 
         {/* Your roadmap: the wrestler's own year first */}
         {year && w ? (

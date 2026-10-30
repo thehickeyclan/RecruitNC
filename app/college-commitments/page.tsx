@@ -5,10 +5,13 @@ import { resolveCollegeLogoUrlMap } from "@/lib/entity-logo-resolve"
 import { COLLEGE_LEADERBOARD_MIN_CLASS_YEAR } from "@/lib/colleges"
 import { shareMetadata } from "@/lib/share-metadata"
 import { CollegeCommitmentsClient } from "./college-commitments-client"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { liveStates, recruitingCoverage } from "@/lib/recruiting/brand"
 
 export const metadata = shareMetadata({
   title: "College Commitments",
-  description: "North Carolina wrestlers committed to college: DI, DII, DIII, NAIA and NJCAA.",
+  description: "Wrestlers committed to college: DI, DII, DIII, NAIA and NJCAA.",
   path: "/college-commitments",
   kicker: "RecruitNC",
 })
@@ -21,10 +24,19 @@ export const revalidate = 120
  * came from two separate queries before). The read is capped at 500; there are under 200 today.
  */
 export default async function CollegeCommitmentsPage() {
-  let commitments: Array<CommitmentAthleteListItem & { top_honor?: string | null }> = []
+  const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
+  const states = liveStates(onRw).map((st) => st.code)
+  let commitments: Array<CommitmentAthleteListItem & { top_honor?: string | null; state?: string }> = []
   try {
     const supabase = await createClient()
-    const { athletes: everyClass } = await fetchCommitmentAthletes(supabase, { year: "all", gender: "all", division: "all", limit: 500 })
+    /*
+     * Every live state on RecruitWrestlers, North Carolina alone on NC United (Matt, 28 Oct 2026):
+     * a South Carolina commitment reported and approved shows here the day it is.
+     */
+    const perState = await Promise.all(
+      states.map(async (st) => (await fetchCommitmentAthletes(supabase, { year: "all", gender: "all", division: "all", limit: 500, state: st })).athletes.map((a) => ({ ...a, state: st }))),
+    )
+    const everyClass = perState.flat().sort((a, b) => String(b.commitmentdate ?? "").localeCompare(String(a.commitmentdate ?? "")))
     // The same classes /colleges and /high-schools count, so the three views give one total.
     const athletes = everyClass.filter((a) => a.graduationyear >= COLLEGE_LEADERBOARD_MIN_CLASS_YEAR)
     // Colleges whose row has no logo go through the same resolver the logo APIs use (static
@@ -39,5 +51,5 @@ export default async function CollegeCommitmentsPage() {
     console.error("[college-commitments] load failed:", error)
   }
 
-  return <CollegeCommitmentsClient commitments={commitments} />
+  return <CollegeCommitmentsClient commitments={commitments} coverage={recruitingCoverage(onRw)} showState={states.length > 1} />
 }

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Report a commitment",
-  description: "Tell North Carolina wrestling where a wrestler is going to college.",
+  description: "Tell us where a wrestler is going to college.",
 }
 
 /** `?athlete=<id>` starts from that profile (its own page links here); `?role=` from Coach Home. */
@@ -49,7 +49,7 @@ export default async function SubmitCommitmentPage({ searchParams }: { searchPar
     <div className="min-h-screen bg-[#0A1628] px-4 py-14 text-white sm:py-20">
       <div className="mx-auto max-w-3xl">
         <header className="mb-10 text-center">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#D3B574]"><BrandName ncu="NC United Wrestling" /></p>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#D3B574]"><BrandName ncu="NC United" /></p>
           <h1 className="text-3xl font-black sm:text-4xl">Report a commitment</h1>
           <p className="mx-auto mt-4 max-w-lg text-white/70">
             The wrestler, a parent or a coach: tell us where they are going. It takes about a minute, and once we check it, it goes on

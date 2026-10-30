@@ -39,11 +39,11 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="container mx-auto flex h-screen flex-col items-center justify-center px-4">
+    <div className="profile-surface flex min-h-screen flex-col items-center justify-center bg-[#0A1628] px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold">Reset Your Password</h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             Enter your email address and we'll send you a link to reset your password.
           </p>
         </div>
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
         ) : (
           <form method="post" onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-muted-foreground">
                 Email address
               </label>
               <Input
@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             <div className="text-center text-sm">
-              <Link href="/auth/signin" className="text-blue-600 hover:underline">
+              <Link href="/auth/signin" className="text-[#D3B574] hover:underline">
                 Back to sign in
               </Link>
             </div>

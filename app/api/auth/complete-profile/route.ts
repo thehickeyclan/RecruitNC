@@ -1,3 +1,4 @@
+import { checkConsent, type ConsentInput } from "@/lib/legal/consent"
 import { NextResponse, type NextRequest } from "next/server"
 import { parseCoachProgram, programPhrase } from "@/lib/recruiting/coach-program"
 import { setCoachProgram } from "@/lib/recruiting/coach-program-server"
@@ -64,6 +65,15 @@ export async function POST(request: NextRequest) {
     patch.verified_coach = true
     // Let in by the rule, not by a person. Stays on the review list until one looks.
     patch.verification_status = "pending"
+  }
+
+  // Consent for a Google sign-up (lib/legal/consent.ts): required when sent, kept on the account.
+  if (body?.consent !== undefined) {
+    const agreed = checkConsent(body.consent as ConsentInput, String(body?.profileType ?? ""), "google")
+    if (!agreed.ok) return NextResponse.json({ ok: false, error: agreed.error }, { status: 400 })
+    await admin.auth.admin
+      .updateUserById(user.id, { user_metadata: { ...((user.user_metadata ?? {}) as Record<string, unknown>), consent: agreed.record } })
+      .catch((e) => console.error("[complete-profile] consent not saved:", e))
   }
 
   const { error } = await admin.from("user_profiles").update(patch).eq("user_id", user.id)

@@ -200,7 +200,7 @@ export default async function CommandCenterActivity({ searchParams }: { searchPa
       <div className="mx-auto max-w-7xl text-white">
         <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1D3A]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/focused-grappler.png" alt="" aria-hidden className="absolute inset-y-0 right-0 h-full w-2/3 object-cover opacity-35" />
+          <img src="/images/tobin-mcnair-action.jpeg" alt="" aria-hidden className="absolute inset-y-0 right-0 h-full w-2/3 object-cover opacity-35" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0B1D3A] via-[#0B1D3A]/90 to-[#0B1D3A]/20" aria-hidden />
           <div className="relative p-6 sm:p-8">
             <p className="text-xs font-black uppercase tracking-[0.25em]" style={{ color: GOLD }}>Activity</p>

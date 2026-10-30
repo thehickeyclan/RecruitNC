@@ -14,7 +14,7 @@ export type NavNewFeed = {
 }
 
 /** One release in the bell: "South Carolina Class of 2027 men's rankings published". */
-export type NavRelease = { id: string; kind: "rankings" | "report" | "news"; title: string; link: string; at: string; slug?: string }
+export type NavRelease = { id: string; kind: "rankings" | "report" | "news" | "commitment"; title: string; link: string; at: string; slug?: string }
 
 /** How far back the bell lists releases. */
 export const RELEASE_WINDOW_DAYS = 30
@@ -61,5 +61,7 @@ export function releaseIsRead(e: NavRelease, seen: NavSeen, readIds: readonly st
   const at = t(e.at)
   if (at <= t(seen.since)) return true
   if (e.kind === "report") return Boolean(e.slug && seen.reports.includes(e.slug))
+  // A commitment is read once it is opened from the bell (or marked read there).
+  if (e.kind === "commitment") return false
   return at <= t(e.kind === "rankings" ? seen.rankings : seen.news)
 }

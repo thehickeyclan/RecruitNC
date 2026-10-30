@@ -4,6 +4,7 @@ import { nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { rankingScopeLabel, sourceLabel } from "@/lib/national-rankings"
 import type { EventPlacer, FargoAllAmerican, NationallyRankedOpponent, StatePlacer } from "@/lib/significant-wins"
 import { readStatePlacerSnapshot } from "@/lib/state-placer-snapshot"
+import { nhscaDivision } from "@/lib/nhsca-division"
 
 /**
  * North Carolina state champions and placers (top 8, NCHSAA and NCISA), for recognising a win
@@ -240,7 +241,13 @@ async function loadEventPlacers(supabase: SupabaseClient, statePlacers: StatePla
     }
     // Not yet checked counts as a namesake, as for state placers.
     entry.ncNamesake ||= r.nc_namesake !== false
-    entry.finishes.push({ event: r.event_name, year: r.year, place: r.place, weight: Number.parseInt(String(r.weight ?? ""), 10) || null })
+    entry.finishes.push({
+      event: r.event_name,
+      year: r.year,
+      place: r.place,
+      weight: Number.parseInt(String(r.weight ?? ""), 10) || null,
+      division: nhscaDivision((r as { event_key?: unknown }).event_key, (r as { division?: unknown }).division),
+    })
     byKey.set(key, entry)
   }
   const entries = [...byKey.values()]

@@ -1,3 +1,4 @@
+import { liveStates } from "@/lib/recruiting/brand"
 import { NextResponse } from "next/server"
 import { adminGate } from "@/lib/admin-gate"
 import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
@@ -146,7 +147,8 @@ export async function GET(request: Request) {
         /** What this viewer may do here: reorder and save, or only read. Publishing is admin-only. */
         access: auth.access,
         // Only North Carolina has public boards; another state's order is saved, never published.
-        can_publish: auth.isAdmin && state === HOME_STATE,
+        // Every live state publishes; a state still being checked stays review-only.
+        can_publish: auth.isAdmin && (state === HOME_STATE || liveStates(true).some((s) => s.code === state)),
       },
     })
   } catch (error) {

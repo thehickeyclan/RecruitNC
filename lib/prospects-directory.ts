@@ -56,6 +56,11 @@ export type ProspectDirectoryRow = Record<string, unknown> & {
 export type ProspectDirectoryFilters = {
   /** Two-letter state; North Carolina when absent. */
   state?: string | null
+  /**
+   * North Carolina plus these states, in one list (RecruitWrestlers' "All states", Matt, 29 Oct
+   * 2026: "should show all kids 2027-2030"). Overrides `state`.
+   */
+  withStates?: string[] | null
   graduationYear?: string | null
   minYear?: number | null
   maxYear?: number | null
@@ -229,14 +234,20 @@ export async function fetchProspectDirectoryPage(
 
   // Another state's wrestlers by the one state rule (lib/recruiting/states.ts). North Carolina keeps
   // this directory's own rule below, so its list is what it always was.
-  const state = normalizeStateCode(filters.state) ?? HOME_STATE
-  if (state !== HOME_STATE) query = inState(query, state)
+  const others = (filters.withStates ?? []).map((c) => normalizeStateCode(c)).filter((c): c is string => Boolean(c) && c !== HOME_STATE)
+  const state = others.length ? HOME_STATE : (normalizeStateCode(filters.state) ?? HOME_STATE)
+  if (!others.length && state !== HOME_STATE) query = inState(query, state)
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
 
   const normalized = (data ?? []).map((row) => normalizeProspectDirectoryRow(row as Record<string, unknown>))
-  const inList = state === HOME_STATE ? normalized.filter(isNorthCarolinaProspect) : normalized
+  const where = (p: unknown) => p as { state?: string | null; location?: unknown }
+  const inList = others.length
+    ? normalized.filter((p) => isNorthCarolinaProspect(where(p)) || others.includes(normalizeStateCode(where(p).state) ?? ""))
+    : state === HOME_STATE
+      ? normalized.filter((p) => isNorthCarolinaProspect(where(p)))
+      : normalized
 
   return {
     prospects: inList,

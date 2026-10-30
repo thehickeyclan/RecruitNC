@@ -8,7 +8,8 @@ export type Story = {
   summary: string
   date: string
   readTime: string
-  image: string
+  /** The tile's picture; a story without one gets a lettered tile. */
+  image: string | null
   category: string
   state: string
   premium: boolean
@@ -19,6 +20,21 @@ export type Story = {
 // The NC recaps are published (NC United published them 26 Oct); SC waits for Matt.
 export const RW_STORIES: Story[] = [
   {
+    href: "/recaps/beyond-the-mat",
+    title: "Choosing a College for the Next 40 Years",
+    summary: "Every wrestler has a final match. How to leverage wrestling for a lifetime of opportunity: the people, the academics and future, the wrestling, and the money.",
+    date: "2026-10-28",
+    readTime: "10 min read",
+    // Matt's photo, 29 Oct 2026: a family walking a campus.
+    image: "/images/news/college-recruiting-5-questions.webp",
+    // The column name (Matt, 30 Oct 2026): a series about life after wrestling, not this headline.
+    category: "Beyond the Mat",
+    state: "All",
+    premium: false,
+    // Published by Matt, 30 Oct 2026.
+    published: true,
+  },
+  {
     href: "/recaps/super32-2026-sc",
     title: "Super 32 2026: South Carolina Boys Recap",
     summary: "Nine winning records, the most in three years, and Sy Strobel's win over the reigning NHSCA national champion. Every SC boy graded on who he beat.",
@@ -28,7 +44,8 @@ export const RW_STORIES: Story[] = [
     category: "Super 32",
     state: "SC",
     premium: true,
-    published: process.env.SUPER32_SC_RECAP_PUBLIC === "1",
+    // Published by Matt, 29 Oct 2026.
+    published: true,
   },
   {
     href: "/recaps/super32-2026-nc-boys",

@@ -14,7 +14,9 @@ import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } from "@/lib/public-rankings-cap"
 import { syncPublicRankingsTable } from "@/lib/rankings/publish-public-rankings"
 import { notifyRankingsPublished } from "@/lib/rankings-notification"
-import { athleteStateCode, HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
+import { athleteStateCode, HOME_STATE, inState, normalizeStateCode } from "@/lib/recruiting/states"
+import { liveStates } from "@/lib/recruiting/brand"
+import { writePublishedSnapshot } from "@/lib/rankings/ranking-snapshot"
 
 export const dynamic = "force-dynamic"
 
@@ -40,12 +42,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "A valid graduation year is required." }, { status: 400 })
   }
   /*
-   * Only North Carolina has public boards. Another state's order is saved for review and never
-   * published: publishing writes `athletes.prospect_ranking` and clears everyone else in the class,
-   * and the public pages and app have no South Carolina board to show it on.
+   * Every live state publishes (Matt, 29 October 2026). North Carolina into
+   * `athletes.prospect_ranking`, as it always has; any other state into `ranking_published` only,
+   * because that column is read as North Carolina's by profiles, the app and the home page.
    */
-  if (action === "publish" && state !== HOME_STATE) {
-    return NextResponse.json({ error: `${state} boards are saved for review only; there is no public ${state} board yet.` }, { status: 400 })
+  if (action === "publish" && state !== HOME_STATE && !liveStates(true).some((s) => s.code === state)) {
+    return NextResponse.json({ error: `${state} is not a live state, so its board is saved for review only.` }, { status: 400 })
   }
   /*
    * Saving a draft needs edit access to this board, which a scoped ranker can hold. Publishing
@@ -134,7 +136,7 @@ export async function POST(request: NextRequest) {
     .select("athlete_id, rank")
     .eq("class_year", year)
     .eq("gender", gender)
-    .eq("state", HOME_STATE)
+    .eq("state", state)
     .order("rank", { ascending: true })
   if (draftError) return NextResponse.json({ error: tableHint(draftError.message) }, { status: 500 })
   if (!draft?.length) {
@@ -142,6 +144,51 @@ export async function POST(request: NextRequest) {
   }
 
   const cap = getPublicRankingsMax(year, gender)
+  const publishedRows = draft
+    .filter((row) => Number(row.rank) <= cap)
+    .map((row) => ({ athlete_id: String(row.athlete_id), rank: Number(row.rank) }))
+
+  if (state !== HOME_STATE) {
+    // Another state: the snapshot is the whole publish. No athlete rows, no app sync, no push -
+    // the app and its alert carry North Carolina's boards only.
+    const snapshot = await writePublishedSnapshot({ admin, state, year, gender, rows: publishedRows, publishedAt: now })
+    if (!snapshot.ok) {
+      return NextResponse.json(
+        { error: /does not exist|schema cache/i.test(snapshot.error) ? "Run scripts/create-ranking-published.sql first." : snapshot.error },
+        { status: 500 },
+      )
+    }
+    await admin
+      .from("ranking_editions")
+      .upsert({ class_year: year, gender, state, published_at: now, published_by: userId }, { onConflict: "class_year,gender,state" })
+    revalidateTag("public-rankings")
+    revalidateTag("admin-ranking-board")
+    return NextResponse.json({
+      ok: true,
+      action,
+      published: publishedRows.length,
+      publishedAt: now,
+      push: { sent: 0, failed: 0, note: `no app alert for ${state} boards` },
+      released: true,
+    })
+  }
+
+  /*
+   * North Carolina's public order before this publish replaces it: the edition readers have seen,
+   * which the snapshot measures movement against until it holds an edition of its own.
+   */
+  const priorPublic = new Map<string, number>()
+  if (isPublicRankingsYearPublished(year, gender)) {
+    const { data: current } = await inState(
+      admin.from("athletes").select("id, prospect_ranking"),
+      HOME_STATE,
+    )
+      .eq("graduationyear", year)
+      .ilike("gender", gender)
+      .not("prospect_ranking", "is", null)
+      .lte("prospect_ranking", cap)
+    for (const row of current ?? []) priorPublic.set(String(row.id), Number(row.prospect_ranking))
+  }
   const results = await Promise.all(
     draft.map((row) =>
       admin
@@ -174,9 +221,11 @@ export async function POST(request: NextRequest) {
   const publishedIdList = draft
     .filter((row) => Number(row.rank) <= cap)
     .map((row) => String(row.athlete_id))
-  const { error: clearError } = await admin
-    .from("athletes")
-    .update({ prospect_ranking: null, updated_at: now })
+  // North Carolina's wrestlers only: no other state's athlete carries this column's ranks.
+  const { error: clearError } = await inState(
+    admin.from("athletes").update({ prospect_ranking: null, updated_at: now }),
+    HOME_STATE,
+  )
     .eq("graduationyear", year)
     .ilike("gender", gender)
     .not("prospect_ranking", "is", null)
@@ -188,6 +237,18 @@ export async function POST(request: NextRequest) {
   await admin
     .from("ranking_editions")
     .upsert({ class_year: year, gender, state: HOME_STATE, published_at: now, published_by: userId }, { onConflict: "class_year,gender,state" })
+
+  // Kept beside the athlete rows so the next publish can say who moved and who is new.
+  const snapshot = await writePublishedSnapshot({
+    admin,
+    state: HOME_STATE,
+    year,
+    gender,
+    rows: publishedRows,
+    publishedAt: now,
+    fallbackPrior: priorPublic.size ? priorPublic : null,
+  })
+  if (!snapshot.ok) console.error("[rankings-save] published snapshot failed", snapshot.error)
 
   // The public page caches its class rankings; a publish must show up.
   revalidateTag("public-rankings")

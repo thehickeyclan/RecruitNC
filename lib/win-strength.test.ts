@@ -86,6 +86,13 @@ describe("divisions", () => {
   })
 })
 
+describe("family-typed national lines", () => {
+  it("reads an NHSCA place and a count with no years", () => {
+    expect(winStrength("2026 NHSCA 3rd place finish", 2026)).toBe(winStrength("2026 NHSCA All-American (3rd, 160)", 2026))
+    expect(winStrength("2x NHSCA All-American", 2026)).toBeGreaterThan(50)
+  })
+})
+
 describe("dates", () => {
   it("reads every format the profile carries", () => {
     expect(winDate("2026-10-24")).toBe(Date.UTC(2026, 9, 24))

@@ -65,7 +65,8 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
     const kind: BillingKind = yearly ? ANNUAL[plan].kind : plan
     setMessage(null)
     if (!user) {
-      window.location.href = `/auth/signin?returnTo=${encodeURIComponent(returnTo)}`
+      // Most visitors have no account yet: make one, then come back to this plan.
+      window.location.href = `/auth/signup?returnTo=${encodeURIComponent(returnTo)}`
       return
     }
     setBusy(plan)
@@ -172,7 +173,7 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
               className={`mt-6 flex items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-base font-black disabled:opacity-60 ${plan.featured ? "bg-[#A3E635] text-[#0B1426] hover:bg-[#BEF264]" : "border border-[#A3E635] text-[#A3E635] hover:bg-[#A3E635]/10"}`}
             >
               {busy === plan.kind ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-              {has(plan.kind) ? "Included in your account" : user ? `Join ${plan.name === "Insider" ? "Insider" : "the Command Center"}` : "Sign in to join"}
+              {has(plan.kind) ? "Included in your account" : `Join ${plan.name === "Insider" ? "Insider" : "the Command Center"}`}
             </button>
           </div>
         ))}
