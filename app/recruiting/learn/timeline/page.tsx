@@ -7,6 +7,7 @@
  *
  * Part of NC United Blue, like the level pages. Locked, it still shows what each year is for.
  */
+import { LearnTabs } from "@/components/recruiting/learn/learn-tabs"
 import type { Metadata } from "next"
 import { PortalShell } from "@/components/portal/portal-shell"
 import { ArrowRight, BarChart3, FileText, Lock, ShieldAlert } from "lucide-react"
@@ -89,14 +90,6 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
   const done = adapted?.done ?? ticked
   const gold = "var(--recruit-accent)"
   const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
-  const tabs = [
-    { label: "Grade by grade", href: "/recruiting/learn/timeline" },
-    { label: "The rules", href: "/recruiting/learn/division-1" },
-    { label: "Exposure events", href: "/recruiting/learn/tournaments" },
-    { label: "College fit", href: "/recruiting/compare" },
-    { label: "Tools & templates", href: "/recruiting/learn/working-the-process" },
-    { label: "FAQs", href: "/recruiting/learn/questions-families-ask" },
-  ]
 
   return (
     <PortalShell active="learn">
@@ -122,17 +115,7 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
           </div>
         </section>
 
-        <nav aria-label="Roadmap sections" className="-mx-4 mt-4 flex items-center gap-4 overflow-x-auto border-b border-white/10 px-4 sm:mx-0 sm:px-0">
-          <ul className="flex flex-1 gap-6 whitespace-nowrap text-sm font-semibold">
-            {tabs.map((t, i) => (
-              <li key={t.label}>
-                <a href={t.href} className={`block border-b-2 py-3 ${i === 0 ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-white/65 hover:text-white"}`}>
-                  {t.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <LearnTabs className="mt-4" />
 
         {open ? (
           <>
