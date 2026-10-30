@@ -206,7 +206,7 @@ export default async function RecruitWrestlersHome() {
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A3E635]">Every college program</p>
               <h2 className="mt-2 text-3xl font-extrabold">One page per college, everything a family needs.</h2>
               <p className="mt-3 text-white/70">
-                Division, conference, team ranking and roster; what a year really costs and what families like yours paid after
+                Division, conference, team ranking and roster; what a year really costs and what families paid after
                 aid; the coaching staff; and whether the program&apos;s coaches are already on RecruitWrestlers.
               </p>
               <a href="/recruiting/college-map" className={`mt-5 ${OUTLINE} py-2`}>
@@ -272,7 +272,7 @@ export default async function RecruitWrestlersHome() {
                 className={`rounded-2xl border p-5 ${s.live ? "border-[#A3E635]/40 bg-white/[0.03] hover:border-[#A3E635]" : "border-white/10 bg-white/[0.02]"}`}
               >
                 <p className="text-2xl font-black tracking-tight">
-                  RECRUIT<span className="text-[#A3E635]">{s.code}</span>
+                  {s.code}
                 </p>
                 <p className="mt-1 text-sm text-white/65">{s.name}</p>
                 <p className={`mt-3 text-xs font-bold uppercase tracking-widest ${s.live ? "text-[#A3E635]" : "text-white/40"}`}>

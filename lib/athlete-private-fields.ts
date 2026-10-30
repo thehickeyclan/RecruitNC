@@ -138,5 +138,6 @@ export async function viewerIdMaySeeAthletePrivateInfo(
   if ((profile as { is_admin?: unknown }).is_admin === true) return true
 
   const viewer = classifyViewer(profile as Parameters<typeof classifyViewer>[0])
-  return viewer.kind === "admin" || viewer.verifiedCoach
+  // Verified college coaches only: the flag alone also sits on a few high-school coach accounts.
+  return viewer.kind === "admin" || (viewer.isCollegeCoach && viewer.verifiedCoach)
 }

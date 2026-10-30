@@ -1,5 +1,7 @@
 "use client"
 
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
+
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -20,6 +22,7 @@ const VIEWS = [
 ] as const
 
 export function CommitsHero({ icon: Icon, title, subtitle }: { icon: LucideIcon; title: string; subtitle: string }) {
+  const onRw = useOnRecruitWrestlers()
   const pathname = usePathname() ?? ""
   return (
     <section className="relative overflow-hidden border-b border-white/10">
@@ -44,7 +47,8 @@ export function CommitsHero({ icon: Icon, title, subtitle }: { icon: LucideIcon;
           Add a commitment
         </Link>
         <nav aria-label="Commitment views" className="-mx-4 mt-8 flex overflow-x-auto px-4">
-          {VIEWS.map((v) => {
+          {/* By high school is NC United's North Carolina directory; RecruitWrestlers has no such page. */}
+          {VIEWS.filter((v) => !(onRw && v.href === "/high-schools")).map((v) => {
             const active = pathname === v.href || pathname.startsWith(`${v.href}/`)
             return (
               <Link

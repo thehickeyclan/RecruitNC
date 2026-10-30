@@ -33,11 +33,11 @@ export default function RecruitWrestlersPrivacy() {
       </header>
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <h1 className="text-3xl font-black tracking-tight">Privacy Policy</h1>
-        <p className="mt-2 text-sm text-[#A8B3C5]">Last updated 22 October 2026</p>
+        <p className="mt-2 text-sm text-[#A8B3C5]">Last updated 30 October 2026</p>
         <div className="mt-6 space-y-3 text-[15px] leading-relaxed text-[#D6DEEA]">
           <p>
             RecruitWrestlers is a college wrestling recruiting service from Guild Ventures LLC. In North Carolina it is offered through NC United, whose families use it at
-            app.ncwrestlingunited.com. We collect as little as we can, we do not sell personal information, and we do not use advertising or tracking software.
+            app.ncwrestlingunited.com. We collect as little as we can, we do not sell personal information, and we do not use advertising. We count page visits with cookie-free analytics.
           </p>
 
           <h2 className={h2}>Accounts</h2>
@@ -49,7 +49,14 @@ export default function RecruitWrestlersPrivacy() {
           <h2 className={h2}>Wrestler profiles</h2>
           <p>
             Competition results come from public tournament records. Families may add a cell number, GPA, test scores and a highlight video. Contact details, GPA and test
-            scores are never public; approved college coaches can see them on a wrestler&apos;s profile and scouting report.
+            scores are never public; verified college coaches can see them on a wrestler&apos;s profile and scouting report.
+          </p>
+
+          <h2 className={h2}>College coach views and messages</h2>
+          <p>
+            When a college coach opens a wrestler&apos;s profile, the wrestler&apos;s family can see the college program and when it looked; the coach&apos;s own name is
+            never shown. Verified college coaches can send a wrestler a message. Every parent linked to the profile sees the whole conversation, and a family can turn off
+            messages from any coach.
           </p>
 
           <h2 className={h2}>Interest form answers</h2>
@@ -74,7 +81,7 @@ export default function RecruitWrestlersPrivacy() {
           </p>
 
           <h2 className={h2}>Minors</h2>
-          <p>Our wrestlers are high school students. A parent or guardian can ask us at any time to see, correct or delete their child&apos;s information.</p>
+          <p>Our wrestlers are middle school and high school students. A parent or guardian can ask us at any time to see, correct or delete their child&apos;s information.</p>
 
           <h2 className={h2}>Contact</h2>
           <p>
