@@ -78,7 +78,7 @@ const SHOTS = {
       const host = await p.evaluate(() => document.documentElement.getAttribute("data-host"))
       if ((brand === "rw") !== (host === "national")) { console.log(`REFUSED ${brand}/${shot}: wrong theme (${host})`); continue }
       // The product only: no dev badge or floating assistant, and on the component screens no site header.
-      await p.addStyleTag({ content: `nextjs-portal,[data-assistant-launcher]{display:none!important}${cfg.dev ? "header{display:none!important}" : ""}` })
+      await p.addStyleTag({ content: `nextjs-portal,[data-assistant-launcher]{display:none!important}${cfg.dev ? "header.sticky{display:none!important}" : ""}` })
       await p.waitForTimeout(600)
       const out = `${dir}/${shot}.jpg`
       if (cfg.clip) {
