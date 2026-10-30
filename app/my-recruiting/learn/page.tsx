@@ -14,6 +14,7 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
+  Calculator,
   CalendarDays,
   Compass,
   ChevronRight,
@@ -65,6 +66,7 @@ const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
   { icon: Scale, label: "Junior college (NJCAA)", href: "/recruiting/learn/njcaa" },
   { icon: GraduationCap, label: "The NCAA Eligibility Center", href: "/recruiting/learn/eligibility-center" },
   { icon: DollarSign, label: "Costs, scholarships and aid", href: "/recruiting/learn/paying-for-college" },
+  { icon: Calculator, label: "What will we actually owe?", href: "/recruiting/learn/what-will-we-owe" },
   { icon: Target, label: "What college coaches look at", href: "/recruiting/learn/what-coaches-look-for" },
   { icon: ListChecks, label: "Getting recruited", href: "/recruiting/learn/working-the-process" },
   { icon: Trophy, label: "Tournaments coaches watch", href: "/recruiting/learn/tournaments" },
@@ -87,6 +89,7 @@ const DO_NEXT: Array<{ icon: LucideIcon; label: string; text: string; href: stri
 /** Whole guides (Matt, 19 Oct 2026): the pages a family reads start to finish, beside the quick answers. */
 const GUIDES: Array<{ icon: LucideIcon; title: string; text: string; href: string }> = [
   { icon: Compass, title: "How to use the Command Center", text: "The five steps of the recruiting path, and how to use Scout.", href: "/recruiting/learn/how-to-use-command-center" },
+  { icon: Calculator, title: "What will we actually owe?", text: "The two prices, where the money comes from, and what to ask each coach.", href: "/recruiting/learn/what-will-we-owe" },
   { icon: Plane, title: "Get ready for your official visit", text: "The checklist, who pays, the limits by level and the questions to ask.", href: "/recruiting/learn/official-visits" },
   { icon: DollarSign, title: "NIL in wrestling", text: "What it is, what wrestlers really earn, and what's just rumour.", href: "/recruiting/learn/nil" },
   { icon: ArrowLeftRight, title: "The transfer portal", text: "How transfers change recruiting, and the rules at every level.", href: "/recruiting/learn/transfer-portal" },

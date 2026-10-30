@@ -34,8 +34,8 @@ import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { familyState } from "@/lib/recruiting/family-state"
 import { unreadCount } from "@/lib/coach-messages"
 import { interestSent } from "@/lib/college-programs/college-interest"
-import { loadReminders, loadVisits } from "@/lib/recruiting/visits-server"
-import { demoFixturesOn, demoReminders, demoVisits } from "@/lib/recruiting/demo-fixtures"
+import { loadOffers, loadReminders, loadVisits } from "@/lib/recruiting/visits-server"
+import { demoFixturesOn, demoOffers, demoReminders, demoVisits } from "@/lib/recruiting/demo-fixtures"
 
 
 const SCHOOLS = new Map([...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS].map((s) => [s.id, s]))
@@ -181,7 +181,7 @@ export async function loadCommandCenter(returnTo: string) {
   const familyViews = { programs: viewedSchools.size, total: totalViews }
 
   const ids2 = athletes.map((a) => a.id)
-  const [visits, reminders, interest, unread, ccVisits, rulesVisits] = await Promise.all([
+  const [visits, reminders, interest, unread, ccVisits, rulesVisits, offers] = await Promise.all([
     loadVisits(admin, ids2),
     loadReminders(admin, viewerId),
     interestSent(admin, ids2).catch(() => ({ available: false, sent: [] as Array<{ athleteId: string; schoolId: string }> })),
@@ -196,12 +196,15 @@ export async function loadCommandCenter(returnTo: string) {
       .eq("event_type", "page_view")
       .or("page_url.like./recruiting/learn%,page_url.like./my-recruiting/rules%,page_url.like./my-recruiting/learn%")
       .then((r) => r.count ?? 0, () => 0),
+    // What each college offered, as the family typed it (scripts/add-college-offers.sql).
+    loadOffers(admin, ids2),
   ])
 
   // A developer's machine before the tables exist: sample rows so the screens can be seen. Never in production.
   if (demoFixturesOn() && athletes[0]) {
     if (!visits.available) Object.assign(visits, { available: true, visits: demoVisits(athletes[0].id, schools.map((s) => s.id)) })
     if (!reminders.available) Object.assign(reminders, { available: true, reminders: demoReminders(athletes[0].id, schools) })
+    if (!offers.available || !offers.offers.length) Object.assign(offers, { available: true, offers: demoOffers(athletes[0].id, schools.map((s) => s.id)) })
   }
 
   return {
@@ -219,6 +222,7 @@ export async function loadCommandCenter(returnTo: string) {
     homeState,
     visits,
     reminders,
+    offers,
     interest,
     unread,
     firstVisit: ccVisits === 0,

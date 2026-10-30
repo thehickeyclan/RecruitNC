@@ -6,6 +6,7 @@ import "server-only"
  */
 import { easternToday } from "@/lib/college-programs/admissions-format"
 import { COLLEGE_LIST_STATUSES } from "@/lib/college-programs/list"
+import { fitForSchool } from "@/lib/college-programs/fit"
 import { allowedNow } from "@/lib/recruiting/allowed-now"
 import { journeySteps } from "@/lib/recruiting/journey"
 import { visitPhase } from "@/lib/recruiting/visits"
@@ -46,6 +47,8 @@ export function journeyFor(cc: CommandCenter, athleteId?: string) {
     unreadMessages: cc.unread,
     upcomingVisits: mine.filter((v) => visitPhase(v, today) === "upcoming").length,
     visitsToConfirm: mine.filter((v) => visitPhase(v, today) === "confirm").length,
+    offers: cc.offers.offers.filter((o) => o.athleteId === athlete.id).length,
+    priced: cc.schools.filter((s) => !s.noTeam && (s.tuition || fitForSchool(s.id)?.netPriceAverage != null)).length,
   })
   return { athlete, wrestler, steps, allowed, today }
 }

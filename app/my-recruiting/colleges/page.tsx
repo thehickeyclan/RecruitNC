@@ -18,6 +18,7 @@ import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, NO_ADMISSIONS } from "@/lib/college-programs/list"
 import { buildMapPreview } from "@/lib/college-programs/map-preview"
 import data from "@/lib/college-programs/programs-2026-27.json"
+import { fitForSchool, netPriceFor } from "@/lib/college-programs/fit"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
@@ -39,6 +40,8 @@ export const metadata = { title: "My College List | Recruiting Command Center" }
 const ALL_SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 const SCHOOLS = new Map(ALL_SCHOOLS.map((s) => [s.id, s]))
 const LEVELS: CollegeDivision[] = ["NCAA Division I", "NCAA Division II", "NCAA Division III", "NAIA", "NJCAA"]
+/** The year of the Department of Education's average net price (fit-federal.json, SFA2223). */
+const NET_PRICE_YEAR = "2022-23"
 const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
 
 const academicMark = (l: FitLine): FitMark =>
@@ -132,6 +135,10 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
     const program = school.programs.find((p) => !focus || p[focus.gender]) ?? school.programs[0]
     const fit = ctx?.first ? collegeFitFor(ctx, school, null) : null
     const cost = yearlyCostFor(s.id, school.state, homeState)
+    const which = school.state === homeState ? "in-state" : "out-of-state"
+    const federal = fitForSchool(s.id)
+    // The average after aid, before any athletic scholarship; income is never asked (Compare's "Average paid after aid").
+    const net = federal ? netPriceFor(federal, school.state, null, homeState) : null
     const v = views.get(s.id)
     return [
       {
@@ -143,7 +150,12 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
         place: s.place,
         logo: s.logo,
         status: s.status,
-        cost: cost ? { ...cost, which: school.state === homeState ? "in-state" : "out-of-state" } : null,
+        cost: cost ? { ...cost, which } : null,
+        money: {
+          published: cost ? { ...cost, which } : null,
+          afterAid: net?.amount != null ? { amount: net.amount, year: NET_PRICE_YEAR } : { amount: null, why: net?.note ?? "Not published." },
+          calculatorUrl: federal?.netPriceCalculatorUrl ?? null,
+        },
         academic: fit ? academicMark(fit.lines.academic) : { label: "—", tone: "none", why: "" },
         athletic: fit ? athleticMark(fit.lines.athletic) : { label: "—", tone: "none", why: "" },
         viewed: v ? { views: v.views, last: v.lastViewedAt } : null,
@@ -181,10 +193,17 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
         {header}
         <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_320px]">
           <div className="min-w-0">
-            <CollegeListTable rows={rows} readOnly={viewerId !== cc.authUserId} wrestlerId={wrestlers[0]?.id ?? null} wrestlerName={first?.firstName ?? null} />
+            <CollegeListTable
+              rows={rows}
+              readOnly={viewerId !== cc.authUserId}
+              wrestlerId={wrestlers[0]?.id ?? null}
+              wrestlerName={first?.firstName ?? null}
+              offers={cc.offers.offers.filter((o) => o.athleteId === wrestlers[0]?.id)}
+              offersAvailable={cc.offers.available}
+            />
             <p className="mt-3 text-xs text-white/40">
               Your status is yours to set. Coach activity is verified from <BrandName />: a program&apos;s coaches viewing the profile or writing to you. Published cost is the
-              college&apos;s full price before aid; what families paid after aid is in Compare.
+              college&apos;s full price before aid; after aid is what aided first-year students paid on average ({NET_PRICE_YEAR}), before any athletic scholarship.
             </p>
           </div>
 

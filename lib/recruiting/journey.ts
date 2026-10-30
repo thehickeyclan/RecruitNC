@@ -30,6 +30,17 @@ export type JourneyStep = {
   progress: { value: number; of: number } | null
   cta: { label: string; href: string }
   scout: { label: string; question: string }
+  /** Smaller items inside a step, each with its own status: step 3's "Know what you'll pay". */
+  items?: JourneyItem[]
+}
+
+export type JourneyItem = {
+  key: string
+  title: string
+  done: boolean
+  /** "2 offers compared", "8 of 10 schools priced". */
+  label: string
+  links: Array<{ label: string; href: string }>
 }
 
 export type JourneySchool = {
@@ -55,6 +66,10 @@ export type JourneyInput = {
   upcomingVisits: number
   /** Visits whose date has passed with no answer yet to "did it happen?". */
   visitsToConfirm: number
+  /** Offers the family has typed in (lib/recruiting/offers.ts). */
+  offers?: number
+  /** Schools on the list with a published cost or an average after aid to show. */
+  priced?: number
 }
 
 /** The list goal (Matt, 28 Oct 2026: My List toward 10, balanced across levels). */
@@ -83,6 +98,25 @@ export function fullyReached(s: JourneySchool): boolean {
 }
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
+
+/**
+ * "Know what you'll pay" (Matt, 30 Oct 2026), inside step 3: the money is part of the rules and
+ * timing. Done once an offer is entered; before that, how many schools on the list have a price.
+ */
+export function costItem(input: Pick<JourneyInput, "offers" | "priced" | "schools">): JourneyItem {
+  const offers = input.offers ?? 0
+  const count = input.schools.length
+  return {
+    key: "cost",
+    title: "Know what you'll pay",
+    done: offers > 0,
+    label: offers >= 2 ? `${offers} offers compared` : offers === 1 ? "1 offer entered" : count ? `${input.priced ?? 0} of ${count} schools priced` : "See the money guide",
+    links: [
+      { label: offers ? "Compare offers" : "Cost calculator", href: "/my-recruiting/colleges#cost" },
+      { label: "Money guide", href: "/recruiting/learn/what-will-we-owe" },
+    ],
+  }
+}
 
 export function journeySteps(input: JourneyInput): JourneyStep[] {
   const { firstName, schools } = input
@@ -136,6 +170,7 @@ export function journeySteps(input: JourneyInput): JourneyStep[] {
       progress: null,
       cta: { label: "See what's allowed now", href: "/my-recruiting/rules" },
       scout: { label: "When can coaches call?", question: `When can college coaches call ${firstName}?` },
+      items: [costItem(input)],
     },
     {
       n: 4,

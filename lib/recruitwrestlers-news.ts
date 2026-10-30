@@ -20,6 +20,19 @@ export type Story = {
 // The NC recaps are published (NC United published them 26 Oct); SC waits for Matt.
 export const RW_STORIES: Story[] = [
   {
+    href: "/recaps/what-will-we-owe",
+    title: "What Will We Actually Owe?",
+    summary: "The money side of college for parents starting from zero: the two prices, the four places money comes from, and the three questions to ask every coach in writing.",
+    date: "2026-10-30",
+    readTime: "6 min read",
+    image: null,
+    category: "Beyond the Mat",
+    state: "All",
+    premium: false,
+    // Draft (30 Oct 2026): staff-only until Matt publishes it. Also switches on its link from the first column.
+    published: false,
+  },
+  {
     href: "/recaps/beyond-the-mat",
     title: "Choosing a College for the Next 40 Years",
     summary: "Every wrestler has a final match. How to leverage wrestling for a lifetime of opportunity: the people, the academics and future, the wrestling, and the money.",
