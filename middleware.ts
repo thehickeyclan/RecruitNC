@@ -131,6 +131,7 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     }
     // RecruitWrestlers' own policy, not NC United's (app/recruitwrestlers/privacy).
     if (pathname === "/privacy") return NextResponse.rewrite(new URL("/recruitwrestlers/privacy", request.url))
+    if (pathname === "/terms") return NextResponse.rewrite(new URL("/recruitwrestlers/terms", request.url))
     if (pathname === "/contact") return NextResponse.rewrite(new URL("/recruitwrestlers/contact", request.url))
     if (pathname === "/about") return NextResponse.rewrite(new URL("/recruitwrestlers/about", request.url))
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {

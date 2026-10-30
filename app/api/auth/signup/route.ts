@@ -1,3 +1,4 @@
+import { checkConsent, type ConsentInput, type ConsentRecord } from "@/lib/legal/consent"
 import { blockedCoachMatch } from "@/lib/coach-blocklist"
 import { notifyStaffBlockedCoachSignup } from "@/lib/staff-alerts-sms"
 import { type NextRequest, NextResponse } from "next/server"
@@ -47,6 +48,19 @@ export async function POST(request: NextRequest) {
       [firstName, lastName].filter(Boolean).join(" ").trim() ||
       email?.split("@")[0] || // Fallback to email username if no name provided
       "User"
+
+    /*
+     * Consent (lib/legal/consent.ts): the website always sends it and must pass. An older client that
+     * sends none (the phone app's sign-up) is let through, recorded as consent: null, and logged.
+     */
+    let consent: ConsentRecord | null = null
+    if (body?.consent !== undefined) {
+      const agreed = checkConsent(body.consent as ConsentInput, profileType, "email")
+      if (!agreed.ok) return NextResponse.json({ error: agreed.error }, { status: 400 })
+      consent = agreed.record
+    } else {
+      console.warn("[signup] no consent sent; older client")
+    }
 
     if (!email || !password) {
       console.log("[v0] Validation failed:", { email: !!email, password: !!password })
@@ -112,6 +126,7 @@ export async function POST(request: NextRequest) {
           profile_type: profileType || undefined,
           // Which site the account began on: emails and alerts sent later carry that site's name.
           signup_brand: signupBrand,
+          consent,
         },
       },
     })

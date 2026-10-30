@@ -11,6 +11,8 @@ import { useSearchParams } from "next/navigation"
 import { AlertCircle, ChevronLeft, ChevronRight, Flag, GraduationCap, Heart, Shield, Trophy, Users } from "lucide-react"
 
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
+import { EMPTY_CONSENT, SignupConsent, type ConsentState } from "@/components/auth/signup-consent"
+import { cellNotice, checkConsent } from "@/lib/legal/consent"
 import { suggestEmailFix } from "@/lib/email-typo"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -140,6 +142,7 @@ function SignUpWizard() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [cellPhone, setCellPhone] = useState("")
+  const [consent, setConsent] = useState<ConsentState>(EMPTY_CONSENT)
   const [college, setCollege] = useState("")
   const [program, setProgram] = useState<CoachProgram | null>(null)
   const [website, setWebsite] = useState("")
@@ -187,6 +190,11 @@ function SignUpWizard() {
       setError(`Check your email address. Did you mean ${emailFix}?`)
       return
     }
+    const agreed = checkConsent(consent, profileType, isCollegeCoach ? "coach" : "email")
+    if (!agreed.ok) {
+      setError(agreed.error)
+      return
+    }
     setLoading(true)
     track("signup_submitted", returnTo, { role: profileType })
 
@@ -195,7 +203,7 @@ function SignUpWizard() {
         const res = await fetch("/api/auth/coach-signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ firstName, lastName, email, cellPhone, college, program, password, website }),
+          body: JSON.stringify({ firstName, lastName, email, cellPhone, college, program, password, website, consent }),
         })
         const data = await res.json().catch(() => ({}))
         if (!res.ok) throw new Error(typeof data?.error === "string" ? data.error : "Something went wrong. Please try again.")
@@ -234,6 +242,7 @@ function SignUpWizard() {
           profileType,
           returnTo: returnTo || undefined,
           website,
+          consent,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -415,6 +424,7 @@ function SignUpWizard() {
                     <div className="space-y-2">
                       <Label htmlFor="cellPhone">Cell</Label>
                       <Input id="cellPhone" type="tel" inputMode="tel" autoComplete="tel" value={cellPhone} onChange={(e) => setCellPhone(e.target.value)} required disabled={loading} />
+                      <p className="text-xs leading-5 text-muted-foreground">{cellNotice(isCollegeCoach ? "college-coach" : profileType)}</p>
                     </div>
                   ) : null}
 
@@ -434,6 +444,8 @@ function SignUpWizard() {
                     <label htmlFor="website">Website</label>
                     <input id="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
                   </div>
+
+                  <SignupConsent role={profileType} value={consent} onChange={setConsent} disabled={loading} />
 
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Creating your account…" : isCollegeCoach ? "Get access" : "Create account"}
@@ -455,6 +467,7 @@ function SignUpWizard() {
                     <span className="h-px flex-1 bg-border" />
                   </div>
                   <GoogleSignInButton returnTo={returnTo} profileType={profileType} label="Sign up with Google" />
+                  <p className="mt-2 text-center text-xs text-muted-foreground">With Google, you agree to the Terms and Privacy Policy on the next step.</p>
                 </div>
               </CardContent>
             </>
