@@ -11,7 +11,7 @@ import { liveStates, recruitingCoverage } from "@/lib/recruiting/brand"
 
 export const metadata = shareMetadata({
   title: "College Commitments",
-  description: "North Carolina wrestlers committed to college: DI, DII, DIII, NAIA and NJCAA.",
+  description: "Wrestlers committed to college: DI, DII, DIII, NAIA and NJCAA.",
   path: "/college-commitments",
   kicker: "RecruitNC",
 })

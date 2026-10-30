@@ -246,12 +246,18 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
               wrestler, and the rules that matter, with the source under each.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href="/plans" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+              {/* RecruitWrestlers sells the Command Center itself; /plans and the NC page are NC United's. */}
+              <a href="/plans" className="ncu-only rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
                 See plans
               </a>
+              <span className="national-only">
+                <a href="/command-center" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+                  Join the Command Center
+                </a>
+              </span>
               <a
                 href="/recruiting/learn/staying-eligible-in-north-carolina"
-                className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5"
+                className="ncu-only rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5"
               >
                 Read the free North Carolina page
               </a>
