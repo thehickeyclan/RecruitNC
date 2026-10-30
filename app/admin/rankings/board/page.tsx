@@ -513,6 +513,8 @@ export default function RankingBoardPage() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
+  // Publishing never alerts the phones; the push is its own button, like Announce commitment.
+  const [alerting, setAlerting] = useState(false)
   const [query, setQuery] = useState("")
   const [filter, setFilter] = useState<"all" | "review" | "gaps">("all")
   const [status, setStatus] = useState("")
@@ -687,6 +689,27 @@ export default function RankingBoardPage() {
     }
   }
 
+  const sendAlert = async () => {
+    if (!window.confirm(`Send the Class of ${year} rankings alert to every iPhone with rankings alerts on?`)) return
+    setAlerting(true)
+    setStatus("")
+    try {
+      const res = await fetch("/api/admin/rankings/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "notify", year, gender, state }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Could not send the alert.")
+      const sent = Number(data.push?.sent ?? 0)
+      setStatus(`iPhone alert sent to ${sent} device${sent === 1 ? "" : "s"}.`)
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not send the alert.")
+    } finally {
+      setAlerting(false)
+    }
+  }
+
   const publishDraft = async () => {
     if (!boardIsCurrent) return setStatus("Still loading this board — wait for it before publishing.")
     if (dirty) return setStatus("You have unsaved moves. Save first — Publish only ever publishes the saved order.")
@@ -707,7 +730,11 @@ export default function RankingBoardPage() {
         `Published the top ${data.published}.`,
         data.released === false ? "Staged: not public until this class is released." : "",
         app?.synced ? `App has the same ${app.rows}.` : app?.note ? `App not updated — ${app.note}` : "",
-        push?.sent ? `Push sent to ${push.sent} device${push.sent === 1 ? "" : "s"}.` : "No push sent.",
+        push?.sent
+          ? `Push sent to ${push.sent} device${push.sent === 1 ? "" : "s"}.`
+          : push?.note === "alert held"
+            ? "No push sent - press Send push when you're ready."
+            : "No push sent.",
       ]
       setStatus(parts.filter(Boolean).join(" "))
       await loadBoard(true)
@@ -880,6 +907,19 @@ export default function RankingBoardPage() {
               ) : (
                 boardIsCurrent && <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Read only</span>
               )}
+              {canPublish && state === "NC" && gender === "Male" ? (
+                <>
+                  {publishedAt ? (
+                    <button
+                      onClick={sendAlert}
+                      disabled={alerting || publishing || !boardIsCurrent}
+                      className="rounded-full border border-slate-600 px-4 py-1.5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-40"
+                    >
+                      {alerting ? "Sending…" : "Send push"}
+                    </button>
+                  ) : null}
+                </>
+              ) : null}
               {canPublish ? (
                 <button
                   onClick={publishDraft}
