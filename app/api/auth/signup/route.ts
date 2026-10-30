@@ -126,6 +126,8 @@ export async function POST(request: NextRequest) {
           profile_type: profileType || undefined,
           // Which site the account began on: emails and alerts sent later carry that site's name.
           signup_brand: signupBrand,
+          // The confirmation email drops the redirect, so the callback reads this instead.
+          signup_return_to: safeReturnTo,
           consent,
         },
       },

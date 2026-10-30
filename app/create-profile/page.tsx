@@ -25,6 +25,9 @@ export default function CreateProfilePage() {
   const [typedName, setTypedName] = useState("")
   const [matchedId, setMatchedId] = useState<string | null>(null)
 
+  // Just verified with no wrestler yet (?find=): the search opens already looking for that name.
+  const [findName] = useState(() => (typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("find")?.trim() ?? ""))
+
   // Back from making the account with the name already typed (?name=): straight to creating it.
   useEffect(() => {
     if (!user) return
@@ -60,6 +63,7 @@ export default function CreateProfilePage() {
       <div className="min-h-screen bg-[#0A1628] px-4 py-12">
         <ClaimExplainer />
         <FindExistingStep
+          initialName={findName}
           onClaim={(match: ExistingMatch) => {
             setMatchedId(match.id)
             setStep("reveal")
