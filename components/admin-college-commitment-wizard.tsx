@@ -105,6 +105,35 @@ export function AdminCollegeCommitmentWizard({
     setSkippedCollegeLogo(false)
   }, [collegeId])
 
+  /*
+   * A school with no logo on its own record usually has one in the logo library. Use it, and save
+   * it to the record, before asking anyone to upload: the upload box is where commitment graphics
+   * were saved as Mount Olive's, Pembroke's, Northern Michigan's and Rochester's logos (Matt, 30 Oct 2026).
+   */
+  useEffect(() => {
+    const college = collegeList.find((c) => c.id === collegeId)
+    if (!college || college.logo_url?.trim()) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch(`/api/logo-mappings/by-entity/college/${encodeURIComponent(college.name)}`)
+        const found = (await res.json().catch(() => null)) as { success?: boolean; logo_url?: string } | null
+        const url = found?.success ? found.logo_url?.trim() : ""
+        if (!url || cancelled) return
+        await fetch(`/api/admin/colleges/${encodeURIComponent(college.id)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ logo_url: url }),
+        }).catch(() => null)
+        if (!cancelled) setCollegeList((prev) => prev.map((c) => (c.id === college.id ? { ...c, logo_url: url } : c)))
+      } catch {}
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [collegeId, collegeList])
+
   useEffect(() => {
     if (!open) return
 
