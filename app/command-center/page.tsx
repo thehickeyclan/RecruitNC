@@ -52,9 +52,14 @@ function Shot({ src, alt, caption = "The real screen, with an example family." }
         <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
         <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} loading="lazy" className="block w-full" />
-      <figcaption className="px-4 py-2 text-[11px] text-white/45">{caption}</figcaption>
+      {/* A tap opens the full-size screen: on a phone the shrunken screenshot is too small to read. */}
+      <a href={src} target="_blank" rel="noopener" className="block cursor-zoom-in" aria-label={`${alt} (open full size)`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={alt} loading="lazy" className="block w-full" />
+      </a>
+      <figcaption className="px-4 py-2 text-xs text-white/50">
+        {caption} <span className="md:hidden">Tap to open full size.</span>
+      </figcaption>
     </figure>
   )
 }

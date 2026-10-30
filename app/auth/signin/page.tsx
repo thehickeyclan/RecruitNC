@@ -383,7 +383,7 @@ export default function SignInPage() {
             <CardHeader className="text-center">
               <CardTitle className="text-xl sm:text-2xl font-bold">Sign In</CardTitle>
               <CardDescription className="text-sm sm:text-base">
-                {returnTo ? `Sign in to continue to ${returnTo}.` : "Enter your credentials to access your account."}
+                {returnTo ? "Sign in to continue where you left off." : "Enter your credentials to access your account."}
               </CardDescription>
             </CardHeader>
             <CardContent className="relative z-10">

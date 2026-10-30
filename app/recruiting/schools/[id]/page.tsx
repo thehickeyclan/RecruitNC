@@ -12,6 +12,8 @@
  * verified coaches see the read-only parts too). A college coach never gets the family's shell.
  */
 import type { Metadata } from "next"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { shareMetadata } from "@/lib/share-metadata"
 import { notFound } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
@@ -158,6 +160,7 @@ function Stat({ value, label, sub }: { value: string; label: string; sub?: strin
 
 export default async function SchoolPage({ params, searchParams }: Params) {
   const { id } = await params
+  const onRwHost = stagedBrandForHost((await headers()).get("host")) === "national"
   const fallParam = Number((await searchParams)?.fall) || null
   const school = SCHOOLS.get(id)
   const niche = school ? nicheFor(school.id) : null
@@ -507,11 +510,11 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               </p>
               <ul className="mt-3 space-y-1.5 text-sm text-white/75">
                 <li>Coaching staff and emails</li>
-                <li>NC wrestlers on the roster</li>
+                <li>Wrestlers from your state on the roster</li>
                 <li>Fit for your wrestler</li>
                 <li>Save, track and email the coach</li>
               </ul>
-              <a href="/plans" className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
+              <a href={onRwHost ? "/command-center" : "/plans"} className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
                 See plans
               </a>
             </section>

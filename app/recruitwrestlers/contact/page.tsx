@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 const TOPICS: Array<{ title: string; body: string; href?: string; cta?: string }> = [
   { title: "Families", body: "Claiming a profile, fixing a result, Insider or the Recruiting Command Center.", href: "/membership", cta: "See the plans" },
   { title: "College coaches", body: "Free coach access, My Recruits, reports and messaging.", href: "/auth/signup?type=college-coach", cta: "Get free coach access" },
-  { title: "Partners", body: "License Insider or the Recruiting Command Center for your club, state or organization." },
-  { title: "A result or profile is wrong", body: "Tell us the wrestler, the event and what should change. Every result on the site is computed from brackets, so we check it against the source." },
+  { title: "Partners", body: "License Insider or the Recruiting Command Center for your club, state or organization.", href: "mailto:info@recruitwrestlers.com?subject=Partnership", cta: "Email us about a partnership" },
+  { title: "A result or profile is wrong", body: "Tell us the wrestler, the event and what should change. Every result on the site is computed from brackets, so we check it against the source.", href: "mailto:info@recruitwrestlers.com?subject=A%20result%20to%20correct", cta: "Email us the correction" },
 ]
 
 export default function RecruitWrestlersContact() {

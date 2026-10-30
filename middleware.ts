@@ -136,7 +136,8 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
       // Nothing on recruitwrestlers.com leads to NC United (Matt's NC United sweep, 27 Oct 2026):
       // its pages, asked for here, are RecruitWrestlers' "page not found".
-      return NextResponse.rewrite(new URL("/recruitwrestlers/not-found", request.url))
+      // A real 404, not a 200 that looks like one, now that search engines read the site.
+      return NextResponse.rewrite(new URL("/recruitwrestlers/not-found", request.url), { status: 404 })
     }
   }
 
