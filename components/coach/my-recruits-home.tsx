@@ -55,7 +55,8 @@ export function MyRecruitsHome({ data, viewingAs = null }: { data: CoachHomeData
       <CompetingNextPanel data={data} />
     </div>
   ) : null
-  if (!viewingAs) return <MyRecruitsBoard needsYou={needsYou} below={below} />
+  const identity = data ? { logo: data.programLogo, program: data.program, coachName: data.coachName } : null
+  if (!viewingAs) return <MyRecruitsBoard needsYou={needsYou} below={below} identity={identity} />
   return (
     <>
       <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-2 border-b border-[#A3E635]/40 bg-[#15243B] px-4 py-2 text-sm text-white">
@@ -66,7 +67,7 @@ export function MyRecruitsHome({ data, viewingAs = null }: { data: CoachHomeData
           Pick another coach
         </Link>
       </div>
-      <MyRecruitsBoard needsYou={needsYou} below={below} asUserId={viewingAs.userId} />
+      <MyRecruitsBoard needsYou={needsYou} below={below} asUserId={viewingAs.userId} identity={identity} />
     </>
   )
 }

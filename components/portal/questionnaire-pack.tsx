@@ -254,7 +254,8 @@ function Logo({ src }: { src: string | null }) {
 
 function FormRow({ form, readOnly, onMark }: { form: PackForm; readOnly: boolean; onMark: () => void }) {
   return (
-    <li className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+    // Each form has its own address, so a school's reach-out checklist opens on it (28 Oct 2026).
+    <li id={`form-${form.schoolId}`} className="flex scroll-mt-24 flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3 target:border-[var(--recruit-accent)] target:ring-2 target:ring-[var(--recruit-accent)]">
       <Logo src={form.logo} />
       <div className="min-w-0 flex-1 basis-48">
         <p className="line-clamp-2 font-bold leading-5">{form.name}</p>

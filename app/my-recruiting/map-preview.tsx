@@ -27,7 +27,7 @@ export function MapPreviewCard({ preview, who, team, savedCount }: { preview: Ma
           </span>
           <span className="mt-0.5 block text-sm leading-5 text-white/60">
             Every program by level, with its coaches, tuition and ranking.{" "}
-            {savedCount > 0 ? `Your ${savedCount} saved ${savedCount === 1 ? "college is" : "colleges are"} ringed in gold.` : "Tap a college to save it to your list."}
+            {savedCount > 0 ? `Your ${savedCount} saved ${savedCount === 1 ? "college is" : "colleges are"} ringed.` : "Tap a college to save it to your list."}
           </span>
         </span>
         <span className="mt-1 inline-flex shrink-0 items-center gap-1 rounded-lg bg-[#D3B574] px-3 py-2 text-sm font-bold text-[#0A1628] group-hover:bg-[#e2c98d]">
@@ -44,7 +44,8 @@ export function MapPreviewCard({ preview, who, team, savedCount }: { preview: Ma
           {preview.dots.map((d) =>
             d.saved ? (
               <g key={d.id}>
-                <circle cx={d.x} cy={d.y} r={8} fill="none" stroke="#F5D985" strokeWidth={2.5} />
+                {/* The brand accent: gold on NC United, lime on RecruitWrestlers (app/recruit-brand.css). */}
+                <circle cx={d.x} cy={d.y} r={8} fill="none" style={{ stroke: "var(--recruit-accent, #F5D985)" }} strokeWidth={2.5} />
                 <circle cx={d.x} cy={d.y} r={4} fill={d.color} stroke="#0a1528" strokeWidth={1} />
               </g>
             ) : (

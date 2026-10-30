@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest) {
   const { admin, userId } = await listOwner()
   if (!userId) return NextResponse.json({ error: "My List is part of NC United Blue." }, { status: 403 })
 
-  const body = (await request.json().catch(() => null)) as { schoolId?: unknown; status?: unknown; note?: unknown; questionnaireDone?: unknown; via?: unknown; admissions?: Record<string, unknown> } | null
+  const body = (await request.json().catch(() => null)) as { schoolId?: unknown; status?: unknown; note?: unknown; questionnaireDone?: unknown; emailed?: unknown; via?: unknown; admissions?: Record<string, unknown> } | null
   const schoolId = typeof body?.schoolId === "string" ? body.schoolId : ""
   if (!SCHOOL_IDS.has(schoolId)) return NextResponse.json({ error: "Unknown school." }, { status: 400 })
   if (body?.status !== undefined && !isCollegeListStatus(body.status)) {
@@ -83,6 +83,9 @@ export async function PUT(request: NextRequest) {
               questionnaire_done_via: body.questionnaireDone ? (body.via === "helper" ? "helper" : "family") : null,
             }
           : {}),
+        // The coach email: opened or copied from the composer, or ticked on the reach-out checklist
+        // (scripts/add-command-center-visits-reminders.sql). It goes out from the family's own mail app.
+        ...(typeof body?.emailed === "boolean" ? { coach_emailed_at: body.emailed ? new Date().toISOString() : null } : {}),
         // Each admissions field the request names; null clears it.
         ...(body?.admissions && typeof body.admissions === "object"
           ? Object.fromEntries(
@@ -110,6 +113,9 @@ export async function PUT(request: NextRequest) {
   // that column exists the save goes through without it.
   let { data: row, error } = await save(body?.status !== undefined ? { stage_changed_at: new Date().toISOString() } : {})
   if (error?.code === COLUMN_MISSING && body?.status !== undefined) ({ data: row, error } = await save({}))
+  if (error?.code === COLUMN_MISSING && typeof body?.emailed === "boolean") {
+    return NextResponse.json({ error: "This is being switched on. Try again shortly." }, { status: 503 })
+  }
   if (error || !row) {
     console.error("[college-list] save failed", error)
     return NextResponse.json({ error: "Could not save. Try again." }, { status: 500 })
