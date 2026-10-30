@@ -24,10 +24,10 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { BrandName } from "@/components/recruiting/brand-name"
 import { headers } from "next/headers"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
-import { productName } from "@/lib/recruiting/product-name"
+import { recruitingCoverage } from "@/lib/recruiting/brand"
 
 export const dynamic = "force-dynamic"
-const SHARE_TITLE = `Recruiting Command Center | ${productName()}`
+const SHARE_TITLE = "Recruiting Command Center"
 const SHARE_DESCRIPTION = "Meet Scout, your AI recruiting assistant. Plan every stage, compare colleges and hear from college coaches, on the same platform they use to recruit."
 // The link preview when the page is texted or posted: Scout, not the NC United logo (Matt, 17 Oct 2026).
 const SHARE_IMAGE = { url: "/images/command-center-share.jpg", width: 1200, height: 630, alt: "Recruiting Command Center: meet Scout, your AI recruiting assistant" }
@@ -433,7 +433,9 @@ export default async function CommandCenterSalesPage() {
           <h2 className={`text-center text-4xl ${tocDisplayClass()}`}>Questions</h2>
           <div className="mt-6 divide-y divide-white/10 rounded-2xl border border-white/10 bg-[#0b1a33]">
             {[
-              ["Is it only for North Carolina?", "The rankings and results are North Carolina's today, with more states coming. The college map, Compare, Learn and coach messages work for every family."],
+              onRw
+                ? ["Which states are covered?", `Rankings and results are live for ${recruitingCoverage(true)}, with more states opening one at a time. The college map, Compare, Learn, Scout and coach messages work for every family, in every state.`]
+                : ["Is it only for North Carolina?", "The rankings and results are North Carolina's. The college map, Compare, Learn and coach messages work for every family."],
               ["Does the Command Center support women's wrestling?", "Yes. Women's wrestling has its own colleges, rules and rankings, and the Command Center follows your wrestler: a daughter's map, colleges and rules are the women's ones."],
               ["Does it guarantee a scholarship or an offer?", "No. Nothing can. It helps you find the colleges that fit, know what to do next and see real coach activity, so your wrestler's opportunities aren't left to chance."],
               ["Who sees my information?", "Your plan, list and notes are yours alone, and a family's income is never saved. Academics and contact info are seen only by verified college coaches, never the public."],

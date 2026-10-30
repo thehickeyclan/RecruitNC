@@ -29,6 +29,11 @@ import { lastUpdatedLabel } from "@/lib/rankings/published-date"
 
 export const dynamic = "force-dynamic"
 
+export const metadata = {
+  title: "College Prospect Rankings",
+  description: "College wrestling prospect rankings by state and class, men's and women's: national results, quality wins and strength of competition.",
+}
+
 /** Where a locked board sends a visitor on RecruitWrestlers. */
 const INSIDER = "/membership#insider"
 const LOGIN = `/auth/signin?returnTo=${encodeURIComponent("/rankings")}`
