@@ -7,6 +7,7 @@ import { Camera, Eye, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { isHeic, preparePhoto } from "@/lib/images/prepare-photo"
 
 /**
  * The one form behind every door.
@@ -84,20 +85,21 @@ export function ProfileSetupForm({
   const pickPhoto = async (file: File | undefined) => {
     if (!file) return
     setPhotoError("")
-    if (!file.type.startsWith("image/")) return setPhotoError("That file is not a photo.")
-    if (file.size > 5 * 1024 * 1024) return setPhotoError("That photo is over 5MB. Pick a smaller one.")
+    if (!file.type.startsWith("image/") && !isHeic(file)) return setPhotoError("That file is not a photo.")
+    // Photos are shrunk in the browser before they go up (lib/images/prepare-photo.ts).
+    if (file.size > 25 * 1024 * 1024) return setPhotoError("That photo is over 25MB. Pick a smaller one.")
     setUploading(true)
     try {
       const form = new FormData()
-      form.append("file", file)
+      form.append("file", await preparePhoto(file))
       form.append("athleteId", athleteId)
       form.append("category", "profile")
       const res = await fetch("/api/athletes/upload-image", { method: "POST", body: form, credentials: "include" })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok || !data.url) throw new Error()
+      if (!res.ok || !data.url) throw new Error(data.error || "")
       setPhoto(data.url)
-    } catch {
-      setPhotoError("The photo did not upload. Please try again.")
+    } catch (err) {
+      setPhotoError(err instanceof Error && err.message ? err.message : "The photo did not upload. Please try again.")
     } finally {
       setUploading(false)
     }

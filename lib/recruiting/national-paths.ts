@@ -45,6 +45,14 @@ export const NATIONAL_PATH_PREFIXES = [
   "/coach-reports",
   // The coach product's own page: My Recruits, free for college coaches (Matt, 26 Oct 2026).
   "/for-coaches",
+  /*
+   * The steps right after a claim, and a profile's short link (signed-in phone review, 30 Oct
+   * 2026): a RecruitWrestlers family who claimed was sent to /profile-setup and got "page not
+   * found", and a shared /w/<name> link did the same.
+   */
+  "/profile-setup",
+  "/request-edit",
+  "/w",
 ] as const
 
 export function isNationalPath(pathname: string): boolean {

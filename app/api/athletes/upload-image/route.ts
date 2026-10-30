@@ -1,6 +1,8 @@
 import { put } from "@vercel/blob"
 import { revalidateTag } from "next/cache"
 import { type NextRequest, NextResponse } from "next/server"
+
+import { HEIC_MESSAGE, isHeic } from "@/lib/images/prepare-photo"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames } from "@/lib/athletes-schema"
@@ -25,6 +27,11 @@ export async function POST(request: NextRequest) {
     if (!file) {
       console.log("[v0] Error: No file provided")
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
+    }
+
+    // A HEIC photo shows only in Safari; the browser converts one before it gets here, so this is the backstop.
+    if (isHeic(file)) {
+      return NextResponse.json({ error: HEIC_MESSAGE }, { status: 415 })
     }
 
     if (!athleteId) {

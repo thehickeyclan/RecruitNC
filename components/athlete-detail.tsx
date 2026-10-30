@@ -77,6 +77,7 @@ import { BannerViewStats } from "./profile/banner-view-stats"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 import { stateName } from "@/lib/athlete-state"
+import { preparePhoto } from "@/lib/images/prepare-photo"
 
 /**
  * Bio/summary paragraph section.
@@ -521,7 +522,7 @@ export function AthleteDetail({
   // Handler for image upload
   const handleImageUpload = async (file: File): Promise<string> => {
     const formData = new FormData()
-    formData.append("file", file)
+    formData.append("file", await preparePhoto(file))
     formData.append("athleteId", athlete.id)
     formData.append("category", "profile")
 

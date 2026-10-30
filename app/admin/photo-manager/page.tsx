@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Upload, ExternalLink, Copy, Check } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { preparePhoto } from "@/lib/images/prepare-photo"
 
 export default function PhotoManagerPage() {
   const [athletes, setAthletes] = useState<any[]>([])
@@ -47,7 +48,7 @@ export default function PhotoManagerPage() {
     setUploading(true)
     try {
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append("file", await preparePhoto(file))
       formData.append("athleteId", athleteId)
       formData.append("category", "athlete")
 

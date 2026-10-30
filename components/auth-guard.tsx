@@ -43,6 +43,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const [redirecting, setRedirecting] = useState(false)
   const [sessionCheckComplete, setSessionCheckComplete] = useState(false)
   const [directSessionCheck, setDirectSessionCheck] = useState<boolean | null>(null)
+  const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
@@ -109,13 +110,25 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     // In this case, wait a bit more for the context to catch up
     const hasSession = user || directSessionCheck
 
-    if (!hasSession && !redirecting) {
+    if (!hasSession && !redirecting && !notFound) {
       // One more getSession before redirecting (avoids loop when session appears late)
       const doFinalRedirect = async () => {
         const supabase = createClient()
         try {
           const { data: { session } } = await supabase.auth.getSession()
           if (session) return
+        } catch (_) {}
+        /*
+         * A page that does not exist is "page not found", not "sign in": the guard only ever saw the
+         * address, so an old or mistyped link on NC United read as a login wall (mobile review,
+         * 30 Oct 2026). The server already answered 404 for it; ask once and show that page.
+         */
+        try {
+          const res = await fetch(window.location.pathname, { method: "HEAD", cache: "no-store" })
+          if (res.status === 404) {
+            setNotFound(true)
+            return
+          }
         } catch (_) {}
         if (!redirecting) {
           setRedirecting(true)
@@ -138,11 +151,11 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
       const redirectTimer = setTimeout(doFinalRedirect, 800)
       return () => clearTimeout(redirectTimer)
     }
-  }, [mounted, isLoading, sessionCheckComplete, directSessionCheck, user, requireAdmin, isAdmin, pathname, redirecting, profile])
+  }, [mounted, isLoading, sessionCheckComplete, directSessionCheck, user, requireAdmin, isAdmin, pathname, redirecting, profile, notFound])
 
   // Fast path: the auth context already has a signed-in user (and admin status when required).
   const confirmed = mounted && !isLoading && !!user && (!requireAdmin || isAdmin)
-  if (confirmed) return <>{children}</>
+  if (confirmed || notFound) return <>{children}</>
 
   if (!mounted || isLoading || !sessionCheckComplete) {
     return (
