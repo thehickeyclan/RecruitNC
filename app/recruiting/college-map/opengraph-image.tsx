@@ -117,10 +117,10 @@ export default async function Image() {
           }}
         />
         <div style={{ position: "absolute", top: 0, left: 0, width: 560, height: "100%", display: "flex", flexDirection: "column", padding: "52px 0 44px 60px" }}>
-          <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: 5, color: GOLD }}>{BRAND} · RECRUITING PORTAL</div>
+          <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: 5, color: GOLD }}>{`${BRAND} · RECRUITING PORTAL`}</div>
           <div style={{ display: "flex", flexDirection: "column", marginTop: 22, fontSize: 60, fontWeight: 800, lineHeight: 1, letterSpacing: -1.5 }}>
             <span style={{ color: "#FFFFFF" }}>COLLEGE PROGRAMS</span>
-            <span style={{ color: GOLD }}>ON {BRAND}</span>
+            <span style={{ color: GOLD }}>{`ON ${BRAND}`}</span>
           </div>
           <div style={{ marginTop: 18, width: 110, height: 6, background: GOLD }} />
           <div style={{ display: "flex", marginTop: 40, gap: 36 }}>
