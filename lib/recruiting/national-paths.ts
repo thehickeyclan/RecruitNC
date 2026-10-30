@@ -32,6 +32,7 @@ export const NATIONAL_PATH_PREFIXES = [
   "/profile",
   "/auth",
   "/privacy",
+  "/terms",
   "/unsubscribe",
   "/api",
   "/dev",
@@ -92,6 +93,8 @@ export function isOpenWhileStaged(pathname: string): boolean {
     // (Matt, 22 Oct 2026), and it carries no athlete data.
     pathname === "/privacy" ||
     pathname === "/recruitwrestlers/privacy" ||
+    pathname === "/terms" ||
+    pathname === "/recruitwrestlers/terms" ||
     pathname === "/guild-recruiting/coming-soon" ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/auth/") ||

@@ -136,6 +136,9 @@ export function Footer() {
           <p className="text-center text-xs text-gray-500">
             &copy; {new Date().getFullYear()} NC United Wrestling. All rights reserved.
           </p>
+          <p className="mt-2 text-center text-xs text-gray-500">
+            <a href="/privacy" className="hover:text-white">Privacy</a> · <a href="/terms" className="hover:text-white">Terms</a>
+          </p>
           <p className="mt-3 text-center">
             <PoweredByRw />
           </p>
