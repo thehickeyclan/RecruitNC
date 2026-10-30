@@ -7,6 +7,7 @@
  * account when ticked, so an id is never renamed or reused.
  */
 import type { Grade } from "@/lib/recruiting/learn/timeline"
+import { productName } from "@/lib/recruiting/product-name"
 
 export type RoadmapItem = { id: string; text: string; href?: string }
 export type RoadmapYear = { grade: Grade; title: string; outcome: string; items: RoadmapItem[] }
@@ -17,7 +18,7 @@ export const ROADMAP: RoadmapYear[] = [
     title: "Build the foundation",
     outcome: "Skills, habits and a verified profile.",
     items: [
-      { id: "g8-profile", text: "Claim the wrestler's RecruitNC profile", href: "/prospects/all" },
+      { id: "g8-profile", text: `Claim the wrestler's ${productName()} profile`, href: "/prospects/all" },
       { id: "g8-compete", text: "Wrestle good tournaments, and enjoy the sport", href: "/recruiting/learn/tournaments" },
       { id: "g8-core", text: "Ask the counselor which 9th grade classes are NCAA core courses", href: "/recruiting/learn/eligibility-center" },
       { id: "g8-ec", text: "Make a free Eligibility Center Profile Page", href: "/recruiting/learn/eligibility-center" },

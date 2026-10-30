@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { productName } from "@/lib/recruiting/product-name"
 
 /**
  * One way to claim a wrestler's profile, for the website and the app.
@@ -20,7 +21,7 @@ export const CLAIM_CONSENT_VERSION = "2026-10-01"
 export const CLAIM_CONSENT_TEXT: Record<"self" | "parent", string> = {
   self: "I confirm this profile is mine. I understand my results, school, weight class and graduation year are shown publicly, and that I can ask for it to be removed at any time.",
   parent:
-    "I confirm I am the parent or legal guardian of this athlete. I consent, on my child's behalf, to RecruitNC showing their wrestling results, school, weight class and graduation year on a public profile, and to managing that profile for them. I understand I can request removal at any time. Typing my name is my electronic signature.",
+    `I confirm I am the parent or legal guardian of this athlete. I consent, on my child's behalf, to ${productName()} showing their wrestling results, school, weight class and graduation year on a public profile, and to managing that profile for them. I understand I can request removal at any time. Typing my name is my electronic signature.`,
 }
 
 export type ClaimRelationship = "self" | "parent"

@@ -6,6 +6,7 @@ import { coachLabel, displayName, familyOf, firstName, messagingStaffIds, unread
 import { getAppBaseUrl } from "@/lib/news-share-formats"
 import { sendToTokens } from "@/lib/push-send"
 import { notifyStaffMessageReport, notifyStaffUnclaimedMessage } from "@/lib/staff-alerts-sms"
+import { onRecruitWrestlersProject, productName } from "@/lib/recruiting/product-name"
 
 /**
  * Telling people a message arrived. The phone alert is the point of the whole feature; email
@@ -81,7 +82,7 @@ async function sendEmail(to: string, subject: string, lines: { headline: string;
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
 <div style="background:#f8fafc;border-radius:12px;padding:28px;border:1px solid #e2e8f0;">
-<p style="color:#9a7b2f;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0;">NC United · RecruitNC</p>
+<p style="color:#9a7b2f;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0;">${onRecruitWrestlersProject() ? "RecruitWrestlers" : "NC United · RecruitNC"}</p>
 <h1 style="color:#0A1628;font-size:22px;margin:8px 0 12px;">${escapeHtml(lines.headline)}</h1>
 <p>${escapeHtml(lines.detail)}</p>
 <p style="margin:24px 0;"><a href="${escapeHtml(lines.url)}" style="display:inline-block;background:#0A1628;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600;">${escapeHtml(lines.cta)}</a></p>
@@ -212,10 +213,10 @@ export async function notifyWaitingMessagesOnClaim(admin: SupabaseClient, input:
     for (const t of threads) {
       const url = `${getAppBaseUrl()}/inbox/${t.id}`
       const staff = await messagingStaffIds(admin, String(t.coach_user_id)).catch(() => [String(t.coach_user_id)])
-      await pushTo(admin, staff, { title: "Family joined", body: `${wrestler}'s family joined RecruitNC and can now read your message.`, threadId: t.id })
+      await pushTo(admin, staff, { title: "Family joined", body: `${wrestler}'s family joined ${productName()} and can now read your message.`, threadId: t.id })
       for (const r of await emailsFor(admin, staff)) {
         await sendEmail(r.email, `${athlete?.name ?? wrestler}'s family can now read your message`, {
-          headline: `${athlete?.name ?? wrestler}'s family joined RecruitNC`,
+          headline: `${athlete?.name ?? wrestler}'s family joined ${productName()}`,
           detail: `They claimed the profile, so the message you sent is in front of them now. Replies come to your inbox.`,
           url,
           cta: "Open the conversation",

@@ -28,6 +28,7 @@ import {
 import { searchWebForWrestler, type WebWrestlerFindings } from "@/lib/data-dawg-web-search"
 import { buildCareerSummary } from "./tournament-bouts"
 import { namesLikelySamePerson } from "@/lib/athlete-name-match"
+import { productName } from "@/lib/recruiting/product-name"
 
 export { isLikelyAthleteNameLookup } from "./athlete-name-fast-path-detect"
 
@@ -137,7 +138,7 @@ export async function tryAthleteNameFastPath(
           profile_url: null,
           not_in_our_data: true,
           writing_notes: [
-            "This wrestler is NOT in RecruitNC data. Everything below came from a public web search and is shown with its sources; it is not ours and is not used in rankings or scouting reports.",
+            `This wrestler is NOT in ${productName()} data. Everything below came from a public web search and is shown with its sources; it is not ours and is not used in rankings or scouting reports.`,
             "Write the name as plain text — no profile link, and never invent one.",
             "Report only what the summary states. Do not add a placement, a record or a school the search did not give you, and do not present any of it as our data.",
           ],
@@ -235,8 +236,8 @@ export async function tryAthleteNameFastPath(
         profile_url: null,
         wrestles_for: state,
         writing_notes: [
-          `${bouts.wrestler} has no RecruitNC profile. Write the name as plain text — do NOT link it, and never invent a profile URL.`,
-          "Say plainly that this wrestler has no RecruitNC profile and that the record is matched on name and team from imported brackets.",
+          `${bouts.wrestler} has no ${productName()} profile. Write the name as plain text — do NOT link it, and never invent a profile URL.`,
+          `Say plainly that this wrestler has no ${productName()} profile and that the record is matched on name and team from imported brackets.`,
           state
             ? `He wrestles for ${state}. "Did he place at states" means ${state}'s state tournament, NOT the NCHSAA — never answer about North Carolina's tournament for a wrestler from another state.`
             : "No state on file for this wrestler; do not guess which state tournament applies.",
@@ -275,7 +276,7 @@ export async function tryAthleteNameFastPath(
     facts: {
       profile_url: null,
       writing_notes: [
-        "This wrestler has no RecruitNC profile page. Write the name as plain text — do NOT make it a link, and never invent a profile URL.",
+        `This wrestler has no ${productName()} profile page. Write the name as plain text — do NOT make it a link, and never invent a profile URL.`,
         "These are historical tournament rows, not a directory profile. We may hold nothing beyond what is here; do not read an empty section as proof they never competed.",
       ],
       results: cross,

@@ -14,6 +14,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
+import { productName } from "@/lib/recruiting/product-name"
 import { stateChampionshipName } from "@/lib/athlete-state"
 import { athleteStateCode } from "@/lib/recruiting/states"
 
@@ -162,7 +163,7 @@ export async function buildProfileReveal(
     club: String(athlete.wrestlingClub ?? "").trim() || null,
     graduationYear,
     prospectRanking: published ? rawRank : null,
-    prospectRankingLabel: published && rawRank != null ? rankingLabel(rawRank, athlete.gender) : null,
+    prospectRankingLabel: published && rawRank != null ? rankingLabel(rawRank, athlete.gender, productName()) : null,
     credentials: credentials.slice(0, 6),
     hasRecord: credentials.length > 0 || published,
   }

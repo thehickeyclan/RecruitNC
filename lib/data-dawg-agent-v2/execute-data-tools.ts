@@ -72,6 +72,7 @@ import {
   PUBLISHED_PUBLIC_RANKINGS_YEARS,
 } from "@/lib/public-rankings-cap"
 import { aliasNamesFor, resolveWrestlerIdentity } from "@/lib/wrestler-identity"
+import { productName } from "@/lib/recruiting/product-name"
 
 /**
  * Data Dawg does not hand out rankings.
@@ -95,7 +96,7 @@ export async function toolPublicRankingsSearch(_args: {
 }) {
   return {
     error:
-      "RecruitNC rankings aren’t available through Data Dawg. Sign in, or sign up for Insider on the Rankings page.",
+      `${productName()} rankings aren’t available through Data Dawg. Sign in, or sign up for Insider on the Rankings page.`,
     rankings: [] as unknown[],
     where_to_look: `${RECRUITNC_APP_URL}/rankings`,
   }
@@ -461,7 +462,7 @@ export async function toolSearchAthletes(args: {
   if (out.length === 0 && queryErrors.length > 0) {
     return {
       error:
-        "Athlete directory lookup failed (database). Try again in a minute or search on RecruitNC. If this persists, contact support.",
+        `Athlete directory lookup failed (database). Try again in a minute or search on ${productName()}. If this persists, contact support.`,
       rows: out,
       searched_for: q,
     }
@@ -2430,7 +2431,7 @@ export async function toolTournamentBoutsSearch(args: {
       // Record and finish per event, so the answer can lead with them instead of a list of bouts.
       events: summarizeBoutsByEvent(theirBouts),
       coverage:
-        `${unprofiled.name} has no profile on RecruitNC — these bouts are from imported brackets, ` +
+        `${unprofiled.name} has no profile on ${productName()} — these bouts are from imported brackets, ` +
         `matched on name and team, and are every one we hold (${wins}-${theirBouts.length - wins}). ` +
         `There may be results at events we have not imported.`,
       bouts: only.map((b) => ({ ...b, narrative: describeBout(b, unprofiled.name) })),

@@ -1,3 +1,4 @@
+import { productName } from "@/lib/recruiting/product-name"
 /**
  * OpenAI Chat Completions `tools` payload (function definitions only).
  */
@@ -30,7 +31,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "search_athletes",
       description:
-        "Find athletes in RecruitNC by name or high school (includes alumni / any graduation year — not limited to recent classes). Handles natural phrasing ('tell me about…', 'who is…') and minor misspellings server-side. Each returned row includes `tournament_summary` (merged NHSCA + Super32 + Fargo from placement tables) — prefer that over `nhsca_results` / `super32_results` JSON on the row when they differ.",
+        `Find athletes in ${productName()} by name or high school (includes alumni / any graduation year — not limited to recent classes). Handles natural phrasing ('tell me about…', 'who is…') and minor misspellings server-side. Each returned row includes \`tournament_summary\` (merged NHSCA + Super32 + Fargo from placement tables) — prefer that over \`nhsca_results\` / \`super32_results\` JSON on the row when they differ.`,
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -312,7 +313,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
         properties: {
           graduation_year: {
             type: "integer",
-            description: "RecruitNC class year, e.g. 2027.",
+            description: `${productName()} class year, e.g. 2027.`,
           },
           times: {
             type: "integer",
@@ -485,7 +486,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "public_rankings_search",
       description:
-        "Access-routing tool for RecruitNC rankings questions. It never returns rankings, names, positions, or availability. Always call it for any rankings request so the user is directed to /rankings to sign in or subscribe.",
+        `Access-routing tool for ${productName()} rankings questions. It never returns rankings, names, positions, or availability. Always call it for any rankings request so the user is directed to /rankings to sign in or subscribe.`,
       parameters: {
         type: "object",
         additionalProperties: false,

@@ -8,6 +8,7 @@
  */
 
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } from "@/lib/public-rankings-cap"
+import { productName } from "@/lib/recruiting/product-name"
 
 export type AthleteRow = Record<string, any>
 
@@ -36,7 +37,7 @@ const asText = (value: unknown) => String(value ?? "").trim()
 
 function athleteName(row: AthleteRow): string {
   const composed = [row.firstName, row.lastName].filter(Boolean).join(" ").trim()
-  return asText(row.name) || asText(row.wrestling_name) || composed || "RecruitNC athlete"
+  return asText(row.name) || asText(row.wrestling_name) || composed || `${productName()} athlete`
 }
 
 

@@ -1,3 +1,4 @@
+import { productName } from "@/lib/recruiting/product-name"
 /**
  * The public web, as a last resort and never as a record.
  *
@@ -138,7 +139,7 @@ export function frameWebAnswer(answer: string, sources: string[]): string {
   const body = String(answer ?? "").trim()
   const list = sources.map((u) => `- ${u}`).join("\n")
   return [
-    "**Not in RecruitNC data — from the public web.** We hold no imported results for this wrestler, so the following is not ours and is not used in rankings or scouting reports.",
+    `**Not in ${productName()} data — from the public web.** We hold no imported results for this wrestler, so the following is not ours and is not used in rankings or scouting reports.`,
     "",
     body,
     sources.length ? `\n**Sources**\n${list}` : "",
@@ -170,7 +171,7 @@ export function appendWebBackground(answer: string, web: WebWrestlerFindings | n
     body,
     "",
     "---",
-    "**From the public web — not verified by RecruitNC.** Background we do not hold, such as school, class and honors. The results above are from brackets we imported; where the two differ, trust those.",
+    `**From the public web — not verified by ${productName()}.** Background we do not hold, such as school, class and honors. The results above are from brackets we imported; where the two differ, trust those.`,
     "",
     summary,
     "",

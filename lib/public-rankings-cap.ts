@@ -150,7 +150,11 @@ export function isPublicRank(rank: unknown, year: unknown, gender: unknown): boo
   return isPublicRankingsYearPublished(y, gender) && n <= getPublicRankingsMax(y, gender)
 }
 
-/** "RecruitNC #4" for the men's board, "RecruitNC Women's #4" for the women's. */
+/**
+ * "RecruitNC #4" for the men's board, "RecruitNC Women's #4" for the women's. The default prefix is
+ * NC United's: server callers pass productName(), browser callers pass the name for their address
+ * (useOnRecruitWrestlers), so the server and browser render the same label.
+ */
 export function rankingLabel(rank: number | string, gender: unknown, prefix = "RecruitNC"): string {
   const board = isWomensBoard(gender) ? "Women's " : ""
   return `${prefix ? `${prefix} ` : ""}${board}#${rank}`

@@ -12,6 +12,7 @@ import { FOUR_TIME_STATE_CHAMPIONS, FOUR_TIME_STATE_CHAMPIONS_COUNT } from "@/li
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
+import { productName } from "@/lib/recruiting/product-name"
 
 export { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-career-status"
 
@@ -220,7 +221,7 @@ export function buildAnalystLeadParagraph(
     honorBits.push(fargoAa === 1 ? "Fargo All-American" : `${fargoAa}× Fargo All-American`)
   }
   if (isOfficialPublishedProspectRank(rank, gy) && gy != null) {
-    honorBits.push(`RecruitNC's No. ${rank} prospect in the Class of ${Math.floor(gy)}`)
+    honorBits.push(`${productName()}'s No. ${rank} prospect in the Class of ${Math.floor(gy)}`)
   }
 
   const careerWhere = hs ? ` his ${hs} career` : " his high school career"
@@ -244,7 +245,7 @@ export function buildAnalystLeadParagraph(
       gy != null ? ` (Class of ${Math.floor(gy)})` : ""
     }.`
   } else {
-    open = `Here's the verified RecruitNC profile for ${name}.`
+    open = `Here's the verified ${productName()} profile for ${name}.`
   }
 
   let second = ""
@@ -451,7 +452,7 @@ export function buildHistoricalContextNarrative(stats: AnalystProfileStats): str
   } else if (titles.length === 1) {
     sentences.push(`${name} claimed an NCHSAA state title${hs ? ` for ${hs}` : ""}.`)
   } else {
-    sentences.push(`${name} compiled a verified RecruitNC career profile${hs ? ` at ${hs}` : ""}.`)
+    sentences.push(`${name} compiled a verified ${productName()} career profile${hs ? ` at ${hs}` : ""}.`)
   }
 
   // Prefer one analytical addition beyond titles — avoid re-listing snapshot honors.
@@ -663,13 +664,13 @@ export function buildVerifiedSourcesFooter(stats: AnalystProfileStats): string {
   if ((stats.fargoAllAmericanCount ?? 0) > 0) sources.add("Fargo")
   if ((stats.ncUnitedEvents ?? []).length || stats.ncUnitedBlue) sources.add("NC United")
   if (stats.prospectRanking != null || stats.careerWinsRank != null || hasCareerRecord(stats.careerWins, stats.careerLosses)) {
-    sources.add("RecruitNC")
+    sources.add(productName())
   }
   if ((stats.daveSchultzYears ?? []).length) sources.add("Dave Schultz Award")
   if ((stats.triciaSaundersYears ?? []).length) sources.add("Tricia Saunders Award")
-  if (!sources.size) sources.add("RecruitNC")
+  if (!sources.size) sources.add(productName())
 
-  const ordered = ["NCHSAA", "NHSCA", "Super32", "Fargo", "NC United", "RecruitNC", "Dave Schultz Award", "Tricia Saunders Award"].filter(
+  const ordered = ["NCHSAA", "NHSCA", "Super32", "Fargo", "NC United", productName(), "Dave Schultz Award", "Tricia Saunders Award"].filter(
     (s) => sources.has(s),
   )
   for (const s of sources) {
@@ -701,7 +702,7 @@ export function buildHistoricalRankingsMarkdown(stats: AnalystProfileStats): str
     stats.graduationYear != null
   ) {
     rows.push(
-      `Class of ${Math.floor(stats.graduationYear)}\nRecruitNC #${stats.prospectRanking}`,
+      `Class of ${Math.floor(stats.graduationYear)}\n${productName()} #${stats.prospectRanking}`,
     )
   }
   const ft = fourTimeOrdinal(stats.displayName)
