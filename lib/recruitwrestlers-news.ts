@@ -31,8 +31,8 @@ export const RW_STORIES: Story[] = [
     category: "Beyond the Mat",
     state: "All",
     premium: false,
-    // Matt publishes it: staff only until this is true.
-    published: false,
+    // Published by Matt, 30 Oct 2026.
+    published: true,
   },
   {
     href: "/recaps/super32-2026-sc",
