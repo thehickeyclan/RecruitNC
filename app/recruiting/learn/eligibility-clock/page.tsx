@@ -8,6 +8,7 @@ import type { Metadata } from "next"
 import { ExternalLink, ShieldCheck } from "lucide-react"
 
 import { PortalShell } from "@/components/portal/portal-shell"
+import { LearnTabs } from "@/components/recruiting/learn/learn-tabs"
 import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
@@ -51,6 +52,8 @@ export default async function EligibilityClockPage() {
 
   return (
     <PortalShell active="learn">
+      {/* The same Learn tabs as every Learn page. */}
+      <div className="mx-auto mb-5 max-w-7xl text-white"><LearnTabs /></div>
       <div className="mx-auto max-w-6xl text-white">
         <p className="text-xs font-black uppercase tracking-[0.25em]" style={{ color: GOLD }}>
           <a href="/my-recruiting/learn" className="hover:underline">Learn</a> › Eligibility clock

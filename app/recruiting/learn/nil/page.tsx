@@ -8,6 +8,7 @@ import type { Metadata } from "next"
 import { ArrowRight, Building2, CheckCircle2, ChevronDown, ExternalLink, Handshake, ShieldAlert, Trophy, X } from "lucide-react"
 
 import { PortalShell } from "@/components/portal/portal-shell"
+import { LearnTabs } from "@/components/recruiting/learn/learn-tabs"
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import {
   ASK_A_COLLEGE,
@@ -76,6 +77,8 @@ export default function NilGuidePage() {
   const penn = PROGRAM_EXAMPLES[0]
   return (
     <PortalShell active="learn">
+      {/* The same Learn tabs as every Learn page. */}
+      <div className="mx-auto mb-5 max-w-7xl text-white"><LearnTabs /></div>
       <div className="mx-auto max-w-6xl text-white">
         <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1D3A]">
           {/* eslint-disable-next-line @next/next/no-img-element */}

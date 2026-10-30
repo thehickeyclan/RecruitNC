@@ -7,6 +7,7 @@ import type { Metadata } from "next"
 import { ArrowRight, CheckCircle2, ChevronDown, ExternalLink, Scale, ShieldAlert } from "lucide-react"
 
 import { PortalShell } from "@/components/portal/portal-shell"
+import { LearnTabs } from "@/components/recruiting/learn/learn-tabs"
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { JucoPaths, RoomBeforeAfter, TransferCalendar, TransferMove } from "@/components/recruiting/learn/transfer-graphics"
 import {
@@ -75,6 +76,8 @@ function More({ title, children }: { title: string; children: React.ReactNode })
 export default function TransferPortalPage() {
   return (
     <PortalShell active="learn">
+      {/* The same Learn tabs as every Learn page. */}
+      <div className="mx-auto mb-5 max-w-7xl text-white"><LearnTabs /></div>
       <div className="mx-auto max-w-6xl text-white">
         <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1D3A]">
           {/* eslint-disable-next-line @next/next/no-img-element */}

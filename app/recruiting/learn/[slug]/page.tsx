@@ -11,6 +11,7 @@ import { D1Contact } from "@/components/recruiting/learn/d1-contact"
 import { LearnSectionCard } from "@/components/recruiting/learn/learn-section"
 import { mostRecentGraduatedClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
+import { LearnFrame } from "@/components/recruiting/learn/learn-frame"
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { CHECKED, MENS_AND_WOMENS, d1TrackFor, learnPage, type D1Track } from "@/lib/recruiting/learn/content"
 import { MensAndWomens } from "@/components/recruiting/learn/mens-and-womens"
@@ -28,7 +29,7 @@ type Params = { params: Promise<{ slug: string }> }
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const page = learnPage((await params).slug)
   if (!page) return { title: `Recruiting rules | ${productName()}` }
-  return { title: `${page.title}: wrestling recruiting rules | RecruitNC`, description: page.summary }
+  return { title: `${page.title}: wrestling recruiting rules | ${productName()}`, description: page.summary }
 }
 
 const checkedLabel = new Date(`${CHECKED}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
@@ -69,10 +70,9 @@ export default async function LearnPage({ params }: Params) {
   }
 
   return (
-    <main className="min-h-screen bg-[#0A1628] px-4 py-8 text-white sm:px-6">
-      <div className="mx-auto max-w-3xl">
-        <a href="/recruiting/learn" className="text-xs font-semibold text-white/55 hover:text-white">
-          ← The rules, level by level
+    <LearnFrame signedIn={Boolean(userId)}>
+        <a href={userId ? "/my-recruiting/learn" : "/recruiting/learn"} className="text-xs font-semibold text-white/55 hover:text-white">
+          ← {userId ? "Learn" : "The rules, level by level"}
         </a>
         <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">{page.title}</h1>
         <p className="mt-2 text-sm leading-6 text-white/65">{page.summary}</p>
@@ -99,12 +99,18 @@ export default async function LearnPage({ params }: Params) {
               ))}
             </ul>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href="/plans" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+              {/* RecruitWrestlers sells the Command Center itself; /plans and the NC page are NC United's. */}
+              <a href="/plans" className="ncu-only rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
                 See plans
               </a>
+              <span className="national-only">
+                <a href="/command-center" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+                  Join the Command Center
+                </a>
+              </span>
               <a
                 href="/recruiting/learn/staying-eligible-in-north-carolina"
-                className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5"
+                className="ncu-only rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5"
               >
                 Read the free North Carolina page
               </a>
@@ -113,7 +119,6 @@ export default async function LearnPage({ params }: Params) {
         )}
 
         <LearnDisclaimer checkedLabel={checkedLabel} />
-      </div>
-    </main>
+    </LearnFrame>
   )
 }

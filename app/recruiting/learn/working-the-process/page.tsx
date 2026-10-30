@@ -6,6 +6,7 @@ import type { Metadata } from "next"
 import { MessageCircleQuestion } from "lucide-react"
 
 import { PortalShell } from "@/components/portal/portal-shell"
+import { LearnTabs } from "@/components/recruiting/learn/learn-tabs"
 import { sectionId } from "@/lib/recruiting/learn/content"
 import { COACH_QUESTIONS, QUESTIONS_ID, WORKING_STEPS } from "@/lib/recruiting/learn/working"
 import { productName } from "@/lib/recruiting/product-name"
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
 export default function WorkingTheProcessPage() {
   return (
     <PortalShell active="learn">
+      {/* The same Learn tabs as every Learn page. */}
+      <div className="mx-auto mb-5 max-w-7xl text-white"><LearnTabs /></div>
       <div className="max-w-3xl">
         <a href="/my-recruiting/learn" className="text-xs font-semibold text-white/55 hover:text-white">
           ← Learn
