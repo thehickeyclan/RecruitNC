@@ -57,10 +57,10 @@ const TABS = [
 ]
 
 const DOORS = [
-  { image: "/focused-wrestler.png", title: "Recruiting timeline", text: "What to do each year, 8th grade to signing.", cta: "View timeline", href: "/recruiting/learn/timeline" },
-  { image: "/grappling-duel.png", title: "The rules, level by level", text: "Contact, calls, visits and what's allowed.", cta: "Learn the rules", href: "/recruiting/learn/division-1" },
+  { image: "/images/jacob-perry-ground-control.jpeg", title: "Recruiting timeline", text: "What to do each year, 8th grade to signing.", cta: "View timeline", href: "/recruiting/learn/timeline" },
+  { image: "/images/blayden-thompson-action.jpeg", title: "The rules, level by level", text: "Contact, calls, visits and what's allowed.", cta: "Learn the rules", href: "/recruiting/learn/division-1" },
   { image: "/hero-banner-nc-wrestling-arena.png", title: "What college costs", text: "Full cost, aid, and how academics lower it.", cta: "Get the guide", href: "/recruiting/learn/paying-for-college" },
-  { image: "/focused-grappler.png", title: "Find the right fit", text: "Compare colleges on fit, cost and roster.", cta: "Compare colleges", href: "/recruiting/compare" },
+  { image: "/images/braylon-butts-action.jpeg", title: "Find the right fit", text: "Compare colleges on fit, cost and roster.", cta: "Compare colleges", href: "/recruiting/compare" },
 ]
 
 const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [

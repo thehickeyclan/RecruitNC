@@ -103,7 +103,7 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
       <div className="mx-auto max-w-7xl text-white">
         <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1D3A]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/focused-wrestler.png" alt="" aria-hidden className="absolute inset-y-0 right-0 h-full w-2/3 object-cover opacity-40" />
+          <img src="/images/jacob-perry-ground-control.jpeg" alt="" aria-hidden className="absolute inset-y-0 right-0 h-full w-2/3 object-cover object-[50%_15%] opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0B1D3A] via-[#0B1D3A]/90 to-[#0B1D3A]/20" aria-hidden />
           <div className="relative p-6 sm:p-8">
             <p className="text-xs font-black uppercase tracking-[0.25em]" style={{ color: gold }}>
