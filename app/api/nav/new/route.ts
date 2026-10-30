@@ -9,6 +9,7 @@ import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { getAllNews } from "@/lib/news"
 import { RW_STORIES } from "@/lib/recruitwrestlers-news"
 import { RELEASE_WINDOW_DAYS, type NavNewFeed, type NavRelease } from "@/lib/nav-new"
+import { inState } from "@/lib/recruiting/states"
 
 export const dynamic = "force-dynamic"
 
@@ -47,6 +48,25 @@ export async function GET() {
 
   const stateName = (code: string) => RECRUITING_BRAND.states.find((s) => s.code === code)?.name ?? code
   const cutoff = new Date(Date.now() - RELEASE_WINDOW_DAYS * 86_400_000).toISOString()
+
+  /*
+   * Commitments in the bell too (Matt, 30 Oct 2026: "commitments should also go to the bell alerts...
+   * on both platforms"): this address's states, newest first, by when we learned of each
+   * (college_set_at, which an edit to a photo or a weight never moves).
+   */
+  const commitRows = (
+    await Promise.all(
+      states.map((code) =>
+        inState(
+          admin.from("athletes").select("id, name, highschool, college, college_set_at").not("college", "is", null).neq("college", "").gte("college_set_at", cutoff),
+          code,
+        )
+          .order("college_set_at", { ascending: false })
+          .limit(15)
+          .then((r) => (r.data ?? []) as Array<{ id: string; name: string | null; highschool: string | null; college: string; college_set_at: string }>),
+      ),
+    ).catch(() => [] as Array<Array<{ id: string; name: string | null; highschool: string | null; college: string; college_set_at: string }>>)
+  ).flat()
   const events: NavRelease[] = [
     ...released.map((e) => {
       const women = /^f/i.test(String(e.gender))
@@ -60,6 +80,13 @@ export async function GET() {
     }),
     ...reports.map((d) => ({ id: `report:${d.slug}`, kind: "report" as const, title: `${d.title} is ready`, link: `/coach-reports/${d.slug}`, at: d.date, slug: d.slug })),
     ...stories.map((s) => ({ id: `news:${s.href}`, kind: "news" as const, title: s.title, link: s.href, at: s.date })),
+    ...commitRows.map((a) => ({
+      id: `commit:${a.id}:${a.college}`,
+      kind: "commitment" as const,
+      title: `${String(a.name ?? "A wrestler").trim()}${a.highschool ? ` (${a.highschool})` : ""} committed to ${a.college}`,
+      link: `/view-profile?id=${a.id}`,
+      at: String(a.college_set_at),
+    })),
   ]
     .filter((e) => (e.at.length === 10 ? `${e.at}T12:00:00Z` : e.at) >= cutoff)
     .sort((a, b) => (b.at > a.at ? 1 : -1))
