@@ -138,7 +138,7 @@ export default async function BeyondTheMat() {
             We spend countless hours researching a program&apos;s coaching staff, lineup, workout partners, training facilities and history of
             producing All-Americans.
           </P>
-          <P>How much time do we spend evaluating the opportunities that program creates beyond wrestling?</P>
+          <P>But how much time do we spend evaluating the opportunities a program creates beyond wrestling?</P>
           <P>
             How many wrestlers participated in internships last summer, and in what fields? Which companies did they work for? How did the
             program help them secure those opportunities?
