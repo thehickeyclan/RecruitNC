@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js"
 import { createClient as createSSRClient } from "@/lib/supabase/server"
+import { applyRequestToProfile, isFamilyOrAdmin } from "@/lib/admin/apply-edit-request-server"
 import { publishSubmittedResult } from "@/lib/publish-submitted-result"
 import { publishSubmittedWin } from "@/lib/athlete-submitted-wins"
 import { checkReportedWin, reviewNote } from "@/lib/reported-win-check"
@@ -149,6 +150,28 @@ export async function POST(request: NextRequest) {
      * visibly not the same as a row we imported off a bracket — and the edit request above
      * stays as the record an admin acknowledges afterwards.
      */
+    /*
+     * A profile update from the wrestler's own family goes on the profile now, as wins and results
+     * already do. The queue keeps only what needs a person: free-text notes, and a club or school
+     * name our registry doesn't know. Before this, a cell number or a club change waited a week
+     * for an admin to press Approve on something nobody was going to question.
+     */
+    if (editType === "profile_update" && data?.id && (await isFamilyOrAdmin(admin, user?.id ?? null, athleteId))) {
+      const result = await applyRequestToProfile(admin, athleteId, requestData as never)
+      if (result.error) console.error("[edit-requests] profile update not applied:", result.error)
+      else {
+        const done = Object.keys(result.applied)
+        await admin
+          .from("edit_requests")
+          .update(
+            result.manual.length === 0
+              ? { status: "approved", admin_notes: `Auto-applied (family): ${done.join(", ")}`, reviewed_at: new Date().toISOString() }
+              : { admin_notes: `${done.length ? `Auto-applied: ${done.join(", ")}. ` : ""}Needs you: ${result.manual.join(" | ")}` },
+          )
+          .eq("id", data.id)
+      }
+    }
+
     let published: { ok: boolean; error?: string } | null = null
     if (editType === "significant_win") {
       const win = (currentData?.proposedSignificantWin ?? {}) as Record<string, string>
