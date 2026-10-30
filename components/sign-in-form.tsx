@@ -163,13 +163,14 @@ export function SignInForm() {
               )}
             </Button>
 
-            <div className="text-center space-y-2">
-              <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
+            {/* 44px tap targets, and the theme's own colours on the dark sign-in page (mobile review, 30 Oct 2026). */}
+            <div className="text-center">
+              <Link href="/auth/forgot-password" className="inline-flex min-h-[44px] items-center px-2 text-sm font-medium text-primary underline-offset-2 hover:underline">
                 Forgot your password?
               </Link>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
-                <Link href="/auth/signup" target="_top" rel="noopener" className="text-blue-600 hover:text-blue-800 font-medium">
+                <Link href="/auth/signup" target="_top" rel="noopener" className="inline-flex min-h-[44px] items-center px-1 font-semibold text-primary underline-offset-2 hover:underline">
                   Sign up
                 </Link>
               </div>

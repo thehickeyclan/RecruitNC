@@ -317,3 +317,16 @@
 body:has([data-composer]:focus) [data-assistant-launcher] {
   display: none;
 }
+
+/*
+ * iOS zooms the page into any field under 16px when it is tapped, and leaves it zoomed. The
+ * rankings year picker, the commitments search, Compare and the news sign-up were all 14px
+ * (mobile review, 30 Oct 2026). One rule for every field on a phone instead of chasing them.
+ */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

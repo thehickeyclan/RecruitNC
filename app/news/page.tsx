@@ -19,7 +19,7 @@ export default function NewsPage() {
     <div className="min-h-screen bg-[#0A1628]">
       {/* Hero Header */}
       <header className="relative bg-gradient-to-br from-[#13294B] via-[#1a3a5c] to-[#0A1628] border-b border-white/10">
-        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
         <div className="relative container mx-auto px-4 py-12 md:py-16">
           <Link
             href="/"
