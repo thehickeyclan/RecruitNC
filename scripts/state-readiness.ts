@@ -288,6 +288,37 @@ async function measure(state: string) {
   const accountedPlacer = (p: Placement) =>
     (acct.placers ?? []).find((x) => nameKey(x.name) === nameKey(p.name) && (!x.season || x.season === p.season) && (!x.school || !p.school || nameKey(x.school) === nameKey(p.school)))
   const unaccounted = unlinked.filter((p) => !accountedPlacer(p) && !graduatedByRegistry(p))
+  /*
+   * Champions and finalists with no profile, listed by name whatever accounts for them.
+   *
+   * Vermont's Maxwell LaPerle - the 2026 state champion at 190 - had no class year in any Vermont
+   * source. Naming him in the accounted file was enough to clear the gate above, so his absence
+   * read as one more number in a passing line; the class year that settled it (three NHSCA grade
+   * prints) was sitting in data the import already held. A missing state champion is the most
+   * visible hole a state can have, so the latest season's top three are always printed by name,
+   * and a graduation that nothing dates has to say what dates it.
+   */
+  const graduatedOnRow = (p: Placement) => p.grad_year != null && p.grad_year < SENIORS
+  const topOfLatest = placements
+    .filter((p) => p.season === latest && !p.athlete_id && (p.place ?? 0) >= 1 && (p.place ?? 99) <= 3)
+    .map((p) => {
+      const a = accountedPlacer(p)
+      const why = a
+        ? `${a.reason}${a.note ? ` - ${a.note}` : ""}`
+        : graduatedOnRow(p)
+          ? `graduated (class of ${p.grad_year})`
+          : graduatedByRegistry(p)
+            ? "graduated (identity registry)"
+            : "UNACCOUNTED"
+      return `${p.name}, ${p.school ?? "?"}, ${p.weight ?? "?"} #${p.place} - ${why}`
+    })
+  const asserted = unlinked
+    .filter((p) => {
+      const a = accountedPlacer(p)
+      return a?.reason === "graduated" && !graduatedByRegistry(p) && !graduatedOnRow(p) && !String(a.note ?? "").trim()
+    })
+    .map((p) => `${p.name}, ${p.school ?? "?"}, ${p.weight ?? "?"} #${p.place ?? "?"} - "graduated" with no class year in any source and no note`)
+
   const reasons = new Map<string, number>()
   for (const p of unlinked) {
     const r = accountedPlacer(p)?.reason ?? (graduatedByRegistry(p) ? "graduated" : undefined)
@@ -312,6 +343,14 @@ async function measure(state: string) {
         pass: unnamedNoClass.length === 0 && pct(recentNoClass.length, recentIds.size) <= 5,
         detail: unnamedNoClass.map((a) => `${a.name}, ${a.highschool ?? "?"} · ${a.id}`),
       },
+      {
+        check: '"Graduated" placers with no dated source and no note',
+        kind: "GATE",
+        value: String(asserted.length),
+        pass: asserted.length === 0,
+        detail: asserted,
+      },
+      { check: `${latest} champions and finalists with no profile`, kind: "INFO", value: String(topOfLatest.length), pass: true, detail: topOfLatest },
       { check: "Championship-linked profiles with no state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
       { check: "Unexplained results before freshman year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
       { check: "Independent-school results from 7th/8th grade (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },

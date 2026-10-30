@@ -266,8 +266,16 @@ async function main() {
       drops: merge.map((d) => ({ id: String(d.row.id), row: d.row, sets: takes.get(String(d.row.id)) ?? [] })),
     })
 
+    /*
+     * Only the tables that actually hold a row for the duplicate are repointed. A freshly minted
+     * placer profile is referenced by a handful of tables at most, so this turns an eighty-three
+     * statement block per duplicate into something a person can read before running it - and it
+     * cannot trip a unique constraint on a join table neither row has ever touched.
+     */
     for (const dup of merge) {
       for (const ref of refs) {
+        const { count } = await admin.from(ref.table).select("*", { count: "exact", head: true }).eq(ref.column, String(dup.row.id))
+        if (!count) continue
         statements.push(
           `update public.${ref.table} set ${ref.column} = '${keep.row.id}' where ${ref.column} = '${dup.row.id}';`,
         )
