@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const type = requestUrl.searchParams.get("type")
   const requestedNext = requestUrl.searchParams.get("next") || "/"
   const next =
-    requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.startsWith("/auth/callback")
+    requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.includes("\\") && !requestedNext.startsWith("/auth/callback")
       ? requestedNext
       : "/"
 

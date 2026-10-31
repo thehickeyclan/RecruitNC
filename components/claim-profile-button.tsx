@@ -207,13 +207,14 @@ export function ClaimProfileButton({
           College programs have viewed this profile
         </p>
       ) : null}
-      <p className="text-sm font-bold text-white">Is this your profile?</p>
+      {/* Said already on the search (?as=): a parent is not asked again whether it is "me". */}
+      <p className="text-sm font-bold text-white">{as === "parent" ? `Claim ${firstName}'s profile` : "Is this your profile?"}</p>
       <p className="mt-1 text-sm text-white/60">
         {collegeViewed
           ? `Claim ${firstName}'s profile to see which programs are looking, and add the film, GPA and contact details they'll want next.`
           : `Nobody has claimed ${firstName} yet. Claiming lets you add film, a GPA and everything college coaches ask for.`}
       </p>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className={`mt-3 flex flex-wrap gap-2 ${as === "parent" && signing ? "hidden" : ""}`}>
         <Button
           onClick={() => void claim("self")}
           disabled={state === "claiming"}
@@ -232,7 +233,7 @@ export function ClaimProfileButton({
           disabled={state === "claiming"}
           variant="outline"
           size="sm"
-          className="min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10"
+          className={`min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10 ${as === "self" ? "hidden" : ""}`}
         >
           <Users className="mr-2 h-4 w-4" />
           This is my son or daughter
