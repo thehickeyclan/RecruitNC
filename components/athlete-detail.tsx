@@ -2132,8 +2132,10 @@ export function AthleteDetail({
         >
           {/* Profile completeness (Matt's mock, 10 October 2026): what is done, what is left, and
               one button to the editors. Each open item is a tap to its own form. */}
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <div className="min-w-0 flex-1">
+          {/* Stacked at every width: the card sits in the narrow side column on desktop, and a row
+              layout there squeezed the text to one word per line (Matt, 31 Oct 2026). */}
+          <div className="flex flex-col gap-4">
+            <div className="min-w-0">
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-base font-bold text-white">Profile Completeness</p>
                 <p className="text-base font-black text-white">{completeness.percent}%</p>
@@ -2156,7 +2158,8 @@ export function AthleteDetail({
                 </a>
               ) : null}
             </div>
-            <ul className="space-y-1.5 lg:w-64">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+            <ul className="min-w-0 space-y-1.5">
               {completeness.items.map((item) => (
                 <li key={item.label}>
                   <button
@@ -2190,6 +2193,7 @@ export function AthleteDetail({
             >
               Edit Profile
             </button>
+            </div>
           </div>
           <div className={cn("mt-4 flex flex-wrap gap-2", !showEditors && "hidden")}>
             {(
