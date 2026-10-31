@@ -12,11 +12,11 @@ describe("brandForAuthEmail", () => {
   it("trusts where the account began over an NC United redirect Supabase substituted", () => {
     const { brand, emails } = authEmailsFor(
       { email: "f@x.com", user_metadata: { signup_brand: "recruitwrestlers" } },
-      { email_action_type: "signup", token_hash: "pkce_1", redirect_to: "https://app.ncwrestlingunited.com" },
+      { email_action_type: "signup", token_hash: "t1", redirect_to: "https://app.ncwrestlingunited.com" },
       SB,
     )
     expect(brand).toBe("recruitwrestlers")
-    expect(emails[0].text).toContain("https://www.recruitwrestlers.com/auth/callback?token_hash=pkce_1&type=signup")
+    expect(emails[0].text).toContain("https://www.recruitwrestlers.com/auth/callback?token_hash=t1&type=signup")
   })
   it("falls back to where the account began, then NC United", () => {
     expect(brandForAuthEmail({ user_metadata: { signup_brand: "recruitwrestlers" } }, { email_action_type: "signup" })).toBe("recruitwrestlers")
@@ -54,6 +54,10 @@ describe("authEmailsFor", () => {
     expect(r.emails[0].text).toContain("https://app.ncwrestlingunited.com/auth/callback?token_hash=r1&type=recovery&next=%2Fauth%2Freset-password")
     const m = authEmailsFor({ email: "a@b.com" }, { email_action_type: "magiclink", token_hash: "m1", redirect_to: "https://app.ncwrestlingunited.com/auth/callback?next=/my-recruiting" }, SB)
     expect(m.emails[0].text).toContain("next=%2Fmy-recruiting")
+  })
+  it("keeps Supabase's own link for a PKCE token, sent back to the right site", () => {
+    const { emails } = authEmailsFor({ email: "a@b.com", user_metadata: { signup_brand: "recruitwrestlers" } }, { email_action_type: "recovery", token_hash: "pkce_9", redirect_to: "https://www.recruitwrestlers.com/auth/reset-password" }, SB)
+    expect(emails[0].text).toContain("https://abc.supabase.co/auth/v1/verify?token=pkce_9&type=recovery&redirect_to=https%3A%2F%2Fwww.recruitwrestlers.com%2Fauth%2Freset-password")
   })
   it("puts the code in a re-authentication email", () => {
     const { emails } = authEmailsFor({ email: "a@b.com" }, { email_action_type: "reauthentication", token: "123456" }, SB)
