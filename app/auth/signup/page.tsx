@@ -144,13 +144,6 @@ function SignUpWizard() {
   const [cellPhone, setCellPhone] = useState("")
   const [consent, setConsent] = useState<ConsentState>(EMPTY_CONSENT)
   const [accountExists, setAccountExists] = useState(false)
-  /*
-   * The form is long on a phone and the confirmation short, so it opened at the bottom (Matt, 31 Oct
-   * 2026). Scrolled after it renders, and "instant": a smooth scroll is cut off by the re-render.
-   */
-  useEffect(() => {
-    if (success) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior })
-  }, [success])
   const [college, setCollege] = useState("")
   const [program, setProgram] = useState<CoachProgram | null>(null)
   const [website, setWebsite] = useState("")
@@ -160,6 +153,13 @@ function SignUpWizard() {
   const [error, setError] = useState("")
   const [resendMessage, setResendMessage] = useState("")
   const [success, setSuccess] = useState(false)
+  /*
+   * The form is long on a phone and the confirmation short, so it opened at the bottom (Matt, 31 Oct
+   * 2026). Scrolled after it renders, and "instant": a smooth scroll is cut off by the re-render.
+   */
+  useEffect(() => {
+    if (success) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior })
+  }, [success])
 
   // "Did you mean gmail.com?" - a mistyped domain is an account that can never be confirmed.
   const emailFix = suggestEmailFix(email)
