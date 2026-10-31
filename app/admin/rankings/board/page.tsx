@@ -705,19 +705,19 @@ export default function RankingBoardPage() {
     }
   }
 
+  /** One alert for the whole update - every board published in the last two days - from any board. */
   const sendAlert = async () => {
-    if (!window.confirm(`Send the Class of ${year} rankings alert to every iPhone with rankings alerts on?`)) return
     setAlerting(true)
     setStatus("")
     try {
-      const res = await fetch("/api/admin/rankings/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "notify", year, gender, state }),
-      })
+      const preview = await fetch("/api/admin/rankings/notify", { cache: "no-store" })
+      const p = await preview.json().catch(() => ({}))
+      if (!preview.ok) throw new Error(p.error || "Could not prepare the alert.")
+      if (!window.confirm(`Send this to every iPhone with rankings alerts on?\n\n${p.message?.title}\n${p.message?.body}`)) return
+      const res = await fetch("/api/admin/rankings/notify", { method: "POST" })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Could not send the alert.")
-      const sent = Number(data.push?.sent ?? 0)
+      const sent = Number(data.sent ?? 0)
       setStatus(`iPhone alert sent to ${sent} device${sent === 1 ? "" : "s"}.`)
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not send the alert.")
@@ -953,7 +953,7 @@ export default function RankingBoardPage() {
               ) : (
                 boardIsCurrent && <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Read only</span>
               )}
-              {canPublish && state === "NC" && gender === "Male" && !isTop75 ? (
+              {canPublish && state === "NC" && gender === "Male" ? (
                 <>
                   {publishedAt ? (
                     <button
