@@ -107,6 +107,23 @@ export function RevealStep({
           </div>
         </div>
 
+        {/* The claim sits under the name: on a phone it was below every result and the gap list (Matt, 31 Oct 2026). */}
+        <div className="mt-5 flex flex-col gap-2">
+          <button
+            onClick={() => onConfirm(reveal)}
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
+          >
+            <Check className="h-4 w-4" />
+            {parent ? "That's my wrestler — claim this profile" : "That's me — claim this profile"}
+            <ArrowRight className="h-4 w-4" />
+          </button>
+          <button
+            onClick={onReject}
+            className="min-h-[44px] text-sm text-white/50 hover:text-white/80"
+          >
+            {parent ? "Not my wrestler — search again" : "Not me — start a new profile"}
+          </button>
+        </div>
         {reveal.credentials.length > 0 ? (
           <div className="mt-5">
             <p className="text-sm text-white/70">
@@ -147,22 +164,6 @@ export function RevealStep({
           </div>
         ) : null}
 
-        <div className="mt-6 flex flex-col gap-2">
-          <button
-            onClick={() => onConfirm(reveal)}
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
-          >
-            <Check className="h-4 w-4" />
-            {parent ? "That's my wrestler — claim this profile" : "That's me — claim this profile"}
-            <ArrowRight className="h-4 w-4" />
-          </button>
-          <button
-            onClick={onReject}
-            className="min-h-[44px] text-sm text-white/50 hover:text-white/80"
-          >
-            {parent ? "Not my wrestler — search again" : "Not me — start a new profile"}
-          </button>
-        </div>
       </div>
     </div>
   )

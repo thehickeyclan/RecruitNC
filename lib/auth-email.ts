@@ -32,8 +32,31 @@ export type AuthEmail = { to: string; subject: string; html: string; text: strin
 export function brandForAuthEmail(user: HookUser, data: HookEmailData): AuthEmailBrand {
   const redirect = (data.redirect_to ?? "").toLowerCase()
   if (redirect.includes("recruitwrestlers")) return "recruitwrestlers"
-  if (redirect.includes("ncwrestlingunited")) return "ncunited"
-  return user.user_metadata?.signup_brand === "recruitwrestlers" ? "recruitwrestlers" : "ncunited"
+  /*
+   * Supabase swaps a redirect it does not allow for its Site URL (NC United), so an NC United
+   * redirect on a confirmation proves nothing: a RecruitWrestlers sign-up was confirmed as NC
+   * United (Matt's test, 31 Oct 2026). Where the account began decides.
+   */
+  if (user.user_metadata?.signup_brand === "recruitwrestlers") return "recruitwrestlers"
+  return "ncunited"
+}
+
+/** A RecruitWrestlers email's link goes back to RecruitWrestlers, even when Supabase put NC United's address in. */
+export function redirectForBrand(brand: AuthEmailBrand, redirectTo: string | undefined): string | undefined {
+  if (!redirectTo || brand !== "recruitwrestlers") return redirectTo
+  try {
+    const u = new URL(redirectTo)
+    if (u.hostname.includes("recruitwrestlers")) return redirectTo
+    /*
+     * Supabase hands the hook its bare Site URL (https://app.ncwrestlingunited.com, no path) on a
+     * PKCE confirmation. The callback finishes the sign-in and reads where to go next from the
+     * account (signup_return_to), so the RecruitWrestlers callback is the whole answer.
+     */
+    const path = u.pathname && u.pathname !== "/" ? u.pathname + u.search : "/auth/callback"
+    return `https://www.recruitwrestlers.com${path}`
+  } catch {
+    return "https://www.recruitwrestlers.com/auth/callback"
+  }
 }
 
 const BRAND = {
@@ -133,6 +156,7 @@ function linkEmail(brand: AuthEmailBrand, to: string, kind: string, url: string)
  */
 export function authEmailsFor(user: HookUser, data: HookEmailData, supabaseUrl: string): { brand: AuthEmailBrand; emails: AuthEmail[] } {
   const brand = brandForAuthEmail(user, data)
+  data = { ...data, redirect_to: redirectForBrand(brand, data.redirect_to) }
   const b = BRAND[brand]
   const kind = data.email_action_type
   const email = user.email ?? ""

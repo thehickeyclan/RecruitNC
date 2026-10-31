@@ -35,6 +35,10 @@ export default function CreateProfilePage() {
     return p.get("find") || p.get("name") ? "self" : null
   })
   const role = (profile?.profile_type ?? "").toLowerCase()
+  // Each step opens at its top: the record screen kept the search list's scroll and opened at the bottom on a phone.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior })
+  }, [step, who])
   const knownWho: Who | null = who ?? (role === "parent" ? "parent" : role === "athlete" ? "self" : null)
   const [typedName, setTypedName] = useState("")
   const [matchedId, setMatchedId] = useState<string | null>(null)
