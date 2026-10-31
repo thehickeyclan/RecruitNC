@@ -58,7 +58,25 @@ const arg = (n: string, d?: string) => {
  * minted as well as linked. The behaviour was the right one, so nothing was damaged, but a flag
  * that does nothing and says nothing is how a real mistake gets made on the run after.
  */
-const KNOWN_FLAGS = new Set(["--write", "--include-graduated", "--only-with-class-year", "--state", "--season"])
+/*
+ * Every flag the script reads, and nothing else. A typo used to be ignored in silence: Alabama
+ * through Indiana were minted with a `--link-only` that had never existed.
+ *
+ * Kept in step with the reads below BY HAND, which this list has now failed twice in opposite
+ * directions. Merging main on 31 Oct took its `--include-qualifiers` and this guard from the
+ * other branch, with no textual conflict for git to report: the feature was present, reachable
+ * from neither the flag nor an error that explained why. `--max-place` had been missing since it
+ * was added.
+ */
+const KNOWN_FLAGS = new Set([
+  "--write",
+  "--include-graduated",
+  "--include-qualifiers",
+  "--only-with-class-year",
+  "--state",
+  "--season",
+  "--max-place",
+])
 for (let i = 0; i < process.argv.length; i += 1) {
   const a = process.argv[i]!
   if (!a.startsWith("--")) continue

@@ -83,11 +83,13 @@ type Claim = { year: number; tournament: boolean; evidence: string; file: string
 const claims = new Map<string, Claim[]>()
 for (const file of FILES) {
   for (const r of readCsv(file)) {
-    if (r.status !== "resolved" || !/^\d{4}$/.test(r.grad_year ?? "")) continue
+    /* `grad_year` in the resolution files of 21 Oct, `class_year` in the ones since. */
+    const year = r.grad_year ?? r.class_year ?? ""
+    if (r.status !== "resolved" || !/^\d{4}$/.test(year)) continue
     const k = norm(r.name)
     // Flo's participant list prints the grade the event published: the tournament's word.
     const tournament = /Flo participants|grade '/i.test(r.evidence ?? "")
-    claims.set(k, [...(claims.get(k) ?? []), { year: Number(r.grad_year), tournament, evidence: r.evidence ?? "", file: path.basename(file), school: r.school ?? "" }])
+    claims.set(k, [...(claims.get(k) ?? []), { year: Number(year), tournament, evidence: r.evidence ?? "", file: path.basename(file), school: r.school ?? "" }])
   }
 }
 
@@ -129,6 +131,27 @@ async function main() {
         year = [...t][0]
         why = `tournament grade wins: ${mine.find((c) => c.tournament)!.evidence}`
       } else held.push(`${r.wrestler_name} (${school}, ${r.season}): ${[...years].join(" vs ")} — held`)
+    }
+    /*
+     * A year that puts the wrestler at this championship before his freshman year is refused.
+     *
+     * The same test the readiness gate applies afterwards (scripts/state-readiness.ts): an
+     * independent association admits 7th and 8th graders, a state's public association does not.
+     * Six South Carolina years arrived this way on 31 Oct - five SCHSL qualifiers whose only
+     * evidence was a grade of "Fr" read from the FOLLOWING season, which makes an 8th grader of
+     * each, plus one the same shape in reverse. Of 2,876 South Carolina rows, all 22 sitting
+     * before a freshman year are SCISA and not one is SCHSL, so six cases of one shape is an
+     * offset in how a grade is dated rather than six unprecedented wrestlers. The row keeps its
+     * blank year until a dated record from a placed season says otherwise.
+     */
+    const independent = /(ISA|VISAA)$/i.test(r.association ?? "")
+    const early = year == null ? 0 : year - 3 - r.season
+    if (year != null && early > (independent ? 2 : 0)) {
+      held.push(
+        `${r.wrestler_name} (${school}, ${r.season} ${r.association ?? ""}): ${year} would be ` +
+          `${early} year${early === 1 ? "" : "s"} before his freshman season — held, not applied`,
+      )
+      continue
     }
     if (year) fills.push({ id: r.id, name: `${r.wrestler_name} (${school}, ${r.season} ${r.association ?? ""} #${r.place ?? "-"})`, year, why })
   }
