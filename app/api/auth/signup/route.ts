@@ -156,6 +156,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create account" }, { status: 400 })
     }
 
+    /*
+     * An address that already has an account: Supabase answers with a stand-in user, no identities
+     * and no email, so the page said "check your email" and nothing ever came (Matt's own test,
+     * 31 Oct 2026). Say so, and send them to sign in.
+     */
+    if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return NextResponse.json(
+        { error: "You already have an account with this email. Sign in instead.", code: "exists" },
+        { status: 409 },
+      )
+    }
+
     console.log("[v0] User created successfully:", data.user.id)
 
     try {
