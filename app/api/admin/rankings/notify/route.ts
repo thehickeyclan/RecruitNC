@@ -15,6 +15,8 @@ export const dynamic = "force-dynamic"
  * update once however many boards it touched. GET shows what it would say; POST sends it.
  */
 const WINDOW_MS = 48 * 60 * 60 * 1000
+/** The events this update brought in, named in the alert. Edit before announcing the next update. */
+const UPDATE_EVENTS = ["TOC", "Journeymen", "Super 32"]
 
 async function currentUpdate() {
   const admin = createAdminClient()
@@ -32,7 +34,7 @@ async function currentUpdate() {
     const { data } = await admin.from("athletes").select("name").eq("id", top[0].athlete_id).maybeSingle()
     leader = (data?.name as string) ?? null
   }
-  return { classes, top75, leader }
+  return { classes, top75, leader, events: UPDATE_EVENTS }
 }
 
 export async function GET() {

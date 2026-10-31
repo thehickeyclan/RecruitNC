@@ -87,22 +87,24 @@ export async function notifyRankingsPublished(input: {
  * alert per board would hit the same parents four times for one event. This names everything
  * published in the update and who leads it, and links to the hub where every board is.
  */
-export function buildRankingsUpdatePush(input: { classes: number[]; top75: boolean; leader: string | null }): RankingsPush {
+export function buildRankingsUpdatePush(input: {
+  classes: number[]
+  top75: boolean
+  leader: string | null
+  /** The events this update added, named in the alert ("TOC", "Journeymen", "Super 32"). */
+  events?: string[]
+}): RankingsPush {
   const classes = [...new Set(input.classes)].sort((a, b) => a - b)
   const classPart = classes.length === 1 ? `Class of ${classes[0]}` : classes.length ? `Classes of ${joinAnd(classes.map(String))}` : ""
-  const what =
-    classPart && input.top75
-      ? `${classPart}, plus the Top 75 College Prospects, are out.`
-      : classPart
-        ? `${classPart} ${classes.length > 1 ? "are" : "is"} out.`
-        : input.top75
-          ? "The Top 75 College Prospects are out."
-          : "The rankings are out."
-  // Only the Top 75 names one leader for the whole update; a class leader would pick a class.
-  const leader = input.top75 ? input.leader?.trim() : null
+  const boards =
+    classPart && input.top75 ? `${classPart} and the Top 75 College Prospects` : classPart || (input.top75 ? "The Top 75 College Prospects" : "The rankings")
+  const events = (input.events ?? []).filter((e) => e.trim())
+  const plural = classes.length > 1 || (classes.length > 0 && input.top75)
+  // No names (Matt, 31 Oct 2026): the alert announces the boards, not a wrestler, and sends
+  // people to log in - the boards are members-only.
   return {
-    title: "NC College Prospect Rankings updated",
-    body: `${what}${leader ? ` ${leader} leads the Top 75.` : ""} Tap to see them.`,
+    title: plural && input.top75 ? "All NC College Prospect Rankings updated" : "NC College Prospect Rankings updated",
+    body: `${boards} ${events.length ? `now include ${joinAnd(events)} results` : plural ? "are updated" : "is updated"}. Log in to see them.`,
     // Same kind and hub link as a class alert, so phones on an older app bundle open it too.
     data: { kind: "rankings", graduationYear: classes[0] ?? null, gender: "Male", path: "/public-rankings" },
   }
