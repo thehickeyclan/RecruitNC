@@ -109,8 +109,14 @@ export default function CreateProfilePage() {
           athleteId={matchedId}
           who={knownWho ?? "self"}
           onConfirm={(reveal) => {
-            /** Claiming happens on the profile itself, where the claim card asks for the account; `as` carries wrestler or parent there. */
-            router.push(`/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1&as=${knownWho ?? "self"}`)
+            /*
+             * The claim is finished on the profile, but the account comes first: signed out, "that's
+             * my wrestler" goes straight to the sign-up (Matt, 31 Oct 2026) rather than to the profile
+             * to find a second button. The confirmation link brings them back to the claim box.
+             */
+            const as = knownWho ?? "self"
+            const claimAt = `/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1&as=${as}`
+            router.push(user ? claimAt : `/auth/signup?type=${as === "parent" ? "parent" : "athlete"}&returnTo=${encodeURIComponent(claimAt)}`)
           }}
           onReject={() => {
             setMatchedId(null)
