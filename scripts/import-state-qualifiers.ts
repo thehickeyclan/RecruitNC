@@ -23,6 +23,14 @@ import { createClient } from "@supabase/supabase-js"
 import { normalizeApostrophes } from "@/lib/athlete-name-match"
 import { stripResultMarkers } from "@/lib/identity-dedupe"
 
+/** A name as a row key: case, punctuation and spacing differ between a file and its re-issue. */
+const nameKey = (v: unknown) =>
+  normalizeApostrophes(String(v ?? ""))
+    .toLowerCase()
+    .replace(/[^a-z ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
   if (!fs.existsSync(p)) continue
@@ -344,6 +352,52 @@ async function main() {
      * every entry below; it belongs here too.
      */
     const associations = [...new Set(entries.map((e) => String((e as { association?: unknown }).association ?? "")))].filter(Boolean)
+    /*
+     * Carry every profile link across the replacement.
+     *
+     * This import replaces a slice rather than updating it, and the rows it writes are built from
+     * the file, which knows nothing about our profiles. So a re-import silently unlinked everything
+     * the slice carried: Connecticut's placer gate went from 95/95 to 0/95 on a re-run that was
+     * only meant to add class years, and the only reason it was caught is that the gate reads the
+     * link. Re-importing South Carolina to add 67 class years would have cut 730 profiles loose
+     * from their qualifier rows the same way.
+     *
+     * The link is matched on the FloArena wrestler id, which is the same id the file carries, and
+     * falls back to name, weight and place within the slice for the pilot files that predate the
+     * id. A row whose link cannot be matched arrives unlinked, exactly as before.
+     */
+    const carried = new Map<string, string>()
+    const carriedByRow = new Map<string, string>()
+    for (const assoc of associations) {
+      for (let f = 0; ; f += 1000) {
+        const { data, error } = await sb
+          .from("state_tournament_placers")
+          .select("athlete_id, source_athlete_id, wrestler_name, weight, place")
+          .eq("state", state)
+          .eq("season", Number(season))
+          .eq("gender", gender)
+          .eq("association", assoc)
+          .not("athlete_id", "is", null)
+          .order("id")
+          .range(f, f + 999)
+        if (error) { console.log(`   reading existing links FAILED: ${error.message}`); return }
+        for (const r of data ?? []) {
+          if (r.source_athlete_id) carried.set(String(r.source_athlete_id), String(r.athlete_id))
+          carriedByRow.set(`${assoc}|${nameKey(r.wrestler_name)}|${r.weight}|${r.place ?? ""}`, String(r.athlete_id))
+        }
+        if (!data || data.length < 1000) break
+      }
+    }
+    let relinked = 0
+    for (const e of entries as Array<Record<string, unknown>>) {
+      const byId = e.source_athlete_id ? carried.get(String(e.source_athlete_id)) : undefined
+      const byRow = carriedByRow.get(`${e.association}|${nameKey(e.wrestler_name)}|${e.weight}|${e.place ?? ""}`)
+      const keep = byId ?? byRow
+      if (!keep) continue
+      e.athlete_id = keep
+      relinked++
+    }
+    if (carried.size || carriedByRow.size) console.log(`   profile links carried over: ${relinked} of ${carriedByRow.size}`)
     for (const assoc of associations) {
       const { error } = await sb
         .from("state_tournament_placers")
