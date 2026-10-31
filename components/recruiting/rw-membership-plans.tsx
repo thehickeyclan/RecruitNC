@@ -24,7 +24,8 @@ const PLANS: Array<{ kind: Kind; name: string; cents: number; lines: string[]; f
     kind: "subscription",
     name: "Insider",
     cents: SCOUTING_REPORT_PRICES.subscription,
-    lines: ["Every published class ranking", "Your wrestler's rank on the profile", "Which college programs viewed your profile"],
+    // What a family buys it for, first (Matt, 31 Oct 2026): who is looking, and the rankings coaches recruit from.
+    lines: ["See which colleges view your profile, and when", "The rankings college coaches use to recruit", "Your wrestler's rank on the profile"],
   },
   {
     kind: "command_center",
@@ -65,9 +66,16 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
     const kind: BillingKind = yearly ? ANNUAL[plan].kind : plan
     setMessage(null)
     if (!user) {
-      // Most visitors have no account yet: make one, then come back to this plan.
-      window.location.href = `/auth/signup?returnTo=${encodeURIComponent(returnTo)}`
-      return
+      // Most visitors have no account yet: make one, then come back to this plan. A signed-in family
+      // whose account had not loaded yet was sent to sign up too, so the server decides.
+      const signedIn = await fetch("/api/membership/status", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((s: { signedIn?: boolean } | null) => s?.signedIn === true)
+        .catch(() => false)
+      if (!signedIn) {
+        window.location.href = `/auth/signup?returnTo=${encodeURIComponent(returnTo)}`
+        return
+      }
     }
     setBusy(plan)
     try {

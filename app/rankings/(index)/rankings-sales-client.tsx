@@ -384,7 +384,7 @@ export function RankingsSalesClient({
                   </span>
                 </div>
                 <p className="mt-4 text-3xl font-black">Insider</p>
-                <p className="mt-1 text-sm text-white/60">Full access to tournament grade reports, rankings and college profile views.</p>
+                <p className="mt-1 text-sm text-white/60">See which colleges view your profile, and the rankings college coaches use to recruit.</p>
                 <p className="mt-5 text-5xl font-black">
                   {formatPrice(SCOUTING_REPORT_PRICES.subscription)}
                   <span className="text-lg font-semibold text-white/60"> / month</span>
@@ -393,7 +393,7 @@ export function RankingsSalesClient({
                   or {formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)}/year (save {formatPrice(annualSavingCents())})
                 </p>
                 <ul className="mt-5 space-y-2.5 text-sm text-white/85">
-                  {[`All class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects board", "Ranked on results, quality wins and head-to-head", "Your wrestler's rank, shown on the profile", "Live NC dashboards at NHSCA, Fargo and Super 32, with a tournament recap report after each", "Every wrestler's grade and the full write-up of his tournament", "Every match, with the opponent's seed, national rank, state titles and where he placed", "Which college programs viewed your profile, and when"].map((l) => (
+                  {["Which college programs viewed your profile, and when", `All class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects board", "Ranked on results, quality wins and head-to-head", "Your wrestler's rank, shown on the profile", "Live NC dashboards at NHSCA, Fargo and Super 32, with a tournament recap report after each", "Every wrestler's grade and the full write-up of his tournament", "Every match, with the opponent's seed, national rank, state titles and where he placed"].map((l) => (
                     <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                   ))}
                 </ul>

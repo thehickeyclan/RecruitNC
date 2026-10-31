@@ -86,6 +86,7 @@ export default async function ProfileSetupPage({
         photoUrl={str("photourl", "photo_url") || null}
         gender={str("gender") || null}
         asParent={Boolean(parentLink) && row.claimed_by_user_id !== user.id}
+        stateCode={str("state") || null}
       />
     </div>
   )
