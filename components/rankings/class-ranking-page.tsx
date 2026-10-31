@@ -189,10 +189,7 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
               <p className="mt-8 text-center text-sm text-white/70">
               Tap any wrestler for full results, significant wins and the scouting report.
               </p>
-              <RankingLegend
-                moved={ranking.athletes.some((a) => a.previousRank != null && a.previousRank !== a.rank)}
-                isNew={ranking.athletes.some((a) => a.isNew === true)}
-              />
+              <RankingLegend isNew={ranking.athletes.some((a) => a.isNew === true)} />
             <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {ranking.athletes.map((athlete) => (
                 <RankedAthleteCard key={athlete.athleteId} athlete={athlete} star={starred ? { starred: starred.has(athlete.athleteId) } : undefined} stateCode={onRw ? state : undefined} />
