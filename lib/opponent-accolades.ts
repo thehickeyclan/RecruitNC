@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { accoladeLineWithRank, findSignificantWins } from "@/lib/significant-wins"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { loadCommitmentCredentials } from "@/lib/college-commitments/credential"
+import { rankedOnLookupCached } from "@/lib/rankings/ranking-archive"
 import { nameWords } from "@/lib/athlete-name-match"
 
 /**
@@ -13,7 +14,14 @@ import { nameWords } from "@/lib/athlete-name-match"
  * Shared by the web's bout tables (/api/opponent-accolades) and the phone's profile endpoint.
  */
 
-export type AccoladeBout = { name: string; club: string | null; year: number | null; weight: string | number | null }
+export type AccoladeBout = {
+  name: string
+  club: string | null
+  year: number | null
+  weight: string | number | null
+  /** The event date, when the table knows it: a national rank is judged by the lists of that day. */
+  date?: string | null
+}
 
 /** The key a label is looked up by. Kept in step with components/profile/tournament-accordion.tsx. */
 export function accoladeKey(name: string, club: string | null, year: number | null) {
@@ -23,8 +31,24 @@ export function accoladeKey(name: string, club: string | null, year: number | nu
 /** How long a profile request will wait for the placer index before sending bouts unlabelled. */
 const INDEX_BUDGET_MS = 4000
 
-export async function labelOpponents(admin: SupabaseClient, bouts: AccoladeBout[]): Promise<Record<string, string>> {
+export async function labelOpponents(
+  admin: SupabaseClient,
+  bouts: AccoladeBout[],
+  gender?: "M" | "F" | null,
+): Promise<Record<string, string>> {
   if (!bouts.length) return {}
+  /*
+   * Ranked on the day of the bout, by the lists then in effect (lib/rankings/ranking-archive.ts),
+   * the rule the ranking board already used. Today's lists dropped Ty Eversman's SI #19 from Jacob
+   * Perry's Super 32 win the day SI's October list came out. Both lists when the caller doesn't say
+   * whose table it is; a ranked name still has to fit the bout's school or weight.
+   */
+  const rankedOnPromise = Promise.all(
+    (gender ? [gender] : (["M", "F"] as const)).map((g) => rankedOnLookupCached(admin, g).catch(() => null)),
+  ).then((lookups) => {
+    const live = lookups.filter((l): l is NonNullable<typeof l> => Boolean(l))
+    return live.length ? (n: string, d: string) => live.flatMap((l) => l(n, d)) : null
+  })
   // The index is cached for ten minutes, but building it cold reads every state's placers. A
   // profile must never wait on that: past the budget the bouts go out without accolades, and the
   // build carries on so the next request finds it ready.
@@ -41,6 +65,7 @@ export async function labelOpponents(admin: SupabaseClient, bouts: AccoladeBout[
      */
     loadCommitmentCredentials(admin).catch(() => ({}) as Record<string, string>),
   ])
+  const rankedOn = loaded ? await rankedOnPromise : null
   const commitmentFor = (name: string) => commitments[nameWords(name).join(" ")] ?? null
   if (!loaded) {
     const only: Record<string, string> = {}
@@ -63,9 +88,10 @@ export async function labelOpponents(admin: SupabaseClient, bouts: AccoladeBout[
     if (key in labels) continue
     // Treated as a win only so the finder looks at it; the outcome plays no part in an accolade.
     // Mid-March places a bout in the season of its own year, close enough for the four-season check.
+    const dated = /^\d{4}-\d{2}-\d{2}/.test(String(bout.date ?? "")) ? String(bout.date).slice(0, 10) : null
     const [found] = findSignificantWins(
-      [{ opponent: name, opponent_school: bout.club, win_loss: "W", date: bout.year ? `${bout.year}-03-01` : null, weight: bout.weight }],
-      index,
+      [{ opponent: name, opponent_school: bout.club, win_loss: "W", date: dated ?? (bout.year ? `${bout.year}-03-01` : null), weight: bout.weight }],
+      dated && rankedOn ? { ...index, nationalRankedOn: rankedOn } : index,
     )
     const line = found ? accoladeLineWithRank(found) : null
     const commit = commitmentFor(name)
