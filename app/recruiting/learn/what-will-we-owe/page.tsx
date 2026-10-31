@@ -12,7 +12,9 @@ import { PortalShell } from "@/components/portal/portal-shell"
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { CHECKED, SOURCES, type SourceKey } from "@/lib/recruiting/learn/content"
 import { ASK_IN_WRITING, ASK_THE_COACH, BOTTOM_LINE, BY_LEVEL, CALCULATOR, FOUR_SOURCES, LOANS, TWO_PRICES } from "@/lib/recruiting/learn/what-we-owe"
+import { FIRST_TIME, MONEY_CHECKED, MONEY_WORDS, type MoneyWordId } from "@/lib/recruiting/learn/money-words"
 import { OFFER_CALCULATOR } from "@/lib/recruiting/offers"
+import { MoneyWord } from "@/components/recruiting/money-word"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { productName } from "@/lib/recruiting/product-name"
@@ -37,6 +39,90 @@ function Sources({ keys }: { keys: SourceKey[] }) {
         </a>
       ))}
     </span>
+  )
+}
+
+/** The definition behind each card's ⓘ, by the card's title. */
+const WORD: Record<string, MoneyWordId> = {
+  "The published price": "cost-of-attendance",
+  "The price after aid": "net-price",
+  "Government grants": "pell",
+  "The college's own aid": "merit-aid",
+  "Athletic scholarship": "athletic-scholarship",
+  "Outside scholarships": "grant-scholarship-loan",
+  "Does it renew?": "renewal",
+}
+const Term = ({ title }: { title: string }) => (WORD[title] ? <MoneyWord id={WORD[title]}>{title}</MoneyWord> : <>{title}</>)
+const moneyChecked = new Date(`${MONEY_CHECKED}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+
+/** "First time doing this?": three things, in order, before anything else on the page. */
+function FirstTime() {
+  return (
+    <section className="mt-6 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-5" aria-labelledby="owe-first">
+      <h2 id="owe-first" className="text-base font-black">
+        First time doing this? Start here.
+      </h2>
+      <ol className="mt-3 grid gap-3 sm:grid-cols-3">
+        {FIRST_TIME.map((f, i) => (
+          <li key={f.title} className="flex flex-col rounded-lg bg-[#0f1c2e] p-4">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#D3B574] text-sm font-black text-[#0A1628]">{i + 1}</span>
+            <p className="mt-2 text-sm font-black leading-5">
+              <MoneyWord id={f.word}>{f.title}</MoneyWord>
+            </p>
+            <p className="mt-1 flex-1 text-xs leading-5 text-white/65">{f.line}</p>
+            <a
+              href={f.href}
+              {...(f.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
+              className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#D3B574] hover:underline"
+            >
+              {f.cta} {f.href.startsWith("http") ? <ExternalLink className="h-3 w-3" aria-hidden /> : <ArrowRight className="h-3 w-3" aria-hidden />}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+/** Every money word, closed to its name and whether it is paid back; a tap opens the rest. */
+function MoneyWords() {
+  return (
+    <section id="money-words" className="mt-10 scroll-mt-24" aria-labelledby="owe-words">
+      <h2 id="owe-words" className="text-lg font-black">
+        Money words
+      </h2>
+      <p className="mt-0.5 text-sm text-white/60">Every word on an offer letter, in plain English. Tap one.</p>
+      <div className="mt-3 grid items-start gap-2 sm:grid-cols-2">
+        {MONEY_WORDS.map((w) => (
+          <details key={w.id} id={`word-${w.id}`} className="group scroll-mt-24 rounded-xl border border-white/10 bg-[#0f1c2e] px-4 py-3">
+            <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+              <span className="flex-1 text-sm font-black">{w.term}</span>
+              <span className="text-[11px] font-semibold text-white/45 group-open:hidden">More</span>
+            </summary>
+            <p className="mt-2 text-sm leading-6 text-white/80">{w.means}</p>
+            <p className="mt-2 text-sm">
+              <span className="text-[11px] font-black uppercase tracking-wide text-white/45">Paid back? </span>
+              <span className="font-semibold">{w.paidBack}</span>
+            </p>
+            {w.yearly ? (
+              <p className="mt-2 rounded-lg bg-white/[0.04] p-2.5 text-sm">
+                <span className="font-semibold">{w.yearly.fact}</span>
+                <span className="block text-xs text-white/50">{w.yearly.year}. Changes every year.</span>
+              </p>
+            ) : null}
+            <a
+              href={w.go.href}
+              {...(w.go.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-[#D3B574] hover:underline"
+            >
+              {w.go.label} {w.go.href.startsWith("http") ? <ExternalLink className="h-3 w-3" aria-hidden /> : <ArrowRight className="h-3 w-3" aria-hidden />}
+            </a>
+            <Sources keys={w.sources} />
+          </details>
+        ))}
+      </div>
+      <p className="mt-2 text-[11px] text-white/40">Checked against each official source on {moneyChecked}.</p>
+    </section>
   )
 }
 
@@ -67,7 +153,17 @@ export default async function WhatWillWeOwe() {
           <Wallet className="h-4 w-4" aria-hidden /> Guide
         </p>
         <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">What will we actually owe?</h1>
-        <p className="mt-2 text-sm leading-6 text-white/70">Four things to know, then one number per college. We never ask about your income.</p>
+        <p className="mt-2 text-sm leading-6 text-white/70">Four things to know, then one number per college. We never ask about your income.{open ? (
+            <>
+              {" "}
+              New words? Tap the <span className="text-[#D3B574]">ⓘ</span>, or see{" "}
+              <a href="#money-words" className="font-semibold text-[#D3B574] hover:underline">
+                Money words
+              </a>
+              .
+            </>
+          ) : null}
+        </p>
 
         {!open ? (
           <div className="mt-6 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-5">
@@ -80,6 +176,7 @@ export default async function WhatWillWeOwe() {
               <li>How to get your own estimate before any offer</li>
               <li>What to ask each coach, in writing</li>
               <li>A calculator that turns each offer into what you&apos;ll owe</li>
+              <li>Every money word in plain English: FAFSA, Pell Grant, CSS Profile, loans, 529 plans</li>
             </ul>
             <a href="/command-center" className="mt-4 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628]">
               See the Command Center
@@ -87,12 +184,16 @@ export default async function WhatWillWeOwe() {
           </div>
         ) : (
           <>
+            <FirstTime />
+
             <Step n={1} title="Every college has two prices">
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {TWO_PRICES.map((c) => (
                   <div key={c.title} className={card}>
                     <p className="text-[11px] font-black uppercase tracking-wider text-[#D3B574]">{c.tag}</p>
-                    <p className="mt-1 text-base font-black">{c.title}</p>
+                    <p className="mt-1 text-base font-black">
+                      <Term title={c.title} />
+                    </p>
                     {c.lines.map((l) => (
                       <p key={l} className="mt-1.5 text-sm leading-6 text-white/75">
                         {l}
@@ -108,7 +209,9 @@ export default async function WhatWillWeOwe() {
                 {FOUR_SOURCES.map((c, i) => (
                   <li key={c.title} className={card}>
                     <p className="flex items-center justify-between gap-2">
-                      <span className="text-base font-black">{c.title}</span>
+                      <span className="text-base font-black">
+                        <Term title={c.title} />
+                      </span>
                       <span className="text-[11px] font-bold text-white/40">{i + 1} of 4</span>
                     </p>
                     <p className="text-xs font-bold text-[#D3B574]">{c.tag}</p>
@@ -149,7 +252,9 @@ export default async function WhatWillWeOwe() {
 
             <Step n={3} title="Get your own estimate, before any offer">
               <div className={`${card} mt-3`}>
-                <p className="text-base font-black">The Net Price Calculator</p>
+                <p className="text-base font-black">
+                  <MoneyWord id="net-price">The Net Price Calculator</MoneyWord>
+                </p>
                 <p className="mt-1.5 text-sm leading-6 text-white/80">{CALCULATOR.what}</p>
                 <p className="mt-3 rounded-lg bg-white/[0.04] p-3 text-sm leading-6 text-white/75">Our advice: {CALCULATOR.advice}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -168,7 +273,9 @@ export default async function WhatWillWeOwe() {
                 {ASK_THE_COACH.map((q) => (
                   <li key={q.ask} className="rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-4">
                     <MessageCircleQuestion className="h-5 w-5 text-[#D3B574]" aria-hidden />
-                    <p className="mt-2 text-xl font-black">{q.ask}</p>
+                    <p className="mt-2 text-xl font-black">
+                      <Term title={q.ask} />
+                    </p>
                     <details className="group mt-1">
                       <summary className="cursor-pointer list-none text-xs font-semibold text-white/55 hover:text-white [&::-webkit-details-marker]:hidden">
                         <span className="group-open:hidden">Why</span>
@@ -204,12 +311,16 @@ export default async function WhatWillWeOwe() {
                   </li>
                 ))}
               </ol>
-              <p className="mt-3 text-sm font-semibold text-amber-100">{LOANS} A loan never lowers what you owe.</p>
+              <p className="mt-3 text-sm font-semibold text-amber-100">
+                {LOANS} A loan never lowers what you owe. <MoneyWord id="student-loans">Loan types</MoneyWord>
+              </p>
               <a href={OFFER_CALCULATOR} className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#D3B574] px-4 py-2.5 text-sm font-black text-[#0A1628] hover:bg-[#e2c98d]">
                 Do the sum for each offer <ArrowRight className="h-4 w-4" aria-hidden />
               </a>
               <Sources keys={BOTTOM_LINE.sources} />
             </section>
+
+            <MoneyWords />
           </>
         )}
         <LearnDisclaimer checkedLabel={checkedLabel} />

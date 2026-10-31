@@ -4,7 +4,8 @@
  * read the first column and asked: just tell me what we're going to owe.
  *
  * Every fact is from the Learn library (lib/recruiting/learn/content.ts, "Paying for college" and
- * "Questions families ask"); the example is round numbers, labelled as one. No income question, no
+ * "Questions families ask") or its money words (money-words.ts, each behind an ⓘ); the example is
+ * round numbers, labelled as one. No income question, no
  * comparison to other families. Staff-only until its switch in lib/recruitwrestlers-news.ts is on.
  */
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
@@ -17,6 +18,8 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { RW_STORIES } from "@/lib/recruitwrestlers-news"
+import { MoneyWord } from "@/components/recruiting/money-word"
+import type { MoneyWordId } from "@/lib/recruiting/learn/money-words"
 
 export const dynamic = "force-dynamic"
 
@@ -33,6 +36,13 @@ export async function generateMetadata(): Promise<Metadata> {
     ...(story.published ? {} : { robots: { index: false, follow: false } }),
   }
 }
+
+/** A money word with its plain-English definition one tap away, on the article's white page. */
+const W = ({ id, children }: { id: MoneyWordId; children?: React.ReactNode }) => (
+  <MoneyWord id={id} tone="light">
+    {children}
+  </MoneyWord>
+)
 
 const REACTIONS_SLUG = "rw-what-will-we-actually-owe"
 
@@ -131,11 +141,17 @@ export default async function WhatWillWeOwe() {
 
           <H2 n={1}>Every college has two prices</H2>
           <P>
-            <b>The published price</b> is what a year costs before any help: tuition and fees, housing and food, and books. It&apos;s the
+            <b>
+              <W id="cost-of-attendance">The published price</W>
+            </b>{" "}
+            is what a year costs before any help: tuition and fees, housing and food, and books. It&apos;s the
             number on the college&apos;s website, and the one that makes parents&apos; stomachs drop.
           </P>
           <P>
-            <b>The net price</b> is what a student actually pays for one year after scholarships and grants are subtracted.
+            <b>
+              <W id="net-price">The net price</W>
+            </b>{" "}
+            is what a student actually pays for one year after scholarships and grants are subtracted.
           </P>
           <P>The second number is the one that matters. A college with a high sticker price can cost your family less than a cheaper-looking one.</P>
 
@@ -145,15 +161,17 @@ export default async function WhatWillWeOwe() {
             items={[
               <>
                 <b>Government grants.</b> Need-based aid comes from the government and the college&apos;s financial aid office, based on your
-                family&apos;s finances, and it starts with one federal form: the FAFSA. The federal Pell Grant is the best-known example.
+                family&apos;s finances, and it starts with one federal form: the <W id="fafsa">FAFSA</W>. The federal <W id="pell">Pell Grant</W> is the best-known example.
               </>,
               <>
                 <b>The college&apos;s own aid.</b> Colleges award their own academic scholarships, usually on GPA and test scores. A need-based grant from
-                the college comes from its financial aid office. Neither has anything to do with wrestling.
+                the college comes from its financial aid office. Some colleges ask for a second form for it, the <W id="css-profile">CSS Profile</W>. Neither has anything to do with wrestling.
               </>,
               <>
-                <b>The athletic scholarship.</b> This is the money from the coach. The NCAA calls it a &ldquo;grant-in-aid&rdquo;; it means the
-                same thing.
+                <b>
+                  <W id="athletic-scholarship">The athletic scholarship.</W>
+                </b>{" "}
+                This is the money from the coach. The NCAA calls it a &ldquo;grant-in-aid&rdquo;; it means the same thing.
               </>,
               <>
                 <b>Outside scholarships.</b> Money from anyone other than the college. Whatever your wrestler receives, it has to be reported to the
@@ -170,12 +188,14 @@ export default async function WhatWillWeOwe() {
           <Quote>Scholarships and grants don&apos;t have to be paid back. Loans do.</Quote>
           <P>
             That sentence is the whole difference. An offer letter may list loans next to scholarships, but a loan isn&apos;t a discount.
-            It&apos;s money your family still owes, later, with interest.
+            It&apos;s money your family still owes, later, with interest. Federal loans in the student&apos;s name are{" "}
+            <W id="student-loans">subsidized or unsubsidized</W>, and a <W id="parent-plus">Parent PLUS loan</W> is in a parent&apos;s name. All of them
+            are paid back.
           </P>
 
           <H2 n={3}>Get your own estimate, before any offer</H2>
           <P>
-            Every college has a net price calculator on its website. You answer questions about your own situation, and it gives you an
+            Every college has a <W id="net-price">net price calculator</W> on its website. You answer questions about your own situation, and it gives you an
             estimate of your own cost. The US Department of Education keeps a search for them.
           </P>
           <P>
@@ -195,7 +215,10 @@ export default async function WhatWillWeOwe() {
                 can be a one-year or a multi-year award.
               </>,
               <>
-                <b>Does it renew?</b> In many cases the head coach decides whether it&apos;s renewed. If a Division I college plans to reduce or
+                <b>
+                  <W id="renewal">Does it renew?</W>
+                </b>{" "}
+                In many cases the head coach decides whether it&apos;s renewed. If a Division I college plans to reduce or
                 not renew it, it must tell the wrestler in writing by July 1.
               </>,
             ]}
@@ -206,7 +229,9 @@ export default async function WhatWillWeOwe() {
           <P>Once you have an offer, the sum is the same for every college:</P>
           <Bullets
             items={[
-              "Start with the college's full yearly cost of attendance.",
+              <>
+                Start with the college&apos;s full yearly <W id="cost-of-attendance">cost of attendance</W>.
+              </>,
               "Subtract every grant and scholarship, as yearly dollar figures. Don't subtract loans.",
               "What's left is what your family pays or borrows each year. Multiply it by four, and ask which parts are guaranteed after the first year.",
             ]}
@@ -231,7 +256,7 @@ export default async function WhatWillWeOwe() {
           </div>
 
           <p className="mt-8 text-sm leading-relaxed text-gray-500">
-            The rules here are from the NCAA&apos;s own manuals and the US Department of Education, as collected in our Learn library. Rules
+            The rules here are from the NCAA&apos;s own manuals, the US Department of Education and the College Board, as collected in our Learn library. Tap any <span className="text-[#65a30d]">ⓘ</span> for a plain-English definition and its source. Rules
             change, so confirm anything you&apos;re relying on with the college&apos;s financial aid or compliance office.
           </p>
         </div>

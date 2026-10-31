@@ -17,6 +17,17 @@ import {
   type OfferField,
   type Renews,
 } from "@/lib/recruiting/offers"
+import { MoneyWord } from "@/components/recruiting/money-word"
+import type { MoneyWordId } from "@/lib/recruiting/learn/money-words"
+
+/** The money word behind each field's ⓘ. Other aid is plain enough to need none. */
+const FIELD_WORD: Partial<Record<OfferField, MoneyWordId>> = {
+  grants: "grant-scholarship-loan",
+  merit: "merit-aid",
+  athletic: "athletic-scholarship",
+  revenueShare: "revenue-share",
+  loans: "student-loans",
+}
 
 /** What we hold about one college's price, for one family (worked out on the server). */
 export type SchoolMoney = {
@@ -140,16 +151,22 @@ export function CostComparison({ schools, offers, onOffer, readOnly, available }
                 {l.ifNotRenewed != null ? <p className="mt-1 text-xs text-amber-100">{dollars(l.ifNotRenewed)} if the athletic scholarship stops after year 1</p> : null}
                 <dl className="mt-3 space-y-1 border-t border-white/10 pt-3 text-xs">
                   <div className="flex justify-between gap-2">
-                    <dt className="text-white/55">{l.costFrom === "offer" ? "Cost on the offer letter" : `Published cost${s.money.published ? `, ${s.money.published.year}` : ""}`}</dt>
+                    <dt className="text-white/55">
+                      <MoneyWord id="cost-of-attendance">{l.costFrom === "offer" ? "Cost on the offer letter" : `Published cost${s.money.published ? `, ${s.money.published.year}` : ""}`}</MoneyWord>
+                    </dt>
                     <dd className="font-semibold">{dollars(l.cost)}</dd>
                   </div>
                   <div className="flex justify-between gap-2">
-                    <dt className="text-white/55">Grants, scholarships, NIL</dt>
+                    <dt className="text-white/55">
+                      <MoneyWord id="grant-scholarship-loan">Grants, scholarships, NIL</MoneyWord>
+                    </dt>
                     <dd className="font-semibold text-emerald-200">−{dollars(l.freeMoney)}</dd>
                   </div>
                   {l.loans > 0 ? (
                     <div className="flex justify-between gap-2">
-                      <dt className="text-white/55">Loans offered (owed later)</dt>
+                      <dt className="text-white/55">
+                        <MoneyWord id="student-loans">Loans offered (owed later)</MoneyWord>
+                      </dt>
                       <dd className="font-semibold">{dollars(l.loans)}</dd>
                     </div>
                   ) : null}
@@ -181,11 +198,15 @@ export function CostComparison({ schools, offers, onOffer, readOnly, available }
                   <span className="truncate text-sm font-semibold">{s.name}</span>
                 </span>
                 <span className="w-28 text-xs">
-                  <span className="block text-white/45">Published</span>
+                  <span className="block text-white/45">
+                    <MoneyWord id="cost-of-attendance">Published</MoneyWord>
+                  </span>
                   <span className="font-semibold">{s.money.published ? dollars(s.money.published.amount) : "—"}</span>
                 </span>
                 <span className="w-28 text-xs">
-                  <span className="block text-white/45">After aid</span>
+                  <span className="block text-white/45">
+                    <MoneyWord id="net-price">After aid</MoneyWord>
+                  </span>
                   <span className="font-semibold" title={s.money.afterAid.amount == null ? s.money.afterAid.why : undefined}>
                     {s.money.afterAid.amount != null ? dollars(s.money.afterAid.amount) : "In-state only"}
                   </span>
@@ -303,7 +324,7 @@ export function OfferDialog({
           {OFFER_FIELDS.map((f) => (
             <label key={f} className="grid grid-cols-[1fr_9rem] items-center gap-3">
               <span>
-                <span className={`block text-sm font-bold ${f === "loans" ? "text-amber-100" : ""}`}>{OFFER_FIELD_LABEL[f].label}</span>
+                <span className={`block text-sm font-bold ${f === "loans" ? "text-amber-100" : ""}`}>{FIELD_WORD[f] ? <MoneyWord id={FIELD_WORD[f]!}>{OFFER_FIELD_LABEL[f].label}</MoneyWord> : OFFER_FIELD_LABEL[f].label}</span>
                 <span className="block text-[11px] leading-4 text-white/45">{OFFER_FIELD_LABEL[f].help}</span>
               </span>
               <span className="relative">
@@ -314,7 +335,9 @@ export function OfferDialog({
           ))}
           <label className="grid grid-cols-[1fr_9rem] items-center gap-3 border-t border-white/10 pt-3">
             <span>
-              <span className="block text-sm font-bold">Cost of attendance</span>
+              <span className="block text-sm font-bold">
+                <MoneyWord id="cost-of-attendance" />
+              </span>
               <span className="block text-[11px] leading-4 text-white/45">
                 {school.money.published ? `If the letter gives one. Otherwise the published ${dollars(school.money.published.amount)} (${school.money.published.year}).` : "The letter's yearly cost. No published price for this college."}
               </span>
@@ -336,7 +359,9 @@ export function OfferDialog({
           </div>
           <div className="grid grid-cols-[1fr_auto] items-center gap-3">
             <span>
-              <span className="block text-sm font-bold">Does it renew each year?</span>
+              <span className="block text-sm font-bold">
+                <MoneyWord id="renewal">Does it renew each year?</MoneyWord>
+              </span>
               <span className="block text-[11px] leading-4 text-white/45">Ask the coach in writing.</span>
             </span>
             <span className="flex rounded-lg border border-white/15 p-0.5">

@@ -119,18 +119,20 @@ export const BOTTOM_LINE = { intro: COMPARING.intro!, steps: COMPARING.bullets!,
 export const GUIDE_PAGES = { paying: PAYING }
 
 /**
- * Left out because the Learn library does not source it (for Matt, 30 Oct 2026). Each is a fair
- * question a parent will ask; none goes in until a source is added to the library.
+ * Left out because no official source has been added for it (for Matt; 30 Oct 2026, cut down 31 Oct
+ * when the money words were sourced: lib/recruiting/learn/money-words.ts now covers the CSS Profile,
+ * the Pell Grant, federal student loan types, Parent PLUS loans with this year's limit and rate,
+ * work-study and 529 plans). Each is a fair question a parent will ask; none goes in until a source
+ * is added to the library.
  */
 export const NOT_INCLUDED = [
-  "When the FAFSA opens each year, and college or state FAFSA deadlines",
-  "The CSS Profile (the extra aid form some private colleges use)",
-  "Pell Grant amounts and who qualifies",
+  "The exact date the FAFSA opens each year, and college or state FAFSA deadlines",
   "Any state grant by name, such as North Carolina's own need-based grants",
   "Any outside scholarship by name, or where to search for them",
-  "Federal student loan types, yearly limits and interest rates; Parent PLUS loans",
-  "Work-study",
+  "Yearly limits and interest rates on the student's own federal loans (subsidized and unsubsidized)",
+  "Private (bank) student loans",
   "Whether an outside scholarship reduces the college's own aid",
   "Asking a college to reconsider an aid offer (appeals)",
-  "529 savings plans and education tax credits",
+  "Education tax credits",
+  "How a 529 plan counts on the FAFSA",
 ]

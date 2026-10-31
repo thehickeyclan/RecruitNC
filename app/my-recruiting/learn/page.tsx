@@ -89,7 +89,7 @@ const DO_NEXT: Array<{ icon: LucideIcon; label: string; text: string; href: stri
 /** Whole guides (Matt, 19 Oct 2026): the pages a family reads start to finish, beside the quick answers. */
 const GUIDES: Array<{ icon: LucideIcon; title: string; text: string; href: string }> = [
   { icon: Compass, title: "How to use the Command Center", text: "The five steps of the recruiting path, and how to use Scout.", href: "/recruiting/learn/how-to-use-command-center" },
-  { icon: Calculator, title: "What will we actually owe?", text: "The two prices, where the money comes from, and what to ask each coach.", href: "/recruiting/learn/what-will-we-owe" },
+  { icon: Calculator, title: "What will we actually owe?", text: "The two prices, where the money comes from, what to ask each coach, and every money word in plain English.", href: "/recruiting/learn/what-will-we-owe" },
   { icon: Plane, title: "Get ready for your official visit", text: "The checklist, who pays, the limits by level and the questions to ask.", href: "/recruiting/learn/official-visits" },
   { icon: DollarSign, title: "NIL in wrestling", text: "What it is, what wrestlers really earn, and what's just rumour.", href: "/recruiting/learn/nil" },
   { icon: ArrowLeftRight, title: "The transfer portal", text: "How transfers change recruiting, and the rules at every level.", href: "/recruiting/learn/transfer-portal" },
