@@ -43,12 +43,24 @@ export function survivorScore(row: Record<string, unknown>, matchRows: number): 
  *   duplicates in the first place, so the newer row is the one that knows he is Blue, and the
  *   older row's "none" is simply stale. Discarding it would drop a paying member's team.
  *
+ * - **An apostrophe in a name beats the same name without one.** Two spellings that differ only
+ *   by an apostrophe are one name typed two ways, and the one that has it is the name: a source
+ *   drops or mangles the character, it does not invent it. D'Yonnee Hall of Woodruff arrived as
+ *   "Dyonnee" on her 2026 placer row and "D'Yonnee" on her 2025 qualifier row, and the survivor
+ *   is chosen by how much it holds, which would have printed her name wrong on her own profile.
+ *   See normalizeApostrophes in lib/athlete-name-match.ts for the mangled forms this folds.
+ *
  * Everything else stays a human decision and is printed rather than resolved. A prospect
  * ranking of 74 against 75 is a duplicate sitting in two slots at once, and which number to
  * keep is a question about the rankings, not about this merge.
  */
+const apostrophed = (v: unknown) => /[\u2019']/.test(String(v ?? ""))
 export function prefersDuplicate(column: string, keepValue: unknown, dupValue: unknown): boolean {
   if (typeof keepValue === "boolean" && typeof dupValue === "boolean") return dupValue && !keepValue
+  if (/^(name|firstName|lastName|wrestling_name)$/.test(column)) {
+    const bare = (v: unknown) => String(v ?? "").replace(/[\u2019']/g, "").toLowerCase()
+    return bare(keepValue) === bare(dupValue) && apostrophed(dupValue) && !apostrophed(keepValue)
+  }
   if (column === "ncUnitedTeam") {
     const stale = String(keepValue ?? "").trim().toLowerCase()
     const other = String(dupValue ?? "").trim().toLowerCase()

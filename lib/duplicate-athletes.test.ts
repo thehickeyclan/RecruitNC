@@ -54,6 +54,19 @@ describe("prefersDuplicate", () => {
   it("leaves an email conflict to a person", () => {
     expect(prefersDuplicate("contactEmail", "coach@school.k12.nc.us", "athlete@gmail.com")).toBe(false)
   })
+
+  it("keeps the apostrophe when that is the only difference", () => {
+    // D'Yonnee Hall, Woodruff: "Dyonnee" on the 2026 placer row, "D'Yonnee" on the 2025 qualifier.
+    expect(prefersDuplicate("name", "Dyonnee Hall", "D'Yonnee Hall")).toBe(true)
+    expect(prefersDuplicate("firstName", "Dyonnee", "D\u2019Yonnee")).toBe(true)
+    expect(prefersDuplicate("name", "D'Yonnee Hall", "Dyonnee Hall")).toBe(false)
+  })
+
+  it("does not take a different name that happens to carry an apostrophe", () => {
+    // Two spellings of one name, not two names: anything else is a human decision.
+    expect(prefersDuplicate("name", "Alanna Smith", "Alannah O'Smith")).toBe(false)
+    expect(prefersDuplicate("name", "Josh Enright", "Joshua Enright")).toBe(false)
+  })
 })
 
 describe("sameWrestler", () => {
