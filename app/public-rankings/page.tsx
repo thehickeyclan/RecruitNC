@@ -245,6 +245,22 @@ export default async function PublicRankingsHomepage({
    * Which boards a tile stands for, with when each was last published, so a republished class
    * lights its tile until the visitor opens it (Matt, 30 Oct 2026). Keys match MarkBoardSeen.
    */
+  // The Top 75 publishes on its own board, so its stamp is its own (top_100_rankings).
+  const { data: top75Row } = await createAdminClient()
+    .from("top_100_rankings")
+    .select("published_at")
+    .eq("gender", "Male")
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  /** When the board behind a tile was last published (Matt, 30 Oct 2026: a stamp on every tile). */
+  const tileUpdated = (href: string, groupKey: string): string | null => {
+    if (/college-prospects/.test(href)) return stateCode === "NC" ? ((top75Row?.published_at as string | undefined) ?? null) : null
+    const gender = groupKey === "womens" ? "Female" : "Male"
+    const year = Number(href.split("?")[0]!.split("/").at(-1))
+    return ((editions ?? []).find((e) => e.state === stateCode && e.gender === gender && Number(e.class_year) === year)?.published_at as string | undefined) ?? null
+  }
+
   const boardsForTile = (href: string, groupKey: string) => {
     const gender = groupKey === "womens" ? "Female" : "Male"
     // The Top 75 publishes on its own board; a class publish is not a Top 75 update (Matt, 30 Oct 2026).
@@ -414,6 +430,11 @@ export default async function PublicRankingsHomepage({
                   <Icon className="h-6 w-6 text-[#D3B574]" aria-hidden />
                   <p className="mt-3 text-2xl font-black text-white">{cardTitle}</p>
                   <p className="mt-1 text-sm text-white/60">{description}</p>
+                  {lastUpdatedLabel(tileUpdated(href, group.key)) ? (
+                    <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-white/55">
+                      <CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden /> {lastUpdatedLabel(tileUpdated(href, group.key))}
+                    </p>
+                  ) : null}
                   <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">
                     {locked ? <><Lock className="h-4 w-4" aria-hidden /> Unlock with Insider</> : <>View rankings <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden /></>}
                   </span>
