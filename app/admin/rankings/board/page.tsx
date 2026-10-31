@@ -84,9 +84,13 @@ type BoardAthlete = {
   national_wins?: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
   national_win_count?: number
   significant_losses: Array<{ opponent: string; result: string | null; event: string | null; standing: string; upset: boolean }>
+  /** Top 75 only: "2027 #3", the wrestler's class and class rank. */
+  class_label?: string
 }
 
 const YEARS = ["2027", "2028", "2029", "2030", "2026"]
+/** The Top 75 College Prospects (2027 + 2028), worked on this same board (Matt, 30 Oct 2026). */
+const TOP75 = "top75"
 /** States with a board. North Carolina's is public; the others are worked here and saved only. */
 const STATES: Array<{ code: string; label: string }> = [
   { code: "NC", label: "North Carolina" },
@@ -498,7 +502,7 @@ export default function RankingBoardPage() {
   const requestedYear = searchParams.get("year")
   const requestedGender = searchParams.get("gender")
   const requestedState = (searchParams.get("state") ?? "NC").toUpperCase()
-  const [year, setYear] = useState(requestedYear && YEARS.includes(requestedYear) ? requestedYear : "2027")
+  const [year, setYear] = useState(requestedYear && (YEARS.includes(requestedYear) || requestedYear === TOP75) ? requestedYear : "2027")
   const [gender, setGender] = useState(requestedGender === "Female" ? "Female" : "Male")
   const [state, setState] = useState(STATES.some((s) => s.code === requestedState) ? requestedState : "NC")
   const [myStates, setMyStates] = useState<string[] | null>(null)
@@ -524,7 +528,8 @@ export default function RankingBoardPage() {
   const [loadedFor, setLoadedFor] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
-  const publicCap = getPublicRankingsMax(Number(year), gender)
+  const isTop75 = year === TOP75
+  const publicCap = isTop75 ? 75 : getPublicRankingsMax(Number(year), gender)
   const canEdit = access === "edit"
   const showing = `${state}|${year}|${gender}`
   const boardIsCurrent = loadedFor === showing
@@ -555,6 +560,11 @@ export default function RankingBoardPage() {
     if (searchParams.get("year") === year && searchParams.get("gender") === gender && (searchParams.get("state") ?? "NC") === state) return
     router.replace(`${pathname}?year=${year}&gender=${gender}${state !== "NC" ? `&state=${state}` : ""}`, { scroll: false })
   }, [year, gender, state, pathname, router, searchParams])
+
+  // The Top 75 is North Carolina's men only; switching away lands on a class board.
+  useEffect(() => {
+    if (isTop75 && (state !== "NC" || gender !== "Male")) setYear("2027")
+  }, [isTop75, state, gender])
 
   const loadBoard = async (forceRefresh = false) => {
     const loadId = ++latestLoad.current
@@ -672,11 +682,17 @@ export default function RankingBoardPage() {
     setSaving(true)
     setStatus("")
     try {
-      const res = await fetch("/api/admin/rankings/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "save", year, gender, state, rankings: athletes.map((a, i) => ({ id: a.id, final_rank: i + 1 })) }),
-      })
+      const res = isTop75
+        ? await fetch("/api/admin/rankings/top-100", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gender: "Male", order: athletes.slice(0, 75).map((a) => a.id) }),
+          })
+        : await fetch("/api/admin/rankings/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "save", year, gender, state, rankings: athletes.map((a, i) => ({ id: a.id, final_rank: i + 1 })) }),
+          })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Could not save the order.")
       setDraftSavedAt(data.draftSavedAt ?? new Date().toISOString())
@@ -715,6 +731,27 @@ export default function RankingBoardPage() {
     if (dirty) return setStatus("You have unsaved moves. Save first — Publish only ever publishes the saved order.")
     setPublishing(true)
     setStatus("")
+    if (isTop75) {
+      try {
+        // Publish refuses unsaved moves (above), so the screen's top 75 is the saved order.
+        const order = athletes.slice(0, 75).map((a) => a.id)
+        const res = await fetch("/api/admin/rankings/top-100", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gender: "Male", order, publish: true }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || "Could not publish.")
+        setPublishedAt(data.publishedAt ?? new Date().toISOString())
+        setStatus(`Published the Top ${data.published}. No push sent.`)
+        await loadBoard(true)
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : "Could not publish.")
+      } finally {
+        setPublishing(false)
+      }
+      return
+    }
     try {
       const res = await fetch("/api/admin/rankings/save", {
         method: "POST",
@@ -774,6 +811,9 @@ export default function RankingBoardPage() {
               <span className="truncate font-bold text-white">{athlete.name}</span>
               {athlete.locked ? <Lock className="h-3 w-3 text-[#d6b75d]" aria-label="Locked" /> : null}
               {stars[athlete.id] ? <span className="text-xs font-bold text-[#d6b75d]">{stars[athlete.id]!.stars}★</span> : null}
+              {athlete.class_label ? (
+                <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[11px] font-bold text-white">Class of {athlete.class_label}</span>
+              ) : null}
             </div>
             <div className="truncate text-xs text-slate-400">
               {[athlete.highschool, athlete.last_competed ? `last: ${athlete.last_competed}` : null].filter(Boolean).join(" · ")}
@@ -877,9 +917,9 @@ export default function RankingBoardPage() {
               ))}
               {/* The Top 75 is its own board (2027 + 2028); a tab here so it is found from the boards (Matt, 30 Oct 2026). */}
               {state === "NC" && gender === "Male" ? (
-                <Link href="/admin/rankings/top-100" className={pill(false)}>
+                <button className={pill(isTop75)} onClick={() => setYear(TOP75)}>
                   Top 75
-                </Link>
+                </button>
               ) : null}
             </div>
             <button
@@ -913,7 +953,7 @@ export default function RankingBoardPage() {
               ) : (
                 boardIsCurrent && <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Read only</span>
               )}
-              {canPublish && state === "NC" && gender === "Male" ? (
+              {canPublish && state === "NC" && gender === "Male" && !isTop75 ? (
                 <>
                   {publishedAt ? (
                     <button
@@ -943,7 +983,7 @@ export default function RankingBoardPage() {
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className="text-2xl font-black tracking-tight">
-                {stateLabel} · {gender === "Male" ? "Men" : "Women"} · Class of {year}
+                {isTop75 ? "North Carolina · Men · Top 75 College Prospects (2027 + 2028)" : <>{stateLabel} · {gender === "Male" ? "Men" : "Women"} · Class of {year}</>}
               </h1>
               <p className="text-sm text-slate-400">
                 {athletes.length} wrestlers · top {publicCap} {state === "NC" ? "go public" : "would be the board"} · the formula agrees with{" "}
