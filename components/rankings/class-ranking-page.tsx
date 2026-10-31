@@ -3,6 +3,7 @@ import Link from "next/link"
 import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { lastUpdatedLabel } from "@/lib/rankings/published-date"
 import { RankingLegend, RankingMethod } from "@/components/rankings/ranking-method"
+import { MarkBoardSeen } from "@/components/rankings/updated-tile"
 import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
 import { loadStarredAthleteIds } from "@/lib/recruiting/starred-ids"
@@ -125,6 +126,7 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
             <span className="block text-2xl text-[#D7B95A] sm:text-3xl">{board}Class of {year}</span>
           </h1>
 
+          <MarkBoardSeen board={`${state}:${gender}:${year}`} publishedAt={ranking.publishedAt} />
           {/* The stamp sits under the title, where a reader decides whether the board is current. */}
           {lastUpdatedLabel(ranking.publishedAt) ? (
             <p className="mt-4 flex justify-center">
