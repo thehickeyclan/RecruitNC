@@ -2,7 +2,7 @@ import { checkConsent, type ConsentInput, type ConsentRecord } from "@/lib/legal
 import { blockedCoachMatch } from "@/lib/coach-blocklist"
 import { notifyStaffBlockedCoachSignup } from "@/lib/staff-alerts-sms"
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createEmailLinkClient } from "@/lib/supabase/email-link-client"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { canonicalRole, shouldAutoApproveCoach } from "@/lib/coach-auto-approve"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("[v0] Creating Supabase client...")
-    const supabase = await createClient()
+    const supabase = createEmailLinkClient()
     console.log("[v0] Supabase client created")
 
     const safeReturnTo =

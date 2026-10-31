@@ -205,5 +205,8 @@ export function authEmailsFor(user: HookUser, data: HookEmailData, supabaseUrl: 
   }
 
   const type = kind === "signup" || kind === "recovery" || kind === "magiclink" || kind === "invite" ? kind : "email"
-  return { brand, emails: [linkEmail(brand, email, kind, callbackUrl(brand, data.token_hash ?? "", type, data.redirect_to))] }
+  const hash = data.token_hash ?? ""
+  /* A PKCE token cannot be checked by our callback; it keeps Supabase's link (same browser only). */
+  const url = hash.startsWith("pkce_") ? verifyUrl(supabaseUrl, hash, type, data.redirect_to) : callbackUrl(brand, hash, type, data.redirect_to)
+  return { brand, emails: [linkEmail(brand, email, kind, url)] }
 }
