@@ -143,6 +143,7 @@ function SignUpWizard() {
   const [password, setPassword] = useState("")
   const [cellPhone, setCellPhone] = useState("")
   const [consent, setConsent] = useState<ConsentState>(EMPTY_CONSENT)
+  const [accountExists, setAccountExists] = useState(false)
   const [college, setCollege] = useState("")
   const [program, setProgram] = useState<CoachProgram | null>(null)
   const [website, setWebsite] = useState("")
@@ -173,6 +174,7 @@ function SignUpWizard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setAccountExists(false)
     if (!profileType) return
     if (roleNeedsPhone && cellPhone.replace(/\D/g, "").length < 10) {
       setError("Enter a 10-digit cell number.")
@@ -247,11 +249,14 @@ function SignUpWizard() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
+        if ((data as { code?: string })?.code === "exists") setAccountExists(true)
         throw new Error((data as { error?: string; message?: string })?.error || (data as { message?: string })?.message || `An error occurred during sign up (${res.status})`)
       }
       track("signup_completed", returnTo, { role: profileType })
       track("verification_email_sent", returnTo)
       setSuccess(true)
+      // The form is long on a phone: without this the confirmation opened scrolled half off the top (Matt, 31 Oct 2026).
+      window.scrollTo({ top: 0 })
     } catch (err) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred during sign up. Please try again."
       track("signup_error", returnTo, { message })
@@ -293,8 +298,7 @@ function SignUpWizard() {
           <CardContent>
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                <strong>Important:</strong> protected actions like rankings, profile claiming/editing, TOC confirmations, wallet, and recruiting tools
-                {" "}<BrandText text="require email verification. Public RecruitNC pages are still available while you check your inbox." />
+                Claiming a profile needs a verified email. You can keep browsing while you check your inbox.
               </p>
               <p className="text-sm text-muted-foreground">
                 If you don&apos;t see the email within a minute, check spam, junk, promotions, or school/work email filters.
@@ -312,9 +316,9 @@ function SignUpWizard() {
               </Button>
               <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2">
                 <Button asChild variant="ghost" className="w-full">
-                  <Link href="/" target="_top" rel="noopener">Browse RecruitNC</Link>
+                  <Link href="/" target="_top" rel="noopener"><BrandText text="Browse RecruitNC" /></Link>
                 </Button>
-                <Button asChild variant="ghost" className="w-full">
+                <Button asChild variant="ghost" className="ncu-only w-full">
                   <Link href="/news/united-ascent" target="_top" rel="noopener">United Ascent News</Link>
                 </Button>
               </div>
@@ -394,7 +398,20 @@ function SignUpWizard() {
                 {error && (
                   <Alert variant="destructive" className="mb-4">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>
+                      {error}
+                      {accountExists ? (
+                        <>
+                          {" "}
+                          <a
+                            href={`/auth/signin${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
+                            className="font-bold underline underline-offset-2"
+                          >
+                            Sign in
+                          </a>
+                        </>
+                      ) : null}
+                    </AlertDescription>
                   </Alert>
                 )}
 
