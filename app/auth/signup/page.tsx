@@ -264,7 +264,8 @@ function SignUpWizard() {
       setSuccess(true)
     } catch (err) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred during sign up. Please try again."
-      track("signup_error", returnTo, { message })
+      // An existing account is not a failed sign-up: the signup-health alert would fire on it.
+      track(/already have an account/i.test(message) ? "signup_existing_account" : "signup_error", returnTo, { message })
       setError(message)
     } finally {
       setLoading(false)
@@ -413,7 +414,12 @@ function SignUpWizard() {
                             className="font-bold underline underline-offset-2"
                           >
                             Sign in
+                          </a>{" "}
+                          or{" "}
+                          <a href="/auth/forgot-password" className="font-bold underline underline-offset-2">
+                            reset your password
                           </a>
+                          .
                         </>
                       ) : null}
                     </AlertDescription>

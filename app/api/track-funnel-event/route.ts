@@ -14,6 +14,7 @@ const ALLOWED_EVENTS = new Set([
   "signup_role_chosen",
   "signup_submitted",
   "signup_error",
+  "signup_existing_account",
   "signup_completed",
   "verification_email_sent",
   "verification_resend_requested",
