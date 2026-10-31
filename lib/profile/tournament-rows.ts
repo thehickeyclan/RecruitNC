@@ -11,7 +11,7 @@ import type { NhscaNationalBout } from "@/lib/nhsca-national-bouts"
  */
 import { displayName, placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import { parseFargoDivisionString } from "@/lib/fargo-division"
-import { HOME_STATE, stateChampionshipName } from "@/lib/athlete-state"
+import { HOME_STATE, invitationalName, stateChampionshipName } from "@/lib/athlete-state"
 import type { NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
 import { cleanClassification } from "@/lib/profile/state-hs-group"
 import {
@@ -61,6 +61,9 @@ export type NchsaaSummaryResult = {
   place: number | null | undefined
   classification: string
   weight_class: string
+  /** Undefined means the state sanctioned it — see lib/recruiting/state-events.ts. */
+  sanctioned?: boolean
+  gender?: string | null
 }
 
 function statePlacement(place: number | null | undefined): string | null {
@@ -134,6 +137,26 @@ export function buildNchsaaStateRows(
   state: string = HOME_STATE,
 ): TournamentRow[] {
   const body = (classification: string) => stateChampionshipName(state, classification)
+  /*
+   * An event the state did not sanction is not a championship, and that is carried on the result
+   * rather than read off the division's name: a label can be changed, and a sanctioned event can
+   * be called anything. `sanctioned: false` reaches here from state_tournament_divisions - see
+   * lib/recruiting/state-events.ts. West Virginia's girls wrestled an invitational in 2024-2026,
+   * and naming it a WVSSAC state championship would credit a girl with a title her state did not
+   * award. Undefined means sanctioned, which is every other state tournament we hold.
+   */
+  const unsanctionedName = (row: NchsaaSummaryResult) =>
+    row.sanctioned === false ? invitationalName(state, row.classification) ?? `${state} ${row.gender ?? ""} State Invitational`.replace(/\s+/g, " ").trim() : null
+  const eventNameFor = (row: NchsaaSummaryResult) => {
+    const notAChampionship = unsanctionedName(row)
+    if (notAChampionship) return notAChampionship
+    const named = body(row.classification)
+    const suffix = row.classification && !row.classification.toUpperCase().startsWith(named.toUpperCase()) ? ` ${row.classification}` : ""
+    return `${named}${suffix} State Championships`
+  }
+  /* The bouts under a row name the tournament without his class, as they always have. */
+  const boutEventNameFor = (row: NchsaaSummaryResult) =>
+    unsanctionedName(row) ?? `${body(row.classification)} State Championships`
   return results
     .map((raw, index) => {
       const result = { ...raw, classification: cleanClassification(raw.classification) }
@@ -142,11 +165,7 @@ export function buildNchsaaStateRows(
       const wins = bouts.filter((bout) => bout.outcome === "W").length
       return {
         id: `state-tournament-${result.year}-${result.classification}-${result.weight_class}-${index}`,
-        event: `${body(result.classification)}${
-          result.classification && !result.classification.toUpperCase().startsWith(body(result.classification).toUpperCase())
-            ? ` ${result.classification}`
-            : ""
-        } State Championships`,
+        event: eventNameFor(result),
         team: null,
         isDuals: false,
         year: result.year,
@@ -157,7 +176,7 @@ export function buildNchsaaStateRows(
         entrants: null,
         bouts: bouts.map((bout, boutOrder) => ({
           eventKey: `state-tournament-${result.year}`,
-          eventName: `${body(result.classification)} State Championships`,
+          eventName: boutEventNameFor(result),
           year: result.year,
           weight: bout.weight ?? result.weight_class,
           round: bout.round || rounds[boutOrder] || "State Championships",

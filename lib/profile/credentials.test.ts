@@ -99,12 +99,18 @@ describe("the state names the championship", () => {
   })
 
   it("names a state we hold no association for by the state itself", () => {
+    /*
+     * Alaska, because each state that loads gains an association and takes this case with it -
+     * Georgia's GHSA, then Alabama's AHSAA. Pick a state that is not on the roadmap, and when
+     * Alaska ever loads, move this to another one rather than deleting the case: the fallback is
+     * what every state we have not reached yet relies on. The map is in lib/athlete-state.ts.
+     */
     const labels = profileCredentials({
-      stateRows: [row("Georgia 6A State Championships", "3rd")],
+      stateRows: [row("Alaska 6A State Championships", "3rd")],
       tocRows: [],
       tournamentRows: [],
-      state: "GA",
+      state: "AK",
     }).map((c) => c.label)
-    expect(labels).toEqual(["Georgia 6A State 3rd · ’26"])
+    expect(labels).toEqual(["Alaska 6A State 3rd · ’26"])
   })
 })

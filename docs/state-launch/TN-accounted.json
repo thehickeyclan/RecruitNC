@@ -1,0 +1,230 @@
+{
+  "placers": [
+    {
+      "name": "Jonathan Graham",
+      "school": "Lakeway Christian",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Christian Davis",
+      "school": "Signal Mountain",
+      "season": 2026,
+      "reason": "source-conflict",
+      "note": "Readings disagree on his class year and neither is ruled out, so it is held rather than forced. Detail in Muse's tn-grad-year-conflicts.md (25 Oct 2026)."
+    },
+    {
+      "name": "William Hamilton",
+      "school": "McCallie",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Ford Bowman",
+      "school": "Providence - Johnson City",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Payne Walker",
+      "school": "CBHS",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Christopher Phillips",
+      "school": "Baylor",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Brandon Mcdonald",
+      "school": "BGA",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Luke Skelton",
+      "school": "Brentwood Aca.",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Riley Alcantar",
+      "school": "Baylor",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Bentley Blazek",
+      "school": "Boyd Buchanan",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Ruger Pennington",
+      "school": "MBA",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Kohlton Vargas",
+      "school": "CBHS",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Dominic Simpson",
+      "school": "MBA",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Landon McConnell",
+      "school": "Goodpasture",
+      "season": 2026,
+      "reason": "source-conflict",
+      "note": "Readings disagree on his class year and neither is ruled out, so it is held rather than forced. Detail in Muse's tn-grad-year-conflicts.md (25 Oct 2026)."
+    },
+    {
+      "name": "Jon Cross",
+      "school": "McCallie",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Cooper Combs",
+      "school": "CBHS",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Charlie Silberman",
+      "school": "McCallie",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Cooper Mariakis",
+      "school": "McCallie",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Blake King",
+      "school": "Chatt. Christian",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Jonathan Comes",
+      "school": "Lakeway Christian",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Maximiliano Fox",
+      "school": "Brentwood Aca.",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Nick Toth",
+      "school": "Father Ryan",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Colten Calvin",
+      "school": "Father Ryan",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    },
+    {
+      "name": "Alex Asack",
+      "school": "JPII",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year in any source: TSSAA's medal-winner notes and the FloArena brackets print none for him, and RankWrestlers was unreachable from the build machine, so that ladder rung was never available for Tennessee at all. Closed as not found rather than guessed; he gets a profile when a year surfaces (25 Oct 2026)."
+    }
+  ],
+  "preFreshmanVerified": [
+    {
+      "athleteId": "4627915a-2c0c-4c98-a86f-015e5e85ed7e",
+      "note": "Ashton Johnson, Boyd Buchanan, class of 2029. Placed at the 2025 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "f245abc4-2321-472b-89bf-91fa580d76bb",
+      "note": "Slade Linton, Eagleville, class of 2030. Placed at the 2026 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "a2f2a7c1-2d0b-4d72-bfc4-b320c2f65714",
+      "note": "Camden Ritchie, McCallie, class of 2029. Placed at the 2025 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "3a228171-1190-4e43-9784-ad5104c3fdfa",
+      "note": "Colin Grone, Boyd Buchanan, class of 2028. Placed at the 2024 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "af9da9c8-1f26-4c8f-8582-54ab36dcdd15",
+      "note": "Carlton King, MBA, class of 2028. Placed at the 2024 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "d8f587e3-41db-4877-9b6a-040b55f2fc93",
+      "note": "Jaxon Lane, McCallie, class of 2028. Placed at the 2024 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "30a9cd8f-5828-40d8-9d33-d9cadb6cd9ed",
+      "note": "Dylan Villers, McCallie, class of 2028. Placed at the 2024 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "c124174d-5ef4-475b-948f-c0e1e90c9c00",
+      "note": "Cainan Williams, McCallie, class of 2028. Placed at the 2024 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "9333aaf9-2a64-47b2-a97b-57cbeb838d2d",
+      "note": "Cooper Ledbetter, McCallie, class of 2028. Placed at the 2024 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "3aebeff7-d034-42bb-98e5-c732d65b9fd2",
+      "note": "Cayden Clay, ECS, class of 2029. Placed at the 2025 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "1c42f358-a2a3-44bc-b1a0-db0206262781",
+      "note": "Cade Riddle, Lakeway Christian, class of 2029. Placed at the 2025 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "ee945ce6-0140-401c-84c2-20f7ebc0f206",
+      "note": "Kristopher Sanders, Chatt. Christian, class of 2029. Placed at the 2025 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "82c80361-9e73-4fd8-aaa0-df9190670982",
+      "note": "Joseph Kennedy, Chatt. Christian, class of 2029. Placed at the 2025 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    },
+    {
+      "athleteId": "8a186b94-a81c-4fcd-adac-e53e7de6e4ed",
+      "note": "Ian McCallie, Signal Mountain, class of 2030. Placed at the 2026 TSSAA championship before his freshman year, which Tennessee allows: TSSAA Handbook Art. II \u00a78 admits eighth graders, and the brackets print '8th' as the grade, which is how the class year was derived in the first place. All fourteen of these are Division II independents. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (25 Oct 2026)."
+    }
+  ]
+}

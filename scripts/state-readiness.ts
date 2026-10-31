@@ -153,6 +153,17 @@ type Accounted = {
   placers?: Array<{ name: string; school?: string; season?: number; reason: "graduated" | "duplicate" | "namesake" | "source-conflict" | "approved"; note?: string }>
   classYearUnresolved?: Array<{ athleteId: string; note?: string }>
   preFreshmanVerified?: Array<{ athleteId: string; note?: string }>
+  /**
+   * A wrestler whose North Carolina results are genuine history, because he moved.
+   *
+   * The gate below treats an NC result on another state's profile as a possible mis-link, which
+   * is right by default. It is not always wrong, though: Jack Harty won NCHSAA 4A titles at
+   * Northern Guilford and now wrestles for Greens Farms Academy in Connecticut, so his profile
+   * is a Connecticut profile carrying two real North Carolina championships. Naming him here
+   * says that was checked, the way preFreshmanVerified does for an eighth-grade medal, instead
+   * of leaving Connecticut permanently NO-GO on a fact about one transfer.
+   */
+  homeStateResultsVerified?: Array<{ athleteId: string; note?: string }>
 }
 function accountedFor(state: string): Accounted {
   // The repo this script lives in, then the working folder: the same answer wherever it is run.
@@ -219,10 +230,13 @@ async function measure(state: string) {
   const namesakes = links.filter((l) => yearsEarly(l) > (l.independent ? 2 : 0) && !verifiedEarly.has(l.athlete_id)).map(line)
   const middleSchool = links.filter((l) => l.independent && yearsEarly(l) > 0 && yearsEarly(l) <= 2).map(line)
   // Out of state NC results on a non-NC profile: possible (a move), never assumed.
+  const verifiedHomeResults = new Set((acct.homeStateResultsVerified ?? []).map((v) => v.athleteId))
   const crossState =
     state === HOME_STATE
       ? []
-      : links.filter((l) => l.source === HOME_STATE).map((l) => `${byId.get(l.athlete_id)?.name} carries ${l.label} · ${l.athlete_id}`)
+      : links
+          .filter((l) => l.source === HOME_STATE && !verifiedHomeResults.has(l.athlete_id))
+          .map((l) => `${byId.get(l.athlete_id)?.name} carries ${l.label} · ${l.athlete_id}`)
 
   const dupCount = new Map<string, Athlete[]>()
   for (const a of current) dupCount.set(key(a.name, a.graduationyear), [...(dupCount.get(key(a.name, a.graduationyear)) ?? []), a])
@@ -274,6 +288,37 @@ async function measure(state: string) {
   const accountedPlacer = (p: Placement) =>
     (acct.placers ?? []).find((x) => nameKey(x.name) === nameKey(p.name) && (!x.season || x.season === p.season) && (!x.school || !p.school || nameKey(x.school) === nameKey(p.school)))
   const unaccounted = unlinked.filter((p) => !accountedPlacer(p) && !graduatedByRegistry(p))
+  /*
+   * Champions and finalists with no profile, listed by name whatever accounts for them.
+   *
+   * Vermont's Maxwell LaPerle - the 2026 state champion at 190 - had no class year in any Vermont
+   * source. Naming him in the accounted file was enough to clear the gate above, so his absence
+   * read as one more number in a passing line; the class year that settled it (three NHSCA grade
+   * prints) was sitting in data the import already held. A missing state champion is the most
+   * visible hole a state can have, so the latest season's top three are always printed by name,
+   * and a graduation that nothing dates has to say what dates it.
+   */
+  const graduatedOnRow = (p: Placement) => p.grad_year != null && p.grad_year < SENIORS
+  const topOfLatest = placements
+    .filter((p) => p.season === latest && !p.athlete_id && (p.place ?? 0) >= 1 && (p.place ?? 99) <= 3)
+    .map((p) => {
+      const a = accountedPlacer(p)
+      const why = a
+        ? `${a.reason}${a.note ? ` - ${a.note}` : ""}`
+        : graduatedOnRow(p)
+          ? `graduated (class of ${p.grad_year})`
+          : graduatedByRegistry(p)
+            ? "graduated (identity registry)"
+            : "UNACCOUNTED"
+      return `${p.name}, ${p.school ?? "?"}, ${p.weight ?? "?"} #${p.place} - ${why}`
+    })
+  const asserted = unlinked
+    .filter((p) => {
+      const a = accountedPlacer(p)
+      return a?.reason === "graduated" && !graduatedByRegistry(p) && !graduatedOnRow(p) && !String(a.note ?? "").trim()
+    })
+    .map((p) => `${p.name}, ${p.school ?? "?"}, ${p.weight ?? "?"} #${p.place ?? "?"} - "graduated" with no class year in any source and no note`)
+
   const reasons = new Map<string, number>()
   for (const p of unlinked) {
     const r = accountedPlacer(p)?.reason ?? (graduatedByRegistry(p) ? "graduated" : undefined)
@@ -298,10 +343,18 @@ async function measure(state: string) {
         pass: unnamedNoClass.length === 0 && pct(recentNoClass.length, recentIds.size) <= 5,
         detail: unnamedNoClass.map((a) => `${a.name}, ${a.highschool ?? "?"} · ${a.id}`),
       },
+      {
+        check: '"Graduated" placers with no dated source and no note',
+        kind: "GATE",
+        value: String(asserted.length),
+        pass: asserted.length === 0,
+        detail: asserted,
+      },
+      { check: `${latest} champions and finalists with no profile`, kind: "INFO", value: String(topOfLatest.length), pass: true, detail: topOfLatest },
       { check: "Championship-linked profiles with no state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
       { check: "Unexplained results before freshman year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
       { check: "Independent-school results from 7th/8th grade (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
-      { check: "NC results on this state's profiles (review each)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
+      { check: "NC results on this state's profiles (unnamed)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
       { check: "Duplicate profiles (same name and class)", kind: "GATE", value: String(dups.length), pass: dups.length === 0, detail: dups },
       {
         check: "Current-class profiles with a school",
@@ -339,8 +392,13 @@ async function main() {
   const listed = process.argv.includes("--all") ? target.rows.filter((r) => !r.pass || r.detail?.length) : failed
   for (const r of listed) {
     console.log(`\n${r.check}:`)
-    for (const d of (r.detail ?? []).slice(0, 40)) console.log(`  - ${d}`)
-    if ((r.detail?.length ?? 0) > 40) console.log(`  … and ${r.detail!.length - 40} more`)
+    /*
+     * The point of printing the rows is that a fix starts from names; forty of a hundred and
+     * thirteen is a percentage again. --all prints them, which is what gets sent to Muse.
+     */
+    const limit = process.argv.includes("--all") ? Number.POSITIVE_INFINITY : 40
+    for (const d of (r.detail ?? []).slice(0, limit)) console.log(`  - ${d}`)
+    if ((r.detail?.length ?? 0) > limit) console.log(`  … and ${r.detail!.length - limit} more (--all to list them)`)
   }
   console.log(
     failed.length

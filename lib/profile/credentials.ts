@@ -95,6 +95,16 @@ export function profileCredentials(input: {
   for (const row of input.stateRows) {
     const place = placeNumber(row.placement)
     if (place == null || place > 6) continue
+    /*
+     * An event that is not a state championship already says so in its own name, because the row
+     * was built from the sanctioned flag (lib/profile/tournament-rows.ts). Re-deriving a title
+     * here from the classification threw that away and called West Virginia's girls' invitational
+     * a WVSSAC state championship — a title the WVSSAC did not award before 2026-27.
+     */
+    if (!/state championships$/i.test(row.event)) {
+      add(row.event.replace(/\s+State Invitational$/i, " State Inv."), `${placeWord(place)} · ${shortYear(row.year)}`, "state", place, row.year)
+      continue
+    }
     const cls = row.event.match(/\b(\d+A(?:\/\d+A)?|NCISA[^ ]*|SCISA[^ ]*)\b/i)?.[1]
     /*
      * The championship is named from the wrestler's state, not hardcoded: an independent-schools

@@ -27,6 +27,31 @@ export const RECRUITING_BRAND = {
     { code: "SC", name: "South Carolina", live: true }, // Live 26 Oct 2026 (Matt); scripts/state-readiness.ts --state SC: all data gates pass
     // Being built (Matt, 21 Oct 2026): profiles first, not open to coaches until he says go.
     { code: "VA", name: "Virginia", live: false },
+    /*
+     * Maryland's data went in on 22 Oct and passes every readiness gate, but the state was
+     * missing from this list entirely - and a state that is not here does not exist to the
+     * product: /api/prospects answers "That state is not open yet" for it, to admins too. So
+     * 224 Maryland profiles were unreachable by anybody, including the people checking them.
+     */
+    { code: "MD", name: "Maryland", live: false },
+    { code: "WV", name: "West Virginia", live: false },
+    { code: "DE", name: "Delaware", live: false },
+    { code: "GA", name: "Georgia", live: false },
+    { code: "TN", name: "Tennessee", live: false },
+    { code: "FL", name: "Florida", live: false },
+    { code: "AL", name: "Alabama", live: false },
+    { code: "LA", name: "Louisiana", live: false },
+    { code: "MS", name: "Mississippi", live: false },
+    { code: "KY", name: "Kentucky", live: false },
+    { code: "IN", name: "Indiana", live: false },
+    { code: "NJ", name: "New Jersey", live: false },
+    { code: "NY", name: "New York", live: false },
+    { code: "CT", name: "Connecticut", live: false },
+    { code: "MA", name: "Massachusetts", live: false },
+    { code: "RI", name: "Rhode Island", live: false },
+    { code: "NH", name: "New Hampshire", live: false },
+    { code: "VT", name: "Vermont", live: false },
+    { code: "ME", name: "Maine", live: false },
   ],
 } as const
 
@@ -68,14 +93,37 @@ export function liveStates(onRecruitWrestlers = false): RecruitingState[] {
   return RECRUITING_BRAND.states.filter((s) => (onRecruitWrestlers ? s.live : s.code === "NC"))
 }
 
-/** States a viewer may open: the live ones on this address, and the ones still being checked for an admin. */
-export function visibleStates(isAdmin: boolean, onRecruitWrestlers = false): RecruitingState[] {
+/**
+ * States a viewer may open: the live ones on this address, the ones still being checked if an
+ * admin, and any named for this viewer by `preview`.
+ *
+ * `preview` exists because the launch checklist asks for a real in-state coach session and a real
+ * family claim BEFORE a state goes live, and until it the only account that could see a
+ * not-yet-live state was an admin. That is circular - to launch we need a coach to look, and to
+ * let a coach look we had to launch - and the only way through it was handing a college coach the
+ * admin surface. A named account previewing a named state is the smaller permission.
+ *
+ * A preview is granted per account and per state, so it holds on either address. The OEM rule
+ * above governs what a brand reports to the public, not what a person who has been handed a
+ * specific state may open - an admin already crosses it the same way.
+ */
+export function visibleStates(
+  isAdmin: boolean,
+  onRecruitWrestlers = false,
+  preview: readonly string[] = [],
+): RecruitingState[] {
   const live = new Set(liveStates(onRecruitWrestlers).map((s) => s.code))
-  return RECRUITING_BRAND.states.filter((s) => live.has(s.code) || isAdmin)
+  const named = new Set(preview.map((c) => String(c).trim().toUpperCase()).filter(Boolean))
+  return RECRUITING_BRAND.states.filter((s) => live.has(s.code) || isAdmin || named.has(s.code))
 }
 
-export function isVisibleState(code: string | null | undefined, isAdmin: boolean, onRecruitWrestlers = false): boolean {
-  return visibleStates(isAdmin, onRecruitWrestlers).some((s) => s.code === String(code ?? "").toUpperCase())
+export function isVisibleState(
+  code: string | null | undefined,
+  isAdmin: boolean,
+  onRecruitWrestlers = false,
+  preview: readonly string[] = [],
+): boolean {
+  return visibleStates(isAdmin, onRecruitWrestlers, preview).some((s) => s.code === String(code ?? "").toUpperCase())
 }
 
 /** "North Carolina", "North Carolina and South Carolina", "North Carolina, South Carolina, and Virginia". */

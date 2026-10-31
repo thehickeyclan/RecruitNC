@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   filterRowsByAthleteMatchContext,
   getAthleteNameSearchVariants,
+  nameReadings,
   nameWords,
   namesLikelySamePerson,
   namesReferToSamePerson,
@@ -168,5 +169,62 @@ describe("a mangled apostrophe", () => {
 
   it("still refuses a trailing question mark, which decides nothing", () => {
     expect(namesLikelySamePerson("Jackson Smith?", "Jackson Jones")).toBe(false)
+  })
+})
+
+describe("one school, two spellings", () => {
+  /*
+   * Every pair here is one Maryland school as two of its own brackets spell it. Each one that
+   * fails mints a second profile for a wrestler who entered both his state's tournaments —
+   * five boys at Loyola Blakefield, before the grouping was fixed to ask this function.
+   */
+  it.each([
+    ["Loyola Blakefield", "Loyola-Blakefield"],
+    ["Cambridge-South Dorchester", "Cambridge/South Dorchester"],
+    ["DeMatha Catholic", "Dematha Catholic"],
+    ["Dr. Henry A. Wise Jr.", "Dr. Henry A. Wise, Jr."],
+    ["North East", "Northeast"],
+    ["Saint John Paul the Great Catholic High School", "St. John Paul the Great Catholic"],
+    ["St. Paul`s School for Boys", "Saint Paul's School for Boys"],
+    ["Our Lady of Mt. Carmel", "Our Lady of Mount Carmel"],
+    ["Ft. Hill", "Fort Hill"],
+  ])("joins %s and %s", (a, b) => {
+    expect(schoolsLikelySame(a, b)).toBe(true)
+  })
+
+  it("still keeps different schools apart", () => {
+    expect(schoolsLikelySame("North East", "North Point")).toBe(false)
+    expect(schoolsLikelySame("Loyola Blakefield", "Loyola Academy")).toBe(false)
+    expect(schoolsLikelySame("Northeast", "North Hagerstown")).toBe(false)
+    expect(schoolsLikelySame("St. John Paul the Great Catholic", "St. Mary's")).toBe(false)
+    expect(schoolsLikelySame("Mount Carmel", "Mount Hebron")).toBe(false)
+  })
+})
+
+describe("a nickname in quotes", () => {
+  it("gives the name two readings, formal first", () => {
+    expect(nameReadings("Steven `Jett` Johnson")).toEqual(["Steven Johnson", "Jett Johnson"])
+    expect(nameReadings('Patrick "Wyatt" Mayfield')).toEqual(["Patrick Mayfield", "Wyatt Mayfield"])
+  })
+
+  it("matches the other bracket's spelling of the same wrestler", () => {
+    /*
+     * Florida printed `Steven \`Jett\` Johnson` in 2025 and `Jett Johnson` in 2026: one Cocoa
+     * Beach 106-pounder, class of 2030, who was minted as two profiles before this.
+     */
+    expect(namesReferToSamePerson("Steven `Jett` Johnson", "Jett Johnson")).toBe(true)
+    expect(namesReferToSamePerson("Steven `Jett` Johnson", "Steven Johnson")).toBe(true)
+  })
+
+  it("does not make two wrestlers one", () => {
+    /* Without the quotes there is no evidence they are the same person, so they are not. */
+    expect(namesReferToSamePerson("Jett Johnson", "Steven Johnson")).toBe(false)
+    expect(namesReferToSamePerson("Steven `Jett` Johnson", "Jett Smith")).toBe(false)
+  })
+
+  it("leaves a mid-name apostrophe alone, however it is mangled", () => {
+    expect(nameReadings("Mason O`dell")).toEqual(["Mason O`dell"])
+    expect(nameReadings("A`Niyah Leon-Goodrich")).toEqual(["A`Niyah Leon-Goodrich"])
+    expect(nameReadings("Jackson D?Ettore")).toEqual(["Jackson D?Ettore"])
   })
 })

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { isVisibleState, visibleStates } from "@/lib/recruiting/brand"
+import { previewStatesForUser } from "@/lib/recruiting/state-preview"
 import { HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
 import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
@@ -34,19 +35,23 @@ export async function GET(request: NextRequest) {
     // RecruitWrestlers carries every live state; NC United's address North Carolina only.
     const onRw = stagedBrandForHost(request.headers.get("host")) === "national"
     let isAdmin = false
+    let preview: string[] = []
     if (state !== HOME_STATE) {
       const { data: auth } = await (await createClient()).auth.getUser()
       if (auth.user) {
         const { data: me } = await supabase.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
         isAdmin = me?.is_admin === true || me?.role === "admin"
+        /* A coach invited to look at a state before it opens — see lib/recruiting/state-preview.ts. */
+        if (!isAdmin) preview = await previewStatesForUser(supabase, auth.user.id)
       }
-      if (!allStates && !isVisibleState(state, isAdmin, onRw)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
+      if (!allStates && !isVisibleState(state, isAdmin, onRw, preview)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
     }
 
     const minYear = minYearParam ? Number.parseInt(minYearParam, 10) : null
     const maxYear = maxYearParam ? Number.parseInt(maxYearParam, 10) : null
 
-    const withStates = allStates ? visibleStates(isAdmin, onRw).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
+    // A coach previewing a state before it opens gets it in the "ALL" list too, not only on its own.
+    const withStates = allStates ? visibleStates(isAdmin, onRw, preview).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
     const { prospects, hasMore } = await fetchProspectDirectoryPage(supabase, {
       graduationYear,
       gender,

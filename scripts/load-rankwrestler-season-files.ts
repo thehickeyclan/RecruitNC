@@ -23,7 +23,7 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
-import { nameWords, schoolsLikelySame } from "@/lib/athlete-name-match"
+import { nameWords, namesReferToSamePerson, schoolsLikelySame } from "@/lib/athlete-name-match"
 import { normalizeState } from "@/lib/athlete-state"
 
 for (const f of [".env.local", ".env"]) {
@@ -53,13 +53,14 @@ const num = (v: unknown) => Number.parseFloat(String(v ?? "")) || 0
 async function main() {
   if (!DIR) { console.error("give the directory holding the season JSON files"); process.exit(1) }
   console.log(`${WRITE ? "WRITING" : "DRY RUN — nothing is written"}${STATE ? ` — matching only ${STATE} profiles` : " — matching profiles in EVERY state"}\n`)
-  const athletes: Array<{ id: string; name: string; highschool: string | null; state?: string | null }> = []
+  const athletes: Array<{ id: string; name: string; wrestling_name?: string | null; highschool: string | null; state?: string | null }> = []
   for (let from = 0; ; from += 1000) {
-    let q = sb.from("athletes").select("id, name, highschool, state")
+    /* .order("id"): without a stable order the pages of a 1,000-row read repeat and skip rows. */
+    let q = sb.from("athletes").select("id, name, wrestling_name, highschool, state").order("id")
     if (STATE) q = q.eq("state", STATE)
     const { data, error } = await q.range(from, from + 999)
     if (error) throw new Error(error.message)
-    athletes.push(...((data ?? []) as never))
+    athletes.push(...((data ?? []) as Array<(typeof athletes)[number]>))
     if (!data || data.length < 1000) break
   }
 
@@ -72,16 +73,55 @@ async function main() {
     const say = (verdict: string) => console.log(`${file}\n   ${full} | ${wi.season} | ${matches.length} matches ${ss.wins}-${ss.losses}\n   ${verdict}`)
 
     if (matches.length < MIN_MATCHES) { say(`SKIPPED — only ${matches.length} match, a truncated pull rather than a season`); continue }
-    const sameName = athletes.filter((a) => nn(a.name) === nn(full))
+    /*
+     * The profile's wrestling name counts, and so does a nickname the bracket printed in quotes:
+     * Florida's `Steven \`Jett\` Johnson` wrestles as Jett Johnson, and both of his season files
+     * came back "no profile of that name" against the formal name alone.
+     */
+    const sameName = athletes.filter(
+      (a) =>
+        nn(a.name) === nn(full) ||
+        namesReferToSamePerson(a.name, full) ||
+        (a.wrestling_name ? namesReferToSamePerson(a.wrestling_name, full) : false),
+    )
     if (!sameName.length) { say("SKIPPED — no profile of that name"); continue }
     const schoolOk = sameName.filter((a) => schoolsLikelySame(a.highschool, wi.high_school))
     let pick = schoolOk.length === 1 ? schoolOk[0] : null
+    /*
+     * A wrestler's old school is not a mismatch, and we already hold the proof.
+     *
+     * The profile carries the school he is at now; a season file carries the school he wrestled
+     * that season at. Seven of Maryland's seasons were refused for this - Ethan Valdisera's
+     * 2023-24 at St. Mary's Ryken against a profile reading Calvert - and every one of them had
+     * placements on file at BOTH schools, which is the transfer, recorded by the state itself.
+     * So the file's school is accepted when it matches a school this athlete placed at.
+     */
+    if (!pick && sameName.length === 1) {
+      /*
+       * Looked up by NAME, not by athlete_id: the placement at the old school is usually not
+       * linked to him yet, and for the same reason the season file was refused - the linker
+       * matches on the school too. Safe because this branch only runs when exactly one profile
+       * in this state carries the name, which the state filter above already guarantees.
+       */
+      const { data: theirPlacements } = await sb
+        .from("state_tournament_placers")
+        .select("school_raw, school_clean, season")
+        .eq("state", STATE ?? "")
+        .ilike("wrestler_name", full)
+      const formerly = (theirPlacements ?? []).find((r) =>
+        schoolsLikelySame(String((r as { school_clean?: string; school_raw?: string }).school_clean ?? (r as { school_raw?: string }).school_raw ?? ""), wi.high_school),
+      )
+      if (formerly) {
+        pick = sameName[0]
+        say(`school changed — "${wi.high_school}" is where he placed in ${(formerly as { season?: number }).season}, profile now reads "${sameName[0]!.highschool}"`)
+      }
+    }
     if (!pick && sameName.length === 1 && ALLOW.some((n) => nn(n) === nn(full))) pick = sameName[0]
     if (!pick) {
       say(
         sameName.length > 1
           ? `SKIPPED — ${sameName.length} profiles of that name, none school-confirmed`
-          : `SKIPPED — the file says "${wi.high_school}" and the profile says "${sameName[0]!.highschool}"; pass --allow-school-mismatch "${full}" if she transferred`,
+          : `SKIPPED — the file says "${wi.high_school}" and the profile says "${sameName[0]!.highschool}", and he has no placement at the first; pass --allow-school-mismatch "${full}" if he transferred`,
       )
       continue
     }
@@ -90,9 +130,22 @@ async function main() {
     const existing = (held ?? [])[0] as { id: string; total_matches: number } | undefined
     if (existing && Number(existing.total_matches) === matches.length) { say(`already loaded with ${matches.length} matches — unchanged, left alone`); continue }
 
+    /*
+     * `wrestler_id` is unique across the whole table, not per athlete, so two wrestlers of one
+     * name in one season collide: Alabama's Caleb Edwards (Brewbaker Tech) was refused because
+     * North Carolina's Caleb Edwards (Piedmont) already held `caleb_edwards_2025-26`. The plain
+     * key is kept wherever it is free or already this athlete's, so nothing existing is renamed,
+     * and only the loser of a collision carries the profile id that makes it unique.
+     */
+    const plainKey = `${pick.name.toLowerCase().replace(/\s+/g, "_")}_${wi.season}`
+    const { data: keyHolder } = await sb.from("matches").select("athlete_id").eq("wrestler_id", plainKey).maybeSingle()
+    const wrestlerId =
+      !keyHolder || keyHolder.athlete_id === pick.id ? plainKey : `${plainKey}_${pick.id.slice(0, 8)}`
+    if (wrestlerId !== plainKey) say(`another wrestler of that name holds "${plainKey}" — this season is keyed ${wrestlerId}`)
+
     const row = {
       athlete_id: pick.id,
-      wrestler_id: `${pick.name.toLowerCase().replace(/\s+/g, "_")}_${wi.season}`,
+      wrestler_id: wrestlerId,
       first_name: wi.first_name,
       last_name: wi.last_name,
       season: wi.season,

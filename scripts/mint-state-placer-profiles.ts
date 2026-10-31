@@ -29,7 +29,7 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
-import { nameWords, schoolsLikelySame } from "@/lib/athlete-name-match"
+import { nameReadings, nameWords, namesReferToSamePerson, schoolsLikelySame } from "@/lib/athlete-name-match"
 import { currentClassYears } from "@/lib/class-years"
 import { normalizeState } from "@/lib/athlete-state"
 
@@ -50,6 +50,21 @@ const arg = (n: string, d?: string) => {
   const i = process.argv.indexOf(`--${n}`)
   return i > 0 ? String(process.argv[i + 1]) : d
 }
+/*
+ * An unknown flag stops the run rather than being ignored.
+ *
+ * Several state imports were invoked with `--link-only`, which this script has never had. It was
+ * silently dropped and the run did something subtly different from what the command said - it
+ * minted as well as linked. The behaviour was the right one, so nothing was damaged, but a flag
+ * that does nothing and says nothing is how a real mistake gets made on the run after.
+ */
+const KNOWN_FLAGS = new Set(["--write", "--include-graduated", "--only-with-class-year", "--state", "--season"])
+for (let i = 0; i < process.argv.length; i += 1) {
+  const a = process.argv[i]!
+  if (!a.startsWith("--")) continue
+  if (!KNOWN_FLAGS.has(a)) throw new Error(`unknown flag ${a}. Known: ${[...KNOWN_FLAGS].join(" ")}`)
+}
+
 const WRITE = process.argv.includes("--write")
 const INCLUDE_GRADUATED = process.argv.includes("--include-graduated")
 /**
@@ -115,23 +130,67 @@ async function main() {
   const unlinked = placers.filter((r) => !r.athlete_id)
   console.log(`${STATE} ${SEASON} ${INCLUDE_QUALIFIERS ? "entrants (placers and qualifiers)" : `placers (top ${MAX_PLACE})`}: ${placers.length}, ${unlinked.length} reaching no profile`)
 
-  /* One person per name+school: two placements for the same wrestler make one profile. */
+  /*
+   * One person per name+school: two placements for the same wrestler make one profile.
+   *
+   * Grouped by name first and then clustered with `schoolsLikelySame`, not by a normalised school
+   * string. A string key splits on spellings that the matcher itself treats as one school:
+   * Maryland's MIS file writes "Loyola Blakefield" and its MIAA file "Loyola-Blakefield", and
+   * five boys who entered both tournaments were each created twice in a single run - the one
+   * thing the claim flow asks people to avoid, done by us.
+   */
   const schoolOf = (r: Placer) => String(r.school_clean ?? r.school_raw ?? "").trim()
-  const groups = new Map<string, Placer[]>()
+  const byName = new Map<string, Placer[]>()
   for (const r of unlinked) {
-    const k = `${nn(r.wrestler_name)}|${nn(schoolOf(r))}`
-    const held = groups.get(k) ?? []
-    held.push(r)
-    groups.set(k, held)
+    const k = nn(r.wrestler_name)
+    byName.set(k, [...(byName.get(k) ?? []), r])
+  }
+  /*
+   * One wrestler, two names, because a bracket quoted his nickname: Florida printed
+   * `Steven \`Jett\` Johnson` in 2025 and `Jett Johnson` in 2026 — the same Cocoa Beach
+   * 106-pounder, who came out of this loop as two profiles. Names that refer to one person
+   * (nameReadings) at a school that agrees are folded together before clustering.
+   */
+  for (const [a, rowsA] of [...byName]) {
+    if (!byName.has(a)) continue
+    for (const [b, rowsB] of [...byName]) {
+      if (b === a || !byName.has(b) || !byName.has(a)) continue
+      if (!namesReferToSamePerson(rowsA[0]!.wrestler_name, rowsB[0]!.wrestler_name)) continue
+      if (!schoolsLikelySame(schoolOf(rowsA[0]!), schoolOf(rowsB[0]!))) continue
+      byName.set(a, [...byName.get(a)!, ...rowsB])
+      byName.delete(b)
+    }
+  }
+  const groups = new Map<string, Placer[]>()
+  for (const [name, rows] of byName) {
+    const clusters: Placer[][] = []
+    for (const r of rows) {
+      const fit = clusters.find((c) => schoolsLikelySame(schoolOf(c[0]!), schoolOf(r)))
+      if (fit) fit.push(r)
+      else clusters.push([r])
+    }
+    clusters.forEach((c, i) => groups.set(`${name}|${nn(schoolOf(c[0]!))}|${i}`, c))
   }
 
   const active = currentClassYears()
   const inSchool = (y: number | null) => y != null && y >= active[0]! && y <= active[active.length - 1]!
 
-  const athletes = await page<{ id: string; name: string; highschool: string | null; state: string | null }>(
+  /*
+   * Only this state's profiles can be the wrestler in front of us.
+   *
+   * The candidate list was every profile in the country, so a namesake in another state blocked
+   * minting: Noah Tucker of Bullis School, Maryland - three MIS seasons, 2026 champion at 175 -
+   * went unminted because Noah Tucker of Union County, South Carolina already existed, a
+   * different boy at a different weight in a different state. Profiles carry a state now, so
+   * that is answerable. A profile with no state is still considered, since it cannot disagree.
+   */
+  const athletes = (await page<{ id: string; name: string; highschool: string | null; state: string | null; graduationyear: number | null }>(
     "athletes",
-    "id, name, highschool, state",
-  )
+    "id, name, highschool, state, graduationyear",
+  )).filter((a) => {
+    const s = String(a.state ?? "").trim().toUpperCase()
+    return !s || s === STATE
+  })
 
   const toLink: Array<{ ids: string[]; athleteId: string; label: string }> = []
   const toCreate: Array<{ row: Record<string, unknown>; label: string; ids: string[] }> = []
@@ -151,7 +210,19 @@ async function main() {
       heldNoYear.push(`${r.wrestler_name} (${school})`)
       continue
     }
-    const sameName = athletes.filter((a) => nn(a.name) === nn(r.wrestler_name))
+    /*
+     * A profile whose class year contradicts this placer's is a different wrestler, not an
+     * ambiguity to hold. Maryland has two Logan Browns: Northwest's, class of 2027, a 2026
+     * champion at 165, and McDonogh's, class of 2028, a heavyweight. The first went unminted
+     * because the second existed and shared his name. Where either year is unknown the name
+     * still holds, which is the cautious half of the rule.
+     */
+    const placerYear = rows.map((x) => Number(x.grad_year)).find((y) => y > 0) ?? null
+    const sameName = athletes.filter((a) => {
+      if (!namesReferToSamePerson(a.name, r.wrestler_name)) return false
+      const theirs = Number((a as { graduationyear?: unknown }).graduationyear)
+      return !(placerYear && theirs > 0 && theirs !== placerYear)
+    })
     const sameSchool = sameName.filter((a) => schoolsLikelySame(a.highschool, school))
     if (sameSchool.length === 1) {
       toLink.push({ ids: rows.map((x) => x.id), athleteId: sameSchool[0]!.id, label: `${r.wrestler_name} -> ${sameSchool[0]!.name} (${sameSchool[0]!.highschool ?? "no school"})` })
@@ -177,11 +248,20 @@ async function main() {
       ambiguous.push(`${r.wrestler_name} (${school}) vs ${sameName.map((a) => `${a.name} (${a.highschool ?? "no school"}, ${a.state ?? "no state"})`).join(" / ")}`)
       continue
     }
-    const name = title(String(r.wrestler_name).trim())
+    /*
+     * The formal reading is the profile's name and the nickname is its wrestling name, which is
+     * where the rest of the product already looks for the other spelling a bracket might print
+     * (lib/public-profile-data.ts). `Steven \`Jett\` Johnson` becomes Steven Johnson, wrestling
+     * as Jett Johnson — not a profile whose name carries a stray pair of backticks.
+     */
+    const readings = nameReadings(String(r.wrestler_name).trim())
+    const name = title(readings[0] ?? String(r.wrestler_name).trim())
+    const wrestlingName = readings[1] ? title(readings[1]) : null
     const parts = name.split(/\s+/)
     toCreate.push({
       row: {
         name,
+        wrestling_name: wrestlingName,
         firstName: parts[0],
         lastName: parts.slice(1).join(" "),
         highschool: school || null,

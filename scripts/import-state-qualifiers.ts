@@ -20,6 +20,7 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
+import { normalizeApostrophes } from "@/lib/athlete-name-match"
 import { stripResultMarkers } from "@/lib/identity-dedupe"
 
 for (const f of [".env.local", ".env"]) {
@@ -168,10 +169,15 @@ async function main() {
       .filter(([a, b]) => a !== b)
 
     const divisions = new Map<string, Record<string, unknown>>()
-    const entries: Array<Record<string, unknown>> = []
+    let entries: Array<Record<string, unknown>> = []
     let noName = 0
     for (const r of group) {
-      const name = stripResultMarkers(`${r.first_name} ${r.last_name}`)
+      /*
+       * The apostrophe is folded as it is stored, not only as it is compared. FloArena writes a
+       * backtick for it - "Mason O`dell", "A`Niyah Leon-Goodrich", 29 of Florida's rows - and
+       * every surface that prints a placer name printed the backtick back at a coach.
+       */
+      const name = normalizeApostrophes(stripResultMarkers(`${r.first_name} ${r.last_name}`))
       /*
        * "Forfeit" is not a wrestler. Arizona's files carry rows whose whole name is a result,
        * alongside weights of "1" to "4" — that state needs recollecting, and until it does these
@@ -248,8 +254,28 @@ async function main() {
      */
     const seen = new Map<string, number>()
     for (const e of placed) { const k = `${e.association}|${e.classification}|${e.weight}|${e.place}`; seen.set(k, (seen.get(k) ?? 0) + 1) }
+    /*
+     * Two wrestlers in one place stops the slice, and this guard must NOT be bypassable.
+     *
+     * `state_tournament_placers` carries a unique index over
+     * (season, state, association, gender, classification, weight, place), so a shared place
+     * cannot be stored however true it is. A flag to skip the check was added on 24 Oct and
+     * removed the same hour: it let the delete run and then the insert failed on that index,
+     * emptying Georgia's 2025 boys - 1,538 rows - which is precisely the failure the block
+     * below exists to prevent.
+     *
+     * A genuine tie does happen. Georgia's 2025 GHSA 1A 144 awarded two sixths and no fifth
+     * because one semi-finalist was disqualified and the other took a medical forfeit, so the
+     * fifth-place match was never wrestled. Reconcile the FILE before importing - blank the
+     * place on the rows that cannot be stored and name them in the state's accounted file - or
+     * relax the index first. Do not make this guard optional.
+     */
     const clash = [...seen.entries()].filter(([, n]) => n > 1)
-    if (clash.length) { console.log(`   TWO WRESTLERS IN ONE PLACE — not written: ${clash.slice(0, 5).map(([k]) => k).join(" ")}`); continue }
+    if (clash.length) {
+      console.log(`   TWO WRESTLERS IN ONE PLACE — nothing deleted, nothing written: ${clash.slice(0, 5).map(([k]) => k).join(" ")}`)
+      console.log(`      the unique index cannot hold a shared place: check it against the bouts, then reconcile the file`)
+      continue
+    }
 
 
     /*
@@ -285,8 +311,27 @@ async function main() {
     }
     for (const d of divisions.values()) if (d.association === "PENDING" || !d.association) d.association = fallback
     for (const d of divisions.values()) if (d.association === "PENDING" || !d.association) d.association = fallback
-    const missingDepth = [...divisions.values()].filter((d) => !d.places_awarded)
-    if (missingDepth.length) { console.log(`   no placement anywhere in ${missingDepth.length} division(s) — not written`); continue }
+    /*
+     * A division where nothing placed is a half-read bracket, so it is refused — but on its own,
+     * not by taking the rest of the slice with it.
+     *
+     * Connecticut's Nollan Thomas placed 5th in the 2025 girls bracket and entered the 2026 boys
+     * Open. Her Open row is gendered girls, which is correct about her, so it grouped with the
+     * girls slice and arrived as a one-row "Open" division with no placement. The whole 262-row
+     * girls slice was then refused over it. The guard is still worth having - it is what catches
+     * a bracket we only partly fetched - so the division is dropped and named, and everything
+     * else in the slice writes.
+     */
+    const missingDepth = [...divisions.entries()].filter(([, d]) => !d.places_awarded)
+    for (const [k] of missingDepth) {
+      const cls = String(k.split("|")[3] ?? "")
+      const dropped = entries.filter((e) => e.classification === cls)
+      console.log(`   no placement anywhere in "${cls}" — that division is not written (${dropped.length} row(s): ${dropped.map((e) => e.wrestler_name).slice(0, 4).join(", ")})`)
+      divisions.delete(k)
+    }
+    const droppedClasses = new Set(missingDepth.map(([k]) => String(k.split("|")[3] ?? "")))
+    if (droppedClasses.size) entries = entries.filter((e) => !droppedClasses.has(String(e.classification)))
+    if (!entries.length) { console.log("   nothing left to write"); continue }
     const { error: dErr } = await sb.from("state_tournament_divisions").upsert([...divisions.values()] as never, { onConflict: "season,state,association,gender,classification" })
     if (dErr) { console.log(`   divisions FAILED: ${dErr.message}`); continue }
     /*
