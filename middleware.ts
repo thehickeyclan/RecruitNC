@@ -339,6 +339,8 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     '/api/auth/signin',
     '/api/auth/update-password',
     '/api/auth/signup',
+    // Supabase's Send Email hook: a signed server-to-server call, never a browser session.
+    '/api/auth/email-hook',
     '/api/auth/reset-password',
     '/api/auth/clear-cooldown',
     '/api/debug',
