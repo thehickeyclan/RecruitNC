@@ -16,6 +16,7 @@
  * and a different stage of growing up, is a different claim and does not belong in the same list.
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { rankedOnLookupCached } from "@/lib/rankings/ranking-archive"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import {
   findSignificantLosses,
@@ -158,7 +159,16 @@ export async function loadAthleteSignificantWins(
   }
 
   // "NC ranked" opponents from this wrestler's own board only: a ranked girl is not a boy's win.
-  const index = rankedOnBoard(await indexPromise, (gradRow as { gender?: unknown } | null)?.gender ?? null)
+  const boardGender = (gradRow as { gender?: unknown } | null)?.gender ?? null
+  const baseIndex = rankedOnBoard(await indexPromise, boardGender)
+  /*
+   * A win keeps the national rank the opponent held on the day (lib/rankings/ranking-archive.ts),
+   * as the ranking board already judged it (Matt, 8 and 31 October 2026).
+   */
+  const rankedOn = baseIndex.nationalRankedOn
+    ? null
+    : await rankedOnLookupCached(admin, /^f/i.test(String(boardGender ?? "")) ? "F" : "M").catch(() => null)
+  const index = rankedOn ? { ...baseIndex, nationalRankedOn: rankedOn } : baseIndex
   const currentWins = findSignificantWins(bouts, index)
   const currentKeys = new Set(currentWins.map((w) => `${w.opponent.toLowerCase()}|${w.date}`))
   const earlierStateWins = findSignificantWins(earlierBouts, index, { stateOnly: true }).filter(

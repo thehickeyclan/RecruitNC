@@ -13,10 +13,10 @@ import { labelOpponents, type AccoladeBout } from "@/lib/opponent-accolades"
 
 export const dynamic = "force-dynamic"
 
-type BoutIn = { name?: unknown; club?: unknown; year?: unknown; weight?: unknown }
+type BoutIn = { name?: unknown; club?: unknown; year?: unknown; weight?: unknown; date?: unknown }
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as { bouts?: BoutIn[] } | null
+  const body = (await request.json().catch(() => null)) as { bouts?: BoutIn[]; gender?: unknown } | null
   const raw = (Array.isArray(body?.bouts) ? body!.bouts : []).slice(0, 500)
   const bouts: AccoladeBout[] = raw
     .filter((b) => typeof b.name === "string" && b.name.trim())
@@ -25,6 +25,8 @@ export async function POST(request: Request) {
       club: typeof b.club === "string" ? b.club : null,
       year: Number.isFinite(Number(b.year)) ? Number(b.year) : null,
       weight: typeof b.weight === "string" || typeof b.weight === "number" ? b.weight : null,
+      date: typeof b.date === "string" ? b.date : null,
     }))
-  return NextResponse.json({ labels: await labelOpponents(createAdminClient(), bouts) })
+  const gender = body?.gender === "M" || body?.gender === "F" ? body.gender : null
+  return NextResponse.json({ labels: await labelOpponents(createAdminClient(), bouts, gender) })
 }

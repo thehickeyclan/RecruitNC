@@ -132,10 +132,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const toLabel: AccoladeBout[] = []
   for (const r of [...stateRows, ...rows]) {
     for (const b of r.bouts) {
-      if (b.opponentName) toLabel.push({ name: b.opponentName, club: b.opponentClub, year: b.year, weight: b.weight || null })
+      const date = /^\d{4}-\d{2}-\d{2}/.test(r.sortKey) ? r.sortKey.slice(0, 10) : null
+      if (b.opponentName) toLabel.push({ name: b.opponentName, club: b.opponentClub, year: b.year, weight: b.weight || null, date })
     }
   }
-  const labels = await labelOpponents(admin, toLabel).catch(() => ({}) as Record<string, string>)
+  const labelGender = /^f/i.test(athleteGender ?? "") ? "F" : /^m/i.test(athleteGender ?? "") ? "M" : null
+  const labels = await labelOpponents(admin, toLabel, labelGender).catch(() => ({}) as Record<string, string>)
   const withAccolades = (list: TournamentRow[]): MobileRow[] =>
     list.map((r) => ({
       ...r,
