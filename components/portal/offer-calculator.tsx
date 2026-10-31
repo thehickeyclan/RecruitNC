@@ -384,7 +384,7 @@ export function OfferDialog({
               <p className="text-sm font-bold">
                 {dollars(live.fourYears)} <span className="font-normal text-white/60">over 4 years</span>
               </p>
-              {live.loans > 0 ? <p className="mt-1 text-xs text-amber-100">Includes {dollars(live.loans)} a year in loans, if you take them: still owed, paid back later.</p> : null}
+              {live.loans > 0 && live.perYear > 0 ? <p className="mt-1 text-xs text-amber-100">Up to {dollars(Math.min(live.loans, live.perYear))} a year of this can be the loans offered: still owed, paid back later.</p> : null}
               {live.ifNotRenewed != null ? <p className="mt-1 text-xs text-amber-100">{dollars(live.ifNotRenewed)} over 4 years if the athletic scholarship stops after year 1.</p> : null}
             </>
           ) : (
