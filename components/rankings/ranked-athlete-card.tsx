@@ -11,15 +11,6 @@ function initials(name: string): string {
   return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
 }
 
-/** Up 4, down 2, or new — measured against the previous published edition, never against a live score. */
-function movement(rank: number, previous: number | null): { label: string; className: string } | null {
-  if (previous == null || previous === rank) return null
-  const delta = previous - rank
-  return delta > 0
-    ? { label: `▲ ${delta}`, className: "text-emerald-300" }
-    : { label: `▼ ${Math.abs(delta)}`, className: "text-red-300" }
-}
-
 /**
  * One ranked wrestler, built to read like a Tournament of Champions field card.
  *
@@ -37,7 +28,6 @@ export function RankedAthleteCard({
   stateCode?: string
 }) {
   const profileHref = `/view-profile?id=${encodeURIComponent(athlete.athleteId)}`
-  const move = movement(athlete.rank, athlete.previousRank)
   const meta = [
     athlete.weightClass ? `${athlete.weightClass} lbs` : null,
     athlete.graduationYear ? `Class of ${athlete.graduationYear}` : null,
@@ -67,15 +57,15 @@ export function RankedAthleteCard({
               {stateCode}
             </span>
           ) : null}
-          {/* Rank and movement share the top-left; the top-right belongs to the My Recruits star. */}
+          {/*
+            * Rank and NEW share the top-left; the top-right belongs to the My Recruits star. No up/down
+            * arrows (Matt, 31 Oct 2026): a red arrow beside a kid's name starts an argument the card
+            * cannot answer. NEW is good news for the wrestler who earns it and costs nobody.
+            */}
           <span className="absolute left-0 top-0 flex items-stretch">
             <span className="bg-[#D7B95A] px-2.5 py-1 text-sm font-black text-[#060f1f]">#{athlete.rank}</span>
             {athlete.isNew ? (
               <span className="flex items-center bg-emerald-400 px-1.5 text-[10px] font-black tracking-wider text-[#061224]">NEW</span>
-            ) : move ? (
-              <span className={`flex items-center bg-black/60 px-1.5 text-[10px] font-bold ${move.className}`}>
-                {move.label}
-              </span>
             ) : null}
           </span>
         </div>
