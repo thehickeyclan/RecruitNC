@@ -247,7 +247,9 @@ export default async function PublicRankingsHomepage({
    */
   const boardsForTile = (href: string, groupKey: string) => {
     const gender = groupKey === "womens" ? "Female" : "Male"
-    const years = /college-prospects/.test(href) ? [2027, 2028] : [Number(href.split("?")[0]!.split("/").at(-1))].filter(Number.isFinite)
+    // The Top 75 publishes on its own board; a class publish is not a Top 75 update (Matt, 30 Oct 2026).
+    if (/college-prospects/.test(href)) return []
+    const years = [Number(href.split("?")[0]!.split("/").at(-1))].filter(Number.isFinite)
     return years.map((year) => ({
       board: `${stateCode}:${gender}:${year}`,
       publishedAt:
