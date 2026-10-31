@@ -144,6 +144,13 @@ function SignUpWizard() {
   const [cellPhone, setCellPhone] = useState("")
   const [consent, setConsent] = useState<ConsentState>(EMPTY_CONSENT)
   const [accountExists, setAccountExists] = useState(false)
+  /*
+   * The form is long on a phone and the confirmation short, so it opened at the bottom (Matt, 31 Oct
+   * 2026). Scrolled after it renders, and "instant": a smooth scroll is cut off by the re-render.
+   */
+  useEffect(() => {
+    if (success) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior })
+  }, [success])
   const [college, setCollege] = useState("")
   const [program, setProgram] = useState<CoachProgram | null>(null)
   const [website, setWebsite] = useState("")
@@ -255,8 +262,6 @@ function SignUpWizard() {
       track("signup_completed", returnTo, { role: profileType })
       track("verification_email_sent", returnTo)
       setSuccess(true)
-      // The form is long on a phone: without this the confirmation opened scrolled half off the top (Matt, 31 Oct 2026).
-      window.scrollTo({ top: 0 })
     } catch (err) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred during sign up. Please try again."
       track("signup_error", returnTo, { message })

@@ -7,7 +7,16 @@ const SB = "https://abc.supabase.co"
 describe("brandForAuthEmail", () => {
   it("follows the site in the link first", () => {
     expect(brandForAuthEmail({ user_metadata: { signup_brand: "ncunited" } }, { email_action_type: "recovery", redirect_to: "https://www.recruitwrestlers.com/auth/reset-password" })).toBe("recruitwrestlers")
-    expect(brandForAuthEmail({ user_metadata: { signup_brand: "recruitwrestlers" } }, { email_action_type: "recovery", redirect_to: "https://app.ncwrestlingunited.com/auth/reset-password" })).toBe("ncunited")
+    expect(brandForAuthEmail({ user_metadata: { signup_brand: "ncunited" } }, { email_action_type: "recovery", redirect_to: "https://app.ncwrestlingunited.com/auth/reset-password" })).toBe("ncunited")
+  })
+  it("trusts where the account began over an NC United redirect Supabase substituted", () => {
+    const { brand, emails } = authEmailsFor(
+      { email: "f@x.com", user_metadata: { signup_brand: "recruitwrestlers" } },
+      { email_action_type: "signup", token_hash: "pkce_1", redirect_to: "https://app.ncwrestlingunited.com" },
+      SB,
+    )
+    expect(brand).toBe("recruitwrestlers")
+    expect(emails[0].text).toContain("redirect_to=https%3A%2F%2Fwww.recruitwrestlers.com%2Fauth%2Fcallback")
   })
   it("falls back to where the account began, then NC United", () => {
     expect(brandForAuthEmail({ user_metadata: { signup_brand: "recruitwrestlers" } }, { email_action_type: "signup" })).toBe("recruitwrestlers")
