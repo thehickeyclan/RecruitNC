@@ -84,6 +84,36 @@ export function fromForBrand(brand: AuthEmailBrand): string {
   return "NC United <info@ncwrestlingunited.com>"
 }
 
+/**
+ * The link in the email: straight to our own callback, which checks the token on the server and
+ * signs the person in. Supabase's verify link only signed in the browser the sign-up happened in;
+ * opened from the Gmail app it confirmed the email and left the family signed out, short of the
+ * claim (Matt's test, 31 Oct 2026). `next` is where to go after, read from what the app asked for.
+ */
+export function callbackUrl(brand: AuthEmailBrand, tokenHash: string, type: string, redirectTo: string | undefined): string {
+  // A local or preview build keeps its own links, so the flow can be tested before it ships.
+  let site: string = BRAND[brand].site
+  try {
+    const r = new URL(redirectTo ?? "")
+    if (r.hostname === "localhost" || r.hostname.endsWith(".vercel.app")) site = r.origin
+  } catch {}
+  const u = new URL("/auth/callback", site)
+  u.searchParams.set("token_hash", tokenHash)
+  u.searchParams.set("type", type)
+  let next: string | null = type === "recovery" ? "/auth/reset-password" : null
+  if (!next && redirectTo) {
+    try {
+      const r = new URL(redirectTo)
+      if (r.pathname === "/auth/callback") next = r.searchParams.get("next")
+      else if (r.pathname && r.pathname !== "/") next = r.pathname + r.search
+    } catch {
+      next = null
+    }
+  }
+  if (next && next.startsWith("/") && !next.startsWith("//")) u.searchParams.set("next", next)
+  return u.toString()
+}
+
 /** Supabase's own verify endpoint: it checks the token and sends the person on to redirect_to. */
 export function verifyUrl(supabaseUrl: string, tokenHash: string, type: string, redirectTo: string | undefined): string {
   const u = new URL("/auth/v1/verify", supabaseUrl)
@@ -175,5 +205,5 @@ export function authEmailsFor(user: HookUser, data: HookEmailData, supabaseUrl: 
   }
 
   const type = kind === "signup" || kind === "recovery" || kind === "magiclink" || kind === "invite" ? kind : "email"
-  return { brand, emails: [linkEmail(brand, email, kind, verifyUrl(supabaseUrl, data.token_hash ?? "", type, data.redirect_to))] }
+  return { brand, emails: [linkEmail(brand, email, kind, callbackUrl(brand, data.token_hash ?? "", type, data.redirect_to))] }
 }
