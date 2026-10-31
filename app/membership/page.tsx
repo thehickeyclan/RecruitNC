@@ -14,7 +14,7 @@ export default function MembershipPage() {
         <p className="text-xs font-black uppercase tracking-[0.3em] text-[#A3E635]">Membership</p>
         <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Start free. Upgrade when you&apos;re ready.</h1>
         <p className="mx-auto mt-4 max-w-xl text-base text-[#A8B3C5]">
-          Every profile is free. Insider adds the rankings and who&apos;s looking; the Command Center adds the whole plan.
+          Every profile is free. Insider shows which colleges view your profile and the rankings college coaches use to recruit; the Command Center adds the whole plan.
         </p>
       </div>
       <div className="mt-10">

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { isHeic, preparePhoto } from "@/lib/images/prepare-photo"
+import { InsiderUpsell } from "@/components/recruiting/insider-upsell"
 
 /**
  * The one form behind every door.
@@ -52,6 +53,7 @@ export function ProfileSetupForm({
   photoUrl = null,
   gender = null,
   asParent = false,
+  stateCode = null,
 }: {
   athleteId: string
   athleteName: string
@@ -62,11 +64,14 @@ export function ProfileSetupForm({
   gender?: string | null
   /** A parent filling it in for a child: "your wrestler", not "you". */
   asParent?: boolean
+  /** The wrestler's state, for which rankings Insider opens. */
+  stateCode?: string | null
 }) {
   const router = useRouter()
   const [v, setV] = useState<ProfileSetupValues>(initial)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const [saved, setSaved] = useState(false)
   const female = /^f/i.test(gender ?? "")
   const his = female ? "her" : "his"
   const first = athleteName.trim().split(/\s+/)[0] || "your wrestler"
@@ -124,12 +129,35 @@ export function ProfileSetupForm({
         setError(data.error || "That did not save. Please try again.")
         return
       }
-      router.push(`/view-profile?id=${encodeURIComponent(athleteId)}`)
+      // Register, claim, update, upgrade (Matt, 31 Oct 2026): the next screen is Insider. Someone who
+      // already has it goes straight to the profile.
+      const status = await fetch("/api/membership/status", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+      if (status?.insider === true) {
+        router.push(`/view-profile?id=${encodeURIComponent(athleteId)}`)
+        return
+      }
+      setSaved(true)
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior })
     } catch {
       setError("That did not save. Please try again.")
     } finally {
       setSaving(false)
     }
+  }
+
+  if (saved) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-5">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D3B574]">Saved</p>
+          <h1 className="mt-2 text-3xl font-black text-white">{first}&apos;s profile is ready for college coaches.</h1>
+        </div>
+        <InsiderUpsell firstName={first} state={stateCode} returnTo={`/view-profile?id=${athleteId}`} />
+        <a href={`/view-profile?id=${encodeURIComponent(athleteId)}`} className="inline-block text-sm font-semibold text-white/70 underline underline-offset-2 hover:text-white">
+          Not now, view the profile
+        </a>
+      </div>
+    )
   }
 
   const Optional = () => <span className="font-normal text-white/40"> (optional)</span>

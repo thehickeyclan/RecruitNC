@@ -1895,7 +1895,7 @@ export function AthleteDetail({
         <CollegeViewsLanding athleteName={athleteName} signedIn={Boolean(currentUserId)} canSeePanel={canViewProfileStats} />
       </div>
       {canViewProfileStats && athlete.id ? (
-        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.views} />
+        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} stateCode={typeof athlete.state === "string" ? athlete.state : null} className={ROW_ORDER.views} />
       ) : null}
       {/* The family's switch for search engines (lib/profile-search.ts). */}
       {canEdit && athlete.id ? (
