@@ -79,3 +79,50 @@ export async function notifyRankingsPublished(input: {
     return null
   }
 }
+
+/**
+ * One alert for a whole rankings update (Matt, 30 October 2026).
+ *
+ * An update publishes several boards in one evening - 2027, 2028, 2029 and the Top 75 - and an
+ * alert per board would hit the same parents four times for one event. This names everything
+ * published in the update and who leads it, and links to the hub where every board is.
+ */
+export function buildRankingsUpdatePush(input: { classes: number[]; top75: boolean; leader: string | null }): RankingsPush {
+  const classes = [...new Set(input.classes)].sort((a, b) => a - b)
+  const classPart = classes.length === 1 ? `Class of ${classes[0]}` : classes.length ? `Classes of ${joinAnd(classes.map(String))}` : ""
+  const what =
+    classPart && input.top75
+      ? `${classPart}, plus the Top 75 College Prospects, are out.`
+      : classPart
+        ? `${classPart} ${classes.length > 1 ? "are" : "is"} out.`
+        : input.top75
+          ? "The Top 75 College Prospects are out."
+          : "The rankings are out."
+  // Only the Top 75 names one leader for the whole update; a class leader would pick a class.
+  const leader = input.top75 ? input.leader?.trim() : null
+  return {
+    title: "NC College Prospect Rankings updated",
+    body: `${what}${leader ? ` ${leader} leads the Top 75.` : ""} Tap to see them.`,
+    // Same kind and hub link as a class alert, so phones on an older app bundle open it too.
+    data: { kind: "rankings", graduationYear: classes[0] ?? null, gender: "Male", path: "/public-rankings" },
+  }
+}
+
+function joinAnd(items: string[]): string {
+  return items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`
+}
+
+export async function notifyRankingsUpdate(input: {
+  classes: number[]
+  top75: boolean
+  leader: string | null
+}): Promise<{ sent: number; failed: number; pruned: number; undelivered: number } | null> {
+  try {
+    const result = await sendToSubscribers("alert_rankings", buildRankingsUpdatePush(input))
+    console.info(`[rankings-push] update ${input.classes.join(",")}${input.top75 ? "+top75" : ""}: sent ${result.sent}, failed ${result.failed}`)
+    return result
+  } catch (e) {
+    console.error("[rankings-push]", e instanceof Error ? e.message : e)
+    return null
+  }
+}
