@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { buildSchoolFacts, type SchoolFacts } from "@/lib/data-dawg-school-dossier"
 import { schoolSlugToPhrase } from "@/lib/school-links"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const revalidate = 3600
 
@@ -38,7 +39,7 @@ const NO_INDEX = { index: false, follow: false, nocache: true } as const
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const facts = await loadSchool(slug)
-  if (!facts) return { title: "School not found | RecruitNC", robots: NO_INDEX }
+  if (!facts) return { title: `School not found | ${productName()}`, robots: NO_INDEX }
 
   const { state_champions, dual_team_titles } = facts.counts
   const bits = [

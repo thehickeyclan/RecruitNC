@@ -15,6 +15,8 @@ import type { LucideIcon } from "lucide-react"
 import { BarChart3, ChevronDown, ChevronRight, ChevronUp, Lock, TrendingDown, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { weightLabel } from "@/lib/profile/weight-label"
+import { newestFirst, topWins } from "@/lib/win-strength"
+import { isStateHs, stateHsGroupName } from "@/lib/profile/state-hs-group"
 
 /* ------------------------------------------------------------------ data, as the app reads it */
 
@@ -282,6 +284,13 @@ function Toggle<T extends string>({ value, options, onChange }: { value: T; opti
 
 /* ------------------------------------------------------------------ tournament results */
 
+/**
+ * The high school state tournament, named by the wrestler's own association (Matt, 28 Oct 2026: a
+ * South Carolina kid's results sat under "NCHSAA State"). The row already says "SCHSL 5A State
+ * Championships" (lib/profile/tournament-rows.ts); the group takes the body from it: "SCHSL State",
+ * "NCISA State", "Georgia State". Freestyle and Greco state events are not this tournament.
+ */
+const STATE_HS = "__state_hs__"
 const EVENT_ORDER: Array<[RegExp, string]> = [
   [/fargo/i, "Fargo"],
   [/women'?s nationals|spokane/i, "USAW Women's Nationals"],
@@ -289,34 +298,40 @@ const EVENT_ORDER: Array<[RegExp, string]> = [
   [/super ?32(?!.*early)/i, "Super 32"],
   [/nhsca(?!.*duals)/i, "NHSCA Nationals"],
   [/tournament of champions|\btoc\b/i, "Tournament of Champions"],
-  [/nchsaa|state championships/i, "NCHSAA State"],
+  [/nchsaa|state championships/i, STATE_HS],
   [/women'?s national duals/i, "Women's National Duals"],
   [/southeast regional|rader/i, "Southeast Regionals"],
   [/journeymen/i, "Journeymen"],
   [/early entry/i, "Super 32 Early Entry"],
 ]
 
-type EventGroup = { name: string; style: "freestyle" | "folkstyle"; rows: AppTournamentRow[] }
+type EventGroup = { name: string; style: "freestyle" | "folkstyle"; rows: AppTournamentRow[]; stateHs?: boolean }
 
 /**
  * In-state or national, the way a coach sorts a résumé (Matt, 10 October 2026): the state
  * tournament and the Tournament of Champions are North Carolina's; everything else travels.
  */
-const IN_STATE_GROUPS = new Set(["NCHSAA State", "Tournament of Champions"])
-const scopeOf = (g: EventGroup): "in-state" | "national" => (IN_STATE_GROUPS.has(g.name) || /nc freestyle|tar heel state|nc usa/i.test(g.name) ? "in-state" : "national")
+const IN_STATE_GROUPS = new Set(["Tournament of Champions"])
+const scopeOf = (g: EventGroup): "in-state" | "national" =>
+  g.stateHs || IN_STATE_GROUPS.has(g.name) || /\b[a-z]{2} freestyle|tar heel state|nc usa/i.test(g.name) ? "in-state" : "national"
 
 function groupByEvent(rows: AppTournamentRow[], style: EventGroup["style"]): EventGroup[] {
   const groups = new Map<string, AppTournamentRow[]>()
+  const stateHs = new Set<string>()
   for (const row of rows) {
-    const named = EVENT_ORDER.find(([re]) => re.test(row.event))?.[1] ?? (row.isDuals ? "Duals" : row.event.replace(/^\d{4}\s+/, ""))
+    let named = isStateHs(row.event) ? STATE_HS : EVENT_ORDER.find(([re]) => re.test(row.event))?.[1] ?? (row.isDuals ? "Duals" : row.event.replace(/^\d{4}\s+/, ""))
+    if (named === STATE_HS) {
+      named = stateHsGroupName(row.event)
+      stateHs.add(named)
+    }
     groups.set(named, [...(groups.get(named) ?? []), row])
   }
   const rank = (name: string) => {
-    const i = EVENT_ORDER.findIndex(([, n]) => n === name)
+    const i = EVENT_ORDER.findIndex(([, n]) => n === (stateHs.has(name) ? STATE_HS : name))
     return i < 0 ? (name === "Duals" ? 99 : 50) : i
   }
   return [...groups.entries()]
-    .map(([name, list]) => ({ name, style, rows: [...list].sort((a, b) => b.year - a.year) }))
+    .map(([name, list]) => ({ name, style, stateHs: stateHs.has(name), rows: [...list].sort((a, b) => b.year - a.year) }))
     .sort((a, b) => rank(a.name) - rank(b.name))
 }
 
@@ -362,41 +377,71 @@ function BoutCard({ bout }: { bout: AppBout }) {
   )
 }
 
-function TournamentRow({ row, compact = false }: { row: AppTournamentRow; compact?: boolean }) {
+/** A finish worth the gold: a title or a top-eight place. */
+const placedLine = (summary: string | null) => !!summary && /champion|all-american|\b(1st|2nd|3rd|[4-8]th)\b/i.test(summary)
+
+/**
+ * One event-year. On its own (By date) it is a card: a slightly lighter panel with space around
+ * it, the tournament name first, gold border only while open. Nested under its event (By
+ * tournament) it is a smaller indented row inside that event's card.
+ */
+function TournamentRow({ row, compact = false, onToggle }: { row: AppTournamentRow; compact?: boolean; onToggle?: (open: boolean) => void }) {
   const [open, setOpen] = useState(false)
   const summary = rowSummary(row)
   const bouts = row.bouts ?? []
+  const toggle = () => {
+    if (!bouts.length) return
+    setOpen((v) => { onToggle?.(!v); return !v })
+  }
+  const head = (
+    <button
+      type="button"
+      className={cn("flex w-full items-center gap-3 text-left", compact ? "px-3 py-2.5 pl-5" : "p-3.5", bouts.length > 0 && "hover:bg-white/[0.03]")}
+      aria-expanded={bouts.length > 0 ? open : undefined}
+      onClick={toggle}
+    >
+      <span className="min-w-0 flex-1">
+        {compact ? (
+          // Under its event's heading a year says the rest: "2026 · Junior Girls Freestyle".
+          <span className="block text-[13px] font-bold text-[#E2E8F0]">{[String(row.year), row.team, divisionOf(row.event)].filter(Boolean).join(" · ")}</span>
+        ) : (
+          <>
+            <span className="block text-[15px] font-black text-white">
+              {row.event} <span className="ml-1 text-xs font-semibold text-[#6B829D]">{row.year}</span>
+            </span>
+            {row.team ? <span className="mt-0.5 block text-[11px] font-bold tracking-wide text-[#6B829D]">{row.team}</span> : null}
+          </>
+        )}
+        {summary ? <span className={cn("mt-0.5 block text-[13px] font-semibold", placedLine(summary) ? "text-[#D3B574]" : "text-[#A8BBD1]")}>{summary}</span> : null}
+      </span>
+      {bouts.length > 0 ? (open ? <ChevronUp className={cn("h-4 w-4 shrink-0", compact ? "text-[#6B829D]" : "text-[#D3B574]")} aria-hidden /> : <ChevronDown className="h-4 w-4 shrink-0 text-[#6B829D]" aria-hidden />) : null}
+    </button>
+  )
+  const body = open ? (
+    <div className={cn("space-y-2 p-2", compact ? "bg-[#0A1628]/70 pl-4" : "border-t border-[#1a3a5f] bg-[#0f1c2e]")}>
+      {bouts.map((bout, index) => (
+        <BoutCard key={`${row.id}-${index}`} bout={bout} />
+      ))}
+    </div>
+  ) : null
+  if (compact) return <div className="border-t border-[#1a3a5f]">{head}{body}</div>
   return (
-    <div className="border-b border-[#1a3a5f] last:border-b-0">
-      <button
-        type="button"
-        className={cn("flex w-full items-center gap-3 p-3 text-left", bouts.length > 0 && "hover:bg-white/[0.03]")}
-        aria-expanded={bouts.length > 0 ? open : undefined}
-        onClick={() => bouts.length > 0 && setOpen((v) => !v)}
-      >
-        <span className="min-w-0 flex-1">
-          {compact ? (
-            // Under its event's heading a year says the rest: "2026 · Junior Girls Freestyle".
-            <span className="block text-[13px] font-bold text-white">{[String(row.year), row.team, divisionOf(row.event)].filter(Boolean).join(" · ")}</span>
-          ) : (
-            <>
-              <span className="block text-[13px] font-bold text-white">
-                {row.event} <span className="font-semibold text-[#6B829D]">{row.year}</span>
-              </span>
-              {row.team ? <span className="mt-0.5 block text-[11px] font-bold tracking-wide text-[#6B829D]">{row.team}</span> : null}
-            </>
-          )}
-          {summary ? <span className="mt-0.5 block text-[13px] font-semibold text-[#A8BBD1]">{summary}</span> : null}
-        </span>
-        {bouts.length > 0 ? (open ? <ChevronUp className="h-4 w-4 shrink-0 text-[#6B829D]" aria-hidden /> : <ChevronDown className="h-4 w-4 shrink-0 text-[#6B829D]" aria-hidden />) : null}
-      </button>
-      {open ? (
-        <div className="space-y-2 bg-[#0A1628] p-2">
-          {bouts.map((bout, index) => (
-            <BoutCard key={`${row.id}-${index}`} bout={bout} />
-          ))}
-        </div>
-      ) : null}
+    <div className={cn("mx-3 my-2.5 overflow-hidden rounded-xl border bg-[#13263c] transition-colors", open ? "border-[#D3B574]/70" : "border-[#1f3a5c]")}>
+      {head}
+      {body}
+    </div>
+  )
+}
+
+/** An event with its years (By tournament): the event's own card, gold while any year is open. */
+function EventCard({ name, rows }: { name: string; rows: AppTournamentRow[] }) {
+  const [openCount, setOpenCount] = useState(0)
+  return (
+    <div className={cn("mx-3 my-2.5 overflow-hidden rounded-xl border bg-[#13263c] transition-colors", openCount > 0 ? "border-[#D3B574]/70" : "border-[#1f3a5c]")}>
+      <p className="px-3.5 pb-1.5 pt-3 text-[15px] font-black text-white">{name}</p>
+      {rows.map((row) => (
+        <TournamentRow key={row.id} row={row} compact onToggle={(o) => setOpenCount((n) => n + (o ? 1 : -1))} />
+      ))}
     </div>
   )
 }
@@ -489,10 +534,7 @@ export function AppTournamentResults({
                       {g.style === "freestyle" ? "FREESTYLE" : "FOLKSTYLE"}
                     </p>
                   ) : null}
-                  <p className="px-3 pb-0.5 pt-3 text-[13px] font-black text-white">{g.name}</p>
-                  {g.rows.map((row) => (
-                    <TournamentRow key={row.id} row={row} compact />
-                  ))}
+                  <EventCard name={g.name} rows={g.rows} />
                 </div>
               ))}
               {groups.length > 8 ? <SeeAll open={showAll} label={`See all ${groups.length} tournaments`} onClick={() => setShowAll((v) => !v)} /> : null}
@@ -527,18 +569,22 @@ function SeeAll({ open, label, onClick }: { open: boolean; label: string; onClic
  * Significant wins or notable losses, In-state | National. National means an opponent from
  * another state; it opens on National when there is one, the stronger list.
  */
-function BoutList({ bouts }: { bouts: AppWin[] }) {
-  const national = bouts.filter((b) => b.scope === "national")
-  const inState = bouts.filter((b) => b.scope !== "national")
-  const [tab, setTab] = useState<"in-state" | "national">(national.length ? "national" : "in-state")
+function BoutList({ bouts, top = false }: { bouts: AppWin[]; top?: boolean }) {
+  // Newest first; the Top 5 tab (wins only) ranks the last 12 months by strength (lib/win-strength.ts).
+  const sorted = newestFirst(bouts)
+  const national = sorted.filter((b) => b.scope === "national")
+  const inState = sorted.filter((b) => b.scope !== "national")
+  const best = top ? topWins(sorted) : []
+  const [tab, setTab] = useState<"top" | "in-state" | "national">(national.length ? "national" : "in-state")
   const [showAll, setShowAll] = useState(false)
-  const list = tab === "national" ? national : inState
+  const list = tab === "top" ? best : tab === "national" ? national : inState
   const shown = showAll ? list : list.slice(0, 6)
   return (
     <div className="space-y-2">
       <Toggle
         value={tab}
         options={[
+          ...(best.length ? ([["top", "Top 5"]] as Array<["top", string]>) : []),
           ["in-state", `In-state (${inState.length})`],
           ["national", `National (${national.length})`],
         ]}
@@ -563,7 +609,7 @@ function BoutList({ bouts }: { bouts: AppWin[] }) {
           </div>
         ))
       ) : (
-        <p className="text-xs text-[#A8BBD1]">{tab === "national" ? "None against out-of-state opponents on file." : "None against NC opponents on file."}</p>
+        <p className="text-xs text-[#A8BBD1]">{tab === "top" ? "No significant wins in the last 12 months." : tab === "national" ? "None against out-of-state opponents on file." : "None against NC opponents on file."}</p>
       )}
       {list.length > 6 && !showAll ? (
         <button type="button" onClick={() => setShowAll(true)} className="text-[13px] font-extrabold text-[#D3B574]">
@@ -574,7 +620,7 @@ function BoutList({ bouts }: { bouts: AppWin[] }) {
   )
 }
 
-function StyledBoutList({ bouts }: { bouts: AppWin[] }) {
+function StyledBoutList({ bouts, top = false }: { bouts: AppWin[]; top?: boolean }) {
   const [style, setStyle] = useState<StyleFilter>("all")
   const both = bouts.some((b) => isOlympic(b.style)) && bouts.some((b) => !isOlympic(b.style))
   const list = !both || style === "all" ? bouts : bouts.filter((b) => (style === "olympic" ? isOlympic(b.style) : !isOlympic(b.style)))
@@ -582,7 +628,7 @@ function StyledBoutList({ bouts }: { bouts: AppWin[] }) {
     <div className="space-y-3">
       {both ? <StyleToggle value={style} onChange={setStyle} /> : null}
       {/* Keyed so the In-state | National tab re-picks itself for the filtered list. */}
-      <BoutList key={style} bouts={list} />
+      <BoutList key={style} bouts={list} top={top} />
     </div>
   )
 }
@@ -597,7 +643,7 @@ export function AppSignificantWins({ wins, loaded, footer, className }: { wins: 
     >
       {wins.length || footer ? (
         <div className="space-y-3">
-          {wins.length ? <StyledBoutList bouts={wins} /> : <p className="text-xs text-[#A8BBD1]">No wins over ranked, All-American or state-placing opponents on file yet.</p>}
+          {wins.length ? <StyledBoutList bouts={wins} top /> : <p className="text-xs text-[#A8BBD1]">No wins over ranked, All-American or state-placing opponents on file yet.</p>}
           {footer ? <div className="flex flex-wrap items-center gap-2 border-t border-[#1a3a5f] pt-3">{footer}</div> : null}
         </div>
       ) : null}

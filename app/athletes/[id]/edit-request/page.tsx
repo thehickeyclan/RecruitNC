@@ -20,7 +20,7 @@ export default async function EditRequestPage({ params }: EditRequestPageProps) 
     .single()
 
   if (error || !athlete) {
-    redirect("/athletes")
+    redirect("/prospects/all")
   }
 
   return (
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
     athlete?.name || `${athlete?.first_name || ""} ${athlete?.last_name || ""}`.trim()
 
   return {
-    title: `Request Edit - ${athleteName} | NC United Wrestling`,
+    title: `Request Edit - ${athleteName}`,
     description: `Request changes to ${athleteName}'s wrestling profile`,
   }
 }

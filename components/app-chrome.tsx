@@ -28,7 +28,7 @@ const SHELL_HINT_KEY = "recruiting-shell"
  * 2026: "you changed nc united website our front end"). A real coach still gets the portal frame
  * everywhere; this is only the staff preview.
  */
-const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/interested", "/scouting-report"]
+const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/college-commitments", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/interested", "/scouting-report", "/coach-reports"]
 /**
  * Pages with no Data Dawg launcher whoever is looking: the inbox (it covers the send button) and
  * the pages that exist only for coaches.
@@ -55,6 +55,8 @@ const SCOUT_PATHS = ["/my-recruiting", "/recruiting", "/command-center", "/plans
 const onScoutPage = (path: string) => SCOUT_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
 const NO_CHAT_PATHS = [
+  // Super 32 HQ: the chat bubble covered the scoreboard on phones (Matt, 24 Oct 2026).
+  "/super32/live",
   "/inbox",
   "/coach-home",
   "/my-recruits",
@@ -120,7 +122,11 @@ function useRecruitingShell(): boolean {
 /**
  * Spartan campaign and future microsites: no portal nav/footer/chat so the page owns the full frame.
  */
-export function AppChrome({ children }: { children: React.ReactNode }) {
+/**
+ * hideNcUnited: RecruitWrestlers' own Vercel project. Its pages carry no NC United menu, footer,
+ * logo, email or socials at all - not even hidden (Matt's NC United sweep, 27 Oct 2026).
+ */
+export function AppChrome({ children, hideNcUnited = false }: { children: React.ReactNode; hideNcUnited?: boolean }) {
   const pathname = usePathname()
   const path = pathname && pathname.length > 0 ? pathname : "/"
   /*
@@ -136,14 +142,15 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
    * the recruiting portal is being separated from the community site (Matt, 13 October 2026).
    */
   const { profile } = useAuth()
-  const coachAtFrontDoor = path === "/" && usesRecruitingShell(profile) && !(typeof window !== "undefined" && isNationalHost(window.location.hostname))
+  // On recruitwrestlers.com too: its home page is for families and visitors, never a coach's.
+  const coachAtFrontDoor = path === "/" && usesRecruitingShell(profile)
   useEffect(() => {
     // The server normally does this first (middleware.ts); this catches a coach it could not yet
     // recognise. There is no way round it: the community front page is not a coach's page.
     if (!coachAtFrontDoor) return
     // The one exception: a partner program's coach who chose the NC United link.
     if (hasCommunityAccess(profile) && new URLSearchParams(window.location.search).has("community")) return
-    window.location.replace("/coach-home")
+    window.location.replace("/my-recruits")
   }, [coachAtFrontDoor, profile])
   // No chat launcher in the coach portal at all (Matt, 11 October 2026).
   // On the community side, the inbox keeps its reply box and send button in the corner the chat launcher floats over.
@@ -209,7 +216,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   if (recruitingShell) {
     return (
       <>
-        <RecruitingShell>
+        <RecruitingShell hideNcUnited={hideNcUnited}>
           <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
         </RecruitingShell>
       </>
@@ -223,19 +230,23 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         the first paint - so recruitwrestlers.com never flashes NC United's menu, and nothing about
         app.ncwrestlingunited.com changes.
       */}
-      <div className="ncu-only">
-        <Navbar />
-      </div>
+      {hideNcUnited ? null : (
+        <div className="ncu-only">
+          <Navbar />
+        </div>
+      )}
       <BrandHeader />
-      <div className="ncu-only">{familyBand === "top" ? <FamilyProfileBand /> : null}</div>
+      {hideNcUnited ? null : <div className="ncu-only">{familyBand === "top" ? <FamilyProfileBand /> : null}</div>}
       <main className="flex-1">
         <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
       </main>
-      <div className="ncu-only">
-        {familyBand === "foot" ? <FamilyProfileBand /> : null}
-        <Footer />
-        {chat}
-      </div>
+      {hideNcUnited ? null : (
+        <div className="ncu-only">
+          {familyBand === "foot" ? <FamilyProfileBand /> : null}
+          <Footer />
+          {chat}
+        </div>
+      )}
       <BrandFooter />
     </div>
   )

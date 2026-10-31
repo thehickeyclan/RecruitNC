@@ -78,7 +78,7 @@ export function accessTokenFrom(headers: Headers, cookies: Array<{ name: string;
 }
 
 /** The user id and email in a valid, unexpired HS256 token signed with our project secret; otherwise null. */
-export async function verifiedClaims(token: string, secret: string, nowSeconds = Date.now() / 1000): Promise<{ sub: string; email: string | null } | null> {
+export async function verifiedClaims(token: string, secret: string, nowSeconds = Date.now() / 1000): Promise<{ sub: string; email: string | null; appMetadata: Record<string, unknown> } | null> {
   const [h, p, s] = token.split(".")
   if (!h || !p || !s) return null
   try {
@@ -87,10 +87,11 @@ export async function verifiedClaims(token: string, secret: string, nowSeconds =
     const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"])
     const ok = await crypto.subtle.verify("HMAC", key, b64urlToBytes(s), new TextEncoder().encode(`${h}.${p}`))
     if (!ok) return null
-    const claims = JSON.parse(new TextDecoder().decode(b64urlToBytes(p))) as { sub?: string; exp?: number; role?: string; email?: string }
+    const claims = JSON.parse(new TextDecoder().decode(b64urlToBytes(p))) as { sub?: string; exp?: number; role?: string; email?: string; app_metadata?: unknown }
     if (typeof claims.exp !== "number" || claims.exp < nowSeconds) return null
     if (claims.role !== "authenticated" || typeof claims.sub !== "string") return null
-    return { sub: claims.sub, email: typeof claims.email === "string" ? claims.email : null }
+    const appMetadata = claims.app_metadata && typeof claims.app_metadata === "object" ? (claims.app_metadata as Record<string, unknown>) : {}
+    return { sub: claims.sub, email: typeof claims.email === "string" ? claims.email : null, appMetadata }
   } catch {
     return null
   }

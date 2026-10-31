@@ -19,6 +19,7 @@ import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import { gradeLabel } from "@/lib/college-programs/outreach-results"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
+import { admissionsSummary } from "@/lib/college-programs/admissions"
 import { costShort } from "@/lib/college-programs/tuition"
 import { listUpcomingEvents, type UpcomingEvent } from "@/lib/college-programs/schedule"
 import { DIVISION_SHORT, primaryDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
@@ -30,6 +31,11 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import type { WarRoomSchool, WarRoomWrestler } from "./war-room-plan"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { familyState } from "@/lib/recruiting/family-state"
+import { unreadCount } from "@/lib/coach-messages"
+import { interestSent } from "@/lib/college-programs/college-interest"
+import { loadReminders, loadVisits } from "@/lib/recruiting/visits-server"
+import { demoFixturesOn, demoReminders, demoVisits } from "@/lib/recruiting/demo-fixtures"
 
 
 const SCHOOLS = new Map([...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS].map((s) => [s.id, s]))
@@ -46,6 +52,8 @@ export async function loadCommandCenter(returnTo: string) {
   // The signed-in viewer - or, on a developer's machine, the family an admin is previewing.
   const portal = await resolvePortalViewer({ supabase, admin })
   const viewerId = portal.userId ?? user.id
+  // The family's own state: college costs, in-state labels and alumni are theirs, not North Carolina's.
+  const homeState = await familyState(admin, viewerId).catch(() => "NC")
   const viewer = portal.viewer
   const [ids, focus] = await Promise.all([familyAthleteIds(admin, viewerId), familyFocus(admin, viewerId)])
   const blue = hasPortalAccess(viewer)
@@ -89,11 +97,17 @@ export async function loadCommandCenter(returnTo: string) {
       // The interest-form column may not exist yet (scripts/add-college-list-questionnaire-done.sql): fall back.
       admin
         .from("college_list_items")
-        .select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread")
+        .select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread, stage_changed_at, coach_emailed_at")
         .eq("user_id", viewerId)
         .order("updated_at", { ascending: false })
         .then(async (r) => {
           if (r.error?.code !== "42703") return r
+          // Before the coach-email column (scripts/add-command-center-visits-reminders.sql).
+          const e = await admin.from("college_list_items").select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread, stage_changed_at").eq("user_id", viewerId).order("updated_at", { ascending: false })
+          if (e.error?.code !== "42703") return e
+          // Before the days-in-stage column (scripts/add-college-list-stage-changed.sql).
+          const s = await admin.from("college_list_items").select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread").eq("user_id", viewerId).order("updated_at", { ascending: false })
+          if (s.error?.code !== "42703") return s
           const q = await admin.from("college_list_items").select("school_id, status, note, updated_at, questionnaire_done_at").eq("user_id", viewerId).order("updated_at", { ascending: false })
           return q.error?.code === "42703" ? admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }) : q
         }),
@@ -113,11 +127,15 @@ export async function loadCommandCenter(returnTo: string) {
           logo: null as string | null,
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
           admissions: admissionsOf(row as Record<string, unknown>),
+          admissionInfo: admissionsSummary(school.id),
+          stageSince: ((row as { stage_changed_at?: string | null }).stage_changed_at ?? (row.updated_at ? String(row.updated_at) : null)) as string | null,
           questionnaireDone: questionnaireDone({ status, questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null }),
+          questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null,
+          emailedAt: (row as { coach_emailed_at?: string | null }).coach_emailed_at ?? null,
           savedAt: row.updated_at ? String(row.updated_at) : null,
           memo: row.note ? String(row.note) : null,
           onRecruitNC: false,
-          tuition: costShort(school.id, school.state),
+          tuition: costShort(school.id, school.state, homeState),
           noTeam: focus && !school.programs.some((p) => p[focus.gender]) ? `No ${focus.gender === "womens" ? "women's" : "men's"} team` : null,
         },
       ]
@@ -145,16 +163,68 @@ export async function loadCommandCenter(returnTo: string) {
 
   // College programs that have viewed each wrestler. Names for a subscriber; the count for everyone.
   const premium = blue || hasPremiumAccess(viewer)
+  const summaries = await Promise.all(athletes.map((a) => getCoachViewsForAthlete(admin, a.id).catch(() => null)))
   const views = new Map(
-    await Promise.all(
-      athletes.map(async (a) => {
-        const summary = await getCoachViewsForAthlete(admin, a.id).catch(() => null)
-        return [a.id, summary ? { programs: summary.schools.length, total: summary.totalViews, schools: premium ? summary.schools : [] } : null] as const
-      }),
-    ),
+    athletes.map((a, i) => {
+      const summary = summaries[i]
+      return [a.id, summary ? { programs: summary.schools.length, total: summary.totalViews, schools: premium ? summary.schools : [] } : null] as const
+    }),
   )
 
-  return { viewerId, authUserId: user.id, blue, focus, athletes, wrestlers, schools, graduatesOnly, views, premium }
+  /*
+   * One family-wide count of college programs that viewed: a program that looked at both brothers
+   * is one program. The home page showed "3 programs viewed" (the first son) beside "5 viewed the
+   * profile" (both sons added up) - Matt, 28 Oct 2026.
+   */
+  const viewedSchools = new Set(summaries.flatMap((x) => (x?.schools ?? []).map((v) => v.school.toLowerCase())))
+  const totalViews = summaries.reduce((n, x) => n + (x?.totalViews ?? 0), 0)
+  const familyViews = { programs: viewedSchools.size, total: totalViews }
+
+  const ids2 = athletes.map((a) => a.id)
+  const [visits, reminders, interest, unread, ccVisits, rulesVisits] = await Promise.all([
+    loadVisits(admin, ids2),
+    loadReminders(admin, viewerId),
+    interestSent(admin, ids2).catch(() => ({ available: false, sent: [] as Array<{ athleteId: string; schoolId: string }> })),
+    unreadCount(admin, viewerId).catch(() => 0),
+    // First visit: no earlier Command Center page view in the log (the tracker records this one after it renders).
+    admin.from("user_analytics").select("id").eq("user_id", viewerId).eq("event_type", "page_view").like("page_url", "/my-recruiting%").limit(1).then((r) => (r.error ? 1 : (r.data ?? []).length), () => 1),
+    // Step 3 is ticked once the family has opened the rules: a Learn page or the Rules page.
+    admin
+      .from("user_analytics")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", viewerId)
+      .eq("event_type", "page_view")
+      .or("page_url.like./recruiting/learn%,page_url.like./my-recruiting/rules%,page_url.like./my-recruiting/learn%")
+      .then((r) => r.count ?? 0, () => 0),
+  ])
+
+  // A developer's machine before the tables exist: sample rows so the screens can be seen. Never in production.
+  if (demoFixturesOn() && athletes[0]) {
+    if (!visits.available) Object.assign(visits, { available: true, visits: demoVisits(athletes[0].id, schools.map((s) => s.id)) })
+    if (!reminders.available) Object.assign(reminders, { available: true, reminders: demoReminders(athletes[0].id, schools) })
+  }
+
+  return {
+    viewerId,
+    authUserId: user.id,
+    blue,
+    focus,
+    athletes,
+    wrestlers,
+    schools,
+    graduatesOnly,
+    views,
+    familyViews,
+    premium,
+    homeState,
+    visits,
+    reminders,
+    interest,
+    unread,
+    firstVisit: ccVisits === 0,
+    rulesSeen: rulesVisits > 0,
+    previewing: portal.previewing,
+  }
 }
 
 export type CommandCenter = Awaited<ReturnType<typeof loadCommandCenter>>

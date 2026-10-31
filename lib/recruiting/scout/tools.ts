@@ -13,6 +13,12 @@ import { readGuide, type Guide } from "@/lib/recruiting/scout/guides"
 import { athleticAdmissionFacts, inStateLine } from "@/lib/recruiting/scout/projected-level"
 import { needSentence, roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
+import { backgroundFor, backgroundLine } from "@/lib/college-programs/coach-backgrounds"
+import { schoolsWithApprovedCoaches } from "@/lib/college-programs/load"
+import { rosterForSchool } from "@/lib/college-programs/rosters"
+import { rankingSentence } from "@/lib/college-programs/team-rankings"
+import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
+import { RECRUITING_BRAND } from "@/lib/recruiting/brand"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_SHORT, type CollegeDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { loadWentHere } from "@/lib/college-programs/went-here"
@@ -21,6 +27,7 @@ import { collegeKey } from "@/lib/recruiting/roadmap-adapt"
 import { fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 import { NICHE_CATEGORIES, gradePoints, nicheFor } from "@/lib/college-programs/niche"
+import { productName } from "@/lib/recruiting/product-name"
 
 /**
  * Scout's college tools (17 Oct 2026, Matt: "understands all the colleges, the line ups, the NC
@@ -58,6 +65,8 @@ export type ScoutSession = {
   commitment?: { name: string; schoolId: string | null } | null
   /** The wrestler's star, for the in-state line (never said to the family). */
   stars?: number | null
+  /** Colleges whose coaches are on the platform (approved accounts), loaded once per question. */
+  onPlatform?: Set<string>
   /** Links Scout may offer; tools add the colleges they return. */
   links: Record<string, { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" | "source" }>
 }
@@ -111,7 +120,7 @@ export const SCOUT_TOOLS = [
     function: {
       name: "college_details",
       description:
-        "Everything about one college for this family: programs, conference, full cost and net price, coaching staff (names, titles, published emails), recruiting questionnaire, the lineup at the wrestler's weight, the NC wrestlers who went there and their results, how the wrestler fits (athletic, academic, cost), whether it is on the family's list and whether its coaches viewed the profile.",
+        "Everything about one college for this family: programs, conference, whether its coaches are on the platform, national team ranking, coaching staff (names, titles, published emails) and support staff, the North Carolina wrestlers on its current roster, full cost and net price, recruiting questionnaire, the lineup at the wrestler's weight, the NC wrestlers who went there and their results, how the wrestler fits (athletic, academic, cost), whether it is on the family's list and whether its coaches viewed the profile.",
       parameters: { type: "object", properties: { school_id: { type: "string" } }, required: ["school_id"] },
     },
   },
@@ -137,7 +146,10 @@ function lineup(s: ScoutSession, schoolId: string): string | null {
   const arrival = s.fit?.classYear ?? seniorClassYear()
   const atText =
     room && weights.length && weightsPublished(room)
-      ? `. At the wrestler's college weights, for the fall ${arrival} the wrestler would arrive: ${needSentence(roomByWeight(room, team, arrival), weights, arrival)}. A direction, never an open spot: redshirts, transfers and new signings change it`
+      ? `. At the wrestler's college weights, for the fall ${arrival} the wrestler would arrive: ${needSentence(roomByWeight(room, team, arrival), weights, arrival)}. A direction, never an open spot: redshirts, transfers and new signings change it.\nWho is at those weights now (name, class, final season, from the school's roster):\n${roomByWeight(room, team, arrival)
+          .filter((r) => weights.includes(r.weight))
+          .map((r) => `- ${r.weight}: ${r.wrestlers.length ? r.wrestlers.map((w) => `${w.name} (${[w.cls, w.redshirt ? "redshirt" : null, w.finalSeason ? `last season ${w.finalSeason - 1}-${String(w.finalSeason).slice(2)}` : null, w.homeState].filter(Boolean).join(", ")})`).join("; ") : "nobody listed"}`)
+          .join("\n")}\nWe do not hold where any wrestler came from (high school recruit or transfer): the roster pull has no previous college. Say so if asked; never suggest the compliance office`
       : room && weights.length
         ? ". The roster lists too few weights to say who is at the wrestler's weight"
         : ""
@@ -159,7 +171,7 @@ function short(s: ScoutSession, school: CollegeMapSchool): string {
   const programs = school.programs
     .filter((p) => !s.team || p[s.team])
     .map((p) => `${DIVISION_SHORT[p.division]}${p.conference ? ` ${p.conference}` : ""} (${[p.mens ? "men" : null, p.womens ? "women" : null].filter(Boolean).join(" and ")})`)
-  const cost = yearlyCostFor(school.id, school.state)
+  const cost = yearlyCostFor(school.id, school.state, s.homeState ?? "NC")
   const stage = s.list.get(school.id)
   return [
     `${spoken(school.name)} [id ${school.id}] [link: school:${school.id}]: ${programs.join("; ") || "no program for this team"}, ${school.city}, ${school.state}`,
@@ -187,7 +199,7 @@ function findColleges(s: ScoutSession, a: Record<string, unknown>): string {
     if (!programs.length) return false
     if (state && school.state !== state) return false
     if (conference && !programs.some((p) => (p.conference ?? "").toLowerCase().includes(conference))) return false
-    if (maxCost != null && (yearlyCostFor(school.id, school.state)?.amount ?? Infinity) > maxCost) return false
+    if (maxCost != null && (yearlyCostFor(school.id, school.state, s.homeState ?? "NC")?.amount ?? Infinity) > maxCost) return false
     if (a.room_at_weight === true && !roomAtWeight(s, school.id)) return false
     if (typeof a.grade_category === "string" && typeof a.min_grade === "string") {
       const have = gradePoints(nicheFor(school.id)?.grades[a.grade_category as keyof NonNullable<ReturnType<typeof nicheFor>>["grades"]])
@@ -254,12 +266,46 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
     if (fit.net?.amount != null) lines.push(`Net price: ${money(fit.net.amount)}, the average paid after aid by all aided students (not this family's income)`)
     lines.push(`Fit: athletic: ${fit.lines.athletic.text} Academic: ${fit.lines.academic.text} Cost: ${fit.lines.cost.text}`)
   }
+  // Coaches on the platform: they can see the profile, the Command Center and write in the app.
+  s.onPlatform ??= await schoolsWithApprovedCoaches(s.admin).catch(() => new Set<string>())
+  lines.push(
+    s.onPlatform.has(school.id)
+      ? `This program's coaches are on ${productName()}: they can see the wrestler's profile and verified results here, and the family can tell them the wrestler is interested from the college list.`
+      : `This program's coaches are not on ${productName()} yet: reach them by email.`,
+  )
+  // National team ranking, the latest coaches' poll that lists it.
+  const ranks = await teamRankingsForSchool(school.id).catch(() => [])
+  const rank = ranks.find((r) => !s.team || r.gender === s.team) ?? null
+  lines.push(rank ? `Team ranking: ${rankingSentence(rank)}.` : "Team ranking: not in the latest coaches' poll we hold.")
+  // Coaches first, with emails; support staff apart (Matt, 23 Oct 2026: a strength coach is not who a
+  // family emails). Tenure and background are not held: say so rather than guess.
   const staff = staffForSchool(school.id).filter((m) => !s.team || m.teams.includes(s.team))
+  const support = (t: string) => /strength|conditioning|trainer|operations|video|manager|administrat|sport science|nutrition|academic/i.test(t)
+  const coaches = staff.filter((m) => !support(m.title))
+  const others = staff.filter((m) => support(m.title))
   lines.push(
     staff.length
-      ? `Coaching staff (from the school's site):\n${staff.map((m) => `- ${m.name}, ${m.title}${isHeadCoach(m) ? " (head coach)" : ""}${m.email ? `, ${m.email}` : ""}`).join("\n")}`
+      ? `Coaching staff (from the school's site; background from each coach's own bio page, counted here):\n${coaches
+          .map((m) => {
+            const b = backgroundFor(school.id, m.name)
+            const line = b ? backgroundLine(b, spoken(school.name)) : null
+            return `- ${m.name}, ${m.title}${m.email ? ` (${m.email})` : " (no email published)"}${line ? `. ${line}` : `. We don't have ${m.name}'s background.`}`
+          })
+          .join("\n")}\nFor a question about the staff or reaching out, give the coach lines above as written, every coach, each on its own line.` +
+          (others.length ? `\nSupport staff (not recruiting contacts): ${others.map((m) => `${m.name} (${m.title})`).join("; ")}` : "") +
+          "\nAdvice: email the whole coaching staff together; a family rarely knows which coach runs recruiting. Use a coach's background only as written here; where it says not on the bio page, say we don't have it."
       : "Coaching staff: not on file yet; the athletics website lists it.",
   )
+  // Who from North Carolina is on the roster now (Muse's roster pull, the school's own roster page).
+  if ((s.homeState ?? "NC") === "NC") {
+    const roster = rosterForSchool(school.id)
+    const mine = roster.wrestlers.filter((w) => !s.team || w.team === s.team)
+    lines.push(
+      roster.anyReviewed
+        ? `North Carolina wrestlers on the current roster: ${roster.teamLines.join(" ")}${mine.length ? `\nSay this line as written, every name: "North Carolina wrestlers on the roster now: ${mine.slice(0, 8).map((w) => `${w.name} (${[w.weight, w.class, w.highSchool].filter(Boolean).join(", ")})`).join("; ")}${mine.length > 8 ? `; and ${mine.length - 8} more` : ""}."` : ""}`
+        : "North Carolina wrestlers on the current roster: we could not read this roster.",
+    )
+  }
   const q = questionnairesForSchool(school.id)
   const qUrl = q.map((x) => (s.team === "womens" ? x.womens : s.team === "mens" ? x.mens : x.mens ?? x.womens)).find(Boolean)
   lines.push(qUrl ? `Recruiting questionnaire: ${qUrl}` : "Recruiting questionnaire: none on file; check the athletics website.")

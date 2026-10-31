@@ -43,19 +43,24 @@ import {
 import { StoreButton } from "@/components/store-button"
 import { StoreNavLink } from "@/components/store-nav-link"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useCoachMessageBadge, useNavNotifications } from "@/hooks/use-nav-badges"
+import { bellDate, useCoachMessageBadge, useNavNew, useNavNotifications } from "@/hooks/use-nav-badges"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [hubAccess, setHubAccess] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  // Desktop and phone bells each get their own: one shared switch let the hidden one close the other on open.
+  const [mobileNotificationsOpen, setMobileNotificationsOpen] = useState(false)
   const pathname = usePathname() ?? ""
   const { user, signOut, isLoading, profile } = useAuth()
   const cartItems = useCartStore((s) => s.items)
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
   const { notifications, unread: unreadNotifications, markRead: markNotificationRead, markAllRead: markAllNotificationsRead } =
-    useNavNotifications(!!user, notificationsOpen)
+    useNavNotifications(!!user, notificationsOpen || mobileNotificationsOpen)
   const { unread: unreadMessages, show: showMessages } = useCoachMessageBadge(!!user, pathname)
+  // "New" beside Rankings and News when a release or story came out since this person last looked.
+  const fresh = useNavNew(!!user, pathname)
+  const newTag = <span className="ml-1.5 rounded-full bg-red-600 px-1.5 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-white">New</span>
 
   useEffect(() => {
     if (!user) {
@@ -133,14 +138,16 @@ export function Navbar() {
   const profilesItem = { href: "/prospects/all", label: "Browse Athlete Profiles" }
   /** Sits with the profiles, because comparing two wrestlers is what you do after finding one. */
   const compareItem = { href: "/compare?src=nav", label: "Compare Wrestlers" }
-  const commitmentItems = [
-    { href: "/athletes", label: "College Commitments" },
-    { href: "/high-schools", label: "Commitments by High School" },
-    { href: "/colleges", label: "Commitments by College" },
-  ]
+  /*
+   * One entry. By college and by high school are tabs on the commitments page itself (27 Oct
+   * 2026), so listing them here too was three menu rows for one place.
+   */
+  const commitmentItems = [{ href: "/college-commitments", label: "College Commitments" }]
+  /* Still under Athletes for the menu's active state: they are the commitments page's other tabs. */
+  const commitmentTabs = [{ href: "/colleges" }, { href: "/high-schools" }]
   const rankingsItem = { href: "/public-rankings", label: "Rankings" }
-  const recruitingItem = { href: "/recruiting/tournaments", label: "Recruiting" }
-  const athletesItems = [profilesItem, compareItem, ...commitmentItems, recruitingItem]
+  // "Recruiting" (/recruiting/tournaments) left this menu 27 Oct 2026: it is a single article, not a section.
+  const athletesItems = [profilesItem, compareItem, ...commitmentItems, ...commitmentTabs]
 
   const programsItems = [
     { href: "/command-center", label: "Recruiting Command Center", description: "Your recruiting assistant, 8th grade to signing" },
@@ -254,7 +261,7 @@ export function Navbar() {
 
   /** Top-level LegacyNC menu (history / awards — not an event tournament). */
   const legacyNcItems: EventsMegaLink[] = [
-    { href: "/athletes?tab=legacy", label: "Wrestlers", icon: Users },
+    { href: "/wrestlers", label: "Wrestlers", icon: Users },
     { href: "/schools", label: "Schools", icon: Medal },
     { href: "/dave-schultz-award", label: "Dave Schultz Award", icon: Trophy },
     { href: "/tricia-saunders-award", label: "Tricia Saunders Award", icon: Trophy },
@@ -335,13 +342,9 @@ export function Navbar() {
                       <a href={item.href} className="block w-full cursor-pointer">{item.label}</a>
                     </DropdownMenuItem>
                   ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href={recruitingItem.href} className="block w-full cursor-pointer">{recruitingItem.label}</a>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <a href="/public-rankings" className={navLinkClass("/public-rankings")}>Rankings</a>
+              <a href="/public-rankings" className={navLinkClass("/public-rankings")}>Rankings{fresh.rankings ? newTag : null}</a>
               <a href="/clubs" className={navLinkClass("/clubs")}>Clubs</a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(eventsNavItemsForActive)}>
@@ -569,7 +572,7 @@ export function Navbar() {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <a href="/news" className={navLinkClass("/news")}>News</a>
+              <a href="/news" className={navLinkClass("/news")}>News{fresh.news ? newTag : null}</a>
               <a href="/about" className={navLinkClass("/about")}>About</a>
               <StoreNavLink className={navLinkClass("/store-app")}>Store</StoreNavLink>
               {highlightNavItems.map((item) => (
@@ -645,7 +648,7 @@ export function Navbar() {
                             <p className="text-sm font-medium">{n.title}</p>
                             {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
                             <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                              {bellDate(n)}
                             </p>
                           </a>
                         )
@@ -759,7 +762,7 @@ export function Navbar() {
             )}
             {/* Notifications bell - when logged in */}
             {user && (
-              <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+              <Popover open={mobileNotificationsOpen} onOpenChange={setMobileNotificationsOpen}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
@@ -799,14 +802,14 @@ export function Navbar() {
                             href={href}
                             onClick={() => {
                               markNotificationRead(n.id)
-                              setNotificationsOpen(false)
+                              setMobileNotificationsOpen(false)
                             }}
                             className={`block px-3 py-2.5 text-left border-b border-border/50 last:border-0 hover:bg-muted/50 ${!n.read_at ? "bg-muted/30" : ""}`}
                           >
                             <p className="text-sm font-medium">{n.title}</p>
                             {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
                             <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                              {bellDate(n)}
                             </p>
                           </a>
                         )
@@ -832,7 +835,7 @@ export function Navbar() {
                   asChild
                   variant="outline"
                   size="sm"
-                  className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized min-h-[44px] px-3"
+                  className="border-white/70 text-white hover:bg-white hover:text-[#003366] bg-transparent mobile-optimized min-h-[44px] px-3"
                 >
                   <Link href="/auth/signin" target="_top" rel="noopener" onPointerDown={signInHere} onFocus={signInHere}>Sign In</Link>
                 </Button>
@@ -853,7 +856,10 @@ export function Navbar() {
                   onClick={() => setIsOpen(true)}
                   className="mobile-optimized min-h-[44px] min-w-[44px] flex items-center gap-2 px-3 text-white hover:bg-white/10 border border-white/40"
                 >
-                  <Menu className="h-5 w-5" />
+                  <span className="relative">
+                    <Menu className="h-5 w-5" />
+                    {fresh.rankings || fresh.news ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-600" aria-label="New" /> : null}
+                  </span>
                   <span className="text-sm font-semibold">MENU</span>
                 </Button>
               </SheetTrigger>
@@ -911,10 +917,9 @@ export function Navbar() {
                       {commitmentItems.map((item) => (
                         <a key={item.href} href={item.href} className={mobileSubLinkClass(item.href)} onClick={() => setIsOpen(false)}>{item.label}</a>
                       ))}
-                      <a href={recruitingItem.href} className={mobileSubLinkClass(recruitingItem.href)} onClick={() => setIsOpen(false)}>{recruitingItem.label}</a>
                     </div>
                   </div>
-                  <a href={rankingsItem.href} className={mobileLinkClass(rankingsItem.href)} onClick={() => setIsOpen(false)}>{rankingsItem.label}</a>
+                  <a href={rankingsItem.href} className={mobileLinkClass(rankingsItem.href)} onClick={() => setIsOpen(false)}>{rankingsItem.label}{fresh.rankings ? newTag : null}</a>
                   <a href="/clubs" className={mobileLinkClass("/clubs")} onClick={() => setIsOpen(false)}>Clubs</a>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Results</div>
@@ -1026,7 +1031,7 @@ export function Navbar() {
                       ))}
                     </div>
                   </div>
-                  <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
+                  <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News{fresh.news ? newTag : null}</a>
                   <a href="/about" className={mobileLinkClass("/about")} onClick={() => setIsOpen(false)}>About</a>
                   <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
                   <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>

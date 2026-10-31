@@ -43,6 +43,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const [redirecting, setRedirecting] = useState(false)
   const [sessionCheckComplete, setSessionCheckComplete] = useState(false)
   const [directSessionCheck, setDirectSessionCheck] = useState<boolean | null>(null)
+  const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
@@ -86,11 +87,9 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
       setSessionCheckComplete(true)
     }
 
-    // Initial wait for auth context and cookies after redirect (mobile needs more time)
-    const timer = setTimeout(() => {
-      checkDirectSessionWithRetries()
-    }, 1200)
-    return () => clearTimeout(timer)
+    // Check at once: a signed-in visitor should not wait. The retries above, with their delays,
+    // only run when no session turns up yet (cookies still settling after a redirect on mobile).
+    void checkDirectSessionWithRetries()
   }, [])
 
   useEffect(() => {
@@ -111,13 +110,25 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     // In this case, wait a bit more for the context to catch up
     const hasSession = user || directSessionCheck
 
-    if (!hasSession && !redirecting) {
+    if (!hasSession && !redirecting && !notFound) {
       // One more getSession before redirecting (avoids loop when session appears late)
       const doFinalRedirect = async () => {
         const supabase = createClient()
         try {
           const { data: { session } } = await supabase.auth.getSession()
           if (session) return
+        } catch (_) {}
+        /*
+         * A page that does not exist is "page not found", not "sign in": the guard only ever saw the
+         * address, so an old or mistyped link on NC United read as a login wall (mobile review,
+         * 30 Oct 2026). The server already answered 404 for it; ask once and show that page.
+         */
+        try {
+          const res = await fetch(window.location.pathname, { method: "HEAD", cache: "no-store" })
+          if (res.status === 404) {
+            setNotFound(true)
+            return
+          }
         } catch (_) {}
         if (!redirecting) {
           setRedirecting(true)
@@ -140,7 +151,11 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
       const redirectTimer = setTimeout(doFinalRedirect, 800)
       return () => clearTimeout(redirectTimer)
     }
-  }, [mounted, isLoading, sessionCheckComplete, directSessionCheck, user, requireAdmin, isAdmin, pathname, redirecting, profile])
+  }, [mounted, isLoading, sessionCheckComplete, directSessionCheck, user, requireAdmin, isAdmin, pathname, redirecting, profile, notFound])
+
+  // Fast path: the auth context already has a signed-in user (and admin status when required).
+  const confirmed = mounted && !isLoading && !!user && (!requireAdmin || isAdmin)
+  if (confirmed || notFound) return <>{children}</>
 
   if (!mounted || isLoading || !sessionCheckComplete) {
     return (
@@ -192,8 +207,8 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
             <CardDescription>You don't have admin privileges</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600 mb-2">Signed in as: {user.email}</p>
-            <p className="text-sm text-gray-600 mb-2">User ID: {user.id}</p>
+            <p className="text-sm text-gray-600 mb-2">Signed in as: {user?.email}</p>
+            <p className="text-sm text-gray-600 mb-2">User ID: {user?.id}</p>
             <p className="text-sm text-gray-600 mb-2">Profile is_admin: {profile?.is_admin ? "true" : "false"}</p>
             <p className="text-xs text-gray-500 mb-4">
               If you should have admin access, please check your user profile in the database (user_profiles.is_admin

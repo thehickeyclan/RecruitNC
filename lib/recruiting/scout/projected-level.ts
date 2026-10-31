@@ -1,4 +1,5 @@
 import type { StarRating } from "@/lib/athlete-star-rating"
+import { productName } from "@/lib/recruiting/product-name"
 
 /**
  * What a star means, as a college level (Matt, 20 Oct 2026): the star is RecruitNC's projection of
@@ -32,13 +33,13 @@ export function projectedLevelFacts(
 ): string {
   if (!rating) {
     if (why.female)
-      return `${first}: RecruitNC does not project a college level for women's wrestling yet (our girls' national results are not complete enough to be fair). For "what division": give where wrestlers with the same standing went, and say that plainly.`
-    return `${first}: too early for RecruitNC's projected college level; we project one for juniors and seniors, when the results that decide recruiting are in. For "what division": give where wrestlers with the same standing went, and what would open more levels.`
+      return `${first}: ${productName()} does not project a college level for women's wrestling yet (our girls' national results are not complete enough to be fair). For "what division": give where wrestlers with the same standing went, and say that plainly.`
+    return `${first}: too early for ${productName()}'s projected college level; we project one for juniors and seniors, when the results that decide recruiting are in. For "what division": give where wrestlers with the same standing went, and what would open more levels.`
   }
   const stars = Math.max(1, Math.min(5, rating.stars))
   const thin = rating.provisional || stars === 1 ? " Results on file are still thin, so this can move quickly." : ""
   const next = NEXT_STEP[stars] ? ` What would raise it: ${NEXT_STEP[stars]}.` : " This is the top of our scale."
-  return `RecruitNC's projected college level for ${first}, from the results on file: ${STAR_LEVEL[stars]}.${thin}${next} It is our assessment of results, not a coach's offer, and grades, growth and this season can change it.`
+  return `${productName()}'s projected college level for ${first}, from the results on file: ${STAR_LEVEL[stars]}.${thin}${next} It is our assessment of results, not a coach's offer, and grades, growth and this season can change it.`
 }
 
 /*
@@ -59,7 +60,7 @@ export function athleticAdmissionFacts(schoolId: string, schoolName: string): st
   const gpa = ATHLETIC_ADMISSION_GPA[schoolId]
   return (
     `Athletic admission: the admission figures describe all applicants. A recruited wrestler is admitted through athletic admissions, with the coaching staff's support, often well below them` +
-    (gpa ? `; at ${schoolName}, recruited athletes are admitted with ${gpa} (RecruitNC's guidance).` : ".") +
+    (gpa ? `; at ${schoolName}, recruited athletes are admitted with ${gpa} (${productName()}'s guidance).` : ".") +
     ` Without a coach's support, the published figures are what an applicant is measured against. The coach decides whether to support an applicant, so the way in is through the coach.`
   )
 }

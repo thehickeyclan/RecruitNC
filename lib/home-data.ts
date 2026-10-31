@@ -15,6 +15,7 @@ import "server-only"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getCollegesByIds } from "@/lib/colleges"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import { inState } from "@/lib/recruiting/states"
 
 export type HomeStats = {
   total: number
@@ -73,13 +74,15 @@ export async function loadCommitCountsByClass(years: readonly number[]): Promise
   const counts: Record<number, number> = Object.fromEntries(years.map((y) => [y, 0]))
   try {
     const supabase = createAdminClient()
-    const { data, error } = await supabase
-      .from("athletes")
-      .select("graduationyear")
-      .not("college", "is", null)
-      .neq("college", "")
-      .neq("is_prospect", true)
-      .in("graduationyear", [...years])
+    const { data, error } = await inState(
+      supabase
+        .from("athletes")
+        .select("graduationyear")
+        .not("college", "is", null)
+        .neq("college", "")
+        .neq("is_prospect", true)
+        .in("graduationyear", [...years]),
+    )
 
     if (error || !Array.isArray(data)) return counts
 
@@ -190,38 +193,34 @@ function honorSourceFieldsFromRow(athlete: Record<string, unknown>) {
   }
 }
 
-function commitmentTime(a: Record<string, any>): number {
-  // commitmentdate is the real column; updated_at only stands in for the handful of rows
-  // that never got one, so a dateless commit still lands somewhere sensible.
-  return new Date(a.commitmentdate || a.updated_at || 0).getTime()
-}
-
 /**
- * Most recent commitments, newest first — the default branch of /api/featured-athletes.
- *
- * Note the source route ignores its `limit` param and always slices to 3; here the caller
- * actually controls it.
- *
- * The database does the ordering, then we re-sort in memory to apply the updated_at
- * fallback. Previously it took 500 rows in whatever order Postgres felt like returning
- * them and sorted those — fine at 159 commitments, but the moment the table passes 500
- * the newest commit could simply not be in the window, and the home page would quietly
- * lead with a stale one.
+ * Most recent North Carolina commitments, newest first — the default branch of
+ * /api/featured-athletes. The caller controls the limit.
  */
 export async function loadLatestCommits(limit = 3): Promise<Record<string, any>[]> {
   try {
     const supabase = createAdminClient()
-    const { data, error } = await supabase
-      .from("athletes")
-      .select("*")
-      .not("college", "is", null)
-      .neq("college", "")
+    /*
+     * North Carolina's commitments, newest commitment date first, rows without a date last.
+     *
+     * Until 26 Oct 2026 this read every state and ranked a dateless row by updated_at, so six
+     * Georgia and West Virginia national profiles with a college and no commit date led the home
+     * page the week they were edited. "Latest" means latest commitment, never latest edit.
+     */
+    const { data, error } = await inState(
+      supabase
+        .from("athletes")
+        .select("*")
+        .not("college", "is", null)
+        .neq("college", "")
+        .neq("is_prospect", true),
+    )
       .order("commitmentdate", { ascending: false, nullsFirst: false })
-      .limit(500)
+      .limit(limit)
 
     if (error || !Array.isArray(data) || data.length === 0) return []
 
-    const sorted = [...data].sort((a, b) => commitmentTime(b) - commitmentTime(a)).slice(0, limit)
+    const sorted = data
 
     const mapped = sorted.map((athlete: Record<string, any>) => ({
       id: athlete.id?.toString() || "",

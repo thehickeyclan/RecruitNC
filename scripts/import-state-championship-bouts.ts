@@ -17,6 +17,14 @@
  * Re-running replaces each event key it writes; nothing else is touched.
  *
  *   npx tsx scripts/import-state-championship-bouts.ts --state SC --dir <bouts-csv> [--source <zip name>] [--write]
+ *
+ * `--layer qualifiers` loads the step below state instead (Matt, 29 October 2026: SC's Upper and
+ * Lower State qualifiers and region tournaments). Those bouts go under `<association>-qualifiers-
+ * <season>`, named for the tournament in each file's Classification column ("SCHSL 5A Upper
+ * State"), so nothing here can read as - or replace - a state championship bout. `--dates` gives
+ * each tournament its date, matched on the Classification text, first match wins:
+ *
+ *   --layer qualifiers --dates "Region=2026-01-23,Girls=2026-02-11,*=2026-02-13"
  */
 import fs from "fs"
 import path from "path"
@@ -67,6 +75,15 @@ const SLUG = val("--slug")
  */
 const ATTRIBUTION = val("--attribution")
 const POOL = String(val("--states") ?? "").toUpperCase().split(/[,\s]+/).filter(Boolean)
+const QUALIFIERS = val("--layer") === "qualifiers"
+const DATES = String(val("--dates") ?? "")
+  .split(",")
+  .map((pair) => pair.split("=").map((x) => x.trim()))
+  .filter(([k, v]) => k && /^\d{4}-\d{2}-\d{2}$/.test(v ?? ""))
+const dateFor = (classification: string): string | null => {
+  for (const [k, v] of DATES) if (k === "*" || classification.toLowerCase().includes(k!.toLowerCase())) return v!
+  return null
+}
 if (REGIONAL && (!SLUG || !POOL.length)) throw new Error("--regional needs --slug <name> and --states XX,YY")
 if (!DIR || (!STATE && !REGIONAL)) throw new Error("--state XX --dir <bouts-csv>, or --regional <name> --slug <s> --states XX,YY --dir <bouts-csv>")
 
@@ -183,7 +200,11 @@ async function main() {
      * and all - in a column every other key is dash-separated in.
      */
     const assocSlug = assoc.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-    const eventKey = REGIONAL ? `${assocSlug}-${SLUG}-${season}` : `${assocSlug}-states-${season}`
+    const eventKey = REGIONAL
+      ? `${assocSlug}-${SLUG}-${season}`
+      : QUALIFIERS
+        ? `${assocSlug}-qualifiers-${season}`
+        : `${assocSlug}-states-${season}`
     const rt = String(b["Result Type"] ?? "").toUpperCase()
     // Muse's Result starts with the type ("F 1:11", "TF 17-2"): the score is what follows it.
     const rest = String(b.Result ?? "").replace(new RegExp(`^${rt}\\b\\s*`, "i"), "").trim()
@@ -199,9 +220,11 @@ async function main() {
        */
       event_name: REGIONAL
         ? REGIONAL
-        : isSanctioned(sanctioning, season, assoc, b.Gender, b.Classification)
-          ? `${assoc} State Championships`
-          : `${STATE} ${b.Gender ?? ""} State Invitational`.replace(/\s+/g, " ").trim(),
+        : QUALIFIERS
+          ? `${assoc} ${b.Classification}`
+          : isSanctioned(sanctioning, season, assoc, b.Gender, b.Classification)
+            ? `${assoc} State Championships`
+            : `${STATE} ${b.Gender ?? ""} State Invitational`.replace(/\s+/g, " ").trim(),
       year: season,
       weight_class: b["Weight Class"],
       /*
@@ -212,8 +235,14 @@ async function main() {
        * would not be.
        */
       round: [
-        !REGIONAL && b.Classification && b.Classification !== assoc && !/^girls$/i.test(b.Classification) ? b.Classification : null,
-        b.Round || (b.Bout ? `Bout ${b.Bout}` : "State Championships"),
+        REGIONAL
+          ? null
+          : QUALIFIERS
+            ? b.Classification || null
+            : b.Classification && b.Classification !== assoc && !/^girls$/i.test(b.Classification)
+              ? b.Classification
+              : null,
+        b.Round || (b.Bout ? `Bout ${b.Bout}` : QUALIFIERS ? "Qualifier" : "State Championships"),
       ]
         .filter(Boolean)
         .join(" · "),
@@ -223,7 +252,7 @@ async function main() {
       win_type: rt || null,
       score,
       gender: /^g/i.test(b.Gender) ? "F" : "M",
-      event_date: null,
+      event_date: QUALIFIERS ? dateFor(String(b.Classification ?? "")) : null,
       source_file: SOURCE,
       _rank: roundRank(b.Round ?? ""),
     }
@@ -268,6 +297,7 @@ async function main() {
   console.log(`  sides linked to a profile: ${linked} of ${sides}, across ${profiles.size} profiles`)
   if (REGIONAL) console.log(`    by Flo wrestler id: ${viaFlo} · by name and school: ${viaName} · refused, wrong state: ${refusedByState}`)
   for (const k of keys) console.log(`  ${k}: ${rows.filter((r) => r.event_key === k).length} rows`)
+  if (QUALIFIERS && rows.some((r) => !r.event_date)) throw new Error("--layer qualifiers needs --dates covering every tournament")
   if (!WRITE) return console.log("\nDry run. --write to apply.")
   for (const k of keys) {
     const { error } = await sb.from("other_tournament_bouts").delete().eq("event_key", k)

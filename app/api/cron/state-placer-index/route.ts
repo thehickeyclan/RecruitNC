@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildStatePlacerIndex } from "@/lib/state-placers"
 import { saveStatePlacerSnapshot } from "@/lib/state-placer-snapshot"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
@@ -18,6 +19,7 @@ function authorizeCron(request: NextRequest): boolean {
  * so profiles, significant wins and scouting reports read it instead of building it themselves.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const started = Date.now()
   try {

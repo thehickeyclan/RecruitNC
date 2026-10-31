@@ -7,6 +7,7 @@
  *
  * Part of NC United Blue, like the level pages. Locked, it still shows what each year is for.
  */
+import { LearnTabs } from "@/components/recruiting/learn/learn-tabs"
 import type { Metadata } from "next"
 import { PortalShell } from "@/components/portal/portal-shell"
 import { ArrowRight, BarChart3, FileText, Lock, ShieldAlert } from "lucide-react"
@@ -25,11 +26,12 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Wrestling recruiting timeline, grade by grade | RecruitNC",
+  title: `Wrestling recruiting timeline, grade by grade | ${productName()}`,
   description: "What a wrestling family should be doing each year from eighth grade to signing, with the dates college coaches may first call, meet and host a wrestler.",
 }
 
@@ -88,21 +90,13 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
   const done = adapted?.done ?? ticked
   const gold = "var(--recruit-accent)"
   const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
-  const tabs = [
-    { label: "Grade by grade", href: "/recruiting/learn/timeline" },
-    { label: "The rules", href: "/recruiting/learn/division-1" },
-    { label: "Exposure events", href: "/recruiting/learn/tournaments" },
-    { label: "College fit", href: "/recruiting/compare" },
-    { label: "Tools & templates", href: "/recruiting/learn/working-the-process" },
-    { label: "FAQs", href: "/recruiting/learn/questions-families-ask" },
-  ]
 
   return (
     <PortalShell active="learn">
       <div className="mx-auto max-w-7xl text-white">
         <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1D3A]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/focused-wrestler.png" alt="" aria-hidden className="absolute inset-y-0 right-0 h-full w-2/3 object-cover opacity-40" />
+          <img src="/images/jacob-perry-ground-control.jpeg" alt="" aria-hidden className="absolute inset-y-0 right-0 h-full w-2/3 object-cover object-[50%_15%] opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0B1D3A] via-[#0B1D3A]/90 to-[#0B1D3A]/20" aria-hidden />
           <div className="relative p-6 sm:p-8">
             <p className="text-xs font-black uppercase tracking-[0.25em]" style={{ color: gold }}>
@@ -121,17 +115,7 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
           </div>
         </section>
 
-        <nav aria-label="Roadmap sections" className="-mx-4 mt-4 flex items-center gap-4 overflow-x-auto border-b border-white/10 px-4 sm:mx-0 sm:px-0">
-          <ul className="flex flex-1 gap-6 whitespace-nowrap text-sm font-semibold">
-            {tabs.map((t, i) => (
-              <li key={t.label}>
-                <a href={t.href} className={`block border-b-2 py-3 ${i === 0 ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-white/65 hover:text-white"}`}>
-                  {t.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <LearnTabs className="mt-4" />
 
         {open ? (
           <>
@@ -262,12 +246,18 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
               wrestler, and the rules that matter, with the source under each.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href="/plans" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+              {/* RecruitWrestlers sells the Command Center itself; /plans and the NC page are NC United's. */}
+              <a href="/plans" className="ncu-only rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
                 See plans
               </a>
+              <span className="national-only">
+                <a href="/command-center" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+                  Join the Command Center
+                </a>
+              </span>
               <a
                 href="/recruiting/learn/staying-eligible-in-north-carolina"
-                className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5"
+                className="ncu-only rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5"
               >
                 Read the free North Carolina page
               </a>

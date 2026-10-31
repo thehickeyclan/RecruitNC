@@ -9,16 +9,19 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { currentClassYears } from "@/lib/class-years"
-import { loadCoachRoster } from "@/lib/coach-roster"
+import { loadLiveRoster } from "@/lib/coach-roster"
 import { coachProgramOf } from "@/lib/recruiting/coach-program"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
 import PerfectRecruitClient, { type PerfectRecruitMatch } from "./perfect-recruit-client"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
-export const metadata = { title: "Your Perfect Recruit | RecruitNC" }
+export const metadata = { title: `Your Perfect Recruit | ${productName()}` }
 
 export default async function PerfectRecruitPage() {
   const supabase = await createClient()
@@ -40,7 +43,9 @@ export default async function PerfectRecruitPage() {
   if (viewer.hasStandard) {
     try {
       // A men's or women's staff is matched against its own side; "both" or not yet chosen, everyone.
-      const athletes = (await loadCoachRoster()).filter((a) => {
+      // Every live state's wrestlers on RecruitWrestlers; North Carolina's on NC United.
+      const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
+      const athletes = (await loadLiveRoster(onRw)).filter((a) => {
         const girl = /^f/i.test(String(a.gender ?? "").trim())
         return program === "womens" ? girl : program === "mens" ? !girl : true
       })

@@ -8,13 +8,15 @@ import type { Metadata } from "next"
 import { ArrowRight, CheckCircle2 } from "lucide-react"
 
 import { PortalShell } from "@/components/portal/portal-shell"
+import { LearnTabs } from "@/components/recruiting/learn/learn-tabs"
 import { readWentHereSnapshot, snapshotForState } from "@/lib/college-programs/went-here-snapshot"
 import { COLLEGE_DIVISIONS, DIVISION_COLOR, DIVISION_SHORT, type CollegeDivision } from "@/lib/college-programs/types"
 import { LOOK_POINTS } from "@/lib/recruiting/learn/coaches-look-for"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
-  title: "What college wrestling coaches look at | RecruitNC",
+  title: `What college wrestling coaches look at | ${productName()}`,
   description: "What college wrestling coaches evaluate, and where North Carolina wrestlers who went to college stood in high school, level by level.",
 }
 
@@ -54,6 +56,8 @@ export default async function WhatCoachesLookFor() {
 
   return (
     <PortalShell active="learn">
+      {/* The same Learn tabs as every Learn page. */}
+      <div className="mx-auto mb-5 max-w-7xl text-white"><LearnTabs /></div>
       <div className="mx-auto max-w-6xl text-white">
         <p className="text-xs font-black uppercase tracking-[0.25em]" style={{ color: GOLD }}>
           <a href="/my-recruiting/learn" className="hover:underline">Learn</a> › Getting recruited

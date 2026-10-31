@@ -12,28 +12,36 @@ function client(result: { data?: unknown; error?: unknown }) {
 
 describe("visibleStates", () => {
   it("shows only the live states to an ordinary viewer", () => {
-    expect(visibleStates(false).every((s) => s.live)).toBe(true)
+    // Second argument: which address. RecruitWrestlers carries every live state, NC United only NC.
+    expect(visibleStates(false, true).every((s) => s.live)).toBe(true)
+    expect(visibleStates(false).map((s) => s.code)).toEqual(["NC"])
+  })
+
+  it("holds on either address, because it is granted per account and per state", () => {
+    // The OEM rule says what a brand reports to the public, not what a named account may open.
+    expect(isVisibleState("MD", false, false, ["MD"])).toBe(true)
   })
 
   it("shows a named state to the account it was named for, and nothing more", () => {
-    const seen = visibleStates(false, ["MD"]).map((s) => s.code)
+    const seen = visibleStates(false, true, ["MD"]).map((s) => s.code)
     expect(seen).toContain("MD")
     expect(seen).not.toContain("VA")
   })
 
   it("is not case or whitespace sensitive, because the column is typed by hand", () => {
-    expect(visibleStates(false, [" md "]).map((s) => s.code)).toContain("MD")
+    expect(visibleStates(false, true, [" md "]).map((s) => s.code)).toContain("MD")
   })
 
   it("still opens everything to an admin", () => {
-    expect(visibleStates(true).length).toBe(visibleStates(true, []).length)
+    expect(visibleStates(true, true).length).toBe(visibleStates(true, true, []).length)
     expect(visibleStates(true).map((s) => s.code)).toContain("MD")
   })
 
   it("gates isVisibleState the same way", () => {
     expect(isVisibleState("MD", false)).toBe(false)
-    expect(isVisibleState("MD", false, ["MD"])).toBe(true)
-    expect(isVisibleState("VA", false, ["MD"])).toBe(false)
+    expect(isVisibleState("MD", false, true)).toBe(false)
+    expect(isVisibleState("MD", false, true, ["MD"])).toBe(true)
+    expect(isVisibleState("VA", false, true, ["MD"])).toBe(false)
   })
 })
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Check, Copy, Mail, Plus, X } from "lucide-react"
+import { Check, Copy, Mail, Plus, X, Sparkles } from "lucide-react"
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { CollegeListStatus } from "@/lib/college-programs/list"
@@ -73,6 +73,7 @@ export function CoachEmailComposer({
   const [custom, setCustom] = useState({ title: "", startDate: "", endDate: "", location: "" })
   const [scheduleError, setScheduleError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [scout, setScout] = useState<{ busy: boolean; error: string | null; wrote: boolean }>({ busy: false, error: null, wrote: false })
 
   useEffect(() => {
     if (!open) return
@@ -120,6 +121,24 @@ export function CoachEmailComposer({
   const edit = (patch: { subject?: string; body?: string }) => {
     if (!generated || !email) return
     setEdited({ from: generatedKey, subject: patch.subject ?? email.subject, body: patch.body ?? email.body })
+  }
+
+  /** Scout rewrites the draft in the wrestler's voice; it lands as the family's edit, to read and change. */
+  const writeWithScout = async () => {
+    if (!generated || !email) return
+    setScout({ busy: true, error: null, wrote: false })
+    const res = await fetch("/api/college-list/scout-draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ schoolId, kind, why, detail, draft: `Subject: ${email.subject}\n\n${email.body}` }),
+    }).catch(() => null)
+    const out = (await res?.json().catch(() => null)) as { subject?: string; body?: string; error?: string } | null
+    if (!res?.ok || !out?.body) {
+      setScout({ busy: false, error: out?.error ?? "Scout couldn't write it just now. The draft below is still ready to send.", wrote: false })
+      return
+    }
+    setEdited({ from: generatedKey, subject: out.subject || email.subject, body: out.body })
+    setScout({ busy: false, error: null, wrote: true })
   }
 
   const hasEvent = (e: OutreachEvent) => events.some((x) => x.title === e.title && x.dates === e.dates)
@@ -337,6 +356,22 @@ export function CoachEmailComposer({
                 We don&apos;t hold a state or national placing for {facts.firstName} yet, so the email leaves results out
                 rather than guess. Add them in your own words once it opens.
               </p>
+            ) : null}
+
+            {email ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void writeWithScout()}
+                  disabled={scout.busy}
+                  className="inline-flex items-center gap-1.5 rounded-sm bg-[#0B1D3A] px-3 py-2 text-sm font-bold text-white hover:bg-[#13294f] disabled:opacity-60"
+                >
+                  <Sparkles className="h-4 w-4" aria-hidden /> {scout.busy ? "Scout is writing…" : scout.wrote ? "Write it again with Scout" : "Write it with Scout"}
+                </button>
+                <span className="text-xs text-slate-500">
+                  {scout.error ?? (scout.wrote ? "Scout wrote this from the verified results. Read every line before you send." : "Rewrites the draft below in the wrestler's own voice.")}
+                </span>
+              </div>
             ) : null}
 
             <div className="rounded-sm border border-slate-200 bg-slate-50 p-3">

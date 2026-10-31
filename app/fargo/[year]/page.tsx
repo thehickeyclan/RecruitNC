@@ -27,10 +27,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { year: yearParam } = await params
   const year = parseInt(yearParam, 10)
   if (!isFargoArchiveYear(year) || year === FARGO_CURRENT_YEAR) {
-    return { title: "Fargo Nationals | NC United" }
+    return { title: "Fargo Nationals" }
   }
   return {
-    title: `Fargo Nationals ${year} | NC United`,
+    title: `Fargo Nationals ${year}`,
     description: `North Carolina results from the ${year} US Marine Corps National Championships (Fargo).`,
   }
 }

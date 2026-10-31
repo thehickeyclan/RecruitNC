@@ -43,6 +43,8 @@ export interface NewsItem {
   imageBannerBgClass?: string
   /** On /news index: full-width image banner above text (hero-style). */
   newsListBanner?: boolean
+  /** Part of it is for Insider/Command Center/Blue members: shows a "Premium content" pill on news cards (Matt, 25 Oct 2026). */
+  premium?: boolean
   /** If true, this is an announcement (lives under /news/[slug]). If false, href is external (e.g. NCHSAA). */
   isAnnouncement?: boolean
   /** Omit from home carousel when the story is already promoted in the homepage hero banner. */
@@ -60,6 +62,8 @@ export interface NewsItem {
   shareStoryImage?: string
   /** Force important launch news above newer items on /news and the homepage carousel. */
   pinToTop?: boolean
+  /** The tap line on the app's Home top-story card (default there: "Read the story"). */
+  actionLabel?: string
 }
 
 import type { NewsShareFormatId } from "@/lib/news-share-formats"
@@ -99,6 +103,77 @@ export function newsShareUsesHeroCropOnly(
  * 3. Square/portrait/Facebook assets are auto-generated from the above when missing
  */
 const ALL_NEWS: NewsItem[] = [
+  {
+    // Super 32 HQ as the top story (Matt, 23 Oct 2026): the app's Home leads with the top news
+    // item, so this is how the app shows it without a new build. The app opens /news/<slug>, which
+    // middleware sends to /super32/live. Not an article (isAnnouncement false): no /news page.
+    id: "super32-live",
+    slug: "super32-live",
+    title: "Super 32 HQ: Follow Every North Carolina Wrestler",
+    subtitle: "NC's record, Huge and Big wins, round recaps and who's still alive, updated after every round.",
+    summary:
+      "Follow every North Carolina wrestler at Super 32 in one place: NC's record, Huge and Big wins, round recaps and who's still alive, updated after every round. Star your wrestlers to follow them all weekend.",
+    href: "/news/super32-live",
+    date: "2026-10-23",
+    image: "/images/super32/super32-hq-2026-mason.jpg",
+    homeImage: "/images/super32/super32-hq-2026-home-mason.jpg",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#0A1628]",
+    newsListBanner: true,
+    shareHeroCropOnly: true,
+    category: "SUPER 32 HQ",
+    categoryBadgeClass: "bg-[#CC0000]",
+    author: "NC United",
+    isAnnouncement: false,
+    // Unpinned 25 Oct 2026: the event is over and the recap leads now.
+    // Members only since 26 Oct 2026 (Insider, Blue, college coaches, admins): premium content.
+    premium: true,
+    actionLabel: "Follow NC live at Super 32 HQ",
+  },
+  {
+    // The recap lives at its own route (app/news/super32-2026-nc-boys-recap), not /news/[slug].
+    id: "super32-2026-nc-boys-recap",
+    slug: "super32-2026-nc-boys-recap",
+    title: "Super 32 2026 — North Carolina Boys Recap",
+    subtitle: "Eleven wins over top-15 seeds, up from six and two. Every NC boy graded on the strength of his tournament.",
+    summary:
+      "North Carolina's boys beat 11 top-15 seeds at Super 32, up from six last year and two in 2024. Braylen Yates medaled, and every NC boy is graded on who he beat, how far he went and who beat him.",
+    href: "/news/super32-2026-nc-boys-recap",
+    date: "2026-10-25",
+    image: "/images/news/super32-2026-boys-recap/share-card.jpg",
+    imagePosition: "center",
+    newsListBanner: true,
+    category: "SUPER 32",
+    categoryBadgeClass: "bg-[#CC0000]",
+    author: "NC United",
+    isAnnouncement: false,
+    pinToTop: true,
+    premium: true,
+    actionLabel: "Read the recap",
+  },
+  {
+    // The girls recap, its own story (Matt, 26 Oct 2026). Pushed only if Matt asks: it was marked
+    // announced in push_sent_news when it was published, so the news-alerts job skips it.
+    id: "super32-2026-nc-girls-recap",
+    slug: "super32-2026-nc-girls-recap",
+    title: "Super 32 2026 — North Carolina Girls Recap",
+    subtitle: "Lauren Samuel and Ella Taylor finished 3rd, North Carolina's best finishes of the weekend. Every NC girl graded.",
+    summary:
+      "Lauren Samuel and Ella Taylor both finished 3rd at Super 32, the best finishes by any North Carolinian, and Samuel is now a two-time All-American. Every NC girl is graded on who she beat, how far she went and who beat her.",
+    href: "/news/super32-2026-nc-girls-recap",
+    date: "2026-10-26",
+    image: "/images/news/super32-2026-girls-recap/share-card.jpg",
+    imagePosition: "center",
+    newsListBanner: true,
+    category: "SUPER 32",
+    categoryBadgeClass: "bg-[#CC0000]",
+    author: "NC United",
+    isAnnouncement: false,
+    // Not pinned (Matt, 26 Oct 2026): the men's recap is the featured story; this one sits right after it.
+    premium: true,
+    actionLabel: "Read the recap",
+  },
   {
     id: "super32-2026-what-good-looks-like",
     slug: "super32-2026-what-good-looks-like",

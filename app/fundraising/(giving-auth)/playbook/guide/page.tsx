@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
-  title: "Fundraising playbook | NC United Wrestling",
+  title: "Fundraising playbook",
   description: "Redirects to the family fundraising playbook (sign-in required).",
   robots: { index: false, follow: false },
 }

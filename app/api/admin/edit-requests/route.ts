@@ -4,8 +4,8 @@ export const revalidate = 0
 import { type NextRequest, NextResponse } from "next/server"
 import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@supabase/supabase-js"
-import { buildAthleteUpdateFromRequest, freeTextForApplying, FREE_TEXT_TARGETS, type FreeTextTarget } from "@/lib/admin/apply-edit-request"
-import { resolveClubName, resolveSchoolName } from "@/lib/admin/canonical-affiliations"
+import { freeTextForApplying, FREE_TEXT_TARGETS, type FreeTextTarget } from "@/lib/admin/apply-edit-request"
+import { applyRequestToProfile } from "@/lib/admin/apply-edit-request-server"
 import { publishesImmediately, retractPublishedSubmission } from "@/lib/retract-submission"
 
 // Server-only service client to bypass RLS for trusted operations
@@ -196,63 +196,34 @@ export async function PUT(request: NextRequest) {
     let applied: Record<string, string | number> = {}
     let manual: string[] = []
     if (status === "approved" && existing.athlete_id) {
-      const { data: currentAthlete } = await svc
-        .from("athletes")
-        .select("wrestlingClub, highschool")
-        .eq("id", existing.athlete_id)
-        .maybeSingle<{ wrestlingClub: string | null; highschool: string | null }>()
-      const plan = buildAthleteUpdateFromRequest(existing.request_data as never)
-      applied = plan.updates
-      manual = plan.manual
-
-      /**
-       * Club and school names are logo join keys. Take the registry's spelling, and refuse a name
-       * that is not in the registry rather than writing text that resolves to no crest.
-       */
-      if (typeof applied.wrestlingClub === "string") {
-        const club = await resolveClubName(svc, applied.wrestlingClub, currentAthlete?.wrestlingClub ?? null)
-        if (club.ok) {
-          applied.wrestlingClub = club.canonical
-          if (club.clubId != null) applied.wrestling_club_id = club.clubId
-        } else {
-          delete applied.wrestlingClub
-          manual = [...manual, `Club not applied: ${club.reason}`]
-        }
-      }
-      if (typeof applied.highschool === "string") {
-        const school = await resolveSchoolName(svc, applied.highschool, currentAthlete?.highschool ?? null)
-        if (school.ok) applied.highschool = school.canonical
-        else {
-          delete applied.highschool
-          manual = [...manual, `School not applied: ${school.reason}`]
-        }
-      }
+      const result = await applyRequestToProfile(svc, existing.athlete_id, existing.request_data as never)
+      applied = result.applied
+      manual = result.manual
       /**
        * Free text goes where the admin sends it. Most requests carry nothing else — families use
        * the "Other" box for biography — and until now approving one wrote nothing at all.
        */
-      if (applyTextTo && FREE_TEXT_TARGETS[applyTextTo]) {
+      if (!result.error && applyTextTo && FREE_TEXT_TARGETS[applyTextTo]) {
         const text = freeTextForApplying(existing.request_data as never)
         if (text) {
-          applied[FREE_TEXT_TARGETS[applyTextTo].column] = text
-          manual = manual.filter((m) => !m.startsWith("Bio note:") && !m.startsWith("Other:") && !m.startsWith("Achievements:"))
+          const column = FREE_TEXT_TARGETS[applyTextTo].column
+          const { error } = await svc.from("athletes").update({ [column]: text }).eq("id", existing.athlete_id)
+          if (error) result.error = error.message
+          else {
+            applied[column] = text
+            manual = manual.filter((m) => !m.startsWith("Bio note:") && !m.startsWith("Other:") && !m.startsWith("Achievements:"))
+          }
         }
       }
 
-      if (Object.keys(applied).length > 0) {
-        const { error: applyErr } = await svc
-          .from("athletes")
-          .update({ ...applied, updated_at: new Date().toISOString() })
-          .eq("id", existing.athlete_id)
-        if (applyErr) {
-          console.error("Failed to apply approved edit to athlete:", applyErr)
-          /** Put the request back so it is not silently marked done against an unchanged profile. */
-          await svc.from("edit_requests").update({ status: "pending" }).eq("id", requestId)
-          return NextResponse.json(
-            { error: `Approved, but the profile could not be updated: ${applyErr.message}. The request has been left pending.` },
-            { status: 500 },
-          )
-        }
+      if (result.error) {
+        console.error("Failed to apply approved edit to athlete:", result.error)
+        /** Put the request back so it is not silently marked done against an unchanged profile. */
+        await svc.from("edit_requests").update({ status: "pending" }).eq("id", requestId)
+        return NextResponse.json(
+          { error: `Approved, but the profile could not be updated: ${result.error}. The request has been left pending.` },
+          { status: 500 },
+        )
       }
     }
 

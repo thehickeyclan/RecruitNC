@@ -1,3 +1,4 @@
+import { profileRobots } from "@/lib/profile-search"
 import { Suspense } from "react"
 import type { Metadata } from "next"
 import { shareMetadata } from "@/lib/share-metadata"
@@ -9,6 +10,7 @@ import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { ViewProfileClient } from "./view-profile-client"
+import { productName } from "@/lib/recruiting/product-name"
 
 /**
  * Resolved per request, not cached.
@@ -27,11 +29,11 @@ type ViewProfilePageProps = {
 }
 
 /**
- * Profiles are reachable by link but never crawled.
- *
- * These are minors. Public-by-link is what makes a profile usable when an athlete sends it to
- * a college coach; being in Google is a different thing entirely — it would make a 15-year-old's
- * name, school, and photo permanently searchable. noindex keeps the first and refuses the second.
+ * Profiles are reachable by link, and the current high-school classes may be found in search
+ * (Matt, 30 Oct 2026; lib/profile-search.ts). These are minors, so search engines get only what the
+ * public page already shows - name, school, class, results - and never the photo (noimageindex),
+ * and a family can hide the profile from search at any time. FloWrestling already publishes the
+ * same results as searchable pages; this adds a better page, not a new exposure.
  *
  * The OG tags still work: link unfurls in a text or DM are rendered by the messaging app
  * fetching the page directly, which noindex doesn't affect.
@@ -40,10 +42,10 @@ export async function generateMetadata({ searchParams }: ViewProfilePageProps): 
   const noIndex = { index: false, follow: false, nocache: true } as const
   const params = await searchParams
   const id = params.id?.trim() ?? ""
-  if (!id) return { title: "Athlete profile | RecruitNC", robots: noIndex }
+  if (!id) return { title: `Athlete profile | ${productName()}`, robots: noIndex }
 
   const result = await loadPublicAthleteProfile(id)
-  if (!result.ok) return { title: "Athlete profile | RecruitNC", robots: noIndex }
+  if (!result.ok) return { title: `Athlete profile | ${productName()}`, robots: noIndex }
 
   const a = result.athlete as Record<string, unknown>
   const name = typeof a.name === "string" && a.name.trim() ? a.name.trim() : "Athlete"
@@ -55,7 +57,10 @@ export async function generateMetadata({ searchParams }: ViewProfilePageProps): 
 
   // "Cardinal Gibbons · Class of 2027". No weight: athletes.weightclass is not the weight he last
   // wrestled, and the card is cached by every phone it reaches.
-  const description = [school, gradYear && `Class of ${gradYear}`].filter(Boolean).join(" · ") || "NC wrestling recruiting profile"
+  const description = [school, gradYear && `Class of ${gradYear}`].filter(Boolean).join(" · ") || "Wrestling recruiting profile"
+  // Search engines (lib/profile-search.ts): current high-school classes, results only, no photos,
+  // and never a profile the family has hidden.
+  const { data: settings } = await createAdminClient().from("athletes").select("graduationyear, custom_attributes").eq("id", id).maybeSingle()
 
   return {
     ...shareMetadata({
@@ -66,7 +71,7 @@ export async function generateMetadata({ searchParams }: ViewProfilePageProps): 
       image: photo ?? null,
       pageTitle: `${name} | RecruitNC`,
     }),
-    robots: noIndex,
+    robots: profileRobots(settings as { graduationyear?: unknown; custom_attributes?: unknown } | null),
   }
 }
 

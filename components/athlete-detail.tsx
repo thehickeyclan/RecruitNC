@@ -22,8 +22,10 @@ import {
 } from "@/components/profile/profile-banner-parts"
 import { ProfileRow } from "@/components/profile/profile-row"
 import { CompetingNextBlock } from "@/components/profile/competing-next-block"
+import { ParentContactBlock } from "@/components/profile/parent-contact-block"
 import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, useAppProfile } from "@/components/profile/app-profile-rows"
 import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
+import { SearchVisibilityToggle } from "@/components/profile/search-visibility-toggle"
 import { summarySentences, type Accolades } from "@/lib/profile/profile-summary"
 import { profileStrengthOfCompetition } from "@/lib/profile/profile-competition"
 import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
@@ -75,6 +77,7 @@ import { BannerViewStats } from "./profile/banner-view-stats"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 import { stateName } from "@/lib/athlete-state"
+import { preparePhoto } from "@/lib/images/prepare-photo"
 
 /**
  * Bio/summary paragraph section.
@@ -243,7 +246,7 @@ function CompetitionBox({ competition }: { competition: CompetitionSummary }) {
     <div className="rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm">
       <p className="text-xs font-semibold uppercase tracking-wider text-white/70">Competes</p>
       <p className="text-sm font-bold text-white">
-        {competition.scope === "national" ? "Nationally" : "North Carolina only"}
+        {competition.scope === "national" ? "Nationally" : "In-state only"}
         {competition.styles.length ? (
           <span className="font-semibold text-[#D3B574]"> · {competition.styles.map((st) => STYLE_LABEL[st]).join(" · ")}</span>
         ) : null}
@@ -357,11 +360,34 @@ export function AthleteDetail({
   const [parentLinkedAthleteIds, setParentLinkedAthleteIds] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
+  /*
+   * The short link (/w/xavier-bernthal-2029), fetched ahead of the tap: Safari only lets a page
+   * write the clipboard inside the tap itself, so there is no time to ask then. Until it arrives,
+   * or if it never does, the share button copies the page address as it always did.
+   */
+  const [shortLink, setShortLink] = useState<string | null>(null)
+  useEffect(() => {
+    if (!athlete?.id) return
+    let cancelled = false
+    fetch(`/api/athletes/${encodeURIComponent(String(athlete.id))}/short-link`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && typeof d?.path === "string") setShortLink(`${window.location.origin}${d.path}`)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [athlete?.id])
+
   const handleShareProfile = async () => {
-    const url = window.location.href
+    const url = shortLink ?? window.location.href
     try {
       await navigator.clipboard.writeText(url)
-      toast({ title: "Link copied", description: "Profile link copied to clipboard." })
+      toast({
+        title: "Link copied",
+        description: shortLink ? `${url.replace(/^https?:\/\//, "")} - made for an Instagram bio.` : "Profile link copied to clipboard.",
+      })
     } catch {
       toast({ title: "Copy failed", description: "Could not copy link. Try selecting the URL manually.", variant: "destructive" })
     }
@@ -496,7 +522,7 @@ export function AthleteDetail({
   // Handler for image upload
   const handleImageUpload = async (file: File): Promise<string> => {
     const formData = new FormData()
-    formData.append("file", file)
+    formData.append("file", await preparePhoto(file))
     formData.append("athleteId", athlete.id)
     formData.append("category", "profile")
 
@@ -1871,6 +1897,10 @@ export function AthleteDetail({
       {canViewProfileStats && athlete.id ? (
         <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.views} />
       ) : null}
+      {/* The family's switch for search engines (lib/profile-search.ts). */}
+      {canEdit && athlete.id ? (
+        <SearchVisibilityToggle athleteId={String(athlete.id)} firstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.views} />
+      ) : null}
       <div className={cn("empty:hidden", ROW_ORDER.messages)}>
         <FamilyMessagesPanel athleteId={String(athlete.id)} />
       </div>
@@ -1973,6 +2003,8 @@ export function AthleteDetail({
               <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" className="min-h-[44px]" />
             ) : null}
             {contactButtons}
+            {/* Parent / guardian: the family, college coaches and admins only - the block asks its own route. */}
+            <ParentContactBlock athleteId={String(athlete.id)} />
             {canEdit ? (
               <button type="button" onClick={() => setEditingSection("contact")} className="text-xs font-bold text-[#D3B574] hover:underline">
                 Edit contact details
@@ -2073,7 +2105,8 @@ export function AthleteDetail({
       */}
       {!isViewingOwnProfile && !isAdmin && (
         <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.claim)}>
-          {athlete.claimed_by_user_id ? (
+          {/* is_claimed: a signed-out visitor is not told who owns it (lib/athlete-private-fields.ts). */}
+          {athlete.claimed_by_user_id || (athlete as { is_claimed?: boolean }).is_claimed ? (
             <ParentLinkButton athleteId={String(athlete.id)} athleteName={athleteName} />
           ) : (
             <ClaimProfileButton
@@ -2113,6 +2146,15 @@ export function AthleteDetail({
                   ? "Your profile is complete. Keep it current: college coaches read this page."
                   : "Complete your profile to get more views from college coaches."}
               </p>
+              {/* The family hears the news first: one tap to report it, starting from this profile. */}
+              {!String(athlete.college ?? "").trim() ? (
+                <a
+                  href={`/submit-commitment?athlete=${encodeURIComponent(String(athlete.id))}&role=${isViewingOwnProfile ? "athlete" : "parent"}`}
+                  className="mt-2 inline-block text-sm font-bold text-[#D3B574] hover:underline"
+                >
+                  Committed to a college? Tell us →
+                </a>
+              ) : null}
             </div>
             <ul className="space-y-1.5 lg:w-64">
               {completeness.items.map((item) => (

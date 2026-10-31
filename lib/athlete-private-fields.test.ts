@@ -53,3 +53,12 @@ describe("stripPrivateAthleteFields", () => {
     }
   })
 })
+
+describe("claimed, without the owner", () => {
+  it("says a profile is claimed but not by whom", () => {
+    const out = stripPrivateAthleteFields({ id: "x", claimed_by_user_id: "user-1" })
+    expect(out).not.toHaveProperty("claimed_by_user_id")
+    expect(out.is_claimed).toBe(true)
+    expect(stripPrivateAthleteFields({ id: "y", claimed_by_user_id: null }).is_claimed).toBe(false)
+  })
+})

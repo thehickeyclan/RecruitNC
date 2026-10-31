@@ -94,7 +94,7 @@ export default async function SalesFunnelPage() {
                 </div>
                 <div className={card}>
                   <p className="text-3xl font-black">{newSubs.filter((s) => (s as { plan?: string }).plan !== "command_center").length}</p>
-                  <p className="text-xs text-white/55">new Rankings subscriptions</p>
+                  <p className="text-xs text-white/55">new Insider subscriptions</p>
                 </div>
               </div>
               <div className="mt-3 grid gap-3 md:grid-cols-2">

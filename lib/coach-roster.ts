@@ -17,6 +17,7 @@ import { currentClassYears } from "@/lib/class-years"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { HOME_STATE, inState } from "@/lib/recruiting/states"
 import { RECRUITING_BRAND } from "@/lib/recruiting/brand"
+import { liveStates } from "@/lib/recruiting/brand"
 
 export type CoachRosterAthlete = {
   id: string
@@ -54,8 +55,8 @@ export const loadCoachRoster = unstable_cache(build, ["coach-roster", "v2"], { r
  * Every live state's wrestlers (lib/recruiting/brand.ts), for the searches a coach uses to find
  * anyone: the top bar, Coach Home and New message. North Carolina alone until a second state is live.
  */
-export async function loadLiveRoster(): Promise<CoachRosterAthlete[]> {
-  const codes = RECRUITING_BRAND.states.filter((s) => s.live).map((s) => s.code)
+export async function loadLiveRoster(onRecruitWrestlers = false): Promise<CoachRosterAthlete[]> {
+  const codes = liveStates(onRecruitWrestlers).map((s) => s.code)
   const lists = await Promise.all(codes.map((code) => (code === HOME_STATE ? loadCoachRoster() : loadCoachRoster(code))))
   return lists.flat().sort((a, b) => a.name.localeCompare(b.name))
 }

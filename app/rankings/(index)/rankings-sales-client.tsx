@@ -108,7 +108,7 @@ export function RankingsSalesClient({
   }
   const [checkingOut, setCheckingOut] = useState<string | null>(null)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
-  const [requestedPlan, setRequestedPlan] = useState<"subscription" | "subscription_annual" | "command_center" | null>(null)
+  const [requestedPlan, setRequestedPlan] = useState<"subscription" | "subscription_annual" | "command_center" | "command_center_annual" | null>(null)
   const [checkoutReturned, setCheckoutReturned] = useState<"purchased" | "canceled" | null>(null)
   const [subscription, setSubscription] = useState<RankingsSubscription | null>(null)
   const [managingSubscription, setManagingSubscription] = useState(false)
@@ -125,11 +125,11 @@ export function RankingsSalesClient({
     return ret.startsWith("/") && !ret.startsWith("//") ? ret : "/public-rankings"
   }
 
-  const startCheckout = async (kind: "subscription" | "subscription_annual" | "command_center") => {
+  const startCheckout = async (kind: "subscription" | "subscription_annual" | "command_center" | "command_center_annual") => {
     // Stripe needs an account to attach the subscription to, so signing in comes first —
     // but only once they have chosen, and the plan rides along so the choice is not lost.
     if (locked === "anonymous") {
-      window.location.href = `/auth/signin?returnTo=${encodeURIComponent(`${kind === "command_center" ? "/plans" : "/rankings"}?plan=${kind}`)}`
+      window.location.href = `/auth/signin?returnTo=${encodeURIComponent(`${kind.startsWith("command_center") ? "/plans" : "/rankings"}?plan=${kind}`)}`
       return
     }
     setCheckingOut(kind)
@@ -178,7 +178,7 @@ export function RankingsSalesClient({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const plan = params.get("plan")
-    if (plan === "subscription" || plan === "subscription_annual" || plan === "command_center") setRequestedPlan(plan)
+    if (plan === "subscription" || plan === "subscription_annual" || plan === "command_center" || plan === "command_center_annual") setRequestedPlan(plan)
     if (params.get("purchased") === "1") setCheckoutReturned("purchased")
     if (params.get("canceled") === "1") setCheckoutReturned("canceled")
 
@@ -214,7 +214,7 @@ export function RankingsSalesClient({
   }, [])
 
   useEffect(() => {
-    // Signed in and choosing a plan: start checkout. A Rankings subscriber upgrading has no lock.
+    // Signed in and choosing a plan: start checkout. An Insider subscriber upgrading has no lock.
     const signedIn = locked === "unentitled" || (locked === null && !loadingAthletes)
     if (!signedIn || !requestedPlan || autoCheckoutStarted.current) return
     autoCheckoutStarted.current = true
@@ -263,7 +263,7 @@ export function RankingsSalesClient({
      * The subscriptions page (rebuilt 15 Oct 2026: "it's horrible").
      *
      * It sells the one thing no recruiting service has - college coaches on the platform, counted -
-     * then three plans side by side: Free (claim the profile), Rankings ($9.99) and Blue (everything,
+     * then three plans side by side: Free (claim the profile), Insider ($9.99) and Blue (everything,
      * including the Recruiting Command Center). Cards, big numbers, short lines; the method and the
      * fine print sit behind a tap. Every number is live; a tile with nothing to show is left out.
      */
@@ -276,7 +276,7 @@ export function RankingsSalesClient({
           [platform.coachViews, "Profile views by coaches"],
         ] as Array<[number, string]>).filter(([n]) => Number(n) > 0)
       : []
-    /** Free, Rankings, Command Center, Blue (Matt, 15 Oct 2026). */
+    /** Free, Insider, Command Center, Blue (Matt, 15 Oct 2026; $9.99 named Insider 25 Oct). */
     const PLAN_ROWS: Array<[string, boolean, boolean, boolean, boolean]> = [
       ["Your profile, with every result already on it", true, true, true, true],
       ["Messages from verified college coaches, with parents seeing every one", true, true, true, true],
@@ -286,6 +286,9 @@ export function RankingsSalesClient({
       [`Class rankings${WOMENS_RANGE ? ", men's and women's" : ""} and the Top 75`, false, true, true, true],
       ["Your wrestler's rank, shown on the profile", false, true, true, true],
       ["Rankings built on results, quality wins and head-to-head", false, true, true, true],
+      ["Live NC dashboards at NHSCA, Fargo and Super 32", false, true, true, true],
+      ["Tournament recap reports: every grade and full write-up", false, true, true, true],
+      ["Every match with the opponent's seed, rank and titles", false, true, true, true],
       ["Recruiting plan, college list, compare and full costs", false, false, true, true],
       ["Every coach conversation tied to its college and your list", false, false, true, true],
       ["Your recruiting assistant: next steps for every stage, 8th grade to signing", false, false, true, true],
@@ -298,7 +301,7 @@ export function RankingsSalesClient({
     const FAQ: Array<[string, string]> = [
       ["Can I cancel?", "Yes, anytime, from your account. The yearly plan runs to the end of the year you paid for."],
       ["Who sees my wrestler's contact information?", "Only college coaches we have verified. Never the public, and never other families."],
-      ["What's the difference between the plans?", "Rankings is the boards and who is viewing your profile. The Recruiting Command Center is your recruiting assistant from 8th grade through signing: your plan, college list, full costs and every coach conversation in one place. Blue is NC United's program: everything in the Recruiting Command Center plus practices run by college coaches, the state's best training partners, the national team pathway and a monthly drop-in at Darkhorse or RAW."],
+      ["What's the difference between the plans?", "Insider is the rankings, tournament grade reports and which college programs are viewing your profile. The Recruiting Command Center includes Insider and adds your recruiting assistant from 8th grade through signing: your plan, college list, full costs and every coach conversation in one place. Blue is NC United's program: it includes the Recruiting Command Center and Insider, plus practices run by college coaches, the state's best training partners, the national team pathway and a monthly drop-in at Darkhorse or RAW."],
       ["Can I share the rankings?", "Share your own wrestler's ranking anywhere. Please don't repost the full boards or screenshots of them; that is what keeps them going."],
     ]
     const check = (on: boolean) =>
@@ -372,7 +375,7 @@ export function RankingsSalesClient({
             </div>
 
             <div className="mt-8 grid gap-5 lg:grid-cols-3">
-              {/* Rankings */}
+              {/* Insider */}
               <div className="relative flex flex-col rounded-2xl border-2 bg-[#0b1a33] p-6" style={{ borderColor: gold }}>
                 <div className="flex items-start justify-between">
                   <TrendingUp className="h-9 w-9" style={{ color: gold }} aria-hidden />
@@ -380,8 +383,8 @@ export function RankingsSalesClient({
                     Most popular
                   </span>
                 </div>
-                <p className="mt-4 text-3xl font-black">Rankings</p>
-                <p className="mt-1 text-sm text-white/60">For families who want to know where their wrestler stands, and who&apos;s watching.</p>
+                <p className="mt-4 text-3xl font-black">Insider</p>
+                <p className="mt-1 text-sm text-white/60">Full access to tournament grade reports, rankings and college profile views.</p>
                 <p className="mt-5 text-5xl font-black">
                   {formatPrice(SCOUTING_REPORT_PRICES.subscription)}
                   <span className="text-lg font-semibold text-white/60"> / month</span>
@@ -390,7 +393,7 @@ export function RankingsSalesClient({
                   or {formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)}/year (save {formatPrice(annualSavingCents())})
                 </p>
                 <ul className="mt-5 space-y-2.5 text-sm text-white/85">
-                  {[`All class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects board", "Ranked on results, quality wins and head-to-head", "Your wrestler's rank, shown on the profile", "Which college programs viewed your profile, and when"].map((l) => (
+                  {[`All class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects board", "Ranked on results, quality wins and head-to-head", "Your wrestler's rank, shown on the profile", "Live NC dashboards at NHSCA, Fargo and Super 32, with a tournament recap report after each", "Every wrestler's grade and the full write-up of his tournament", "Every match, with the opponent's seed, national rank, state titles and where he placed", "Which college programs viewed your profile, and when"].map((l) => (
                     <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                   ))}
                 </ul>
@@ -401,7 +404,7 @@ export function RankingsSalesClient({
                   className="mt-6 rounded-xl px-4 py-3 text-base font-black text-[#0A1628] transition hover:brightness-110 disabled:opacity-60"
                   style={{ backgroundColor: gold }}
                 >
-                  {checkingOut === "subscription" ? "Starting…" : "Get Rankings →"}
+                  {checkingOut === "subscription" ? "Starting…" : "Sign up for Insider →"}
                 </button>
                 <button
                   type="button"
@@ -442,7 +445,10 @@ export function RankingsSalesClient({
                   {formatPrice(SCOUTING_REPORT_PRICES.command_center)}
                   <span className="text-lg font-semibold text-white/60"> / month</span>
                 </p>
-                <p className="mt-4 text-xs font-black uppercase tracking-widest text-sky-300">Everything in Rankings, plus:</p>
+                <p className="mt-1 text-sm text-white/55">
+                  or {formatPrice(SCOUTING_REPORT_PRICES.command_center_annual)}/year (save {formatPrice(annualSavingCents("command_center"))})
+                </p>
+                <p className="mt-4 text-xs font-black uppercase tracking-widest text-sky-300">Includes Insider, plus:</p>
                 <ul className="mt-3 space-y-2.5 text-sm text-white/85">
                   {["Next steps for every stage, 8th grade to signing", "My College List: your stage, next step and verified coach activity", "Compare fit, with full yearly cost", "Every college's coaching staff and the NC wrestlers on its roster", "Coach conversations tied to each college", "The full Learn library: rules, timeline and costs"].map((l) => (
                     <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
@@ -458,7 +464,15 @@ export function RankingsSalesClient({
                     >
                       {checkingOut === "command_center" ? "Starting…" : "Get the Recruiting Command Center →"}
                     </button>
-                    <p className="mt-2 text-center text-xs text-white/45">On Rankings already? It replaces your $9.99 plan.</p>
+                    <button
+                      type="button"
+                      disabled={checkingOut !== null}
+                      onClick={() => { void startCheckout("command_center_annual") }}
+                      className="mt-2 rounded-xl border border-sky-400/60 px-4 py-2.5 text-sm font-bold text-sky-300 transition hover:bg-sky-400/10 disabled:opacity-60"
+                    >
+                      {checkingOut === "command_center_annual" ? "Starting…" : `Or pay yearly, ${formatPrice(SCOUTING_REPORT_PRICES.command_center_annual)}`}
+                    </button>
+                    <p className="mt-2 text-center text-xs text-white/45">On Insider already? It replaces your $9.99 plan.</p>
                     <p className="mt-1 text-center text-[11px] text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
                   </>
                 ) : (
@@ -488,7 +502,7 @@ export function RankingsSalesClient({
                   <p className="mt-5 text-5xl font-black">
                     $55<span className="text-lg font-semibold text-white/60"> / month</span>
                   </p>
-                  <p className="mt-4 text-xs font-black uppercase tracking-widest" style={{ color: gold }}>Everything in the Recruiting Command Center, plus:</p>
+                  <p className="mt-4 text-xs font-black uppercase tracking-widest" style={{ color: gold }}>Includes the Recruiting Command Center and Insider, plus:</p>
                   <ul className="mt-3 space-y-2.5 text-sm text-white/85">
                     {["Practices run by college coaches", "The state's best training partners", "The NC United national team pathway", "One drop-in each month at Darkhorse or RAW"].map((l) => (
                       <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
@@ -555,7 +569,7 @@ export function RankingsSalesClient({
                   <tr className="border-b border-white/10 text-xs font-bold uppercase tracking-wider text-white/55">
                     <th className="p-4 text-left font-bold" />
                     <th className="p-4 text-center">Free</th>
-                    <th className="p-4 text-center" style={{ color: gold }}>Rankings</th>
+                    <th className="p-4 text-center" style={{ color: gold }}>Insider</th>
                     <th className="p-4 text-center text-sky-400">Recruiting Command Center</th>
                     <th className="p-4 text-center text-sky-300">Blue</th>
                   </tr>
@@ -624,7 +638,7 @@ export function RankingsSalesClient({
                 Blue family and still seeing this? This account isn&apos;t linked to your wrestler yet. Open your
                 wrestler&apos;s profile and tap{" "}
                 <strong className="text-white">&ldquo;I&apos;m [their name]&apos;s parent&rdquo;</strong> to link it, or{" "}
-                <a href="mailto:info@ncwrestlingunited.com?subject=Rankings%20access" className="underline" style={{ color: gold }}>
+                <a href="mailto:info@ncwrestlingunited.com?subject=Insider%20access" className="underline" style={{ color: gold }}>
                   email us
                 </a>{" "}
                 and we&apos;ll link it for you.
@@ -653,7 +667,7 @@ export function RankingsSalesClient({
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-border border-t-blue-600"></div>
           {checkoutReturned === "purchased" && (
-            <p className="mt-4 text-sm text-muted-foreground">Activating your rankings subscription…</p>
+            <p className="mt-4 text-sm text-muted-foreground">Activating your Insider subscription…</p>
           )}
         </div>
       </div>
@@ -672,7 +686,7 @@ export function RankingsSalesClient({
               * same orienting job in a line of text and takes none of the screen.
               */}
             <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-primary">
-              RecruitNC Rankings
+              Insider
             </p>
             {/*
               * Lighter on navy.
@@ -701,14 +715,14 @@ export function RankingsSalesClient({
             </div>
             {checkoutReturned === "purchased" && (
               <p className="mx-auto mb-5 max-w-xl rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-foreground">
-                Your subscription is active. Welcome to RecruitNC Rankings.
+                Your subscription is active. Welcome to Insider.
               </p>
             )}
             {subscription && (
               <div className="mx-auto mb-6 max-w-xl rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
                 <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
                   <span>
-                    Rankings subscription: <strong className="text-foreground">{subscription.status}</strong>
+                    Insider subscription: <strong className="text-foreground">{subscription.status}</strong>
                     {subscription.interval ? ` · billed ${subscription.interval === "year" ? "annually" : "monthly"}` : ""}
                     {subscription.nextBillingAt
                       ? ` · ${subscription.cancelAtPeriodEnd ? "access through" : "next bill"} ${new Date(subscription.nextBillingAt).toLocaleDateString()}`

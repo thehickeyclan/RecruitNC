@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export type ExistingMatch = {
   id: string
@@ -71,7 +72,7 @@ export function FindExistingStep({
       <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Let&apos;s find you first</h2>
       <p className="mt-3 text-white/70">
         {/* Not "ranked": most profiles are built from tournament results for wrestlers who are not (Matt, 16 Oct 2026). */}
-        We build profiles for North Carolina wrestlers from state and national tournament results, so yours
+        We build profiles for <BrandName ncu="North Carolina wrestlers" national="wrestlers" /> from state and national tournament results, so yours
         may already be here. Search your name before creating a new one.
       </p>
 

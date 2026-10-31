@@ -1,17 +1,28 @@
+import type { Metadata } from "next"
 import { StorePageClient } from "@/components/store-page-client"
 import { createClient } from "@/lib/supabase/server"
 import { Suspense } from "react"
 import { shareMetadata } from "@/lib/share-metadata"
+import { headers } from "next/headers"
+import { notFound } from "next/navigation"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
-export const metadata = shareMetadata({
-  title: "NC United Store",
-  description: "Gear and apparel from NC United Wrestling.",
-  path: "/store-app",
-})
+// NC United's store: its title only on NC United's address (recruitwrestlers.com shows "not found").
+export async function generateMetadata(): Promise<Metadata> {
+  if (stagedBrandForHost((await headers()).get("host")) === "national") return { title: { absolute: "Page not found | RecruitWrestlers" }, robots: { index: false, follow: false } }
+  return shareMetadata({
+    title: "NC United Store",
+    description: "Gear and apparel from NC United Wrestling.",
+    path: "/store-app",
+  })
+}
 
 export const dynamic = "force-dynamic"
 
 export default async function StoreAppPage() {
+  // NC United's store; not on RecruitWrestlers (Matt's NC United sweep, 27 Oct 2026). The store
+  // runs without middleware (middleware.ts matcher), so it refuses here.
+  if (stagedBrandForHost((await headers()).get("host")) === "national") notFound()
   const supabase = await createClient()
 
   const { data: productsData, error } = await supabase

@@ -1,7 +1,7 @@
 import { NhscaDuals2026PublicResults } from "@/components/national-team/nhsca-duals-2026-public-results"
 
 export const metadata = {
-  title: "NHSCA Duals 2026 Results | NC United",
+  title: "NHSCA Duals 2026 Results",
   description:
     "NC United National and Select team results, athlete gallery, and dual meet records from NHSCA Duals 2026 in Virginia Beach.",
 }

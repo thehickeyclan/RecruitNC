@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getCollegesByIds } from "@/lib/colleges"
 import { jsonSafeClone } from "@/lib/json-safe-clone"
+import { inState } from "@/lib/recruiting/states"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 60 // Cache for 60 seconds
@@ -230,20 +231,21 @@ export async function GET(request: Request) {
     // Latest commitments: Get ALL athletes with colleges, sort by most recent commitment/update
     const recentCommitmentsResult = await safeSupabaseQuery(
       () =>
-        supabase
-          .from("athletes")
-          .select("*")
-          .not("college", "is", null)
-          .neq("college", "")
-          .limit(500),
+        inState(
+          supabase
+            .from("athletes")
+            .select("*")
+            .not("college", "is", null)
+            .neq("college", ""),
+        ).limit(500),
       "Featured Athletes API - Recent Commitments",
     )
 
     if (recentCommitmentsResult.success && Array.isArray(recentCommitmentsResult.data) && recentCommitmentsResult.data.length > 0) {
       const sortedCommitments = recentCommitmentsResult.data
         .sort((a: any, b: any) => {
-          const dateA = new Date(a.commitment_date || a.commitmentdate || a.updated_at || 0).getTime()
-          const dateB = new Date(b.commitment_date || b.commitmentdate || b.updated_at || 0).getTime()
+          const dateA = new Date(a.commitment_date || a.commitmentdate || 0).getTime()
+          const dateB = new Date(b.commitment_date || b.commitmentdate || 0).getTime()
           return dateB - dateA
         })
         .slice(0, 3)

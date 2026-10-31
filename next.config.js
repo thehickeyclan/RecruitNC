@@ -1,7 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Which brand this deployment is, known at build time to server and browser alike: the
+  // RecruitWrestlers project serves recruitwrestlers.com only, so its HTML can say RecruitWrestlers
+  // from the first byte (launch review, 30 Oct 2026). NC United's build leaves it empty.
+  env: {
+    NEXT_PUBLIC_RW_PROJECT: /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "") ? "1" : "",
+  },
   async redirects() {
     return [
+      {
+        // /athletes was two pages behind one name: college commitments, and a "Search wrestlers"
+        // tab that was LegacyNC's history search. Each has its own address now (26 Oct 2026).
+        // Profiles under /athletes/<id> are untouched; only the bare list address moves.
+        source: "/athletes",
+        has: [{ type: "query", key: "tab", value: "legacy" }],
+        destination: "/wrestlers",
+        permanent: true,
+      },
+      { source: "/athletes", destination: "/college-commitments", permanent: true },
+      { source: "/athletes-public", destination: "/college-commitments", permanent: true },
       {
         // The Community area (group chats and DMs) was taken down on 14 Oct 2026: no group post had
         // ever been written, and 69 people a month opened it to an empty room. Recruiting messages
@@ -102,6 +119,16 @@ const nextConfig = {
   // name the file — which is the problem it exists to solve.
   outputFileTracingIncludes: {
     "/api/admin/migrations": ["docs/sql/**"],
+    // Coach Reports read their data file and the recap behind them by a computed path, which
+    // tracing cannot follow: name them, or the page has no data in production.
+    "/coach-reports": ["content/reports/**", "content/news/**"],
+    "/coach-reports/[slug]": ["content/reports/**", "content/news/**"],
+    // The recap's photos come from the coach report's thumbnails.
+    "/news/super32-2026-nc-boys-recap": ["content/reports/**", "content/news/**"],
+    "/news/super32-2026-nc-girls-recap": ["content/reports/**", "content/news/**"],
+    "/recaps/super32-2026-sc": ["content/reports/**", "content/news/**"],
+    "/recaps/super32-2026-nc-boys": ["content/reports/**", "content/news/**"],
+    "/recaps/super32-2026-nc-girls": ["content/reports/**", "content/news/**"],
   },
   outputFileTracingExcludes: {
     "/*": [

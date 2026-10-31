@@ -10,12 +10,21 @@ export type CollegeListStatus = (typeof COLLEGE_LIST_STATUSES)[number]
 
 export const COLLEGE_LIST_STATUS_LABEL: Record<CollegeListStatus, string> = {
   interested: "Interested",
-  questionnaire: "Questionnaire sent",
-  contacted: "Emailed the coach",
-  talking: "Coach replied",
+  // No longer a stage of its own (22 Oct 2026): the interest form is an activity, checked at any
+  // stage. Old rows still carry it and are shown as Interested with the form done.
+  questionnaire: "Interested",
+  contacted: "Reached out",
+  talking: "Talking",
   visited: "Visited",
   offer: "Offer",
 }
+
+/** The stages a family moves a college through, in order (Matt, 22 Oct 2026: stages, with activities inside each). */
+export const BOARD_STAGES = ["interested", "contacted", "talking", "visited", "offer"] as const satisfies readonly CollegeListStatus[]
+export type BoardStage = (typeof BOARD_STAGES)[number]
+
+/** Where a college sits on the board: an old "questionnaire" row is an Interested one. */
+export const boardStage = (status: CollegeListStatus): BoardStage => (status === "questionnaire" ? "interested" : status)
 
 export type CollegeListItem = {
   schoolId: string

@@ -14,6 +14,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
+import { stateChampionshipName } from "@/lib/athlete-state"
+import { athleteStateCode } from "@/lib/recruiting/states"
 
 export type RevealCredential = {
   /** Short label for the line: "NCHSAA States", "Super 32 Early Entry". */
@@ -94,7 +96,8 @@ export async function buildProfileReveal(
   for (const r of bundle.nchsaa ?? []) {
     const place = r.place != null && r.place > 0 ? r.place : null
     credentials.push({
-      label: "NCHSAA States",
+      // His own association: "SCHSL States" for a South Carolina wrestler, never NCHSAA.
+      label: `${stateChampionshipName(athleteStateCode(athlete as { state?: string | null; is_nc_athlete?: boolean | null }) ?? "NC", r.classification)} States`,
       detail: `${place ? (place === 1 ? "Champion" : ordinal(place)) : "Qualifier"} · ${r.classification} · ${r.weight_class}`,
       year: r.year,
       weight: placementWeight(place, null) + 5, // a state result is the one they will recognise

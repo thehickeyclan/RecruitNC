@@ -75,12 +75,20 @@ export async function loadAthleteSignificantWins(
     admin.from("matches").select("season,matches,grade").eq("athlete_id", id),
     // Qualifier and national-event wins live in their own table, not in the match import.
     getQualifierSignificantWinBouts(admin, id, "wins", "any").catch(() => [] as Bout[]),
-    admin.from("athletes").select("graduationyear,gender").eq("id", id).maybeSingle(),
+    admin.from("athletes").select("graduationyear,gender,state").eq("id", id).maybeSingle(),
     // Wins and losses, last 12 months: the notable losses, as the scouting report lists them.
     getQualifierSignificantWinBouts(admin, id, "all").catch(() => [] as Bout[]),
   ])
   // No middle school seasons or bouts anywhere (Matt, 1 October 2026).
   const grad = (gradRow as { graduationyear?: number | null } | null)?.graduationyear ?? null
+  /*
+   * In-state means the wrestler's own state, not North Carolina's. Trey Robinson (Rock Hill, SC) had
+   * his wins over NC placers filed "In-state" and his SC ones "National" (Matt, 22 October 2026).
+   * An opponent with no state recorded is North Carolina's, as everywhere in the opponent index.
+   */
+  const homeState = String((gradRow as { state?: string | null } | null)?.state ?? "NC").trim().toUpperCase() || "NC"
+  const scopeFor = (opponentState: string | null | undefined) =>
+    (String(opponentState ?? "NC").trim().toUpperCase() || "NC") === homeState ? ("in-state" as const) : ("national" as const)
   const rows = (rawRows ?? []).filter((r: any) => isHighSchoolSeason(r.season, grad, r.grade))
   const tournamentBouts = highSchoolBouts(rawTournamentBouts as never[], grad) as Bout[]
   // Inside the head-to-head window they count for every reason; older ones only for a state
@@ -170,7 +178,9 @@ export async function loadAthleteSignificantWins(
     credential: significantWinCredential(win),
     stateFinish: stateFinishOf(win),
     // A win over another state's placer is a national result, and the filter should say so.
-    scope: win.opponentState && win.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
+    scope: scopeFor(win.opponentState),
+    // The Top 5's score, from his whole record (lib/win-strength.ts).
+    strength: win.strength ?? null,
   }))
 
   /*
@@ -252,7 +262,8 @@ export async function loadAthleteSignificantWins(
       reason: hit.reason,
       credential: significantWinCredential(hit) ?? win.credential,
       stateFinish: stateFinishOf(hit),
-      scope: hit.opponentState && hit.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
+      scope: scopeFor(hit.opponentState),
+      strength: hit.strength ?? null,
     }
   })
 
@@ -290,10 +301,18 @@ export async function loadAthleteSignificantWins(
     weight: loss.weight,
     reason: loss.reason,
     credential: notableLossCredential(loss),
-    scope: loss.opponentState && loss.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
+    scope: scopeFor(loss.opponentState),
     style: styleOfEventForAthlete(loss.event, null, gender),
   }))
 
+
+  /*
+   * Nationally ranked wins first, whatever list they came from (Matt's rule: "ranked first").
+   * Family-added wins were listed ahead of everything, so Jacob Perry's two Georgia Early Entry
+   * wins sat above his Super 32 win over SI's #24 (Matt, 26 October 2026). Stable otherwise.
+   */
+  const ranked = (w: { reason?: unknown }) => (w.reason === "national-ranked" ? 0 : 1)
+  wins.sort((a, b) => ranked(a) - ranked(b))
 
   return {
     wins: wins.map((w) => ({ ...w, style: styleOfEventForAthlete(w.event, null, gender) })),

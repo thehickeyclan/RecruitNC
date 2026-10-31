@@ -8,6 +8,7 @@
  * (lib/coach-event-report-email.ts). Mail-client safe: tables and inline styles.
  */
 import { RECRUITING_BRAND } from "@/lib/recruiting/brand"
+import { RANKINGS_UPDATE } from "@/lib/rankings-update-notice"
 
 const BASE = "https://app.ncwrestlingunited.com"
 const NAVY = "#0A1628"
@@ -147,7 +148,7 @@ ${section("Where we're going", "Every state", `
   <p style="margin:0 0 18px;">Our goal is every state. <strong>South Carolina launches next week</strong>, and more states follow quickly.</p>
   <p style="margin:0;">Thank you for being part of it,</p>
   <p style="margin:2px 0 0;font-weight:800;color:${INK};">Matt Hickey</p>
-  <p style="margin:0;color:${MUTED};font-size:13px;">${esc(RECRUITING_BRAND.name)}</p>`, true)}
+  <p style="margin:0;color:${MUTED};font-size:13px;">${esc(RECRUITING_BRAND.name)} · Cell <a href="tel:+16316625409" style="color:${MUTED};">631.662.5409</a></p>`, true)}
 
 <tr><td style="background:${NAVY};border-radius:0 0 16px 16px;padding:18px 24px;">
   <div>${wordmark(14)}</div>
@@ -322,5 +323,253 @@ ${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af
     [`Matt Hickey`, input.senderPhone, brand].filter(Boolean).join("\n"),
     ...(input.unsubscribeUrl ? ["", `Not recruiting North Carolina? Unsubscribe: ${input.unsubscribeUrl}`] : []),
   ].join("\n\n").replace(/\n\n\n\n/g, "\n\n")
+  return { subject, html, text }
+}
+
+
+/** How to reach Matt. A statement, never a question: coach emails ask nothing (Matt, 26 Oct 2026). */
+function replyAsk(_starred: number): string {
+  return "Reply to this email or call or text me anytime."
+}
+
+/* ------------------------------------------------------------------ Super 32 report ready */
+
+export type CoachReportReadyInput = {
+  coachName: string | null
+  coachEmail: string | null
+  program: string | null
+  programLogo: string | null
+  /** NC wrestlers in the men's report. */
+  wrestlers: number
+  /** This coach's (and staff's) starred wrestlers who wrestled, strongest first: one line each. */
+  recruits: Array<{ name: string; line: string }>
+  unsubscribeUrl?: string | null
+}
+
+/**
+ * "Your Super 32 report is ready" (Matt, 26 Oct 2026): every signed-up men's coach, personalised
+ * when their staff starred wrestlers who competed, pointing to Coach Home, where the report lives
+ * in their Reports folder. Also says new rankings land by Friday with Journeymen, I-64 and Super 32.
+ * No grades (coach reports never carry them) and no "what would you like to see".
+ */
+export function renderCoachReportReadyEmail(input: CoachReportReadyInput): { subject: string; html: string } {
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const n = input.recruits.length
+  const subject = n
+    ? `${coach}, your Super 32 report: ${n} of your recruit${n === 1 ? "" : "s"}`
+    : `${coach}, your Super 32 North Carolina report is ready`
+  const preheader = n
+    ? `${n} wrestler${n === 1 ? "" : "s"} you starred competed in Greensboro. Every match, every opponent, in your report.`
+    : `Every North Carolina wrestler's results from Greensboro, every match and every opponent.`
+  const homeUrl = `${BASE}/coach-home`
+  const reportUrl = `${BASE}/coach-reports/super32-2026-mens`
+  const hqUrl = `${BASE}/super32/live`
+  const button = (label: string, href: string) =>
+    `<a href="${href}" style="display:inline-block;background:${GOLD};color:${NAVY};font-family:${FONT};font-size:15px;font-weight:800;text-decoration:none;padding:13px 24px;border-radius:10px;">${esc(label)}</a>`
+  const shown = input.recruits.slice(0, 6)
+  const recruitRows = shown
+    .map((r) => `<tr><td valign="top" width="22" style="padding:7px 8px 7px 0;color:#f5c518;font-size:16px;">&#9733;</td><td style="padding:7px 0;border-bottom:1px solid ${LINE};font-family:${FONT};"><div style="font-size:15px;font-weight:800;color:${INK};">${esc(r.name)}</div><div style="font-size:13px;color:#475569;">${esc(r.line)}</div></td></tr>`)
+    .join("")
+  const more = n > shown.length ? `<p style="margin:10px 0 0;font-size:14px;">…and ${n - shown.length} more in your report.</p>` : ""
+
+  const html = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#eef2f7;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;"><tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+
+<tr><td style="background:${NAVY};border-radius:16px 16px 0 0;padding:18px 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td>${wordmark(22)}</td>
+    <td align="right" style="font-family:${FONT};font-size:11px;font-weight:800;letter-spacing:1.4px;color:${GOLD};">SUPER 32 · 2026</td>
+  </tr></table>
+</td></tr>
+
+<tr><td style="background:${NAVY};padding:4px 24px 26px;border-top:1px solid rgba(211,181,116,0.25);">
+  <div style="font-family:${FONT};font-size:14px;color:rgba(255,255,255,0.75);margin-top:18px;">${esc(coach)},</div>
+  <div style="font-family:${FONT};font-size:28px;line-height:1.15;font-weight:900;color:#ffffff;margin-top:6px;">Your Super 32 report is ready.</div>
+  ${input.program ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:12px;"><tr>
+    ${input.programLogo ? `<td style="padding-right:10px;"><img src="${esc(input.programLogo)}" width="36" height="36" alt="" style="display:block;width:36px;height:36px;border-radius:8px;background:#ffffff;object-fit:contain;padding:3px;border:0;"></td>` : ""}
+    <td style="font-family:${FONT};font-size:14px;color:rgba(255,255,255,0.75);">Prepared for ${esc(programDisplayName(input.program))}</td></tr></table>` : ""}
+  <div style="font-family:${FONT};font-size:15px;line-height:1.55;color:rgba(255,255,255,0.85);margin-top:14px;">
+    ${n
+      ? `<strong style="color:#ffffff;">${n} wrestler${n === 1 ? "" : "s"} you or your staff starred competed in Greensboro.</strong> They're marked with a gold star in your report, alongside all ${input.wrestlers} North Carolina wrestlers.`
+      : `Every North Carolina wrestler at Super 32, all ${input.wrestlers} of them: every match, and every opponent's seed, national ranking and state titles.`}
+  </div>
+  <div style="text-align:center;margin-top:20px;">${button("Open Coach Home", homeUrl)}</div>
+  <div style="font-family:${FONT};font-size:13px;color:rgba(255,255,255,0.7);text-align:center;margin-top:12px;line-height:1.7;">
+    Your report is in the <strong style="color:#ffffff;">Reports</strong> folder on Coach Home.<br>
+    <a href="${reportUrl}" style="color:${GOLD};font-weight:700;">Super 32 Recruiting Recap</a> &nbsp;·&nbsp; <a href="${hqUrl}" style="color:${GOLD};font-weight:700;">Super 32 HQ</a>
+  </div>
+</td></tr>
+
+${n ? section("Your recruits", `How your recruits did`, `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${recruitRows}</table>${more}`) : ""}
+
+${section("In your report", "Every result, every opponent", `
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    ${feature("&#9733;", "Your recruits, starred", n ? "Gold stars on the wrestlers you and your staff follow. Filter to just them in one tap." : "Star any wrestler right from the report and he joins your recruits, with a gold star.")}
+    ${feature("&#9776;", "Every match", "Each North Carolina wrestler's bouts, with every opponent's seed, national ranking, state titles and where he placed.")}
+    ${feature("&#9650;", "Strongest tournaments first", "Ordered by how each wrestler performed against the bracket, not just his record.")}
+    ${feature("&#8681;", "Download as a PDF", "One tap to save or share the whole report, or just your recruits.")}
+    ${feature("&#9673;", "Super 32 HQ", `Every North Carolina result from Greensboro in one dashboard, boys and girls. <a href="${hqUrl}" style="color:${GOLD_DARK};font-weight:700;">Open Super 32 HQ</a>`)}
+  </table>`)}
+
+${section("Coming Friday", "New rankings", `
+  <p style="margin:0 0 18px;">New North Carolina rankings come out by <strong>${esc(RANKINGS_UPDATE.by)}</strong>, updated with results from <strong>${esc(RANKINGS_UPDATE.events)}</strong>. They'll be on your Coach Home.</p>
+  <p style="margin:0 0 18px;"><strong>${esc(replyAsk(n))}</strong></p>
+  <p style="margin:2px 0 0;font-weight:800;color:${INK};">Matt Hickey</p>
+  <p style="margin:0;color:${MUTED};font-size:13px;">${esc(RECRUITING_BRAND.name)}</p>`, true)}
+
+<tr><td style="background:${NAVY};border-radius:0 0 16px 16px;padding:18px 24px;">
+  <div>${wordmark(14)}</div>
+  <div style="font-family:${FONT};font-size:11px;line-height:1.6;color:rgba(255,255,255,0.55);margin-top:8px;">You're receiving this because you have a college coach account on ${esc(RECRUITING_BRAND.name)}.${input.unsubscribeUrl ? `<br><a href="${esc(input.unsubscribeUrl)}" style="color:rgba(255,255,255,0.55);">Unsubscribe</a>` : ""}</div>
+</td></tr>
+
+</table></td></tr></table>
+</body></html>`
+  return { subject, html }
+}
+
+/** The designed email's plain-text twin: an HTML-only email reads as marketing to mail filters. */
+export function coachReportReadyText(input: CoachReportReadyInput): string {
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const n = input.recruits.length
+  return [
+    `${coach},`,
+    n
+      ? `Your Super 32 report is ready. ${n} wrestler${n === 1 ? "" : "s"} you or your staff starred competed in Greensboro; they're marked with a gold star in your report, alongside all ${input.wrestlers} North Carolina wrestlers.`
+      : `Your Super 32 report is ready: every North Carolina wrestler at Super 32, all ${input.wrestlers} of them, with every match and every opponent's seed, national ranking and state titles.`,
+    ...(n ? [input.recruits.slice(0, 6).map((r) => `* ${r.name}: ${r.line}`).join("\n") + (n > 6 ? `\n...and ${n - 6} more in your report.` : "")] : []),
+    `Coach Home (your report is in the Reports folder): ${BASE}/coach-home`,
+    `Super 32 Recruiting Recap: ${BASE}/coach-reports/super32-2026-mens`,
+    `Super 32 HQ: ${BASE}/super32/live`,
+    `New North Carolina rankings come out by ${RANKINGS_UPDATE.by}, updated with results from ${RANKINGS_UPDATE.events}.`,
+    replyAsk(n),
+    `Matt Hickey\n${RECRUITING_BRAND.name}\nCell 631.662.5409`,
+    ...(input.unsubscribeUrl ? [`Unsubscribe: ${input.unsubscribeUrl}`] : []),
+  ].join("\n\n")
+}
+
+/**
+ * The same news as a short letter from Matt: no images, no buttons, a few plain links, and a text
+ * twin. The designed invite went to Gmail's Promotions tab twice (17 Oct 2026) and the letter
+ * landed in the inbox; this is the version to send if the designed one tests into Promotions.
+ */
+export function renderCoachReportReadyLetter(input: CoachReportReadyInput): { subject: string; html: string; text: string } {
+  const { subject } = renderCoachReportReadyEmail(input)
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const n = input.recruits.length
+  const link = (href: string, label: string) => `<a href="${href}" style="color:#1d4ed8;">${esc(label)}</a>`
+  const p = (h: string) => `<p style="margin:0 0 14px;">${h}</p>`
+  const shown = input.recruits.slice(0, 6)
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
+${p(`${esc(coach)},`)}
+${p(n
+    ? `Your Super 32 report is ready. ${n} wrestler${n === 1 ? "" : "s"} you or your staff starred competed in Greensboro, and they're marked with a gold star in your report alongside all ${input.wrestlers} North Carolina wrestlers:`
+    : `Your Super 32 report is ready: every North Carolina wrestler at Super 32, all ${input.wrestlers} of them, with every match and every opponent's seed, national ranking and state titles.`)}
+${n ? `<ul style="margin:0 0 14px;padding-left:20px;">${shown.map((r) => `<li style="margin:0 0 4px;"><strong>${esc(r.name)}</strong>: ${esc(r.line)}</li>`).join("")}</ul>${n > 6 ? p(`…and ${n - 6} more in your report.`) : ""}` : ""}
+${p(`It's in the Reports folder on your ${link(`${BASE}/coach-home`, "Coach Home")}. You can filter to your recruits, star anyone you missed, and download it as a PDF. Every North Carolina result from Greensboro is also on ${link(`${BASE}/super32/live`, "Super 32 HQ")}, and here is the ${link(`${BASE}/coach-reports/super32-2026-mens`, "Super 32 Recruiting Recap")} directly.`)}
+${p(`New North Carolina rankings come out by ${esc(RANKINGS_UPDATE.by)}, updated with results from ${esc(RANKINGS_UPDATE.events)}.`)}
+${p(esc(replyAsk(n)))}
+<p style="margin:18px 0 0;">Matt Hickey<br>${esc(RECRUITING_BRAND.name)}<br>Cell 631.662.5409</p>
+${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(input.unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>` : ""}
+</div></body></html>`
+  return { subject, html, text: coachReportReadyText(input) }
+}
+
+/* ------------------------------------------------------------------ Super 32 results invite */
+
+export type Super32ResultsInviteInput = {
+  coachName: string | null
+  coachEmail: string | null
+  /** Coaches and programs on the platform, counted at send time. */
+  coaches: number
+  programs: number
+  unsubscribeUrl?: string | null
+}
+
+/**
+ * To men's college coaches not on the platform (Matt, 26 Oct 2026): Super 32 results for North Carolina
+ * are in, and coach accounts are free. A letter from Matt, the format that reaches the inbox: no
+ * images or buttons, a text twin, no "free" in the subject or preview, and no questions (coach
+ * emails ask nothing). Coaches who replied to earlier emails are left off by the send script.
+ */
+export function renderSuper32ResultsInviteLetter(input: Super32ResultsInviteInput): { subject: string; html: string; text: string } {
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const subject = coach === "Coach" ? "Super 32 results for North Carolina are in" : `${coach}, Super 32 results for North Carolina are in`
+  const brand = RECRUITING_BRAND.name
+  const recap = `${BASE}/news/super32-2026-nc-boys-recap`
+  const paras = [
+    `${coach},`,
+    `Super 32 is done, and every North Carolina wrestler's results from Greensboro are on ${brand}: every match, with each opponent's seed, national ranking and state titles. North Carolina beat 11 top-15 seeds, up from six last year and two in 2024, and Braylen Yates medaled.`,
+    `${input.coaches} college coaches from ${input.programs} programs already recruit North Carolina here: every wrestler's results, academics and contact information, scouting reports, and a My Recruits board shared with your staff. College coach accounts are free, and access is instant.`,
+    `New North Carolina rankings come out by ${RANKINGS_UPDATE.by}, updated with results from ${RANKINGS_UPDATE.events}.`,
+  ]
+  const signupLine = `Create your coach account here:`
+  const recapLine = `Our recap of how North Carolina did:`
+  const close = `Reply to this email or call or text me anytime.`
+  const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
+  const link = (href: string) => `<a href="${href}" style="color:#1d4ed8;">${href.replace(/^https:\/\//, "")}</a>`
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
+${paras.map(p).join("\n")}
+<p style="margin:0 0 14px;">${esc(signupLine)} ${link(SIGNUP_URL)}</p>
+<p style="margin:0 0 14px;">${esc(recapLine)} ${link(recap)}</p>
+${p(close)}
+<p style="margin:18px 0 0;">Matt Hickey<br>${esc(brand)}<br>Cell 631.662.5409</p>
+${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(input.unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>` : ""}
+</div></body></html>`
+  const text = [
+    ...paras,
+    `${signupLine} ${SIGNUP_URL}`,
+    `${recapLine} ${recap}`,
+    close,
+    `Matt Hickey\n${brand}\nCell 631.662.5409`,
+    ...(input.unsubscribeUrl ? [`Unsubscribe: ${input.unsubscribeUrl}`] : []),
+  ].join("\n\n")
+  return { subject, html, text }
+}
+
+/**
+ * The women's version (Matt, 26 Oct 2026): announces the girls recap, with the sign-up link. Same
+ * letter format and rules as the men's (no questions, no "free" in the subject). No rankings-by-
+ * Friday line: that promise is for the NC rankings, not yet the girls' boards.
+ */
+export function renderSuper32WomensInviteLetter(input: Super32ResultsInviteInput): { subject: string; html: string; text: string } {
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const subject = coach === "Coach" ? "Super 32 results for North Carolina's girls are in" : `${coach}, Super 32 results for North Carolina's girls are in`
+  const brand = RECRUITING_BRAND.name
+  const recap = `${BASE}/news/super32-2026-nc-girls-recap`
+  const paras = [
+    `${coach},`,
+    `Super 32 is done, and every North Carolina girl's results from Greensboro are on ${brand}: every match, with each opponent's seed, national ranking and state titles. Lauren Samuel and Ella Taylor both finished 3rd, North Carolina's best finishes of the weekend, and Samuel is now a two-time Super 32 All-American.`,
+    `We wrote up how North Carolina's girls did, wrestler by wrestler, in our recap.`,
+    `${input.coaches} college coaches from ${input.programs} programs already recruit North Carolina here: every wrestler's results, academics and contact information, scouting reports, and a My Recruits board shared with your staff. College coach accounts are free, and access is instant.`,
+  ]
+  const recapLine = `The girls' recap:`
+  const signupLine = `Create your coach account here:`
+  const close = `Reply to this email or call or text me anytime.`
+  const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
+  const link = (href: string) => `<a href="${href}" style="color:#1d4ed8;">${href.replace(/^https:\/\//, "")}</a>`
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
+${paras.slice(0, 2).map(p).join("\n")}
+<p style="margin:0 0 14px;">${esc(paras[2]!)} ${link(recap)}</p>
+${p(paras[3]!)}
+<p style="margin:0 0 14px;">${esc(signupLine)} ${link(SIGNUP_URL)}</p>
+${p(close)}
+<p style="margin:18px 0 0;">Matt Hickey<br>${esc(brand)}<br>Cell 631.662.5409</p>
+${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(input.unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>` : ""}
+</div></body></html>`
+  const text = [
+    paras[0], paras[1], `${recapLine} ${recap}`, paras[3], `${signupLine} ${SIGNUP_URL}`, close,
+    `Matt Hickey\n${brand}\nCell 631.662.5409`,
+    ...(input.unsubscribeUrl ? [`Unsubscribe: ${input.unsubscribeUrl}`] : []),
+  ].join("\n\n")
   return { subject, html, text }
 }

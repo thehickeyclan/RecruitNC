@@ -5,9 +5,10 @@ import { AdminClubDirectory } from "@/components/clubs/admin-club-directory"
 import { AdminClubClaims } from "@/components/clubs/admin-club-claims"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { MapPinned } from "lucide-react"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata: Metadata = {
-  title: "Club Submissions Admin | RecruitNC",
+  title: `Club Submissions Admin | ${productName()}`,
   description: "Review, approve, and manage wrestling club submissions for the RecruitNC club locator.",
 }
 

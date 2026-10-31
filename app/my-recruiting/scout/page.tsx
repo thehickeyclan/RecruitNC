@@ -15,7 +15,9 @@ export const dynamic = "force-dynamic"
 export const metadata: Metadata = { title: "Scout | Recruiting Command Center" }
 
 /** Scout, the recruiting assistant (Matt's mock-up, 17 Oct 2026). Command Center families only. */
-export default async function ScoutPage() {
+export default async function ScoutPage({ searchParams }: { searchParams?: Promise<Record<string, string | undefined>> }) {
+  // A step's "Ask Scout" link arrives with its question (?ask=), asked as soon as the page opens.
+  const ask = String((await searchParams)?.ask ?? "").trim().slice(0, 300) || null
   const admin = createAdminClient()
   const supabase = await createClient()
   const { data: auth } = await supabase.auth.getUser()
@@ -37,7 +39,7 @@ export default async function ScoutPage() {
     <PortalShell active="scout">
       <div className="mx-auto max-w-3xl text-white">
         {open ? (
-          <ScoutChat firstName={firstName} />
+          <ScoutChat firstName={firstName} ask={ask} />
         ) : (
           <section className="rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-8 text-center">
             <Lock className="mx-auto h-8 w-8 text-[#D3B574]" aria-hidden />

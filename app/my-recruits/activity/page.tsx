@@ -9,10 +9,11 @@ import { StaffActivityList } from "@/components/recruiting/staff-activity-list"
 import { loadStaffActivity } from "@/lib/recruiting/staff-activity"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
-export const metadata = { title: "Staff activity | RecruitNC" }
+export const metadata = { title: `Staff activity | ${productName()}` }
 
 export default async function StaffActivityPage() {
   const supabase = await createClient()

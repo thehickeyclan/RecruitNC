@@ -8,12 +8,10 @@ import { usePathname } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import {
   BarChart3,
-  Bell,
   ChevronDown,
   GitCompareArrows,
   GraduationCap,
   HeartHandshake,
-  Home,
   LogOut,
   Menu,
   MessageSquare,
@@ -21,15 +19,16 @@ import {
   Target,
   User,
   Users,
+  FileText,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { useCoachMessageBadge, useInterestBadge, useNavNotifications } from "@/hooks/use-nav-badges"
+import { useCoachMessageBadge, useInterestBadge, useNavNew } from "@/hooks/use-nav-badges"
+import { NotificationBell } from "@/components/recruiting/notification-bell"
 import { COACH_PREVIEW_KEY, COMMUNITY_PARTNER_LINKS, RECRUITING_BRAND, hasCommunityAccess, recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { RecruitingFooter } from "@/components/recruiting/recruiting-footer"
 import { RecruitingWordmark } from "@/components/recruiting/recruiting-wordmark"
 import { RecruitingSearch } from "@/components/recruiting/recruiting-search"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 /**
  * The frame around a college coach's pages (Matt, 11 October 2026): a slim bar on top, the
@@ -51,7 +51,8 @@ import {
  * Links are plain <a href>, as in the community bar: app/layout.tsx navigates on capture before
  * React click handlers run.
  */
-type Item = { href: string; label: string; icon: LucideIcon; badge?: number }
+/** `badge` counts; `fresh` is a "New" tag for something released since the coach last looked. */
+type Item = { href: string; label: string; icon: LucideIcon; badge?: number; fresh?: boolean }
 
 function SideMenu({ items, isActive, onNavigate, partner }: { items: Item[]; isActive: (href: string) => boolean; onNavigate?: () => void; partner: boolean }) {
   return (
@@ -69,11 +70,13 @@ function SideMenu({ items, isActive, onNavigate, partner }: { items: Item[]; isA
             }`}
           >
             <item.icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
-            <span className="flex-1">{item.label}</span>
+            <span className="flex-1 whitespace-nowrap">{item.label}</span>
             {item.badge ? (
               <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">
                 {item.badge > 9 ? "9+" : item.badge}
               </span>
+            ) : item.fresh ? (
+              <span className="shrink-0 rounded-full bg-red-600 px-1 py-px text-[9px] font-bold uppercase text-white">New</span>
             ) : null}
           </a>
         )
@@ -93,21 +96,20 @@ function SideMenu({ items, isActive, onNavigate, partner }: { items: Item[]; isA
   )
 }
 
-export function RecruitingShell({ children }: { children: React.ReactNode }) {
+export function RecruitingShell({ children, hideNcUnited = false }: { children: React.ReactNode; hideNcUnited?: boolean }) {
+  const onRw = useOnRecruitWrestlers()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const pathname = usePathname() ?? ""
   const { user, profile, signOut } = useAuth()
   const messages = useCoachMessageBadge(!!user, pathname)
   const interestNew = useInterestBadge(!!user, pathname)
-  const bell = useNavNotifications(!!user, notificationsOpen)
+  const fresh = useNavNew(!!user, pathname)
 
   /**
    * One My Recruits for every coach: the board with the funnel on it. The program portal
    * (calendar, notes, activity) is a link from that page, not a second place called My Recruits.
    */
   const boardHref = "/my-recruits"
-  const home: Item = { href: "/coach-home", label: "Home", icon: Home }
   const athletes: Item = { href: "/prospects/all", label: "Athletes", icon: Users }
   const recruits: Item = { href: boardHref, label: "My Recruits", icon: Star }
   const inbox: Item = { href: "/inbox", label: "Messages", icon: MessageSquare, badge: messages.unread }
@@ -119,22 +121,23 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
   const womensOut = releasedClassYears("Female").length > 0
   const womensFirst = viewGenderFor(coachProgramOf(user)) === "Female"
   const rankings: Item[] = !womensOut
-    ? [{ href: "/public-rankings", label: "Rankings", icon: BarChart3 }]
+    ? [{ href: "/public-rankings", label: "Rankings", icon: BarChart3, fresh: fresh.rankings }]
     : (() => {
-        const mens: Item = { href: "/public-rankings#mens", label: "Men's Rankings", icon: BarChart3 }
-        const womens: Item = { href: "/public-rankings#womens", label: "Women's Rankings", icon: BarChart3 }
+        const mens: Item = { href: "/public-rankings#mens", label: "Men's Rankings", icon: BarChart3, fresh: fresh.rankings }
+        const womens: Item = { href: "/public-rankings#womens", label: "Women's Rankings", icon: BarChart3, fresh: fresh.rankings }
         return womensFirst ? [womens, mens] : [mens, womens]
       })()
+  // My Recruits is the coach's home (Matt, 27 Oct 2026): first, and Coach Home folds into it.
   const items: Item[] = [
-    home,
+    recruits,
     athletes,
     ...rankings,
-    recruits,
     { href: "/interested", label: "Interested", icon: HeartHandshake, badge: interestNew },
+    { href: "/coach-reports", label: "Reports", icon: FileText, badge: fresh.reports },
     inbox,
     { href: "/compare?src=nav", label: "Compare", icon: GitCompareArrows },
     { href: "/perfect-recruit", label: "Perfect Recruit", icon: Target },
-    { href: "/athletes", label: "Commitments", icon: GraduationCap },
+    { href: "/college-commitments", label: "Commitments", icon: GraduationCap },
   ]
 
   const isActive = (link: string) => {
@@ -162,15 +165,17 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div id="app-content" data-shell="recruiting" className="group/shell relative flex min-h-screen flex-col bg-[#0A1628]">
+    <div id="app-content" data-shell="recruiting" className="group/shell relative flex min-h-screen flex-col bg-[#0A1628] print:bg-white">
       <header className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b border-white/10 bg-[#0A1628] px-4 print:hidden lg:px-5">
-        <a href="/coach-home" className="flex shrink-0 items-baseline gap-3" aria-label={`${RECRUITING_BRAND.name} — Home`}>
+        <a href="/my-recruits" className="flex shrink-0 items-baseline gap-3" aria-label={`${onRw || hideNcUnited ? "RecruitWrestlers" : RECRUITING_BRAND.name} — Home`}>
           {/* RecruitNC here; RecruitWrestlers on recruitwrestlers.com (app/recruit-brand.css). */}
-          <span className="ncu-only">
-            <RecruitingWordmark className="text-xl" />
-          </span>
+          {hideNcUnited ? null : (
+            <span className="ncu-only">
+              <RecruitingWordmark className="text-xl" />
+            </span>
+          )}
           <BrandLockup />
-          <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">{recruitingCoverage()} wrestling</span>
+          <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">{recruitingCoverage(onRw)} wrestling</span>
         </a>
         <RecruitingSearch className="hidden min-w-0 max-w-md flex-1 md:block" />
         <div className="ml-auto flex items-center gap-1">
@@ -179,51 +184,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
               Coach view · exit
             </button>
           ) : null}
-          <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <PopoverTrigger asChild>
-              <button type="button" className={iconButton} aria-label={bell.unread > 0 ? `Notifications (${bell.unread} unread)` : "Notifications"}>
-                <Bell className="h-5 w-5" />
-                {bell.unread > 0 && (
-                  <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
-                    {bell.unread > 99 ? "99+" : bell.unread}
-                  </span>
-                )}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-[min(340px,100vw-24px)] p-0" sideOffset={8}>
-              <div className="flex items-center justify-between border-b px-3 py-2">
-                <span className="text-sm font-semibold">Notifications</span>
-                {bell.unread > 0 && (
-                  <button type="button" onClick={bell.markAllRead} className="text-xs text-muted-foreground hover:text-foreground">
-                    Mark all read
-                  </button>
-                )}
-              </div>
-              <div className="max-h-[320px] overflow-y-auto">
-                {bell.notifications.length === 0 ? (
-                  <p className="px-3 py-4 text-center text-sm text-muted-foreground">No notifications yet.</p>
-                ) : (
-                  bell.notifications.map((n) => (
-                    <a
-                      key={n.id}
-                      href={n.link || "#"}
-                      onClick={() => {
-                        bell.markRead(n.id)
-                        setNotificationsOpen(false)
-                      }}
-                      className={`block border-b border-border/50 px-3 py-2.5 text-left last:border-0 hover:bg-muted/50 ${!n.read_at ? "bg-muted/30" : ""}`}
-                    >
-                      <p className="text-sm font-medium">{n.title}</p>
-                      {n.body && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>}
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                      </p>
-                    </a>
-                  ))
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
+          <NotificationBell signedIn={!!user} />
           <DropdownMenu>
             <DropdownMenuTrigger className="ml-1 flex h-10 items-center gap-2 rounded-lg border border-white/20 px-3 text-sm font-semibold text-white hover:bg-white/10">
               <User className="h-4 w-4" />
@@ -262,7 +223,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav aria-label="Recruiting navigation" className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-5 border-t border-white/10 bg-[#0A1628] print:hidden lg:hidden">
-        {[home, athletes, { ...recruits, label: "Recruits" }, inbox].map((item) => {
+        {[{ ...recruits, label: "Recruits" }, athletes, { ...rankings[0], label: "Rankings" }, inbox].map((item) => {
           const active = isActive(item.href)
           return (
             <a
@@ -277,6 +238,8 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
                 <span className="absolute right-[22%] top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
                   {item.badge > 9 ? "9+" : item.badge}
                 </span>
+              ) : item.fresh ? (
+                <span className="absolute right-[26%] top-2 h-2.5 w-2.5 rounded-full bg-red-600" aria-label="New" />
               ) : null}
             </a>
           )

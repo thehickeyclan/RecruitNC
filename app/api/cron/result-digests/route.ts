@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { sendToTokens } from "@/lib/push-send"
 import { followersOfAthletes } from "@/lib/athlete-follows"
 import { digestBody, digestTitle } from "@/lib/result-digest-message"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -90,6 +91,7 @@ type EventBatch = {
 }
 
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -138,6 +140,12 @@ export async function GET(request: NextRequest) {
 
   const announced: Array<Record<string, unknown>> = []
   let eventsHandled = 0
+
+  /*
+   * Super 32 2026 is published round by round from the Command Center, so its rows land all
+   * weekend. Followers get one digest, once the finals are over, not one off the first round.
+   */
+  if (Date.now() < Date.parse("2026-10-26T00:00:00-04:00")) events.delete("super32-2026")
 
   for (const batch of events.values()) {
     if (eventsHandled >= MAX_EVENTS_PER_RUN) break

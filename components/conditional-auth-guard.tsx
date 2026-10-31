@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
+import { isNationalPath, isOpenWhileStaged, stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 /**
  * Public routes (no sign-in): public record / discovery pages that should be shareable
@@ -41,13 +42,18 @@ export function ConditionalAuthGuard({
      * login page, and three were recorded as unsubscribed.
      */
     "/unsubscribe",
+    // Anyone with the news reports a commitment - a parent, a college coach - most with no
+    // account; and the approval page's link carries its own permission (26 Oct 2026).
+    "/submit-commitment",
+    "/approve-commitment",
     // Partners send this link to their own people; a login wall would waste it.
     "/supporters",
     // The printed QR code on lanyards and signage points here. A login wall would make every
     // one of them useless, and they cannot be reprinted.
     "/download",
     "/athletes",
-    "/athletes-public",
+    "/college-commitments",
+    "/wrestlers",
     "/view-profile",
     "/prospects",
     /*
@@ -72,6 +78,9 @@ export function ConditionalAuthGuard({
     // they have an account, so a login wall here loses the sale (15 Oct 2026).
     "/plans",
     "/command-center",
+    // RecruitWrestlers' plans page: prices before an account (Matt's product review, 26 Oct 2026).
+    "/membership",
+    "/for-coaches",
     // Dev-only product screenshots (404 in production).
     "/dev/screens",
     "/schools",
@@ -95,6 +104,13 @@ export function ConditionalAuthGuard({
     // what it holds rather than a sign-in wall.
     "/recruiting/learn",
     "/news",
+    // RecruitWrestlers' public recaps (app/recaps): free tops and A grades, like /news.
+    "/recaps",
+    // Super 32: the champions history (public, like /nhsca and /fargo - signed-out visitors were
+    // bounced to sign-in from it 34 times the week of the 2026 event) and the live Command Center.
+    // Its rehearsal page is notFound() in production.
+    "/super32",
+    "/dev/super32-live-preview",
     "/nchsaa",
     "/nhsca",
     "/fargo",
@@ -111,7 +127,12 @@ export function ConditionalAuthGuard({
     // The App Store listing points at /privacy and /support, and Apple opens both signed out
     // during review — a login wall there is a rejection, not a detail. /contact is the route
     // both of those pages send people to, so gating it broke the only way to reach a human.
+    // Short profile links (/w/xavier-bernthal-2029): they redirect to the public profile.
+    "/w",
     "/privacy",
+    // Sign-up consent, every footer and the store reviews link here (mobile review, 30 Oct 2026:
+    // the terms showed for four seconds, then a sign-in wall).
+    "/terms",
     "/support",
     "/contact",
   ]
@@ -151,7 +172,17 @@ export function ConditionalAuthGuard({
     /^\/athletes\/[^/]+\/edit(?:\/|$)/.test(path) ||
     /^\/athletes\/[^/]+\/edit-request(?:\/|$)/.test(path)
 
-  const isPublic = !isProfileManagementRoute && (isHomepage || isPublicPrefix || isPublicExact || isAuthRoute)
+  /*
+   * On recruitwrestlers.com a path outside the national site is its "page not found" (middleware
+   * rewrites it with a 404). The guard still saw the address asked for and put a sign-in wall in
+   * front of the 404, so a stale link read as "log in" rather than "not here".
+   */
+  const onRw =
+    process.env.NEXT_PUBLIC_RW_PROJECT === "1" ||
+    (typeof window !== "undefined" && stagedBrandForHost(window.location.hostname) === "national")
+  const isRwNotFound = onRw && !isNationalPath(path) && !isOpenWhileStaged(path)
+
+  const isPublic = !isProfileManagementRoute && (isHomepage || isPublicPrefix || isPublicExact || isAuthRoute || isRwNotFound)
 
   if (isPublic) {
     return <>{children}</>

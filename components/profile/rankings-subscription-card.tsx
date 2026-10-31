@@ -20,7 +20,7 @@ function formatDate(iso: string | null): string {
 }
 
 /**
- * The RecruitNC Rankings subscription, beside NC United Blue on the profile's Subscriptions tab.
+ * The Insider subscription ($9.99, named 25 Oct 2026), beside NC United Blue on the profile's Subscriptions tab.
  *
  * Three honest states: a paid subscription (status, next bill, manage in Stripe); access that comes
  * another way - Blue, a verified coach account, staff - which needs no subscription; or neither,
@@ -93,7 +93,7 @@ export function RankingsSubscriptionCard({ access }: { access: RankingsAccess })
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-[#D3B574]" />
-          RecruitNC Rankings
+          Insider
         </CardTitle>
         <CardDescription className="text-muted-foreground">
           Every published class ranking, the Top 75 College Ready Prospects board, and which college programs viewed your profile.
@@ -145,12 +145,12 @@ export function RankingsSubscriptionCard({ access }: { access: RankingsAccess })
           </>
         ) : (
           <>
-            <p>You don&apos;t have rankings access on this account. It&apos;s included with NC United Blue, or available on its own.</p>
+            <p>Sign up for Insider and get full access to tournament grade reports, rankings and college profile views. Insider is included in the Recruiting Command Center and NC United Blue.</p>
             <Link
               href="/rankings"
               className="inline-flex h-10 items-center justify-center rounded-lg bg-[#D3B574] px-4 text-sm font-semibold text-[#0A1628] hover:bg-[#c4a665]"
             >
-              See rankings plans
+              Sign up for Insider
             </Link>
           </>
         )}

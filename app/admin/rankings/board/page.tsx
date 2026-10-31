@@ -35,7 +35,7 @@ import { reviewBoard, summariseReview, type ReviewAthlete, type ReviewFlag } fro
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import type { StarRating } from "@/lib/athlete-star-rating"
 import { normalizeBoardAthlete } from "@/lib/rankings/board-athlete"
-import { rankingBoardDefault } from "@/lib/rankings/ranking-board-home"
+import { rankingBoardDefault, rankingBoardStates } from "@/lib/rankings/ranking-board-home"
 import { createClient } from "@/lib/supabase/client"
 
 type Evidence = { kind: string; label: string; points?: number; tone?: string }
@@ -73,20 +73,30 @@ type BoardAthlete = {
   nhsca_by_year: string[]
   super32_by_year: string[]
   fargo_by_year: string[]
+  journeymen_record?: string | null
+  journeymen_by_year?: string[]
   star_rating: StarRating | null
   state_placements: string[]
   nhsca_record: string | null
   toc_result: string | null
   super32_record: string | null
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  national_wins?: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  national_win_count?: number
   significant_losses: Array<{ opponent: string; result: string | null; event: string | null; standing: string; upset: boolean }>
+  /** Top 75 only: "2027 #3", the wrestler's class and class rank. */
+  class_label?: string
 }
 
 const YEARS = ["2027", "2028", "2029", "2030", "2026"]
+/** The Top 75 College Prospects (2027 + 2028), worked on this same board (Matt, 30 Oct 2026). */
+const TOP75 = "top75"
 /** States with a board. North Carolina's is public; the others are worked here and saved only. */
 const STATES: Array<{ code: string; label: string }> = [
   { code: "NC", label: "North Carolina" },
   { code: "SC", label: "South Carolina" },
+  { code: "VA", label: "Virginia" },
+  { code: "MD", label: "Maryland" },
 ]
 
 const SCORE_SEGMENTS: Array<{ key: string; label: string; className: string }> = [
@@ -183,6 +193,17 @@ function ScoreBar({ breakdown, total }: { breakdown: Record<string, number>; tot
         ))}
       </div>
     </div>
+  )
+}
+
+/** When he last wrestled, on the row (Matt, 29 Oct 2026); amber after four months without a match. */
+function LastWrestled({ value }: { value: string }) {
+  const day = parseLastCompeted(value)
+  const stale = day != null && Date.now() - Date.parse(day) > 120 * 86_400_000
+  return (
+    <span className={`rounded px-1.5 py-0.5 text-[10px] ${stale ? "bg-amber-500/25 text-amber-200" : "bg-slate-800 text-slate-300"}`} title={value}>
+      Last wrestled: {value}
+    </span>
   )
 }
 
@@ -297,9 +318,19 @@ function Details({
     ["NHSCA", athlete.nhsca_by_year],
     ["Super 32", athlete.super32_by_year],
     ["Fargo", athlete.fargo_by_year],
+    ["Journeymen", athlete.journeymen_by_year ?? []],
   ]
   return (
     <div className="space-y-3 border-t border-slate-800 bg-slate-950/60 p-3 text-xs sm:p-4">
+      {/* Rankers check a wrestler's full profile from here (Matt, 23 Oct 2026). New tab: the board keeps its place. */}
+      <a
+        href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
+        target="_blank"
+        rel="noopener"
+        className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2.5 py-1 font-semibold text-slate-200 hover:border-[#A3E635] hover:text-white"
+      >
+        Open profile ↗
+      </a>
       <FlagList flags={flags} />
       <ScoreBar breakdown={athlete.score_breakdown} total={athlete.ai_score} />
 
@@ -322,6 +353,25 @@ function Details({
             )}
           </div>
         ))}
+      </div>
+
+      <div className="rounded-md border border-[#A3E635]/40 bg-[#A3E635]/5 p-2">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[#A3E635]">
+          Top national wins · {athlete.national_win_count ?? 0} in all
+        </p>
+        {athlete.national_wins?.length ? (
+          <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-slate-200">
+            {athlete.national_wins.map((w, i) => (
+              <li key={`${w.opponent}-${i}`}>
+                <b className="text-white">{w.opponent}</b> <span className="text-slate-400">({w.standing})</span>
+                {w.result ? <span className="font-mono text-emerald-200"> {w.result}</span> : null}
+                {w.event ? <span className="text-slate-500"> · {w.event}</span> : null}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-1 text-slate-500">None on file: no win over a nationally ranked opponent or a national placer</p>
+        )}
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
@@ -452,9 +502,11 @@ export default function RankingBoardPage() {
   const requestedYear = searchParams.get("year")
   const requestedGender = searchParams.get("gender")
   const requestedState = (searchParams.get("state") ?? "NC").toUpperCase()
-  const [year, setYear] = useState(requestedYear && YEARS.includes(requestedYear) ? requestedYear : "2027")
+  const [year, setYear] = useState(requestedYear && (YEARS.includes(requestedYear) || requestedYear === TOP75) ? requestedYear : "2027")
   const [gender, setGender] = useState(requestedGender === "Female" ? "Female" : "Male")
   const [state, setState] = useState(STATES.some((s) => s.code === requestedState) ? requestedState : "NC")
+  const [myStates, setMyStates] = useState<string[] | null>(null)
+  const shownStates = myStates ? STATES.filter((s) => myStates.includes(s.code)) : STATES
   const [athletes, setAthletes] = useState<BoardAthlete[]>([])
   const [stars, setStars] = useState<Record<string, StarRating>>({})
   const [excluded, setExcluded] = useState<Array<{ id: string; name: string; highschool: string | null }>>([])
@@ -465,6 +517,8 @@ export default function RankingBoardPage() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
+  // Publishing never alerts the phones; the push is its own button, like Announce commitment.
+  const [alerting, setAlerting] = useState(false)
   const [query, setQuery] = useState("")
   const [filter, setFilter] = useState<"all" | "review" | "gaps">("all")
   const [status, setStatus] = useState("")
@@ -474,21 +528,28 @@ export default function RankingBoardPage() {
   const [loadedFor, setLoadedFor] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
-  const publicCap = getPublicRankingsMax(Number(year), gender)
+  const isTop75 = year === TOP75
+  const publicCap = isTop75 ? 75 : getPublicRankingsMax(Number(year), gender)
   const canEdit = access === "edit"
   const showing = `${state}|${year}|${gender}`
   const boardIsCurrent = loadedFor === showing
 
-  // A link with no class on it opens a scoped ranker's own board.
+  // A link with no class on it opens a scoped ranker's own board. Whatever the link, a ranker sees
+  // only the states their grant opens and never lands on one they cannot read.
   const cameWithoutBoard = useRef(!requestedYear && !requestedGender)
   useEffect(() => {
-    if (!cameWithoutBoard.current) return
+    const withoutBoard = cameWithoutBoard.current
     cameWithoutBoard.current = false
     void createClient()
       .auth.getSession()
       .then(({ data }) => {
-        const board = rankingBoardDefault(data.session?.user?.app_metadata)
-        if (!board || !YEARS.includes(String(board.year))) return
+        const meta = data.session?.user?.app_metadata
+        const allowed = rankingBoardStates(meta)
+        if (allowed) setMyStates(allowed)
+        const board = rankingBoardDefault(meta)
+        if (!board) return
+        if (allowed && !allowed.includes(requestedState)) setState(board.state)
+        if (!withoutBoard || !YEARS.includes(String(board.year))) return
         setYear(String(board.year))
         setGender(board.gender)
       })
@@ -499,6 +560,11 @@ export default function RankingBoardPage() {
     if (searchParams.get("year") === year && searchParams.get("gender") === gender && (searchParams.get("state") ?? "NC") === state) return
     router.replace(`${pathname}?year=${year}&gender=${gender}${state !== "NC" ? `&state=${state}` : ""}`, { scroll: false })
   }, [year, gender, state, pathname, router, searchParams])
+
+  // The Top 75 is North Carolina's men only; switching away lands on a class board.
+  useEffect(() => {
+    if (isTop75 && (state !== "NC" || gender !== "Male")) setYear("2027")
+  }, [isTop75, state, gender])
 
   const loadBoard = async (forceRefresh = false) => {
     const loadId = ++latestLoad.current
@@ -616,11 +682,17 @@ export default function RankingBoardPage() {
     setSaving(true)
     setStatus("")
     try {
-      const res = await fetch("/api/admin/rankings/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "save", year, gender, state, rankings: athletes.map((a, i) => ({ id: a.id, final_rank: i + 1 })) }),
-      })
+      const res = isTop75
+        ? await fetch("/api/admin/rankings/top-100", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gender: "Male", order: athletes.slice(0, 75).map((a) => a.id) }),
+          })
+        : await fetch("/api/admin/rankings/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "save", year, gender, state, rankings: athletes.map((a, i) => ({ id: a.id, final_rank: i + 1 })) }),
+          })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Could not save the order.")
       setDraftSavedAt(data.draftSavedAt ?? new Date().toISOString())
@@ -633,11 +705,53 @@ export default function RankingBoardPage() {
     }
   }
 
+  /** One alert for the whole update - every board published in the last two days - from any board. */
+  const sendAlert = async () => {
+    setAlerting(true)
+    setStatus("")
+    try {
+      const preview = await fetch("/api/admin/rankings/notify", { cache: "no-store" })
+      const p = await preview.json().catch(() => ({}))
+      if (!preview.ok) throw new Error(p.error || "Could not prepare the alert.")
+      if (!window.confirm(`Send this to every iPhone with rankings alerts on?\n\n${p.message?.title}\n${p.message?.body}`)) return
+      const res = await fetch("/api/admin/rankings/notify", { method: "POST" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Could not send the alert.")
+      const sent = Number(data.sent ?? 0)
+      setStatus(`iPhone alert sent to ${sent} device${sent === 1 ? "" : "s"}.`)
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not send the alert.")
+    } finally {
+      setAlerting(false)
+    }
+  }
+
   const publishDraft = async () => {
     if (!boardIsCurrent) return setStatus("Still loading this board — wait for it before publishing.")
     if (dirty) return setStatus("You have unsaved moves. Save first — Publish only ever publishes the saved order.")
     setPublishing(true)
     setStatus("")
+    if (isTop75) {
+      try {
+        // Publish refuses unsaved moves (above), so the screen's top 75 is the saved order.
+        const order = athletes.slice(0, 75).map((a) => a.id)
+        const res = await fetch("/api/admin/rankings/top-100", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gender: "Male", order, publish: true }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || "Could not publish.")
+        setPublishedAt(data.publishedAt ?? new Date().toISOString())
+        setStatus(`Published the Top ${data.published}. No push sent.`)
+        await loadBoard(true)
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : "Could not publish.")
+      } finally {
+        setPublishing(false)
+      }
+      return
+    }
     try {
       const res = await fetch("/api/admin/rankings/save", {
         method: "POST",
@@ -653,7 +767,11 @@ export default function RankingBoardPage() {
         `Published the top ${data.published}.`,
         data.released === false ? "Staged: not public until this class is released." : "",
         app?.synced ? `App has the same ${app.rows}.` : app?.note ? `App not updated — ${app.note}` : "",
-        push?.sent ? `Push sent to ${push.sent} device${push.sent === 1 ? "" : "s"}.` : "No push sent.",
+        push?.sent
+          ? `Push sent to ${push.sent} device${push.sent === 1 ? "" : "s"}.`
+          : push?.note === "alert held"
+            ? "No push sent - press Send push when you're ready."
+            : "No push sent.",
       ]
       setStatus(parts.filter(Boolean).join(" "))
       await loadBoard(true)
@@ -693,6 +811,9 @@ export default function RankingBoardPage() {
               <span className="truncate font-bold text-white">{athlete.name}</span>
               {athlete.locked ? <Lock className="h-3 w-3 text-[#d6b75d]" aria-label="Locked" /> : null}
               {stars[athlete.id] ? <span className="text-xs font-bold text-[#d6b75d]">{stars[athlete.id]!.stars}★</span> : null}
+              {athlete.class_label ? (
+                <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[11px] font-bold text-white">Class of {athlete.class_label}</span>
+              ) : null}
             </div>
             <div className="truncate text-xs text-slate-400">
               {[athlete.highschool, athlete.last_competed ? `last: ${athlete.last_competed}` : null].filter(Boolean).join(" · ")}
@@ -713,6 +834,9 @@ export default function RankingBoardPage() {
               {athlete.toc_result ? <span className="rounded bg-emerald-800 px-1.5 py-0.5 text-[10px] font-bold text-white">TOC {athlete.toc_result}</span> : null}
               {athlete.super32_record ? <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-white">S32 {athlete.super32_record}</span> : null}
               {athlete.nhsca_record ? <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-white">NHSCA {athlete.nhsca_record}</span> : null}
+              {athlete.journeymen_record ? <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-white">JM {athlete.journeymen_record}</span> : null}
+              {athlete.national_win_count ? <span className="rounded bg-[#A3E635] px-1.5 py-0.5 text-[10px] font-bold text-slate-950">{athlete.national_win_count} national {athlete.national_win_count === 1 ? "win" : "wins"}</span> : null}
+              {athlete.last_competed ? <LastWrestled value={athlete.last_competed} /> : null}
               {athlete.match_count === 0 ? <span className="rounded bg-red-900 px-1.5 py-0.5 text-[10px] text-red-100">No season matches</span> : null}
             </div>
           </button>
@@ -772,7 +896,7 @@ export default function RankingBoardPage() {
         <div className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
             <div className="flex rounded-full bg-slate-900 p-1">
-              {STATES.map((s) => (
+              {shownStates.map((s) => (
                 <button key={s.code} className={pill(state === s.code)} onClick={() => setState(s.code)} title={s.label}>
                   {s.code}
                 </button>
@@ -791,6 +915,12 @@ export default function RankingBoardPage() {
                   {y}
                 </button>
               ))}
+              {/* The Top 75 is its own board (2027 + 2028); a tab here so it is found from the boards (Matt, 30 Oct 2026). */}
+              {state === "NC" && gender === "Male" ? (
+                <button className={pill(isTop75)} onClick={() => setYear(TOP75)}>
+                  Top 75
+                </button>
+              ) : null}
             </div>
             <button
               className="rounded-full p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
@@ -803,7 +933,7 @@ export default function RankingBoardPage() {
             <div className="ml-auto flex flex-wrap items-center gap-2">
               <span className="text-xs text-slate-400">
                 Saved <b className="text-white">{timeAgo(draftSavedAt)}</b>
-                {state === "NC" ? (
+                {state === "NC" || canPublish ? (
                   <>
                     {" · "}Published <b className="text-white">{timeAgo(publishedAt)}</b>
                   </>
@@ -823,6 +953,19 @@ export default function RankingBoardPage() {
               ) : (
                 boardIsCurrent && <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Read only</span>
               )}
+              {canPublish && state === "NC" && gender === "Male" ? (
+                <>
+                  {publishedAt ? (
+                    <button
+                      onClick={sendAlert}
+                      disabled={alerting || publishing || !boardIsCurrent}
+                      className="rounded-full border border-slate-600 px-4 py-1.5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-40"
+                    >
+                      {alerting ? "Sending…" : "Send push"}
+                    </button>
+                  ) : null}
+                </>
+              ) : null}
               {canPublish ? (
                 <button
                   onClick={publishDraft}
@@ -840,7 +983,7 @@ export default function RankingBoardPage() {
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className="text-2xl font-black tracking-tight">
-                {stateLabel} · {gender === "Male" ? "Men" : "Women"} · Class of {year}
+                {isTop75 ? "North Carolina · Men · Top 75 College Prospects (2027 + 2028)" : <>{stateLabel} · {gender === "Male" ? "Men" : "Women"} · Class of {year}</>}
               </h1>
               <p className="text-sm text-slate-400">
                 {athletes.length} wrestlers · top {publicCap} {state === "NC" ? "go public" : "would be the board"} · the formula agrees with{" "}

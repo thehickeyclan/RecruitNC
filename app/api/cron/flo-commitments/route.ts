@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { commitmentRunDecision } from "@/lib/college-commitments/schedule"
 import { runCommitmentSync } from "@/lib/college-commitments/run"
@@ -23,6 +24,7 @@ function authorizeCron(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   const url = new URL(request.url)
   const force = url.searchParams.get("force") === "1"

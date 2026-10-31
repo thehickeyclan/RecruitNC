@@ -33,7 +33,15 @@ export type CollegeFit = {
   financialAidUrl: string | null
 }
 
-const FIT = data.fit as unknown as Record<string, CollegeFit>
+/** A web address as a link: IPEDS often leaves off the https://, which made it a page on our site. */
+const asLink = (url: string | null | undefined): string | null => {
+  const u = String(url ?? "").trim()
+  if (!u) return null
+  return /^https?:\/\//i.test(u) ? u : `https://${u.replace(/^\/+/, "")}`
+}
+const FIT = Object.fromEntries(
+  Object.entries(data.fit as unknown as Record<string, CollegeFit>).map(([id, f]) => [id, { ...f, netPriceCalculatorUrl: asLink(f.netPriceCalculatorUrl) }]),
+) as Record<string, CollegeFit>
 
 export const fitForSchool = (schoolId: string): CollegeFit | null => FIT[schoolId] ?? null
 
@@ -61,7 +69,7 @@ export type NetPrice = { amount: number; note: string } | { amount: null; note: 
  * What families at one income level paid, for a North Carolina family at this college; or why
  * there is no figure.
  */
-export function netPriceFor(fit: CollegeFit, schoolState: string, bracket: number | null, homeState = "NC"): NetPrice {
+export function netPriceFor(fit: CollegeFit, schoolState: string, bracket: number | null, homeState: string): NetPrice {
   if (fit.netPriceInStateOnly && schoolState !== homeState) {
     return { amount: null, note: "Published for in-state students only. Use the college's calculator." }
   }

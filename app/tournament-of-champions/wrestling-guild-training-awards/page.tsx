@@ -3,7 +3,7 @@ import Link from "next/link"
 import { ArrowLeft, ExternalLink } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Wrestling Guild Training Awards Rules | NC United",
+  title: "Wrestling Guild Training Awards Rules",
   description:
     "Official rules for the Wrestling Guild training-credit awards — win up to $1,000 in training with current and former NCAA athletes — presented through the 2026 NC United Tournament of Champions partnership.",
 }

@@ -7,7 +7,10 @@
  * ./load.ts, shared with the other portal pages.
  */
 import Link from "next/link"
-import { ArrowRight, CalendarDays, Check, Circle, DollarSign, HelpCircle, ListChecks, Mail, Scale } from "lucide-react"
+import { easternToday } from "@/lib/college-programs/admissions-format"
+import { nextStep, type ActivityAction } from "@/lib/college-programs/board-activities"
+import { loadListInbound } from "@/lib/college-programs/list-signals"
+import { ArrowRight, BookOpenCheck, CalendarDays, DollarSign, HelpCircle, ListChecks, Mail, Plane, Scale } from "lucide-react"
 
 import { InfoSheetCard } from "@/components/portal/info-sheet-card"
 import { StageSelect } from "@/components/portal/stage-select"
@@ -17,11 +20,10 @@ import { CONTACT_LABEL, summarizeContacts } from "@/lib/college-programs/contact
 import { loadCollegeContacts } from "@/lib/college-programs/contacts-server"
 import { ReachedOutButton, type ReachedOutSchool } from "@/components/portal/reached-out-button"
 import { PortalShell } from "@/components/portal/portal-shell"
-import { unreadCount } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { buildMapPreview } from "@/lib/college-programs/map-preview"
 import data from "@/lib/college-programs/programs-2026-27.json"
-import { listTarget, planSteps } from "@/lib/college-programs/roadmap"
+import { listTarget } from "@/lib/college-programs/roadmap"
 import type { CollegeMapSchool } from "@/lib/college-programs/types"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { programsFollowing } from "@/lib/college-programs/competing-alerts"
@@ -31,9 +33,17 @@ import { buildInfoSheet } from "./info-sheet"
 import { loadCommandCenter } from "./load"
 import { MapPreviewCard } from "./map-preview"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { productName } from "@/lib/recruiting/product-name"
+import { CommandCenterTour } from "@/components/portal/command-center-tour"
+import { RecruitingPath } from "@/components/portal/recruiting-path"
+import { RemindersPanel } from "@/components/portal/reminders-panel"
+import { StarterSet } from "@/components/portal/starter-set"
+import { daysUntilText, visitDates, visitPhase, VISIT_GUIDE } from "@/lib/recruiting/visits"
+import { journeyFor, remindersOn } from "./journey-data"
+import { starterSet } from "./starter-set"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Recruiting Command Center | RecruitNC" }
+export const metadata = { title: `Recruiting Command Center | ${productName()}` }
 
 const ALL_SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 const SCHOOL_BY_ID = new Map(ALL_SCHOOLS.map((s) => [s.id, s]))
@@ -53,45 +63,59 @@ const LEARN_LINKS = [
   { icon: HelpCircle, label: "Questions families ask", href: "/recruiting/learn/questions-families-ask" },
 ]
 
-export default async function CommandCenterHome() {
+export default async function CommandCenterHome({ searchParams }: { searchParams?: Promise<Record<string, string | undefined>> }) {
+  const params = (await searchParams) ?? {}
   const cc = await loadCommandCenter("/my-recruiting")
-  const { athletes, wrestlers, schools, blue, focus, views, viewerId } = cc
+  const { athletes, wrestlers, schools, blue, focus, viewerId, homeState, familyViews, unread } = cc
   const admin = createAdminClient()
-  const first = athletes[0] ?? null
-  const w = wrestlers[0] ?? null
+  // A parent of two picks whose path to show (?w=); everything family-wide stays family-wide.
+  const first = athletes.find((a) => a.id === params.w) ?? athletes[0] ?? null
+  const w = wrestlers.find((x) => x.id === first?.id) ?? wrestlers[0] ?? null
+  const journey = first ? journeyFor(cc, first.id) : null
+  const researchNow = journey?.steps.find((s) => s.key === "research")?.status === "now"
 
-  const [lastCompeted, unread, sheet, contacts, following] = await Promise.all([
-    first ? loadLastCompeted(admin, [first.id], new Map([[first.id, first.classYear]])).then((m) => m.get(first.id) ?? null).catch(() => null) : null,
-    unreadCount(admin, viewerId).catch(() => 0),
+  const [lastCompeted, sheet, contacts, following, inbound, starter] = await Promise.all([
+    // Every wrestler's last competed weight: a parent of two saw only one son's (Cheryl Shuster, 28 Oct 2026).
+    athletes.length ? loadLastCompeted(admin, athletes.map((a) => a.id), new Map(athletes.map((a) => [a.id, a.classYear]))).catch(() => new Map()) : new Map(),
     blue && first ? buildInfoSheet(admin, first.id).catch(() => null) : null,
     loadCollegeContacts(admin, athletes.map((a) => a.id)),
     // College programs following the wrestler: a count for the "where he competes next" reminder, never names.
     first ? programsFollowing(admin, first.id).catch(() => 0) : 0,
+    blue ? loadListInbound(admin, viewerId, athletes.map((a) => a.id)).catch(() => new Map()) : new Map(),
+    researchNow && first ? starterSet(admin, viewerId, focus?.gender ?? null, schools.map((s) => s.id)).catch(() => []) : [],
   ])
+  // Today's moves: the steps across the whole list that advance it most (lib/college-programs/board-activities.ts).
+  const todayET = easternToday()
+  const moves = blue
+    ? schools
+        .map((s) => ({ s, step: nextStep({ ...s, inbound: inbound.get(s.id) }, todayET) }))
+        .filter((m): m is { s: (typeof schools)[number]; step: NonNullable<ReturnType<typeof nextStep>> } => Boolean(m.step) && m.step!.rank < 4)
+        .sort((a, b) => a.step.rank - b.step.rank)
+        .slice(0, 5)
+    : []
+  const moveHref = (s: (typeof schools)[number], a: ActivityAction): { href: string; external?: boolean } =>
+    a.kind === "reply"
+      ? { href: `/inbox/${a.threadId}` }
+      : a.kind === "forms"
+        ? { href: "/my-recruiting/questionnaires" }
+        : a.kind === "apply"
+          ? { href: a.href, external: true }
+          : a.kind === "scout"
+            ? { href: "/my-recruiting/scout" }
+            : { href: "/my-recruiting/colleges?view=board" }
   // Who has reached out: what the family logged (calls, visits, offers happen off the platform).
   const reach = summarizeContacts(contacts)
-  const viewedPrograms = athletes.reduce((n, a) => n + (views.get(a.id)?.programs ?? 0), 0)
   const recentContacts = contacts.slice(0, 4)
-  const weight = lastCompeted?.weight ? `${String(lastCompeted.weight).replace(/\s*lbs?$/i, "")} lbs` : null
-
-  const steps = w
-    ? planSteps({
-        firstName: w.firstName,
-        athleteId: w.id,
-        grade: w.grade,
-        profilePercent: w.profilePercent,
-        profileTodo: w.profileTodo,
-        listStatuses: schools.map((s) => s.status),
-        listLevels: schools.map((s) => s.level),
-        questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && !s.questionnaireDone).length,
-        scheduleCount: w.events.length,
-      })
-    : []
-  const open = steps.filter((s) => !s.done).length
-  const seen = first ? views.get(first.id) : null
+  const weightOf = (id: string) => {
+    const lc = (lastCompeted as Map<string, { weight?: string | number | null }>).get(id)
+    return lc?.weight ? `${String(lc.weight).replace(/\s*lbs?$/i, "")} lbs` : null
+  }
   const target = listTarget(w?.grade ?? null)
   const percent = first?.completeness.percent ?? 0
-
+  const today = easternToday()
+  const upcomingVisits = cc.visits.visits.filter((v) => visitPhase(v, today) !== "happened" && visitPhase(v, today) !== "missed")
+  const schoolNames = Object.fromEntries(ALL_SCHOOLS.map((x) => [x.id, cleanName(x.name)]))
+  const showReminders = remindersOn()
   return (
     <PortalShell active="home">
       {/* Header band: who this is for, over an NC arena. */}
@@ -104,9 +128,21 @@ export default async function CommandCenterHome() {
             <p className="text-[11px] font-black uppercase tracking-widest text-[#D3B574]"><BrandName /> · Recruiting Portal</p>
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-5xl">Recruiting Command Center</h1>
             <p className="mt-2 text-sm text-white/75 sm:text-base">
-              {first ? `Welcome back. Here is ${athletes.map((a) => a.firstName).join(" and ")}'s recruiting progress and what to do next.` : "Welcome. This is where recruiting gets done."}
+              {first
+                ? `${cc.firstVisit ? "Welcome" : "Welcome back"}. Here is ${athletes.map((a) => a.firstName).join(" and ")}'s recruiting progress and what to do next.`
+                : "Welcome. This is where recruiting gets done."}
             </p>
-            {first ? <p className="mt-1 text-sm text-white/50">{[first.classYear ? `Class of ${first.classYear}` : null, first.highSchool, weight].filter(Boolean).join(" · ")}</p> : null}
+            {/* One line per wrestler: a parent of two saw both names and one son's class, school and weight. */}
+            {athletes.map((a) => (
+              <p key={a.id} className="mt-1 text-sm text-white/50">
+                {[athletes.length > 1 ? a.firstName : null, a.classYear ? `Class of ${a.classYear}` : null, a.highSchool, weightOf(a.id)].filter(Boolean).join(" · ")}
+              </p>
+            ))}
+            {first ? (
+              <div className="mt-3">
+                <CommandCenterTour firstName={athletes.map((a) => a.firstName).join(" and ")} autoOpen={cc.firstVisit} />
+              </div>
+            ) : null}
           </div>
           {/* Every wrestler on the account, one tap from his or her profile: the thing families most often came looking for. */}
           {athletes.length ? (
@@ -129,7 +165,7 @@ export default async function CommandCenterHome() {
           <ul className="relative mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <li className={`${card} bg-[#0f1c2e]/90 p-4`}>
               <p className="text-3xl font-black">{percent}%</p>
-              <p className="text-sm text-white/70">Profile complete</p>
+              <p className="text-sm text-white/70">{athletes.length > 1 ? `${first.firstName}'s profile complete` : "Profile complete"}</p>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-[#D3B574]" style={{ width: `${percent}%` }} />
               </div>
@@ -143,16 +179,16 @@ export default async function CommandCenterHome() {
             </li>
             <li>
               <Link href="/my-recruiting/activity" className={`${card} flex h-full flex-col bg-[#0f1c2e]/90 p-4 hover:border-[#D3B574]/60`}>
-                <span className="text-3xl font-black">{seen ? seen.programs : "–"}</span>
-                <span className="text-sm text-white/70">College programs viewed</span>
-                <span className={`${more} mt-auto pt-1`}>{!seen || seen.programs === 0 ? "Keep building" : "See who"} →</span>
+                <span className="text-3xl font-black">{familyViews.programs}</span>
+                <span className="text-sm text-white/70">College programs viewed{athletes.length > 1 ? " (all wrestlers)" : ""}</span>
+                <span className={`${more} mt-auto pt-1`}>{familyViews.programs === 0 ? "Keep building" : "See who"} →</span>
               </Link>
             </li>
             <li>
-              <Link href="/my-recruiting/plan" className={`${card} flex h-full flex-col bg-[#0f1c2e]/90 p-4 hover:border-[#D3B574]/60`}>
-                <span className="text-3xl font-black">{open}</span>
-                <span className="text-sm text-white/70">Next actions</span>
-                <span className={`${more} mt-auto pt-1`}>{open ? "View your plan" : "All done for now"} →</span>
+              <Link href="/my-recruiting/plan#visits" className={`${card} flex h-full flex-col bg-[#0f1c2e]/90 p-4 hover:border-[#D3B574]/60`}>
+                <span className="text-3xl font-black">{upcomingVisits.length}</span>
+                <span className="text-sm text-white/70">{upcomingVisits.length === 1 ? "Visit planned" : "Visits planned"}</span>
+                <span className={`${more} mt-auto pt-1`}>{upcomingVisits.length ? "See visits" : "Add a visit"} →</span>
               </Link>
             </li>
           </ul>
@@ -167,12 +203,76 @@ export default async function CommandCenterHome() {
               ? "The Command Center is for wrestlers who are still being recruited. Link a younger wrestler and it fills in from their record."
               : "Claim your profile, or link to your child's as a parent, and the Command Center fills in from their record."}
           </p>
-          <Link href="/athletes" className="mt-5 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+          <Link href="/prospects/all" className="mt-5 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
             Find the profile
           </Link>
         </div>
       ) : (
         <>
+          {athletes.length > 1 ? (
+            <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Whose path">
+              {athletes.map((a) => (
+                <Link
+                  key={a.id}
+                  href={`/my-recruiting?w=${a.id}`}
+                  role="tab"
+                  aria-selected={a.id === first.id}
+                  className={`rounded-lg border px-4 py-2 text-sm font-bold ${a.id === first.id ? "border-[#D3B574] bg-[#D3B574]/15 text-white" : "border-white/15 text-white/70 hover:text-white"}`}
+                >
+                  {a.firstName}
+                </Link>
+              ))}
+            </div>
+          ) : null}
+          {journey ? <RecruitingPath steps={journey.steps} firstName={first.firstName} /> : null}
+          {starter.length ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} /> : null}
+
+          {/* Coming up: visits and the family's own reminders (Matt, 28 Oct 2026). */}
+          {upcomingVisits.length || showReminders ? (
+            <div className={`mt-4 grid gap-4 ${upcomingVisits.length && showReminders ? "lg:grid-cols-2" : ""}`}>
+              {upcomingVisits.length ? (
+                <section className={`${card} p-5`} aria-labelledby="cc-visits">
+                  <div className="flex items-baseline justify-between">
+                    <h2 id="cc-visits" className={title}>
+                      Visits
+                    </h2>
+                    <Link href="/my-recruiting/plan#visits" className={more}>
+                      All visits →
+                    </Link>
+                  </div>
+                  <ul className="mt-3 space-y-2">
+                    {upcomingVisits.slice(0, 3).map((v) => {
+                      const confirm = visitPhase(v, today) === "confirm"
+                      return (
+                        <li key={v.id} className="flex items-center gap-3 rounded-lg bg-white/[0.04] p-3">
+                          <Plane className="h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-bold">{schoolNames[v.schoolId] ?? v.schoolId}</span>
+                            <span className="block text-xs text-white/55">
+                              {v.kind === "official" ? "Official" : "Unofficial"} · {visitDates(v)}
+                              {confirm ? "" : ` · ${daysUntilText(v.startsOn, today)}`}
+                              {athletes.length > 1 ? ` · ${athletes.find((a) => a.id === v.athleteId)?.firstName ?? ""}` : ""}
+                            </span>
+                          </span>
+                          {confirm ? (
+                            <Link href="/my-recruiting/plan#visits" className="shrink-0 rounded-lg bg-[#D3B574] px-3 py-1.5 text-xs font-black text-[#0A1628]">
+                              Did it happen?
+                            </Link>
+                          ) : v.kind === "official" ? (
+                            <a href={VISIT_GUIDE} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[#D3B574]/60 px-3 py-1.5 text-xs font-bold text-[#D3B574] hover:bg-[#D3B574]/10">
+                              <BookOpenCheck className="h-3.5 w-3.5" aria-hidden /> Get ready
+                            </a>
+                          ) : null}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              ) : null}
+              {showReminders ? <RemindersPanel initial={cc.reminders.reminders} available={cc.reminders.available} schoolNames={schoolNames} athleteId={first.id} readOnly={cc.viewerId !== cc.authUserId} limit={3} /> : null}
+            </div>
+          ) : null}
+
           {/*
            * Where he competes next (Matt, 20 Oct 2026): approved coaches following him see it on
            * Coach Home and in a Thursday alert, so the Command Center asks for it whenever none is on.
@@ -209,7 +309,7 @@ export default async function CommandCenterHome() {
             </div>
             <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {[
-                { n: viewedPrograms, label: "Viewed the profile", sub: "verified" },
+                { n: familyViews.programs, label: "Programs viewed", sub: athletes.length > 1 ? "verified, all wrestlers" : "verified" },
                 { n: reach.reached, label: "Reached out", sub: "colleges" },
                 { n: reach.visits, label: "Visits", sub: "colleges" },
                 { n: reach.offers, label: "Offers", sub: "colleges" },
@@ -249,41 +349,45 @@ export default async function CommandCenterHome() {
             )}
           </section>
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            {/* Next steps */}
-            <section className={`${card} flex flex-col p-5`} aria-labelledby="cc-steps">
+          {moves.length ? (
+            <section className={`${card} mt-6 p-5`} aria-labelledby="cc-moves">
               <div className="flex items-baseline justify-between">
-                <h2 id="cc-steps" className={title}>
-                  Your next steps
+                <h2 id="cc-moves" className={title}>
+                  Today&apos;s moves
                 </h2>
-                <span className="text-xs text-white/45">This month</span>
+                <Link href="/my-recruiting/colleges?view=board" className="text-xs font-semibold text-[#D3B574] hover:underline">
+                  Open the pipeline
+                </Link>
               </div>
-              {blue ? (
-                <ul className="mt-3 space-y-3">
-                  {steps.slice(0, 4).map((s) => (
-                    <li key={s.key} className="flex gap-3">
-                      {s.done ? <Check className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-emerald-500 p-0.5 text-[#0A1628]" aria-label="Done" /> : <Circle className="mt-0.5 h-5 w-5 shrink-0 text-white/40" aria-label="To do" />}
-                      <span className="min-w-0">
-                        <span className={`block text-sm font-semibold ${s.done ? "text-white/60" : "text-white"}`}>{s.title}</span>
-                        <span className="line-clamp-1 text-xs text-white/45">{s.detail}</span>
+              <ul className="mt-3 divide-y divide-white/5">
+                {moves.map(({ s, step }) => {
+                  const go = moveHref(s, step.action)
+                  return (
+                    <li key={s.id} className="flex items-center gap-3 py-2.5">
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${step.tone === "urgent" ? "bg-rose-400" : step.rank <= 2 ? "bg-sky-400" : "bg-amber-300"}`} aria-hidden />
+                      {s.logo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.logo} alt="" className="h-8 w-8 shrink-0 rounded bg-white object-contain p-0.5" />
+                      ) : null}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-bold">{s.name}</span>
+                        {step.why ? <span className="block text-xs text-white/50">{step.why}</span> : null}
                       </span>
+                      <a
+                        href={go.href}
+                        {...(go.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                        className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-black text-[#0A1628] ${step.tone === "urgent" ? "bg-rose-400" : "bg-[#D3B574] hover:bg-[#e2c98d]"}`}
+                      >
+                        {step.label}
+                      </a>
                     </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-3 text-sm text-white/60">The plan, college board and schedule are part of the Command Center.</p>
-              )}
-              {/* Not Blue: NC United's Blue page on its own address; on Guild Recruiting's, nothing to buy until national pricing is set. */}
-              <Link href={blue ? "/my-recruiting/plan" : "/blue"} className={`${blue ? "" : "ncu-only "}mt-auto inline-flex w-fit items-center gap-1 rounded-lg bg-[#D3B574] px-3 py-2 pt-2 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d] [margin-top:1rem]`}>
-                {blue ? "View your full plan" : "Learn about Blue"} <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-              {!blue ? (
-                <span className="guild-only">
-                  <span className="mt-4 inline-flex w-fit rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold text-white/60">Full Command Center: coming soon</span>
-                </span>
-              ) : null}
+                  )
+                })}
+              </ul>
             </section>
+          ) : null}
 
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
             {/* My college list */}
             <section className={`${card} flex flex-col p-5`} aria-labelledby="cc-list">
               <div className="flex items-baseline justify-between">
@@ -298,8 +402,8 @@ export default async function CommandCenterHome() {
                 <ul className="mt-3 space-y-3">
                   {schools.slice(0, 2).map((s) => {
                     const school = SCHOOL_BY_ID.get(s.id)
-                    const cost = school ? yearlyCostFor(s.id, school.state) : null
-                    const which = school && cost ? (school.state === "NC" ? "in-state" : "out-of-state") : null
+                    const cost = school ? yearlyCostFor(s.id, school.state, homeState) : null
+                    const which = school && cost ? (school.state === homeState ? "in-state" : "out-of-state") : null
                     return (
                       <li key={s.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                         <div className="flex items-center gap-3">
@@ -365,12 +469,12 @@ export default async function CommandCenterHome() {
               <dl className="mt-4 grid grid-cols-3 gap-3 text-center">
                 <div>
                   <dt className="sr-only">College programs that viewed</dt>
-                  <dd className="text-3xl font-black text-[#D3B574]">{seen ? seen.programs : 0}</dd>
-                  <dd className="text-[11px] leading-4 text-white/55">Programs viewed {first.firstName}</dd>
+                  <dd className="text-3xl font-black text-[#D3B574]">{familyViews.programs}</dd>
+                  <dd className="text-[11px] leading-4 text-white/55">Programs viewed{athletes.length > 1 ? "" : ` ${first.firstName}`}</dd>
                 </div>
                 <div>
                   <dt className="sr-only">Total profile views</dt>
-                  <dd className="text-3xl font-black">{seen ? seen.total : 0}</dd>
+                  <dd className="text-3xl font-black">{familyViews.total}</dd>
                   <dd className="text-[11px] leading-4 text-white/55">Total profile views</dd>
                 </div>
                 <div>

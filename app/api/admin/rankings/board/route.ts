@@ -1,5 +1,7 @@
+import { liveStates } from "@/lib/recruiting/brand"
 import { NextResponse } from "next/server"
 import { adminGate } from "@/lib/admin-gate"
+import { requireAdmin } from "@/lib/admin-auth"
 import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -41,8 +43,53 @@ const cachedBoard = unstable_cache(
   { revalidate: 600, tags: ["admin-ranking-board"] },
 )
 
+/** The Top 75 College Prospects: classes 2027 and 2028 together, in the class boards' own rows. */
+const TOP75 = "top75"
+const TOP75_CLASSES = ["2027", "2028"]
+
+async function top75Board(fresh: boolean) {
+  const gate = await requireAdmin()
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status })
+  const admin = createAdminClient()
+  const [boards, drafts, published] = await Promise.all([
+    Promise.all(
+      TOP75_CLASSES.map((y) =>
+        fresh ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year: y, gender: "Male", state: HOME_STATE }) : cachedBoard(y, "Male", HOME_STATE),
+      ),
+    ),
+    admin.from("top_100_drafts").select("athlete_id, rank").eq("gender", "Male"),
+    admin.from("top_100_rankings").select("published_at").eq("gender", "Male").limit(1),
+  ])
+  const draftRanks = new Map((drafts.data ?? []).map((row) => [String(row.athlete_id), Number(row.rank)]))
+  // One formula order across both classes, by score, so the suggestion panel reads as one list.
+  const merged = boards.flat().sort((a, b) => Number(b.ai_score) - Number(a.ai_score))
+  return NextResponse.json({
+    athletes: merged.map((athlete, i) => ({
+      ...athlete,
+      ai_rank: i + 1,
+      draft_rank: draftRanks.get(String(athlete.id)) ?? null,
+      class_label: `${athlete.graduationyear}${athlete.prospect_ranking ? ` #${athlete.prospect_ranking}` : ""}`,
+    })),
+    meta: {
+      draft_count: draftRanks.size,
+      excluded_no_gender: [],
+      year: TOP75,
+      gender: "Male",
+      state: HOME_STATE,
+      count: merged.length,
+      scored_at: new Date().toISOString(),
+      draft_saved_at: draftRanks.size ? new Date().toISOString() : null,
+      published_at: published.data?.[0]?.published_at ?? null,
+      formula: "recruitnc-toc-resume-v2",
+      access: "edit",
+      can_publish: true,
+    },
+  })
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
+  if (searchParams.get("year") === TOP75) return top75Board(searchParams.get("refresh") === "1")
   const year = searchParams.get("year") || "2027"
   const gender = searchParams.get("gender") || "Male"
   // Whose board. North Carolina unless asked; a ranker's grant names the states it covers.
@@ -146,7 +193,8 @@ export async function GET(request: Request) {
         /** What this viewer may do here: reorder and save, or only read. Publishing is admin-only. */
         access: auth.access,
         // Only North Carolina has public boards; another state's order is saved, never published.
-        can_publish: auth.isAdmin && state === HOME_STATE,
+        // Every live state publishes; a state still being checked stays review-only.
+        can_publish: auth.isAdmin && (state === HOME_STATE || liveStates(true).some((s) => s.code === state)),
       },
     })
   } catch (error) {

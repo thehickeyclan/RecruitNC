@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,19 @@ export default function CreateProfilePage() {
   const [step, setStep] = useState<"find" | "reveal" | "create">("find")
   const [typedName, setTypedName] = useState("")
   const [matchedId, setMatchedId] = useState<string | null>(null)
+
+  // Just verified with no wrestler yet (?find=): the search opens already looking for that name.
+  const [findName] = useState(() => (typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("find")?.trim() ?? ""))
+
+  // Back from making the account with the name already typed (?name=): straight to creating it.
+  useEffect(() => {
+    if (!user) return
+    const asked = new URLSearchParams(window.location.search).get("name")?.trim()
+    if (asked) {
+      setTypedName(asked)
+      setStep("create")
+    }
+  }, [user])
 
   if (isLoading) {
     return (
@@ -50,6 +63,7 @@ export default function CreateProfilePage() {
       <div className="min-h-screen bg-[#0A1628] px-4 py-12">
         <ClaimExplainer />
         <FindExistingStep
+          initialName={findName}
           onClaim={(match: ExistingMatch) => {
             setMatchedId(match.id)
             setStep("reveal")
@@ -93,8 +107,9 @@ export default function CreateProfilePage() {
             profile from scratch. It takes a minute and brings you straight back here &mdash; the
             account is how you manage the profile afterwards.
           </p>
-          <Button asChild className="mt-5 w-full rounded-sm bg-rnc-red text-white hover:bg-rnc-red-hover">
-            <a href="/auth/signup?returnTo=%2Fcreate-profile">Create my free account</a>
+          <Button asChild className="mt-5 w-full rounded-sm bg-[#D3B574] font-bold text-[#0A1628] hover:brightness-110">
+            {/* The typed name rides along, so nobody types it twice. */}
+            <a href={`/auth/signup?returnTo=${encodeURIComponent(typedName ? `/create-profile?name=${encodeURIComponent(typedName)}` : "/create-profile")}`}>Create my free account</a>
           </Button>
           <p className="mt-3 text-center text-sm text-white/60">
             <a href="/auth/signin?returnTo=%2Fcreate-profile" className="underline underline-offset-2">

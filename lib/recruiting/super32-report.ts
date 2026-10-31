@@ -25,6 +25,16 @@ export function super32NoticeActive(now: Date = new Date()): boolean {
   return now.getTime() <= NOTICE_ENDS
 }
 
+/**
+ * After the finals, every coach is told the report is ready, starred or not (Matt, 26 Oct 2026:
+ * "even for coaches who did not star.. they should see the report"). Ends 15 November.
+ */
+const REPORT_READY_ENDS = Date.parse("2026-11-15T23:59:59-05:00")
+export function super32ReportReadyActive(now: Date = new Date()): boolean {
+  const t = now.getTime()
+  return t > NOTICE_ENDS && t <= REPORT_READY_ENDS
+}
+
 /** "Oct 24–25", for the notices. */
 export function super32Dates(): string {
   const day = (iso: string) => Number(iso.slice(8, 10))

@@ -317,3 +317,25 @@
 body:has([data-composer]:focus) [data-assistant-launcher] {
   display: none;
 }
+
+/*
+ * iOS zooms the page into any field under 16px when it is tapped, and leaves it zoomed. The
+ * rankings year picker, the commitments search, Compare and the news sign-up were all 14px
+ * (mobile review, 30 Oct 2026). One rule for every field on a phone instead of chasing them.
+ */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /*
+   * The 9-11px labels (about 1,200 of them: kickers, chips, card captions) were read on a desktop
+   * screen. On a phone they are the smallest type on the page and the first thing a parent has to
+   * zoom for (mobile review, 30 Oct 2026). One pixel up, phones only; layouts were checked at 390px.
+   */
+  .text-\[9px\] { font-size: 10px; }
+  .text-\[10px\] { font-size: 11px; }
+  .text-\[11px\] { font-size: 12px; }
+}

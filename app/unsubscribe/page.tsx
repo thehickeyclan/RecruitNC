@@ -2,11 +2,13 @@ import type { Metadata } from "next"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { normalizeEmail, recordUnsubscribe, verifyUnsubscribeToken } from "@/lib/email-unsubscribe"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Unsubscribe | NC United Wrestling",
+  title: "Unsubscribe",
   robots: { index: false, follow: false },
 }
 
@@ -27,6 +29,9 @@ export default async function UnsubscribePage({
   searchParams: Promise<{ e?: string; t?: string }>
 }) {
   const { e = "", t = "" } = await searchParams
+  // RecruitWrestlers' own name and address on its site (Matt's NC United sweep, 27 Oct 2026).
+  const rw = stagedBrandForHost((await headers()).get("host")) === "national"
+  const support = rw ? "info@recruitwrestlers.com" : "info@ncwrestlingunited.com"
   const email = normalizeEmail(e)
   const valid = Boolean(email) && verifyUnsubscribeToken(email, t)
 
@@ -42,7 +47,7 @@ export default async function UnsubscribePage({
     <main className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
       <div className="w-full max-w-md rounded-xl border border-white/10 bg-white/[0.03] p-8 text-center">
         <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#D3B574]">
-          NC United Wrestling
+          {rw ? "RecruitWrestlers" : "NC United Wrestling"}
         </p>
 
         {done ? (
@@ -53,7 +58,7 @@ export default async function UnsubscribePage({
               You won&apos;t get any more of these.
             </p>
             <p className="mt-4 text-xs leading-relaxed text-white/45">
-              This doesn&apos;t change your account or your NC United Blue membership, and you will
+              This doesn&apos;t change your account or your {rw ? "membership" : "NC United Blue membership"}, and you will
               still get anything you specifically asked for, like an order receipt.
             </p>
           </>
@@ -62,8 +67,8 @@ export default async function UnsubscribePage({
             <h1 className="mt-3 text-2xl font-bold text-white">Something went wrong</h1>
             <p className="mt-3 text-sm leading-relaxed text-white/65">
               We could not record that just now. Email{" "}
-              <a className="text-[#D3B574] underline" href="mailto:info@ncwrestlingunited.com">
-                info@ncwrestlingunited.com
+              <a className="text-[#D3B574] underline" href={`mailto:${support}`}>
+                {support}
               </a>{" "}
               and we will take you off by hand.
             </p>
@@ -73,8 +78,8 @@ export default async function UnsubscribePage({
             <h1 className="mt-3 text-2xl font-bold text-white">This link isn&apos;t valid</h1>
             <p className="mt-3 text-sm leading-relaxed text-white/65">
               It may have been cut short by your email app. Forward the message to{" "}
-              <a className="text-[#D3B574] underline" href="mailto:info@ncwrestlingunited.com">
-                info@ncwrestlingunited.com
+              <a className="text-[#D3B574] underline" href={`mailto:${support}`}>
+                {support}
               </a>{" "}
               and we will remove you.
             </p>

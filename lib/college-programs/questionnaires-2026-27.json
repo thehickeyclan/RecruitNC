@@ -289,7 +289,7 @@
   "university-of-jamestown": [
    {
     "division": "NCAA Division II",
-    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjM0Mzk=-Ra/XfChS1Rs=&ptype=Recruit",
+    "mens": null,
     "womens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjE4MTY=-ZDga5HgPp+U=&ptype=Recruit"
    }
   ],
@@ -949,6 +949,69 @@
     "division": "NJCAA",
     "mens": null,
     "womens": "https://snowbadgers.com/sb_output.aspx?form=3"
+   }
+  ],
+  "university-of-north-carolina-at-chapel-hill-north-carolina": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/b729ce811dd1",
+    "womens": null
+   }
+  ],
+  "north-carolina-state-university-nc-state": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/4c58ca96bc42",
+    "womens": null
+   }
+  ],
+  "appalachian-state-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/36ecbfddada5",
+    "womens": null
+   }
+  ],
+  "davidson-college": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/fe116833acc5?path=wrestling",
+    "womens": null
+   }
+  ],
+  "duke-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/12974f99f3f6?path=wrestling",
+    "womens": null
+   }
+  ],
+  "belmont-abbey-college": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://app.spry.so/recruiting/belmont-abbey-college/mens-wrestling/recruit",
+    "womens": null
+   }
+  ],
+  "greensboro-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://questionnaires.armssoftware.com/93b93e60c642",
+    "womens": "https://questionnaires.armssoftware.com/1ac07f6cf6c6?path=womens_wrestling"
+   }
+  ],
+  "university-of-mount-olive": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://questionnaires.armssoftware.com/efb68f2e9a6f",
+    "womens": "https://questionnaires.armssoftware.com/b773db2ed0c3"
+   }
+  ],
+  "university-of-north-carolina-at-pembroke": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://uncpbraves.com/sb_output.aspx?form=25&path=wrestling",
+    "womens": null
    }
   ]
  }

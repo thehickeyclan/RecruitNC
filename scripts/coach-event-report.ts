@@ -17,6 +17,11 @@
  * coach (classifyViewer), never to an address that unsubscribed, and only notable losses the
  * profile would show that coach.
  *
+ * The coach portal's Reports page (app/coach-reports) reads one full report per event, built for
+ * every NC entrant and saved as data, never sent:
+ *   --all-entrants  every NC wrestler in the event's published live snapshot (boys and girls)
+ *   --json-out content/reports/<event>.json   the portal file (no recap grades or write-ups in it)
+ *
  * --no-ai leaves out the written summaries (each is checked against the report's facts).
  * Other options: --athletes-file <ids.txt> (comma or newline separated), --no-profile-check (skip the profile cross-check, faster),
  * --no-strength (skip each wrestler's Strength of Competition grade), --concurrency N.
@@ -25,6 +30,7 @@ import fs from "fs"
 import path from "path"
 import { createRequire } from "module"
 import { createClient } from "@supabase/supabase-js"
+import { nameKey, recapGradesFor } from "@/lib/news-recaps/recap"
 
 // Some lib modules import "server-only", which throws outside a React server render. Pre-seed the
 // module cache so the script runs the real code paths (as scripts/verify-toc-public-field.ts does).
@@ -76,7 +82,8 @@ async function main() {
   if (!event) throw new Error(`Unknown event. Known: ${Object.keys(report.REPORT_EVENTS).join(", ")}; or pass --event-key and --source-file`)
 
   const out = arg("out")
-  if (!out) throw new Error("--out <file.html> is required")
+  const jsonOut = arg("json-out")
+  if (!out && !jsonOut) throw new Error("--out <file.html> or --json-out <file.json> is required")
   const send = flag("send")
 
   // Who it is for.
@@ -94,6 +101,12 @@ async function main() {
   const listed = arg("athletes-file") ? fs.readFileSync(arg("athletes-file")!, "utf8") : (arg("athletes") ?? "")
   let athleteIds = [...new Set(listed.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean))]
   if (!athleteIds.length && coach) athleteIds = await load.loadStarredAthleteIds(admin, coach.userId)
+  if (!athleteIds.length && flag("all-entrants")) {
+    const { latestSnapshot } = await import("../lib/super32-live/snapshot")
+    const snap = await latestSnapshot(admin as never, event.key, true)
+    if (!snap) throw new Error(`--all-entrants: no published live snapshot for ${event.key}`)
+    athleteIds = [...new Set(snap.data.entrants.map((e) => e.athleteId).filter((id): id is string => !!id))]
+  }
   if (!athleteIds.length) throw new Error("No athletes: pass --athletes or a --coach with starred wrestlers")
 
   console.log(`Event ${event.key} (${event.sources.map((s) => `${s.eventKey}:${s.sourceFiles.join("+")}`).join(", ")})`)
@@ -116,6 +129,15 @@ async function main() {
   if (loaded.missing.length) console.warn(`No athlete row for: ${loaded.missing.join(", ")}`)
 
   const reports = report.buildEventReport({ event, athletes: loaded.athletes, field, index, lossesVisible })
+  // A wrestler graded in NC United's recap of this event gets his grade and write-up flagged.
+  const recapGrades = recapGradesFor(event.key, report.PROFILE_BASE_URL)
+  for (const r of reports) r.recap = recapGrades.get(nameKey(r.name)) ?? null
+  // Performance order from the recap's grades (never shown to the coach): A first ... honorable
+  // mention, then everyone else by place and wins.
+  const ORDER = ["A+", "A", "A-", "B+", "B", "B-", "Honorable Mention"]
+  for (const r of reports) if (r.recap) r.performanceRank = ORDER.indexOf(r.recap.grade) === -1 ? 900 : ORDER.indexOf(r.recap.grade)
+  reports.sort(report.compareReports)
+  if (recapGrades.size) console.log(`Recap grades attached: ${reports.filter((r) => r.recap).length} of ${reports.length}`)
 
   // What the profile shows beside what the brackets say.
   const byId = new Map(loaded.athletes.map((a) => [a.id, a]))
@@ -177,13 +199,27 @@ async function main() {
     console.log(`\nwritten summaries: ${summaries.size} of ${competed.length} competed`)
     for (const r of competed) console.log(`  ${r.name}: ${summaries.get(r.athleteId) ?? "(none: computed card only)"}`)
   }
+  if (jsonOut) {
+    // The portal file. A recap link is kept; its grade and write-up never leave the article.
+    const portal = {
+      event: { key: event.key, name: event.name, date: event.date },
+      generatedAt: new Date().toISOString(),
+      reports: reports.map((r) => ({ ...r, recap: r.recap ? { grade: "", text: "", url: r.recap.url } : null })),
+      summaries: Object.fromEntries(summaries),
+      photos: Object.fromEntries([...photos].filter(([id]) => reports.some((r) => r.athleteId === id))),
+    }
+    fs.mkdirSync(path.dirname(path.resolve(jsonOut)), { recursive: true })
+    fs.writeFileSync(jsonOut, JSON.stringify(portal))
+    console.log(`\nPortal report: ${path.resolve(jsonOut)} (${reports.length} wrestlers, ${summaries.size} summaries)`)
+    if (!out) return
+  }
   const renderFor = (unsubscribeUrl: string | null) =>
     renderCoachReportEmailHtml({ event: event!, coachName: coach?.name ?? null, program, programLogo, reports, photos, lossesVisible, unsubscribeUrl, summaries })
   const email = renderFor(null)
-  fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true })
-  fs.writeFileSync(out, email.html)
-  fs.writeFileSync(out.replace(/\.html?$/i, "") + ".json", JSON.stringify({ event, coach: coach?.email ?? null, reports }, null, 2))
-  console.log(`\nSubject: ${email.subject}\nPreview: ${path.resolve(out)}\nTook ${((Date.now() - started) / 1000).toFixed(1)}s`)
+  fs.mkdirSync(path.dirname(path.resolve(out!)), { recursive: true })
+  fs.writeFileSync(out!, email.html)
+  fs.writeFileSync(out!.replace(/\.html?$/i, "") + ".json", JSON.stringify({ event, coach: coach?.email ?? null, reports }, null, 2))
+  console.log(`\nSubject: ${email.subject}\nPreview: ${path.resolve(out!)}\nTook ${((Date.now() - started) / 1000).toFixed(1)}s`)
 
   if (!send) {
     console.log("Dry run: nothing sent.")

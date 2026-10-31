@@ -113,6 +113,15 @@ export const REPORT_EVENTS: Record<string, ReportEvent> = {
     ],
     profileSection: { table: "super32", year: 2025 },
   },
+  // Written by the Command Center on every publish (lib/super32-live/sync.ts).
+  "super32-2026": {
+    key: "super32-2026",
+    name: "2026 Super 32",
+    date: "2026-10-24",
+    format: "single-bracket",
+    sources: [{ eventKey: "super32-2026", sourceFiles: ["super32-2026-live.csv"], placementsCount: true }],
+    profileSection: { table: "super32", year: 2026 },
+  },
 }
 
 /* ------------------------------------------------------------------ *
@@ -212,6 +221,16 @@ export type AthleteEventReport = {
    * ..."). Competed wrestlers only; null when it could not be computed - never guessed.
    */
   strength: StrengthOfCompetitionLine | null
+  /**
+   * Set when NC United's recap of this event features him (lib/news-recaps). The coach email shows
+   * only a link to the recap, never the grade or write-up. Attached by the caller.
+   */
+  recap?: { grade: string; text: string; url: string } | null
+  /**
+   * Lower is stronger: the event's performance order when one exists (the recap's grade order for
+   * Super 32 2026). Sorts the report; never shown. Unset falls back to place, then wins.
+   */
+  performanceRank?: number
 }
 
 /* ------------------------------------------------------------------ *
@@ -547,7 +566,11 @@ export function buildAthleteEventReport(athlete: ReportAthleteInput, ctx: Report
 /** Best finish first, then the unplaced by wins, then those who did not compete; names break ties. */
 export function compareReports(a: AthleteEventReport, b: AthleteEventReport): number {
   const tier = (r: AthleteEventReport) => (!r.competed ? 2 : r.place == null ? 1 : 0)
+  // Performance order outranks placement: an A-grade blood-round loser comes before an 8th-place
+  // B. Placement then breaks ties inside a grade.
   return (
+    Number(!a.competed) - Number(!b.competed) ||
+    (a.performanceRank ?? 999) - (b.performanceRank ?? 999) ||
     tier(a) - tier(b) ||
     (a.place ?? 99) - (b.place ?? 99) ||
     b.record.wins - a.record.wins ||
@@ -645,7 +668,12 @@ ${facts ? `<p style="margin:2px 0 8px;color:#64748b;font-size:13px;">${facts}</p
   const matches = `<p style="margin:10px 0 4px;color:#64748b;font-size:12px;">${r.bouts
     .map((b) => `${esc(b.round)}${b.bracket ? ` (${esc(b.bracket)})` : ""}: ${b.outcome} ${esc(b.opponent)}${b.method || b.score ? ` ${esc([b.method, b.score].filter(Boolean).join(" "))}` : ""}`)
     .join("<br>")}</p>`
-  return `<div style="border-top:1px solid #e2e8f0;padding:16px 0;">${head}${stats}${note}${strength}${wins}${losses}${matches}
+  // Coaches see facts, not our grades: a letter grade beside "no place" reads as hype to a recruiter
+  // (Matt, 25 Oct). The recap is only pointed to.
+  const recap = r.recap
+    ? `<p style="margin:6px 0 8px;font-size:12px;"><a href="${r.recap.url}" style="color:#003366;">Featured in NC United's recap of this event →</a></p>`
+    : ""
+  return `<div style="border-top:1px solid #e2e8f0;padding:16px 0;">${head}${stats}${note}${strength}${recap}${wins}${losses}${matches}
 <p style="margin:8px 0 0;font-size:13px;"><a href="${url}" style="color:#003366;">View full profile</a></p></div>`
 }
 
@@ -655,13 +683,14 @@ export function renderCoachEventReportEmail(input: {
   coachName: string | null
   reports: readonly AthleteEventReport[]
 }): { subject: string; bodyHtml: string } {
+  const byPerformance = input.reports.some((r) => r.performanceRank != null)
   const { event, reports } = input
   const competed = reports.filter((r) => r.competed)
   const placers = competed.filter((r) => r.place != null)
   const subject = `${event.name}: your ${reports.length} starred wrestler${reports.length === 1 ? "" : "s"}`
   const greeting = input.coachName ? `Coach ${esc(input.coachName.trim().split(/\s+/).slice(-1)[0])},` : "Coach,"
   const intro = `<p style="margin:0 0 12px;">${greeting}</p>
-<p style="margin:0 0 12px;">Here is how the wrestlers you have starred did at <strong>${esc(event.name)}</strong>: ${competed.length} of ${reports.length} competed${placers.length ? `, ${placers.length} placed` : ""}. Best finishes first.</p>
+<p style="margin:0 0 12px;">Here is how the wrestlers you have starred did at <strong>${esc(event.name)}</strong>: ${competed.length} of ${reports.length} competed${placers.length ? `, ${placers.length} placed` : ""}. ${byPerformance ? "Strongest tournaments first." : "Best finishes first."}</p>
 <p style="margin:0 0 4px;color:#64748b;font-size:13px;">Records and placements are computed from the brackets. Significant wins and notable losses list only opponents with a ranking or a state or national placing on file. Notable losses are shared with college coaches only.</p>`
   return { subject, bodyHtml: intro + reports.map((r) => athleteBlock(r, event)).join("") }
 }

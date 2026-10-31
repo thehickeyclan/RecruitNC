@@ -39,7 +39,7 @@ describe("buildPurchaseReceiptEmail", () => {
 
   it("states the amount, the date and the reference, and offers the app", () => {
     const { subject, html, text } = buildPurchaseReceiptEmail(base)
-    expect(subject).toBe("Your receipt: RecruitNC Rankings subscription ($9.99)")
+    expect(subject).toBe("Your receipt: Insider subscription ($9.99)")
     for (const body of [html, text]) {
       expect(body).toContain("$9.99")
       expect(body).toContain("October 11, 2026")

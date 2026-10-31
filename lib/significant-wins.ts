@@ -1,5 +1,7 @@
 import { hasNameAlias, nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
+import { recordStrength } from "@/lib/win-strength"
 import { isNationalEvent } from "@/lib/wrestling-style"
+import { nhscaLabel, type NhscaDivision } from "@/lib/nhsca-division"
 
 /**
  * Wins worth showing on a profile: the ones over somebody the reader has heard of.
@@ -105,22 +107,8 @@ export type OpponentIndex = {
   eventPlacers?: readonly EventPlacer[]
 }
 
-export type EventPlacement = {
-  event: string
-  year: number
-  place: number
-  weight: number | null
-  /**
-   * The grade division, for an event that runs more than one.
-   *
-   * NHSCA High School Nationals is six tournaments in one building - Freshman, Sophomore, Junior
-   * and Senior brackets plus unified Girls and Middle School - so four wrestlers win each weight.
-   * Without this, a freshman title and a senior title are the same sentence on a profile, and a
-   * coach reading it cannot tell them apart. Null for an event with one bracket per weight, and
-   * for the pre-2023 NHSCA rows whose division the source cannot supply.
-   */
-  division?: string | null
-}
+/** `division`: NHSCA's grade division (lib/nhsca-division.ts), so a freshman title reads as one. */
+export type EventPlacement = { event: string; year: number; place: number; weight: number | null; division?: NhscaDivision | null }
 
 export type EventPlacer = {
   name: string
@@ -138,27 +126,6 @@ export type EventPlacer = {
  * "2025 Super 32 3rd (190)", "2026 NHSCA All-American (3rd, 138)", "2026 NHSCA Champion (138)";
  * the newest three when he has more.
  */
-/**
- * The grade division as a credential reads it: "freshman", "sophomore", "junior", "senior".
- *
- * Girls and Middle School are unified divisions at NHSCA rather than grades, so they are left out
- * of the label - a girls' All-American is already named by her own bracket, and no middle school
- * result reaches a recruiting profile at all.
- */
-const GRADE_DIVISIONS = new Set(["freshman", "sophomore", "junior", "senior"])
-const divisionWord = (division: string | null | undefined): string | null => {
-  const d = String(division ?? "").trim().toLowerCase()
-  return GRADE_DIVISIONS.has(d) ? d : null
-}
-
-/**
- * "2025 Super 32 3rd (190)", "2026 NHSCA sophomore All-American (3rd, 138)",
- * "2026 NHSCA freshman Champion (138)"; the newest three when he has more.
- *
- * Every division weighs the same here and in the star rating - a freshman national title counts
- * as a national title (Matt, 29 Oct 2026). The division is in the label because the two are not
- * the same achievement to describe, not because one is worth less to count.
- */
 export function eventPlacementLabel(finishes: readonly EventPlacement[]): string | null {
   if (!finishes.length) return null
   // The same finish can reach here twice, once from each bracket entry of one wrestler.
@@ -166,18 +133,7 @@ export function eventPlacementLabel(finishes: readonly EventPlacement[]): string
   const nhscaAA = unique.filter((f) => /nhsca/i.test(f.event))
   if (nhscaAA.length > 1) {
     const rest = unique.filter((f) => !/nhsca/i.test(f.event))
-    /*
-     * Each year carries its own division, because that is the point: Sean Perez Jr is a "3x NHSCA
-     * All-American (2024 freshman, 2025 sophomore, 2026 junior)", which says he has done it in
-     * three brackets as he moved up, and a bare list of years does not.
-     */
-    const years = [...nhscaAA]
-      .sort((a, b) => a.year - b.year)
-      .map((f) => {
-        const word = divisionWord(f.division)
-        return word ? `${f.year} ${word}` : String(f.year)
-      })
-      .join(", ")
+    const years = [...nhscaAA].sort((a, b) => a.year - b.year).map((f) => (f.division ? `${f.year} ${f.division.toLowerCase()}` : String(f.year))).join(", ")
     const head = `${nhscaAA.length}x NHSCA All-American (${years})`
     const tail = eventPlacementLabel(rest)
     return tail ? `${head} · ${tail}` : head
@@ -189,13 +145,10 @@ export function eventPlacementLabel(finishes: readonly EventPlacement[]): string
     .slice(0, 3)
     .map((f) => {
       const at = f.weight ? ` (${f.weight})` : ""
-      const nhsca = /nhsca/i.test(f.event)
-      const word = nhsca ? divisionWord(f.division) : null
-      const event = word ? `${f.event} ${word}` : f.event
-      if (f.place === 1) return `${f.year} ${event} Champion${at}`
+      if (f.place === 1) return /nhsca/i.test(f.event) ? `${nhscaLabel(f.year, f.division ?? null, "title")} Champion${at}` : `${f.year} ${f.event} Champion${at}`
       const ord = `${f.place}${ordinalSuffix(f.place)}`
-      return nhsca
-        ? `${f.year} ${event} All-American (${ord}${f.weight ? `, ${f.weight}` : ""})`
+      return /nhsca/i.test(f.event)
+        ? `${nhscaLabel(f.year, f.division ?? null, "title")} All-American (${ord}${f.weight ? `, ${f.weight}` : ""})`
         : `${f.year} ${f.event} ${ord}${at}`
     })
     .join(" · ")
@@ -395,6 +348,12 @@ export type SignificantWin = {
    * comparing two résumés needs to know whether a win came against #2 or #38.
    */
   opponentRanking: number | null
+  /**
+   * How strong the win is, from the opponent's whole record - every state finish with its
+   * division, every national placing, a national rank (lib/win-strength.ts). The profile's Top 5
+   * sorts on it; the printed credential names only part of that record.
+   */
+  strength?: number
 }
 
 function opponentName(bout: Bout): string {
@@ -804,6 +763,25 @@ function findSignificantBouts(
       eventPlacers.flatMap((p) => p.finishes).filter((f) => season == null || Math.abs(f.year - season) <= 3),
     )
     const eventState = eventLabel ? eventPlacers.find((p) => p.state && p.state !== "NC")?.state ?? null : null
+    const fargoFinishes = (index.fargoAllAmericans ?? [])
+      .filter((f) => namesLikelySamePerson(f.name, name))
+      .filter((f) => schoolConsistent(bout.opponent_school, f.schools, index.stateSchools))
+      .flatMap((f) => f.finishes)
+      .filter((f) => season == null || Math.abs(f.year - season) <= 3)
+    const eventFinishes = [
+      ...new Map(
+        eventPlacers
+          .flatMap((p) => p.finishes)
+          .filter((f) => season == null || Math.abs(f.year - season) <= 3)
+          .map((f) => [`${f.event}|${f.year}|${f.place}|${f.weight}`, f]),
+      ).values(),
+    ]
+    const strength = recordStrength({
+      nationalRank: national?.rank ?? null,
+      stateFinishes: [...new Map(finishes.map((f) => [`${f.state ?? "NC"}|${f.year}|${f.place}|${f.classification}`, f])).values()],
+      eventFinishes,
+      fargoFinishes,
+    })
     if (!national && !inField && !ranked && !placer && !eventLabel) continue
 
     // One entry per opponent per day: the same bout is sometimes stored twice.
@@ -834,6 +812,7 @@ function findSignificantBouts(
       ...(fargo ? { fargoLabel: fargo } : {}),
       opponentGraduationYear: ranked?.graduationYear ?? null,
       opponentRanking: ranked?.ranking ?? null,
+      ...(strength > 0 ? { strength } : {}),
       ...(national
         ? { nationalRankLabel: `#${national.rank} ${national.source}`, opponentState: national.state }
         : placer && finishes.some((f) => f.state && f.state !== "NC")
@@ -859,8 +838,16 @@ function findSignificantBouts(
       eventLabel: seenLabels.eventLabel ?? w.eventLabel,
     })
   }
+  // The record behind the labels goes with them: his strongest reading at any meeting.
+  const strengthByName = new Map<string, number>()
+  for (const w of wins) {
+    const key = w.opponent.toLowerCase()
+    if ((w.strength ?? 0) > (strengthByName.get(key) ?? 0)) strengthByName.set(key, w.strength!)
+  }
   for (const w of wins) {
     const labels = labelsByName.get(w.opponent.toLowerCase())
+    const strongest = strengthByName.get(w.opponent.toLowerCase())
+    if (strongest && strongest > (w.strength ?? 0)) w.strength = strongest
     if (!w.stateLabel && labels?.stateLabel) w.stateLabel = labels.stateLabel
     if (!w.fargoLabel && labels?.fargoLabel) w.fargoLabel = labels.fargoLabel
     if (!w.eventLabel && labels?.eventLabel) w.eventLabel = labels.eventLabel

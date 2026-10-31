@@ -71,12 +71,28 @@
       "schedule": "0 13 * * 1"
     },
     {
+      "path": "/api/cron/questionnaire-reminders",
+      "schedule": "0 23 * * 0"
+    },
+    {
       "path": "/api/cron/competing-next",
       "schedule": "0 12 * * *"
     },
     {
       "path": "/api/cron/signup-health",
       "schedule": "10 * * * *"
+    },
+    {
+      "path": "/api/cron/bout-link-guard",
+      "schedule": "40 7 * * *"
+    },
+    {
+      "path": "/api/cron/super32-flo",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/family-reminders",
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/flo-commitments",

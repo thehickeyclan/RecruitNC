@@ -13,6 +13,7 @@ import { displayName, placementLabel, type OtherTournamentProfileBlock } from "@
 import { parseFargoDivisionString } from "@/lib/fargo-division"
 import { HOME_STATE, invitationalName, stateChampionshipName } from "@/lib/athlete-state"
 import type { NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
+import { cleanClassification } from "@/lib/profile/state-hs-group"
 import {
   fargoEventKey,
   NC_UNITED_AAU_DUALS_EVENT_KEY,
@@ -157,7 +158,8 @@ export function buildNchsaaStateRows(
   const boutEventNameFor = (row: NchsaaSummaryResult) =>
     unsanctionedName(row) ?? `${body(row.classification)} State Championships`
   return results
-    .map((result, index) => {
+    .map((raw, index) => {
+      const result = { ...raw, classification: cleanClassification(raw.classification) }
       const bouts = stateBouts.filter((bout) => bout.year === result.year)
       const rounds = inferNchsaaStateRounds(result.place, bouts)
       const wins = bouts.filter((bout) => bout.outcome === "W").length
@@ -289,17 +291,19 @@ function attachEventBouts(
 function rowsFromSummaries(
   event: string,
   results: AccordionSummaryResult[],
-  options: { team?: string; isDuals?: boolean } = {},
+  options: { team?: string; isDuals?: boolean; monthDay?: string; divisionInEvent?: boolean } = {},
 ): TournamentRow[] {
   return results
     .filter((r) => !!r.year)
     .map((r, i) => ({
       id: `${event}-${r.year}-${i}`,
-      event,
+      event: options.divisionInEvent && r.division ? `${event} - ${r.division}` : event,
       team: options.team ?? null,
       isDuals: options.isDuals ?? looksLikeDuals(event),
       year: r.year,
-      sortKey: `${r.year}-06-01`,
+      // When in the year the event is held, so By date puts it in its place: Super 32 is late
+      // October, not June (it was sorting behind every fall event, 25 Oct 2026).
+      sortKey: `${r.year}-${options.monthDay ?? "06-01"}`,
       weight: r.weight ?? null,
       placement: r.placement || null,
       record: r.record ?? null,
@@ -464,13 +468,15 @@ export function buildTournamentRows(input: {
      * naming anybody beaten is the one thing a college coach cannot use, and states has shown
      * every bout since its own import.
      */
-    ...attachEventBouts(rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? []), input.nhscaBouts ?? [], {
+    // A row with its grade division reads "NHSCA Nationals - Freshman" (lib/nhsca-division.ts);
+    // the profile groups it under NHSCA Nationals and shows the division beside it.
+    ...attachEventBouts(rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? [], { divisionInEvent: true }), input.nhscaBouts ?? [], {
       keyPrefix: "nhsca-nationals-",
       eventName: "NHSCA High School Nationals",
       roundFallback: "NHSCA Nationals",
     }),
     // Super 32 on the same terms, from the 2025 import on. Earlier years are a record only.
-    ...attachEventBouts(rowsFromSummaries("Super 32", input.super32Results ?? []), input.super32Bouts ?? [], {
+    ...attachEventBouts(rowsFromSummaries("Super 32", input.super32Results ?? [], { monthDay: "10-25" }), input.super32Bouts ?? [], {
       keyPrefix: "super32-",
       eventName: "Super 32",
       roundFallback: "Super 32",

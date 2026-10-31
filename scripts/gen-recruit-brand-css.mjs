@@ -22,6 +22,13 @@ import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..")
+// NC United's community admin tools (lib/recruiting/admin-scope.ts), read as text: this script runs on plain Node.
+const COMMUNITY_ADMIN_PREFIXES = [
+  ...readFileSync(join(ROOT, "lib/recruiting/admin-scope.ts"), "utf8")
+    .split("COMMUNITY_ADMIN_PREFIXES = [")[1]
+    .split("]")[0]
+    .matchAll(/"(\/admin\/[^"]+)"/g),
+].map((m) => m[1])
 export const OUT = join(ROOT, "app", "recruit-brand.css")
 
 /**
@@ -270,7 +277,7 @@ export function buildCss() {
    * and the green "good" marks are data, not brand, and are left alone.
    */
   const national = THEMES.find((t) => t.scope.includes('"national"'))
-  const EXTRA_ACCENTS = ["d7b95a", "d6b75d", "c5a84d", "cbaf5d", "d3b573", "c4a665", "c8a94a", "9c7a2e", "cc0000", "bc0b03", "b31b1b", "38bdf8", "7dd3fc", "bae6fd", "1f5fbf"]
+  const EXTRA_ACCENTS = ["d7b95a", "d6b75d", "c5a84d", "cbaf5d", "d3b573", "c4a665", "c8a94a", "9c7a2e", "cc0000", "bc0b03", "b31b1b", "38bdf8", "7dd3fc", "bae6fd", "1f5fbf", "c8102e", "a00d25", "d4af55"]
   const EXTRA_NAVIES = { "003366": "#15243B", "03154c": "#0B1426", "1e3a5f": "#22324D", "031a3f": "#0B1426", "0d1a4d": "#15243B", "0b1a33": "#15243B", "002147": "#0B1426" }
   const EXTRA_TOKEN = new RegExp(`(?<![\\w-])((?:[a-z-]+:)*)([a-z-]+)-\\[#(${EXTRA_ACCENTS.join("|")})\\](?:\\/(\\d+))?`, "gi")
   const SKY_TOKEN = /(?<![\w-])((?:[a-z-]+:)*)(text|bg|border|from|to|via|ring|fill|stroke)-sky-(\d{2,3})(?:\/(\d+))?/gi
@@ -290,8 +297,9 @@ export function buildCss() {
     NAVY_TOKEN.lastIndex = 0
     const m = NAVY_TOKEN.exec(cls)
     const parts = variantParts((m[1] ?? "").split(":").filter(Boolean))
-    if (!parts || m[2].toLowerCase() === "text") continue
-    const color = hex3(EXTRA_NAVIES[m[3].toLowerCase()])
+    if (!parts) continue
+    // Navy text sits on white (forms, the printed report): it takes Midnight Navy, never a surface shade.
+    const color = hex3(m[2].toLowerCase() === "text" ? "#0B1426" : EXTRA_NAVIES[m[3].toLowerCase()])
     const alpha = m[4] != null ? Number(m[4]) : null
     const body = declarations(m[2].toLowerCase(), color, color, alpha, null)
     if (body) rules.push(`${targetsFor(cls, m[2].toLowerCase(), parts).map((x) => `${national.scope} ${x}`).join(",\n")} {\n  ${body}\n}`)
@@ -327,6 +335,24 @@ export function buildCss() {
     `html[data-host="guild"] body,\nhtml[data-host="guild"] .auth-surface {\n  background: #0A0A0B !important;\n}`,
     // RecruitWrestlers: Midnight Navy page, Muted Gray for secondary text (Matt's palette, 20 Oct 2026).
     `html[data-host="national"] body,\nhtml[data-host="national"] .auth-surface {\n  background: #0B1426 !important;\n}`,
+    // Sign-in has no NC United promo column here, so its one card sits in the middle.
+    `html[data-host="national"] .auth-columns {\n  grid-template-columns: minmax(0, 28rem) !important;\n  justify-content: center;\n}`,
+    // Token-themed dark surfaces (profiles, sign-in) take lime for their primary here, never gold.
+    `html[data-host="national"] .profile-surface {\n  --primary: 82 77% 55%;\n  --primary-foreground: 222 55% 10%;\n  --ring: 82 77% 55%;\n}`,
+    // RecruitWrestlers admin (Matt, 22 Oct 2026: one admin on recruitwrestlers.com, lime). Work
+    // areas stay light for tables and forms; NC United's rainbow of gradient tiles and its blue hero
+    // become Secondary Navy with lime icons. Light gradients (from-white cards) are untouched.
+    // NC United's community admin tools are not part of the RecruitWrestlers admin (lib/recruiting/admin-scope.ts):
+    // their dashboard tiles and links are hidden there, and middleware forwards their addresses.
+    `html[data-host="national"] .admin-layout :is(${COMMUNITY_ADMIN_PREFIXES.flatMap((p) => [`a[href="${p}"]`, `a[href^="${p}/"]`, `a[href^="${p}?"]`]).join(", ")}) {\n  display: none !important;\n}`,
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]) {\n  background-image: none !important;\n  background-color: #15243B !important;\n  color: #FFFFFF !important;\n  border: 1px solid #22324D !important;\n}`,
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]):hover {\n  background-color: #22324D !important;\n  border-color: #A3E635 !important;\n}`,
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]) svg {\n  color: #A3E635 !important;\n}`,
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"] .text-blue-200 {\n  color: #A8B3C5 !important;\n}`,
+    // NC United's red as an admin accent on a light work area: Midnight Navy, since lime text on
+    // white cannot be read. Its pale card gradients (from-white to-red-50) become plain white.
+    `html[data-host="national"] .admin-layout :is(.text-\\[\\#C8102E\\], .text-\\[\\#c8102e\\]) {\n  color: #0B1426 !important;\n}`,
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"][class*="from-white"] {\n  background-image: none !important;\n  background-color: #FFFFFF !important;\n}`,
     `html[data-host="national"] .text-white\\/50,\nhtml[data-host="national"] .text-white\\/55,\nhtml[data-host="national"] .text-white\\/60,\nhtml[data-host="national"] .text-white\\/65,\nhtml[data-host="national"] .text-white\\/70 {\n  color: #A8B3C5 !important;\n}`,
   ].join("\n\n")
   // For colours written as inline styles: var(--recruit-accent) is gold on NC United, the brand accent on a brand address.

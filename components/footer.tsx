@@ -1,3 +1,4 @@
+import { PoweredByRw } from "@/components/recruiting/powered-by-rw"
 import Image from "next/image"
 import { HardLink } from "@/components/hard-link"
 import { StoreButton } from "@/components/store-button"
@@ -30,7 +31,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-[#D3B574] uppercase tracking-wider">Quick Links</h3>
             <ul className="mt-4 space-y-3">
               <li>
-                <a href="/athletes" className="text-sm text-gray-300 hover:text-white transition-colors">
+                <a href="/college-commitments" className="text-sm text-gray-300 hover:text-white transition-colors">
                   Commitments
                 </a>
               </li>
@@ -133,7 +134,13 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-8 pt-6 border-t border-[#1e3a5f]">
           <p className="text-center text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} NC United Wrestling. All rights reserved.
+            &copy; {new Date().getFullYear()} NC United. All rights reserved.
+          </p>
+          <p className="mt-2 text-center text-xs text-gray-500">
+            <a href="/privacy" className="hover:text-white">Privacy</a> · <a href="/terms" className="hover:text-white">Terms</a>
+          </p>
+          <p className="mt-3 text-center">
+            <PoweredByRw />
           </p>
         </div>
       </div>

@@ -481,10 +481,10 @@ describe("NHSCA labels name the division", () => {
   const f = (over: Partial<EventPlacement> = {}): EventPlacement => ({ event: "NHSCA", year: 2026, place: 1, weight: 138, ...over })
 
   it("says which bracket a title was won in", () => {
-    /* Four wrestlers win each NHSCA weight — one per grade division. */
-    expect(eventPlacementLabel([f({ division: "Freshman" })])).toBe("2026 NHSCA freshman Champion (138)")
-    expect(eventPlacementLabel([f({ division: "Senior" })])).toBe("2026 NHSCA senior Champion (138)")
-    expect(eventPlacementLabel([f({ place: 3, division: "Sophomore" })])).toBe("2026 NHSCA sophomore All-American (3rd, 138)")
+    /* Four wrestlers win each NHSCA weight — one per grade division, named as the tournament does. */
+    expect(eventPlacementLabel([f({ division: "Freshman" })])).toBe("2026 NHSCA Freshman Champion (138)")
+    expect(eventPlacementLabel([f({ division: "Senior" })])).toBe("2026 NHSCA Senior Champion (138)")
+    expect(eventPlacementLabel([f({ place: 3, division: "Sophomore" })])).toBe("2026 NHSCA Sophomore All-American (3rd, 138)")
   })
 
   it("carries the division per year across a multi-year All-American", () => {
@@ -500,11 +500,20 @@ describe("NHSCA labels name the division", () => {
     expect(label).toBe("3x NHSCA All-American (2024 freshman, 2025 sophomore, 2026 junior)")
   })
 
-  it("leaves the label bare where the division is unknown or not a grade", () => {
-    /* Pre-2023 rows have no division in the source, and Girls / Middle School are not grades. */
+  it("leaves the label bare only where the source has no division", () => {
+    /* Pre-2023 rows have no division in the source at all. */
     expect(eventPlacementLabel([f({ year: 2022, division: null })])).toBe("2022 NHSCA Champion (138)")
-    expect(eventPlacementLabel([f({ division: "Girls" })])).toBe("2026 NHSCA Champion (138)")
-    expect(eventPlacementLabel([f({ division: "Middle School" })])).toBe("2026 NHSCA Champion (138)")
+  })
+
+  it("names the unified brackets too, because they are brackets a title was won in", () => {
+    /*
+     * Girls and Middle School are not grades, and an earlier pass left them out of the label for
+     * that reason. They are still the bracket the title was won in, and naming it is what the
+     * division is for: "2026 NHSCA Girls Champion" tells a coach which field she won, where a
+     * bare "2026 NHSCA Champion" invites him to read it as the open senior title.
+     */
+    expect(eventPlacementLabel([f({ division: "Girls" })])).toBe("2026 NHSCA Girls Champion (138)")
+    expect(eventPlacementLabel([f({ division: "Middle School" })])).toBe("2026 NHSCA Middle School Champion (138)")
   })
 
   it("does not touch an event that runs one bracket per weight", () => {

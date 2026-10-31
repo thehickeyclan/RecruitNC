@@ -24,10 +24,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
 }
 
-export default async function WomensClassRankingPage({ params }: Params) {
+export default async function WomensClassRankingPage({ params, searchParams }: Params & { searchParams: Promise<{ state?: string }> }) {
   const { year: raw } = await params
   const year = Number(raw)
   if (!/^\d{4}$/.test(raw) || !isRankedClassYear(year, "Female")) notFound()
   await redirectIfSignedOut(`/public-rankings/women/${year}`)
-  return <ClassRankingPage year={year} gender="Female" />
+  return <ClassRankingPage year={year} gender="Female" state={(await searchParams).state} />
 }

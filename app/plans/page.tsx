@@ -3,16 +3,17 @@ import type { Metadata } from "next"
 import { RankingsSalesClient } from "../rankings/(index)/rankings-sales-client"
 import { loadSalesData } from "@/lib/recruiting/sales-data"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
-  title: "Plans | RecruitNC",
-  description: "Free, Rankings, Command Center and NC United Blue: what each plan includes and what it costs.",
+  title: `Plans | ${productName()}`,
+  description: "Free, Insider, Command Center and NC United Blue: what each plan includes and what it costs.",
 }
 
 /**
  * Every plan, for everyone (15 Oct 2026). /rankings sends anyone who already has the rankings on
- * to the boards; this page does not, so a Rankings subscriber can upgrade to the Command Center and
+ * to the boards; this page does not, so an Insider subscriber can upgrade to the Command Center and
  * the portal's own locks have somewhere to point.
  */
 export default async function PlansPage() {

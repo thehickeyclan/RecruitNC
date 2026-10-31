@@ -10,21 +10,27 @@
  *
  * A bout is claimed only when all of these hold — a name alone is never enough
  * ([[check-weight-before-claiming-nc-kid]], [[club-state-is-not-wrestler-state]]):
- *   1. the bout's wrestler name is the profile's name (or its wrestling name), exactly;
- *   2. no other profile anywhere carries that name — two of a name go to review;
+ *   1. the bout's wrestler name is the profile's name (or its wrestling name): exactly, or as the
+ *      same name without a suffix, middle name or initial, or with a nickname (lib/name-variants.ts:
+ *      "Maximiliano Johnson" is Max Johnson, "Tyrone Norris III" is Tyrone Norris; 29 Oct 2026);
+ *   2. no other profile anywhere answers to that name, in any of those forms — two go to review;
  *   3. the bout's team is the state's code, or names his school or club;
  *   4. its weight is within CLOSE_LB of a weight he is known to have made (state placement,
  *      high-school season, or an already-linked bout) within CLOSE_SEASONS seasons;
  *   5. it is a high-school event for his class (lib/high-school-window.ts).
- * Everything else is printed as held back, with the reason.
+ * Everything else is printed as held back, with the reason, and the run ends with every wrestler on
+ * the state's team still unlinked, with any profile of the same surname - the list to review before
+ * an event is called done ([[nicknames-before-no-profile]]).
  *
  *   npx tsx scripts/link-state-profile-bouts.ts --state SC            # dry run
  *   npx tsx scripts/link-state-profile-bouts.ts --state SC --write
+ *   npx tsx scripts/link-state-profile-bouts.ts --state GA --event-key super32-2026   # one event
  */
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { isHighSchoolEvent } from "../lib/high-school-window"
+import { nameKeys, normalizeName } from "@/lib/name-variants"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -44,6 +50,8 @@ const arg = (name: string) => {
 }
 const STATE = String(arg("--state") ?? "").toUpperCase()
 const WRITE = process.argv.includes("--write")
+/** --event-key super32-2026 limits the run to one event's bouts. */
+const EVENT_KEY = arg("--event-key")
 const CLOSE_LB = 30
 const CLOSE_SEASONS = 2
 const STATE_NAMES: Record<string, string> = { SC: "south carolina", NC: "north carolina", GA: "georgia", VA: "virginia" }
@@ -109,12 +117,28 @@ async function main() {
   const holders = new Map<string, Set<string>>()
   for (const a of allNames) {
     for (const n of [a.name, a.wrestling_name]) {
-      const k = norm(n)
-      if (!k) continue
-      if (!holders.has(k)) holders.set(k, new Set())
-      holders.get(k)!.add(a.id)
+      for (const k of nameKeys(n)) {
+        if (!holders.has(k)) holders.set(k, new Set())
+        holders.get(k)!.add(a.id)
+      }
     }
   }
+  /** Every profile, anywhere, that a bout's name could be: by every form of the name. */
+  const answering = (name: unknown) => new Set(nameKeys(name).flatMap((k) => [...(holders.get(k) ?? [])]))
+
+  // The state's own team's unlinked bouts, by every form of the wrestler's name: what a bracket's
+  // legal name ("Tyrone Norris III") reaches a profile ("Tyrone Norris") through.
+  const stateTeam = await page<Bout & { id: string }>(
+    "other_tournament_bouts",
+    "id, event_key, event_name, event_date, year, weight_class, athlete_name, athlete_club",
+    (q) => {
+      let x = q.is("athlete_id", null).in("athlete_club", [STATE, STATE.toLowerCase(), STATE_NAMES[STATE] ?? STATE])
+      if (EVENT_KEY) x = x.eq("event_key", EVENT_KEY)
+      return x
+    },
+  )
+  const teamByKey = new Map<string, Bout[]>()
+  for (const b of stateTeam) for (const k of nameKeys(b.athlete_name)) teamByKey.set(k, [...(teamByKey.get(k) ?? []), b])
 
   // Weights each profile is known to have made, by season.
   const known = new Map<string, Array<{ weight: number; year: number }>>()
@@ -150,21 +174,29 @@ async function main() {
   for (const p of profiles) {
     const names = [...new Set([p.name, p.wrestling_name].map((n) => String(n ?? "").trim()).filter(Boolean))]
     const bouts: Bout[] = []
+    // His state's team's bouts under any form of his name.
+    for (const k of new Set(names.flatMap((n) => nameKeys(n)))) bouts.push(...(teamByKey.get(k) ?? []))
     for (const n of names) {
       const { data } = await sb
         .from("other_tournament_bouts")
         .select("id, event_key, event_name, event_date, year, weight_class, athlete_name, athlete_club")
         .ilike("athlete_name", n)
         .is("athlete_id", null)
+        .match(EVENT_KEY ? { event_key: EVENT_KEY } : {})
         .limit(1000)
       bouts.push(...((data ?? []) as Bout[]))
     }
+    const seenBout = new Set<string>()
+    const unique = bouts.filter((b) => (seenBout.has(b.id) ? false : (seenBout.add(b.id), true)))
+    bouts.length = 0
+    bouts.push(...unique)
     if (!bouts.length) continue
     const label = `${p.name} (${p.highschool ?? "?"}, ${p.graduationyear ?? "?"})`
 
-    const shared = names.some((n) => [...(holders.get(norm(n)) ?? [])].some((id) => id !== p.id))
+    // Any other profile that any of these bouts' names could also be sends them to review.
+    const shared = bouts.some((b) => [...answering(b.athlete_name)].some((id) => id !== p.id))
     if (shared) {
-      held.push({ who: label, why: "another profile has the same name", n: bouts.length })
+      held.push({ who: label, why: `another profile answers to "${bouts.find((b) => [...answering(b.athlete_name)].some((id) => id !== p.id))?.athlete_name}"`, n: bouts.length })
       continue
     }
 
@@ -201,7 +233,8 @@ async function main() {
         continue
       }
       claims.push({ boutId: b.id, athleteId: p.id })
-      const c = claimedBy.get(p.id) ?? { name: label, n: 0, events: new Set<string>() }
+      const variant = !names.some((n) => norm(n) === norm(b.athlete_name))
+      const c = claimedBy.get(p.id) ?? { name: variant ? `${label} as "${b.athlete_name}"` : label, n: 0, events: new Set<string>() }
       c.n += 1
       c.events.add(b.event_key)
       claimedBy.set(p.id, c)
@@ -215,6 +248,25 @@ async function main() {
   }
   console.log(`\nheld back:`)
   for (const h of held.sort((a, b) => a.who.localeCompare(b.who))) console.log(`   ${String(h.n).padStart(3)}  ${h.who} — ${h.why}`)
+
+  // Still unlinked from the state's team, after this run: each name, its bouts, and any profile of
+  // the same surname in the state, so nobody calls an event done with a Max Johnson left off.
+  const claimed = new Set(claims.map((c) => c.boutId))
+  const left = new Map<string, { n: number; weights: Set<string>; events: Set<string> }>()
+  for (const b of stateTeam) {
+    if (claimed.has(b.id) || !b.athlete_name) continue
+    const e = left.get(b.athlete_name) ?? { n: 0, weights: new Set<string>(), events: new Set<string>() }
+    e.n += 1
+    e.weights.add(String(b.weight_class ?? "?"))
+    e.events.add(b.event_key)
+    left.set(b.athlete_name, e)
+  }
+  console.log(`\nstill unlinked on the ${STATE} team${EVENT_KEY ? ` at ${EVENT_KEY}` : ""}: ${left.size} wrestlers`)
+  for (const [name, e] of [...left].sort((a, b) => b[1].n - a[1].n)) {
+    const surname = normalizeName(name).split(" ").filter((w) => !/^(jr|sr|ii|iii|iv|v)$/.test(w)).pop() ?? ""
+    const same = profiles.filter((p) => normalizeName(p.name).split(" ").pop() === surname).map((p) => `${p.name} (${p.highschool ?? "?"}, ${p.graduationyear ?? "?"})`)
+    console.log(`   ${String(e.n).padStart(3)}  ${name} · ${[...e.weights].join("/")} · ${[...e.events].join(", ")}${same.length ? ` · same surname: ${same.join("; ")}` : " · no profile of that surname"}`)
+  }
 
   if (!WRITE) {
     console.log("\nRe-run with --write.")

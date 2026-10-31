@@ -167,7 +167,8 @@ function signOff(facts: OutreachFacts, seed: string): string {
 }
 
 const PROFILE_LINE = (facts: OutreachFacts) =>
-  `My verified results and full record are on my RecruitNC profile: ${facts.profileUrl}`
+  // The profile's own site names it: a recruitwrestlers.com link is a RecruitWrestlers profile.
+  `My verified results and full record are on my ${/recruitwrestlers\.com/.test(facts.profileUrl) ? "RecruitWrestlers" : "RecruitNC"} profile: ${facts.profileUrl}`
 
 /**
  * Why a draft cannot be written yet, as something the wrestler can act on - or null when it can.
@@ -199,11 +200,9 @@ export function renderOutreachEmail(facts: OutreachFacts, input: OutreachInput):
       )
     }
     paragraphs.push(PROFILE_LINE(facts))
-    paragraphs.push(
-      input.questionnaireDone
-        ? "I've filled out your recruiting questionnaire. What would you like to see from me this season?"
-        : "What would you like to see from me this season?",
-    )
+    // Never ask the coach what he wants to see this season (Matt, 23 Oct 2026). Matt's own
+    // example structure for these emails is coming; until then the close is a plain fact.
+    if (input.questionnaireDone) paragraphs.push("I've filled out your recruiting questionnaire.")
   } else if (input.kind === "competing") {
     paragraphs.push(
       `${facts.firstName} ${facts.lastName}${facts.graduationYear ? ` (Class of ${facts.graduationYear}${facts.weight ? `, ${facts.weight}` : ""})` : ""} here. I wanted you to know where I'm wrestling next, in case you or your staff will be there:`,

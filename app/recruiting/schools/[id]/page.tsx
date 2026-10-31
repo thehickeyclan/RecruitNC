@@ -12,6 +12,8 @@
  * verified coaches see the read-only parts too). A college coach never gets the family's shell.
  */
 import type { Metadata } from "next"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { shareMetadata } from "@/lib/share-metadata"
 import { notFound } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
@@ -43,6 +45,8 @@ import { SchoolActions } from "@/components/colleges/school-actions"
 import { StaffList } from "@/components/colleges/staff-list"
 import { WentHereSection } from "@/components/colleges/went-here-section"
 import { RoomByWeight } from "@/components/colleges/room-by-weight"
+import { AdmissionsCard } from "@/components/colleges/admissions-card"
+import { collegeAdmissions } from "@/lib/college-programs/admissions"
 import { InterestButton } from "@/components/colleges/interest-button"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { INCOME_BRACKETS, fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
@@ -66,11 +70,13 @@ import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { MAJOR_FAMILIES, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { familyFocus } from "@/lib/recruiting/family-focus"
+import { isDemoFamily } from "@/lib/recruiting/demo-family"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
@@ -96,7 +102,7 @@ type Params = { params: Promise<{ id: string }>; searchParams?: Promise<{ fall?:
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const school = SCHOOLS.get((await params).id)
-  if (!school) return { title: "College wrestling program | RecruitNC" }
+  if (!school) return { title: `College wrestling program | ${productName()}` }
   const name = spoken(school.name)
   const levels = school.programs.map((p) => DIVISION_SHORT[p.division]).join(" / ")
   return {
@@ -154,6 +160,7 @@ function Stat({ value, label, sub }: { value: string; label: string; sub?: strin
 
 export default async function SchoolPage({ params, searchParams }: Params) {
   const { id } = await params
+  const onRwHost = stagedBrandForHost((await headers()).get("host")) === "national"
   const fallParam = Number((await searchParams)?.fall) || null
   const school = SCHOOLS.get(id)
   const niche = school ? nicheFor(school.id) : null
@@ -194,8 +201,9 @@ export default async function SchoolPage({ params, searchParams }: Params) {
   const rankings = rankingsAll.sort((a, b) => Number(b.gender === team) - Number(a.gender === team))
   const ranking = rankings[0] ?? null
 
-  const cost = costLines(school.id, school.state)
-  const tuition = cost ? null : tuitionFacts(school.id, school.state)
+  const cost = costLines(school.id, school.state, homeState)
+  const tuition = cost ? null : tuitionFacts(school.id, school.state, homeState)
+  const admissions = collegeAdmissions(school.id)
   const fit = fitForSchool(school.id)
   const depth = depthFor(school.id, team)
   const roster = rosterForSchool(school.id)
@@ -214,7 +222,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
   const fitResult = ctx && ctx.first ? collegeFitFor(ctx, school, null) : null
   // This college's coaches looking at the family's wrestler: the reason RecruitNC exists.
   const viewed =
-    familySide && userId
+    familySide && userId && !(await isDemoFamily())
       ? ((await collegeViewsFor(admin, await familyAthleteIds(admin, userId).catch(() => [])).catch(() => new Map())).get(school.id) ?? null)
       : null
   const viewedDate = viewed ? new Date(viewed.lastViewedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : null
@@ -428,6 +436,8 @@ export default async function SchoolPage({ params, searchParams }: Params) {
             )}
           </section>
 
+          {admissions ? <AdmissionsCard a={admissions} card={card} cardTitle={cardTitle} /> : null}
+
           {fitResult && ctx ? (
             <section className={card}>
               <div className="flex items-baseline justify-between">
@@ -451,7 +461,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               <p className="mt-1 text-xs leading-5 text-white/55">
                 The average a year after the grants and scholarships the college gave, before loans. It is every aided student, not your wrestler: any athletic scholarship offered would lower it.
               </p>
-              {fit.netPriceInStateOnly && school.state !== "NC" ? (
+              {fit.netPriceInStateOnly && school.state !== homeState ? (
                 <p className="mt-2 text-sm text-white/65">
                   Published for in-state families only.{" "}
                   {fit.netPriceCalculatorUrl ? (
@@ -500,11 +510,11 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               </p>
               <ul className="mt-3 space-y-1.5 text-sm text-white/75">
                 <li>Coaching staff and emails</li>
-                <li>NC wrestlers on the roster</li>
+                <li>Wrestlers from your state on the roster</li>
                 <li>Fit for your wrestler</li>
                 <li>Save, track and email the coach</li>
               </ul>
-              <a href="/plans" className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
+              <a href={onRwHost ? "/command-center" : "/plans"} className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
                 See plans
               </a>
             </section>

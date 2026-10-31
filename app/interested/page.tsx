@@ -6,9 +6,10 @@ import { resolveFitViewer } from "@/lib/program-fit-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import InterestedClient from "./interested-client"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Interested in your program | RecruitNC" }
+export const metadata = { title: `Interested in your program | ${productName()}` }
 
 /**
  * Every wrestler whose family told this program they are interested (Matt, 21 Oct 2026: "should

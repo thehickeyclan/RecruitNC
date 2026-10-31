@@ -45,7 +45,7 @@ export function ClassOf2025CollegeCommitsContent() {
           RecruitNC preserves each athlete&apos;s high school profile, achievements and match history as a permanent record of the journey that brought this class to the college level.
         </p>
         <p>
-          <Link href="/athletes" className="font-bold text-[#13294B] underline decoration-[#D3B574] decoration-2 underline-offset-4">
+          <Link href="/college-commitments" className="font-bold text-[#13294B] underline decoration-[#D3B574] decoration-2 underline-offset-4">
             Explore North Carolina athlete profiles and college commitments
           </Link>
         </p>

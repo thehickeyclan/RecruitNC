@@ -4,6 +4,7 @@ import { approvedCoachBoards } from "@/lib/college-programs/competing-alerts"
 import { easternToday, easternWeekday, groupRecruitsByEvent, isOnBetween, weekendBody, weekendEnd } from "@/lib/college-programs/competing-next"
 import { sendToTokens } from "@/lib/push-send"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -28,6 +29,7 @@ function authorizeCron(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const admin = createAdminClient()
   const today = easternToday()

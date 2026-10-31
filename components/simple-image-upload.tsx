@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { useToast } from "@/components/ui/use-toast"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle, AlertCircle, Loader2, Upload } from "lucide-react"
+import { isHeic, preparePhoto } from "@/lib/images/prepare-photo"
 
 interface SimpleImageUploadProps {
   onUploadComplete: (url: string) => void
@@ -39,7 +40,7 @@ export default function SimpleImageUpload({
     if (!selectedFile) return
 
     // Validate file
-    if (!selectedFile.type.startsWith("image/")) {
+    if (!selectedFile.type.startsWith("image/") && !isHeic(selectedFile)) {
       setError("Please select an image file")
       return
     }
@@ -76,7 +77,7 @@ export default function SimpleImageUpload({
     try {
       // Create form data for upload
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append("file", await preparePhoto(file))
 
       // Add additional metadata if provided
       if (athleteId) formData.append("entityId", athleteId)

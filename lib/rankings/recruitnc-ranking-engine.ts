@@ -156,6 +156,9 @@ export type RankingBoardAthlete = {
   nhsca_by_year: string[]
   super32_by_year: string[]
   fargo_by_year: string[]
+  /** Journeymen Fall Classic, the same way (Matt, 29 Oct 2026: it was missing from the board). Display only. */
+  journeymen_record?: string | null
+  journeymen_by_year?: string[]
   /**
    * Computed here rather than by a second endpoint. The board already holds the bundle and the
    * season's bouts, and rating separately meant a second full pass over the class — ninety-two
@@ -168,6 +171,9 @@ export type RankingBoardAthlete = {
   missed_windows: Array<{ label: string; entrants: number; classSize: number; penalty: number }>
   /** Wins over wrestlers who are ranked, nationally ranked, or in the TOC field. */
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  /** The top five over nationally ranked opponents or national placers, and how many he has in all. */
+  national_wins?: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  national_win_count?: number
   /**
    * Losses to that same calibre of opponent. Shown beside the wins, and not scored — see where
    * they are built for why.
@@ -1630,8 +1636,17 @@ export async function buildRecruitNcRankingBoard({
       const tournamentWins = tournamentBouts.filter((b) => String(b.win_loss ?? "").toUpperCase() === "W").length
       const tournamentRecord = tournamentBouts.length ? `${tournamentWins}-${tournamentBouts.length - tournamentWins}` : null
 
-      const topSignificantWins = findSignificantWins(boutsForSignificance, winsIndex).slice(0, 8)
+      const everySignificantWin = findSignificantWins(boutsForSignificance, winsIndex)
+      const topSignificantWins = everySignificantWin.slice(0, 8)
       const significantWins = topSignificantWins.map(significantBoutRow)
+      /*
+       * Top five national wins (Matt, 29 Oct 2026): over a nationally ranked opponent or a national
+       * placer (NHSCA, Super 32, Fargo), in the list's own order - nationally ranked first. Shown,
+       * not scored. The count is every one he has, not only the five.
+       */
+      const nationalSignificant = everySignificantWin.filter((w) => w.reason === "national-ranked" || w.reason === "national-placer")
+      const nationalWins = nationalSignificant.slice(0, 5).map(significantBoutRow)
+      const nationalWinCount = nationalSignificant.length
 
       /**
        * Losses to the same calibre of opponent, shown beside the wins.
@@ -1827,6 +1842,24 @@ export async function buildRecruitNcRankingBoard({
         nhsca_by_year: byYear(bundle.nhsca || []),
         super32_by_year: byYear(bundle.super32 || []),
         fargo_by_year: byYear(bundle.fargo || []),
+        // Journeymen sits in the bundle's "other" national events; an overflow bracket says so.
+        ...(() => {
+          const ord = (n: number) => `${n}${n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th"}`
+          const jm = (bundle.other || [])
+            .filter((r) => /journeymen/i.test(`${r.eventKey ?? ""} ${r.eventName ?? ""}`))
+            .map((r) => {
+              const overflow = /\(OF\)|overflow/i.test(r.eventName ?? "")
+              return {
+                year: r.year,
+                overflow,
+                record: r.record ? `${r.record}${overflow ? " (overflow)" : ""}` : null,
+                placement: r.placement ? `${r.placement === 1 ? "Champion" : ord(r.placement)}${overflow ? " (overflow)" : ""}` : null,
+              }
+            })
+          // The row's chip is the main bracket; an overflow bracket only when that is all he wrestled.
+          const main = jm.filter((r) => !r.overflow).map((r) => ({ ...r, record: r.record }))
+          return { journeymen_record: latestRecord(main) ?? latestRecord(jm.map((r) => ({ ...r, record: String(r.record ?? "").replace(" (overflow)", "") }))), journeymen_by_year: byYear(jm) }
+        })(),
         star_rating: isRatedAthlete({ gender: athlete.gender as string, graduationYear: toNumber(athlete.graduationyear) })
           ? applyStarOverride(
               rateAthlete({
@@ -1846,6 +1879,8 @@ export async function buildRecruitNcRankingBoard({
             )
           : null,
         significant_wins: significantWins,
+        national_wins: nationalWins,
+        national_win_count: nationalWinCount,
         significant_losses: significantLosses,
         /*
          * Every national/out-of-state event this wrestler entered, as "Event 2026". Carried so

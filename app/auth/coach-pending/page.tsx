@@ -19,7 +19,7 @@ export default function CoachPendingPage() {
       if (!user) {
         window.location.href = "/auth/signin"
       } else if (profile?.verified_coach) {
-        window.location.href = "/athletes"
+        window.location.href = "/prospects/all"
       } else {
         setChecking(false)
       }
@@ -103,7 +103,7 @@ export default function CoachPendingPage() {
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Button asChild className="flex-1">
-              <Link href="/athletes">Browse Athletes</Link>
+              <Link href="/prospects/all">Browse Athletes</Link>
             </Button>
             <Button asChild variant="outline" className="flex-1 bg-transparent">
               <Link href="/prospects">View Rankings</Link>

@@ -1,12 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { isVisibleState } from "@/lib/recruiting/brand"
+import { isVisibleState, visibleStates } from "@/lib/recruiting/brand"
 import { previewStatesForUser } from "@/lib/recruiting/state-preview"
 import { HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
 import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
 import { highestAchievement, loadAchievements } from "@/lib/prospect-achievements"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -28,7 +29,11 @@ export async function GET(request: NextRequest) {
      * One state per request; North Carolina when none is asked for, which is every request made
      * before a second state existed. A state not yet announced is admins' only.
      */
-    const state = normalizeStateCode(searchParams.get("state")) ?? HOME_STATE
+    // "ALL": North Carolina and every other state this viewer may open, in one list.
+    const allStates = String(searchParams.get("state") ?? "").toUpperCase() === "ALL"
+    const state = allStates ? "ALL" : (normalizeStateCode(searchParams.get("state")) ?? HOME_STATE)
+    // RecruitWrestlers carries every live state; NC United's address North Carolina only.
+    const onRw = stagedBrandForHost(request.headers.get("host")) === "national"
     let isAdmin = false
     let preview: string[] = []
     if (state !== HOME_STATE) {
@@ -39,12 +44,14 @@ export async function GET(request: NextRequest) {
         /* A coach invited to look at a state before it opens — see lib/recruiting/state-preview.ts. */
         if (!isAdmin) preview = await previewStatesForUser(supabase, auth.user.id)
       }
-      if (!isVisibleState(state, isAdmin, preview)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
+      if (!allStates && !isVisibleState(state, isAdmin, onRw, preview)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
     }
 
     const minYear = minYearParam ? Number.parseInt(minYearParam, 10) : null
     const maxYear = maxYearParam ? Number.parseInt(maxYearParam, 10) : null
 
+    // A coach previewing a state before it opens gets it in the "ALL" list too, not only on its own.
+    const withStates = allStates ? visibleStates(isAdmin, onRw, preview).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
     const { prospects, hasMore } = await fetchProspectDirectoryPage(supabase, {
       graduationYear,
       gender,
@@ -52,7 +59,8 @@ export async function GET(request: NextRequest) {
       maxYear: Number.isFinite(maxYear!) ? maxYear : null,
       limit,
       offset,
-      state,
+      state: allStates ? HOME_STATE : state,
+      withStates,
     })
 
     /*
@@ -91,7 +99,7 @@ export async function GET(request: NextRequest) {
       {
         headers: {
           // A state still being checked is answered per person, never from a shared cache.
-          "Cache-Control": isVisibleState(state, false) ? "public, s-maxage=120, stale-while-revalidate=300" : "private, no-store",
+          "Cache-Control": isVisibleState(state, false, onRw) ? "public, s-maxage=120, stale-while-revalidate=300" : "private, no-store",
           "Content-Type": "application/json",
         },
       },

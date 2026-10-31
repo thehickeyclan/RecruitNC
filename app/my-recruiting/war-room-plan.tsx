@@ -1,5 +1,7 @@
 "use client"
 
+import type { AdmissionsSummary } from "@/lib/college-programs/admissions-format"
+import type { Inbound } from "@/lib/college-programs/board-activities"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { CalendarDays, Check, ChevronRight, Circle, ListChecks, Lock, Mail, MapPin, X } from "lucide-react"
 
@@ -25,8 +27,18 @@ export type WarRoomSchool = {
   hasQuestionnaire: boolean
   /** The interest form (recruiting questionnaire) is done, whatever the stage. */
   questionnaireDone?: boolean
+  /** When it was marked done, if it was ticked rather than implied by the stage. */
+  questionnaireDoneAt?: string | null
+  /** When the family emailed the coach: from the composer, or ticked on the reach-out checklist. */
+  emailedAt?: string | null
   /** The admissions track (application status, plan, date, pre-read). */
   admissions?: Admissions
+  /** The college's own deadlines and basics for this cycle (lib/college-programs/admissions.ts). */
+  admissionInfo?: AdmissionsSummary | null
+  /** When it entered its stage (or its last change, before that is stored). */
+  stageSince?: string | null
+  /** What came in from the college: views, messages, contacts (the college list page adds these). */
+  inbound?: Inbound
   /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */
   tuition: string | null
   /** The family's own note on the college: calls, what the coach said, next steps. */
@@ -127,7 +139,8 @@ export function WarRoomPlan({
             profileTodo: wrestler.profileTodo,
             listStatuses: schools.map((s) => s.status),
             listLevels: schools.map((s) => s.level),
-            questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && !s.questionnaireDone).length,
+            // Every college whose form is not done, link on file or not (the Amiotts' 7 read as 3, 23 Oct 2026).
+            questionnairesWaiting: schools.filter((s) => !s.questionnaireDone && !s.noTeam).length,
             scheduleCount: events.length,
           })
         : [],
@@ -141,14 +154,21 @@ export function WarRoomPlan({
           <Lock className="h-4 w-4 text-[#D3B574]" aria-hidden /> The plan is part of the Command Center
         </p>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">
-          Blue members get this month&apos;s steps for each wrestler, a college list that tracks every school from
+          {/* RecruitWrestlers sells the Command Center itself; Blue and /plans are NC United's (Matt, 29 Oct 2026). */}
+          <span className="ncu-only">Blue members get</span>
+          <span className="national-only">Command Center members get</span> this month&apos;s steps for each wrestler, a college list that tracks every school from
           interested to offer, coach emails drafted from verified results, the coaching staff and recruiting
           questionnaire for every program, and a schedule that tells coaches where to watch.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <a href="/plans" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+          <a href="/plans" className="ncu-only rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
             See plans
           </a>
+          <span className="national-only">
+            <a href="/command-center" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+              Join the Command Center
+            </a>
+          </span>
           <a href="/recruiting/college-map" className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5">
             See the college map
           </a>
@@ -400,9 +420,14 @@ export function WarRoomPlan({
                   status: s.status,
                   logo: s.logo,
                   cost: s.tuition,
-                  note: s.noTeam ? `${s.noTeam} in 2026-27` : s.hasQuestionnaire && !s.questionnaireDone ? "Interest form to fill out" : null,
+                  note: s.noTeam ? `${s.noTeam} in 2026-27` : null,
+                  hasQuestionnaire: s.hasQuestionnaire,
                   questionnaireDone: Boolean(s.questionnaireDone),
                   admissions: s.admissions ?? NO_ADMISSIONS,
+                  admissionInfo: s.admissionInfo ?? null,
+                  stageSince: s.stageSince ?? null,
+                  questionnaireDoneAt: s.questionnaireDoneAt ?? null,
+                  inbound: s.inbound,
                   memo: s.memo ?? null,
                   onRecruitNC: Boolean(s.onRecruitNC),
                   interest: interest && s.onRecruitNC ? (interest[wrestler.id] ?? []).includes(s.id) : null,

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { BrandName } from "@/components/recruiting/brand-name"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -33,8 +34,8 @@ export default function RankingsIndexPage() {
         {/*
           * The cross-class boards, which live outside the per-class board above.
           *
-          * The Top 75 is drawn from the published class cuts; the Top 100 reaches past them, so a
-          * wrestler just outside a deep class can still be seen by a college coach.
+          * Labelled by what they publish (Matt, 30 Oct 2026: the Top 75 was hidden behind a
+          * "Top 100" button while a different board wore the Top 75 name).
           */}
         <Card className="mb-6">
           <CardHeader>
@@ -42,15 +43,15 @@ export default function RankingsIndexPage() {
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-sm text-gray-600">
-              One order across 2027, 2028 and 2029. The Top 100 reaches deeper into each class than
-              the published boards do, so wrestlers just outside a class cut are still considered.
+              One order across classes. The Top 75 College Prospects (2027 and 2028) is the list on the
+              public rankings page; it reaches past each class cut, so wrestlers just outside it are still considered.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button asChild className="bg-[#13294B] hover:bg-[#0b1b33]">
-                <Link href="/admin/rankings/top-100">Top 100 College Prospects</Link>
+                <Link href="/admin/rankings/top-100">Top 75 College Prospects</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/admin/rankings/p4p">Top 75 Ranked Prospects</Link>
+                <Link href="/admin/rankings/p4p">Pound-for-Pound Prospects (separate board)</Link>
               </Button>
             </div>
           </CardContent>
@@ -59,7 +60,7 @@ export default function RankingsIndexPage() {
         {/* Quick Access Card */}
         <Card className="mb-6 border-[#D3B574]">
           <CardHeader>
-            <CardTitle className="text-xl">RecruitNC AI Ranking Board</CardTitle>
+            <CardTitle className="text-xl"><BrandName /> AI Ranking Board</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-sm text-gray-600">

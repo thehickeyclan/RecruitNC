@@ -19,7 +19,7 @@ export default function NewsPage() {
     <div className="min-h-screen bg-[#0A1628]">
       {/* Hero Header */}
       <header className="relative bg-gradient-to-br from-[#13294B] via-[#1a3a5c] to-[#0A1628] border-b border-white/10">
-        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
         <div className="relative container mx-auto px-4 py-12 md:py-16">
           <Link
             href="/"
@@ -99,6 +99,7 @@ export default function NewsPage() {
                         {featured.category}
                       </span>
                     )}
+                    {featured.premium && <span className="inline-flex items-center gap-1 rounded-full border border-[#D3B574] px-2.5 py-0.5 text-xs font-semibold text-[#D3B574]">★ Premium content</span>}
                     <span className="text-sm text-white/50 uppercase tracking-wide">Featured</span>
                   </div>
                   <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight group-hover:text-[#D3B574] transition-colors">
@@ -110,7 +111,7 @@ export default function NewsPage() {
                   <div className="mt-6 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-white/50">
                       <Calendar className="h-4 w-4" />
-                      {new Date(featured.date).toLocaleDateString("en-US", {
+                      {new Date(`${featured.date}T12:00:00`).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -172,10 +173,15 @@ export default function NewsPage() {
 
                   {/* Card Content */}
                   <div className="p-5">
-                    {item.category && (
-                      <span className="inline-block rounded-full bg-[#D3B574]/20 text-[#D3B574] px-2.5 py-0.5 text-xs font-medium mb-3">
-                        {item.category}
-                      </span>
+                    {(item.category || item.premium) && (
+                      <div className="mb-3 flex flex-wrap gap-1.5">
+                        {item.category && (
+                          <span className="inline-block rounded-full bg-[#D3B574]/20 text-[#D3B574] px-2.5 py-0.5 text-xs font-medium">
+                            {item.category}
+                          </span>
+                        )}
+                        {item.premium && <span className="inline-flex items-center gap-1 rounded-full border border-[#D3B574] px-2.5 py-0.5 text-xs font-semibold text-[#D3B574]">★ Premium content</span>}
+                      </div>
                     )}
                     <h3 className="font-semibold text-white group-hover:text-[#D3B574] transition-colors line-clamp-2 leading-snug">
                       {item.title}

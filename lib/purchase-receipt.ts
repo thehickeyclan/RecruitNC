@@ -46,7 +46,7 @@ export function receiptKindForCheckout(metadata: Metadata): ReceiptKind | null {
   if (m.source === "national_team" || m.channel === "spartan") return null
   if (m.source === "scouting_report") {
     // The Recruiting Command Center is a subscription of its own, never "Scouting report".
-    if (m.kind === "command_center") return "command_center"
+    if (m.kind === "command_center" || m.kind === "command_center_annual") return "command_center"
     return m.kind === "subscription" || m.kind === "subscription_annual" ? "subscription" : "scouting_report"
   }
   if (m.channel === "blue" && (m.signup_id || m.membership_id)) return "blue"
@@ -56,7 +56,7 @@ export function receiptKindForCheckout(metadata: Metadata): ReceiptKind | null {
 }
 
 const KIND_LABEL: Record<ReceiptKind, string> = {
-  subscription: "RecruitNC Rankings subscription",
+  subscription: "Insider subscription",
   command_center: "Recruiting Command Center subscription",
   scouting_report: "Scouting report",
   blue: "NC United Blue membership",

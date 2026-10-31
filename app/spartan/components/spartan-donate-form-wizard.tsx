@@ -1118,7 +1118,7 @@ export function SpartanDonateFormWizard({
           )}
           {showNoDirectoryMatch && (
             <p className="mt-1 text-[11px] text-[#888]">
-              No match — try <HardLink href="/athletes" className="text-[#C8A94A] hover:underline">the directory</HardLink> or
+              No match — try <HardLink href="/prospects/all" className="text-[#C8A94A] hover:underline">the directory</HardLink> or
               the manual box.
             </p>
           )}

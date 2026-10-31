@@ -17,17 +17,50 @@ import { Analytics } from "@vercel/analytics/next"
 import { UserActivityTracker } from "@/components/user-activity-tracker"
 import { ContactTapTracker } from "@/components/contact-tap-tracker"
 
-const defaultTitle = "NC United Wrestling"
+const defaultTitle = "NC United"
 const defaultDescription =
   "North Carolina wrestling news, rankings, events, athlete profiles, clubs, and college recruiting coverage."
 // Any page without its own card still gets a full-width one instead of the bare logo.
-const defaultShareImage = "/api/share-card?t=NC%20United%20Wrestling&s=Rankings%2C%20athlete%20profiles%2C%20events%20and%20college%20recruiting%20for%20North%20Carolina%20wrestlers."
+const defaultShareImage = "/api/share-card?t=NC%20United&s=Rankings%2C%20athlete%20profiles%2C%20events%20and%20college%20recruiting%20for%20North%20Carolina%20wrestlers."
 
-export const metadata: Metadata = {
+/** True on NC United's Vercel project (its production address is ncwrestlingunited.com), set by Vercel at build. */
+const NC_UNITED_PROJECT = /ncwrestlingunited/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
+
+/** True on RecruitWrestlers' own Vercel project (Guild Ventures), which serves recruitwrestlers.com only. */
+const RW_PROJECT = /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
+
+const rwDescription = "College wrestling recruiting built on verified results: athlete profiles, rankings, recaps and the Recruiting Command Center."
+
+/** RecruitWrestlers' defaults: its tab titles, link previews and icons, never NC United's (Matt's product review, 26 Oct 2026). */
+const rwMetadata: Metadata = {
+  metadataBase: new URL("https://www.recruitwrestlers.com"),
+  title: { default: "RecruitWrestlers", template: "%s | RecruitWrestlers" },
+  description: rwDescription,
+  manifest: null,
+  openGraph: {
+    title: "RecruitWrestlers",
+    description: rwDescription,
+    url: "https://www.recruitwrestlers.com",
+    siteName: "RecruitWrestlers",
+    type: "website",
+    images: [{ url: "/recruitwrestlers/share.jpg", width: 1200, height: 630, alt: "RecruitWrestlers" }],
+  },
+  twitter: { card: "summary_large_image", title: "RecruitWrestlers", description: rwDescription, images: ["/recruitwrestlers/share.jpg"] },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "RecruitWrestlers" },
+  icons: {
+    icon: [
+      { url: "/recruitwrestlers/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/recruitwrestlers/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/recruitwrestlers/apple-icon.png" }],
+  },
+}
+
+const ncuMetadata: Metadata = {
   metadataBase: new URL("https://app.ncwrestlingunited.com"),
   title: {
     default: defaultTitle,
-    template: "%s | NC United Wrestling",
+    template: "%s | NC United",
   },
   description: defaultDescription,
   manifest: "/api/manifest",
@@ -35,14 +68,14 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     url: "https://app.ncwrestlingunited.com",
-    siteName: "NC United Wrestling",
+    siteName: "NC United",
     type: "website",
     images: [
       {
         url: defaultShareImage,
         width: 1200,
         height: 630,
-        alt: "NC United Wrestling",
+        alt: "NC United",
       },
     ],
   },
@@ -66,6 +99,8 @@ export const metadata: Metadata = {
   },
   generator: "v0.app",
 }
+
+export const metadata: Metadata = RW_PROJECT ? rwMetadata : ncuMetadata
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -91,11 +126,15 @@ export default function RootLayout({
           its frame (components/app-chrome.tsx) show from the first frame with no NC United gold, and
           the tab says RecruitWrestlers. Same pages, two addresses; this is the one switch.
         */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var h=location.hostname,b=/^recruit\\./.test(h)?'guild':/(^|\\.)recruitwrestlers\\.com$/.test(h)?'national':null;if(!b)return;document.documentElement.setAttribute('data-host',b)}catch(e){}})();`,
-          }}
-        />
+        {/* NC United's own project never ships it (Matt, 26 Oct 2026): RecruitWrestlers runs as its own
+            Vercel project now, and the name must not appear in NC United's page source before launch. */}
+        {!NC_UNITED_PROJECT && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{var h=location.hostname,b=/^recruit\\./.test(h)?'guild':/(^|\\.)recruitwrestlers\\.com$/.test(h)?'national':null;if(!b)return;document.documentElement.setAttribute('data-host',b)}catch(e){}})();`,
+            }}
+          />
+        )}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#003366" />
         <meta name="msapplication-tap-highlight" content="no" />
@@ -157,7 +196,7 @@ export default function RootLayout({
             <BulletproofInternalLinks />
             <UserActivityTracker />
             <LayoutOptionalClients />
-            <AppChrome>{children}</AppChrome>
+            <AppChrome hideNcUnited={RW_PROJECT}>{children}</AppChrome>
             {/* Coach Call/Text/Email taps on a wrestler, the closest signal of off-site contact. */}
             <ContactTapTracker />
             {/* Renders nothing without ?welcome=<role>, set at verification and at coach sign-up. */}

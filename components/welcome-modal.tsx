@@ -57,7 +57,7 @@ const RANKINGS: Destination = {
 }
 
 const COMMITS: Destination = {
-  href: "/athletes",
+  href: "/college-commitments",
   icon: GraduationCap,
   title: "College commitments",
   body: "Who has signed where, this class and last.",
@@ -84,7 +84,7 @@ const WELCOMES: Record<string, Welcome> = {
    */
   college_coach: {
     heading: "You're in, Coach",
-    intro: `Full access, no charge. Four places to start with ${recruitingCoverage()}'s wrestlers:`,
+    intro: "Full access, no charge. Four places to start:",
     destinations: [
       {
         href: "/public-rankings",
@@ -251,7 +251,7 @@ export function WelcomeModal() {
   const isCoach = usesRecruitingShell(profile)
   useEffect(() => {
     if (!isCoach || welcome) return
-    if (window.location.pathname !== "/coach-home") return
+    if (window.location.pathname !== "/coach-home" && window.location.pathname !== "/my-recruits") return
     try {
       if (localStorage.getItem(COACH_WELCOME_SEEN) === "1") return
     } catch {
@@ -275,52 +275,60 @@ export function WelcomeModal() {
 
   if (!welcome) return null
 
+  /*
+   * On a phone it is a bottom sheet with the titles only: as a centred card with every description
+   * it filled the whole screen on a coach's first visit (mobile review, 30 Oct 2026). Tapping the
+   * dimmed page above it closes it too.
+   */
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/70 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="welcome-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) dismiss()
+      }}
     >
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#D3B574]/30 bg-[#0f1c2e] p-6 shadow-2xl">
+      <div className="relative max-h-[80dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-[#D3B574]/30 bg-[#0f1c2e] p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:max-h-[90vh] sm:rounded-2xl sm:p-6">
         <button
           type="button"
           onClick={dismiss}
           aria-label="Close"
-          className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+          className="absolute right-2 top-2 inline-flex h-11 w-11 items-center sm:right-4 sm:top-4 sm:h-8 sm:w-8 justify-center rounded-md text-white/50 transition-colors hover:bg-white/10 hover:text-white"
         >
           <X className="h-4 w-4" />
         </button>
 
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D3B574]"><BrandName ncu="NC United · RecruitNC" /></p>
-        <h2 id="welcome-title" className="mt-2 pr-8 text-2xl font-black text-white">
+        <h2 id="welcome-title" className="mt-2 pr-8 text-xl font-black text-white sm:text-2xl">
           {headingFor(welcome, asked, profile)}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-white/70">{welcome.intro}</p>
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-4 space-y-2 sm:mt-5 sm:space-y-3">
           {welcome.destinations.map(({ href, icon: Icon, title, body }) => (
             <Link
               key={`${href}-${title}`}
               href={href}
               onClick={dismiss}
-              className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-colors hover:border-[#D3B574]/50 hover:bg-white/10"
+              className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 transition-colors sm:items-start sm:p-4 hover:border-[#D3B574]/50 hover:bg-white/10"
             >
-              <Icon className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#D3B574]" />
+              <Icon className="h-5 w-5 sm:mt-0.5 flex-shrink-0 text-[#D3B574]" />
               <span>
                 <span className="block text-sm font-bold text-white">{title}</span>
-                <span className="mt-1 block text-xs leading-relaxed text-white/60">{body}</span>
+                <span className="mt-1 hidden text-xs leading-relaxed text-white/60 sm:block">{body}</span>
               </span>
             </Link>
           ))}
         </div>
 
         {welcome.footnote ? (
-          <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#D3B574]/30 bg-[#D3B574]/10 p-4">
+          <div className="mt-3 flex items-start gap-3 rounded-xl border border-[#D3B574]/30 bg-[#D3B574]/10 px-4 py-3 sm:mt-4 sm:p-4">
             <FileText className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#D3B574]" />
             <p className="text-xs leading-relaxed text-white/80">
               <span className="font-bold text-[#D3B574]">{welcome.footnote.title}</span>{" "}
-              {welcome.footnote.body}
+              <span className="hidden sm:inline">{welcome.footnote.body}</span>
             </p>
           </div>
         ) : null}
@@ -328,7 +336,7 @@ export function WelcomeModal() {
         <button
           type="button"
           onClick={dismiss}
-          className="mt-5 w-full rounded-lg bg-[#D3B574] px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-[#0A1628] transition-colors hover:bg-[#e2c98d]"
+          className="mt-4 min-h-[44px] w-full rounded-lg bg-[#D3B574] px-4 py-2.5 sm:mt-5 text-sm font-bold uppercase tracking-wider text-[#0A1628] transition-colors hover:bg-[#e2c98d]"
         >
           Start here
         </button>

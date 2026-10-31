@@ -2,13 +2,16 @@
 
 import { useMemo, useState } from "react"
 
-import { AdmissionsControls } from "@/components/portal/admissions-controls"
+import { CollegePanel, Chip, LastLine, NotePreview, Signals, type PipelineCollege } from "@/components/portal/college-pipeline"
+import { easternToday, type AdmissionsSummary } from "@/lib/college-programs/admissions-format"
+import { activitiesFor, lastActivity, nextStep as pipelineStep, type ActivityAction } from "@/lib/college-programs/board-activities"
 import type { Admissions } from "@/lib/college-programs/list"
-import { BarChart3, Eye, Mail, MessageSquare, MoreVertical, PhoneCall } from "lucide-react"
+import { ArrowRight, BarChart3, ExternalLink, MoreVertical } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
+import { ReachOutChecklist, type ReachState } from "@/components/portal/reach-out-checklist"
 import { StageSelect } from "@/components/portal/stage-select"
-import { COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, type CollegeListStatus } from "@/lib/college-programs/list"
+import { BOARD_STAGES, COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, boardStage, type BoardStage, type CollegeListStatus } from "@/lib/college-programs/list"
 
 export type FitMark = { label: string; tone: "good" | "close" | "low" | "none"; why: string }
 export type ListRow = {
@@ -26,15 +29,51 @@ export type ListRow = {
   athletic: FitMark
   /** Verified, from our own records: never what the family typed. */
   viewed: { views: number; last: string } | null
-  messaged: { threadId: string; yourTurn: boolean } | null
+  messaged: { threadId: string; yourTurn: boolean; at?: string | null } | null
   /** What the family logged: the furthest step (reached out, visit, offer) and the latest contact. */
-  reached?: { label: string; date: string } | null
+  reached?: { label: string; date: string; on?: string | null } | null
   hasQuestionnaire: boolean
   /** The interest form is done: its own check, whatever the stage (22 Oct 2026). */
   questionnaireDone?: boolean
   /** The admissions track, beside the stage. */
   admissions?: Admissions
+  /** The college's own deadlines for this cycle. */
+  admissionInfo?: AdmissionsSummary | null
+  /** When it entered its stage. */
+  stageSince?: string | null
+  questionnaireDoneAt?: string | null
   note: string | null
+  /** The reach-out checklist for the first wrestler: interested, form, email (28 Oct 2026). */
+  reach?: ReachState | null
+  /** The next planned visit to this college. */
+  visit?: { label: string; official: boolean } | null
+}
+
+/** A list row as the shared pipeline pieces read it (chips, signals, panel, next step). */
+function asPipeline(r: ListRow, status: CollegeListStatus): PipelineCollege {
+  return {
+    id: r.id,
+    name: r.name,
+    level: r.level,
+    place: r.place,
+    status,
+    logo: r.logo,
+    cost: r.cost ? `$${r.cost.amount.toLocaleString("en-US")} a year ${r.cost.which} (${r.cost.year}, before aid)` : null,
+    note: null,
+    memo: r.note,
+    onRecruitNC: false,
+    hasQuestionnaire: r.hasQuestionnaire,
+    questionnaireDone: r.questionnaireDone,
+    questionnaireDoneAt: r.questionnaireDoneAt ?? null,
+    admissions: r.admissions,
+    admissionInfo: r.admissionInfo,
+    stageSince: r.stageSince ?? null,
+    inbound: {
+      views: r.viewed ? { count: r.viewed.views, last: r.viewed.last } : null,
+      message: r.messaged,
+      contact: r.reached ?? null,
+    },
+  }
 }
 
 const TONE: Record<FitMark["tone"], string> = {
@@ -43,50 +82,60 @@ const TONE: Record<FitMark["tone"], string> = {
   low: "bg-white/10 text-white/70",
   none: "text-white/35",
 }
-const TABS: Array<{ key: "all" | CollegeListStatus; label: string }> = [
+const TABS: Array<{ key: "all" | BoardStage; label: string }> = [
   { key: "all", label: "My list" },
-  ...COLLEGE_LIST_STATUSES.map((s) => ({ key: s, label: COLLEGE_LIST_STATUS_LABEL[s] })),
+  ...BOARD_STAGES.map((s) => ({ key: s, label: COLLEGE_LIST_STATUS_LABEL[s] })),
 ]
 const MAX_COMPARE = 4
-
-/** What to do next with one college, from where it stands. A coach waiting on a reply comes first. */
-function nextStep(r: ListRow): { label: string; href?: string; email?: boolean } {
-  if (r.messaged?.yourTurn) return { label: "Reply", href: `/inbox/${r.messaged.threadId}` }
-  // A family often emails the coach before the interest form: the form is still the next step.
-  if (r.hasQuestionnaire && !r.questionnaireDone && (r.status === "interested" || r.status === "contacted")) return { label: "Interest form", href: `/recruiting/schools/${r.id}#staff` }
-  switch (r.status) {
-    case "interested":
-      return r.hasQuestionnaire ? { label: "Questionnaire", href: `/recruiting/schools/${r.id}#staff` } : { label: "Send intro", email: true }
-    case "questionnaire":
-      return { label: "Send intro", email: true }
-    case "contacted":
-      return { label: "Follow up", email: true }
-    case "talking":
-      return { label: "Plan a visit", href: "/recruiting/learn/questions-families-ask" }
-    case "visited":
-      return { label: "Compare", href: `/recruiting/compare?s=${r.id}&step=colleges` }
-    case "offer":
-      return { label: "Weigh the offer", href: "/recruiting/learn/paying-for-college" }
-  }
-}
 
 /**
  * The family's recruiting pipeline as one table (Matt, 15 Oct 2026, from ChatGPT's mock): every
  * college, where they stand, what it costs, how it fits, what coaches have actually done, and the
  * next step. The status is the family's own; viewed and messaged are verified.
  */
-export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow[]; readOnly: boolean; wrestlerId: string | null }) {
+export function CollegeListTable({ rows, readOnly, wrestlerId, wrestlerName }: { rows: ListRow[]; readOnly: boolean; wrestlerId: string | null; wrestlerName?: string | null }) {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all")
   const [level, setLevel] = useState("all")
   const [picked, setPicked] = useState<string[]>([])
   const [emailing, setEmailing] = useState<ListRow | null>(null)
   const [removed, setRemoved] = useState<Set<string>>(new Set())
   const [menu, setMenu] = useState<string | null>(null)
+  const [panel, setPanel] = useState<string | null>(null)
+  // Stage moves made here, so the row's chips and next step follow without a reload.
+  const [stages, setStages] = useState<Record<string, CollegeListStatus>>({})
+  const today = easternToday()
+  const statusOf = (r: ListRow) => stages[r.id] ?? r.status
+  // Interest-form ticks made here, shown at once.
+  const [formDone, setFormDone] = useState<Record<string, boolean>>({})
+  const toggleForm = async (r: ListRow, done: boolean) => {
+    setFormDone((m) => ({ ...m, [r.id]: done }))
+    const res = await fetch("/api/college-list", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schoolId: r.id, questionnaireDone: done }) }).catch(() => null)
+    if (!res?.ok) setFormDone((m) => ({ ...m, [r.id]: !done }))
+  }
 
   const live = rows.filter((r) => !removed.has(r.id))
   const levels = [...new Set(live.map((r) => r.level))]
-  const shown = useMemo(() => live.filter((r) => (tab === "all" || r.status === tab) && (level === "all" || r.level === level)), [live, tab, level])
-  const count = (key: (typeof TABS)[number]["key"]) => (key === "all" ? live.length : live.filter((r) => r.status === key).length)
+  const shown = useMemo(
+    () => live.filter((r) => (tab === "all" || boardStage(stages[r.id] ?? r.status) === tab) && (level === "all" || r.level === level)),
+    [live, tab, level, stages],
+  )
+  const count = (key: (typeof TABS)[number]["key"]) => (key === "all" ? live.length : live.filter((r) => boardStage(statusOf(r)) === key).length)
+
+  const setStage = async (r: ListRow, next: CollegeListStatus) => {
+    setStages((m) => ({ ...m, [r.id]: next }))
+    const res = await fetch("/api/college-list", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schoolId: r.id, status: next }) }).catch(() => null)
+    if (!res?.ok) setStages((m) => ({ ...m, [r.id]: r.status }))
+  }
+
+  const act = (r: ListRow, a: ActivityAction) => {
+    if (a.kind === "reply") window.location.href = `/inbox/${a.threadId}`
+    else if (a.kind === "forms") window.location.href = "/my-recruiting/questionnaires"
+    else if (a.kind === "email") setEmailing(r)
+    else if (a.kind === "apply") window.open(a.href, "_blank", "noopener,noreferrer")
+    else if (a.kind === "stage") void setStage(r, a.to)
+    else if (a.kind === "scout") window.location.href = "/my-recruiting/scout"
+    else if (a.kind === "interest") setPanel(r.id)
+  }
 
   const remove = async (r: ListRow) => {
     setMenu(null)
@@ -125,27 +174,34 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
           <thead>
             <tr className="border-b border-white/10 text-left text-xs font-semibold text-white/50">
               <th className="w-10 p-3" />
-              <th className="p-3">College</th>
+              <th className="p-3">
+                College
+                <span className="block font-normal text-white/35">reach out: interested · form · email</span>
+              </th>
               <th className="p-3">Level</th>
-              <th className="p-3">Location</th>
-              <th className="p-3">Academic fit</th>
-              <th className="p-3">Athletic fit</th>
+              <th className="p-3">
+                Fit
+                <span className="block font-normal text-white/35">academic · athletic</span>
+              </th>
               <th className="p-3">
                 Published cost
                 <span className="block font-normal text-white/35">per year, before aid</span>
               </th>
+              <th className="p-3">Last activity</th>
               <th className="p-3">
-                Coach activity
-                <span className="block font-normal text-white/35">verified</span>
+                Progress
+                <span className="block font-normal text-white/35">from the college</span>
               </th>
-              <th className="p-3">Your status · admissions</th>
+              <th className="p-3">Stage</th>
               <th className="p-3">Next step</th>
               <th className="w-10 p-3" />
             </tr>
           </thead>
           <tbody>
             {shown.map((r) => {
-              const next = nextStep(r)
+              const pc = { ...asPipeline(r, statusOf(r)), ...(r.id in formDone ? { questionnaireDone: formDone[r.id] } : {}) }
+              const chips = activitiesFor(pc, today).filter((x) => x.key === "form" || x.key === "email" || (x.key === "apply" && (x.done || x.detail)))
+              const step = pipelineStep(pc, today)
               const on = picked.includes(r.id)
               return (
                 <tr key={r.id} className={`border-t border-white/5 ${on ? "bg-[#D3B574]/[0.06]" : "hover:bg-white/[0.02]"}`}>
@@ -168,22 +224,47 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                         <span className="h-10 w-10 shrink-0 rounded-lg bg-white/[0.06]" aria-hidden />
                       )}
                       <span className="min-w-0">
-                        <span className="line-clamp-1 font-bold text-white hover:underline">{r.name}</span>
-                        {r.conference ? <span className="block text-xs text-white/45">{r.conference}</span> : null}
+                        <span className="line-clamp-2 max-w-[13rem] font-bold leading-5 text-white hover:underline">{r.name}</span>
+                        <span className="block text-xs text-white/45">{[r.place, r.conference].filter(Boolean).join(" · ")}</span>
                       </span>
                     </a>
+                    {r.reach && wrestlerId ? (
+                      <div className="mt-2 pl-[3.25rem]">
+                        <ReachOutChecklist
+                          compact
+                          school={{ id: r.id, name: r.name }}
+                          athlete={{ id: wrestlerId, firstName: wrestlerName ?? "Your wrestler" }}
+                          initial={{ ...r.reach, ...(r.id in formDone ? { formDone: formDone[r.id] } : {}) }}
+                          status={statusOf(r)}
+                          readOnly={readOnly}
+                          onChange={(st) => setFormDone((m) => ({ ...m, [r.id]: st.formDone }))}
+                        />
+                      </div>
+                    ) : null}
+                    {r.visit ? (
+                      <div className="pl-[3.25rem]">
+                    
+                      <a href="/my-recruiting/plan#visits" className={`mt-1 inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black ${r.visit.official ? "bg-[#D3B574] text-[#0A1628]" : "bg-white/15 text-white"}`}>
+                        {r.visit.label}
+                      </a>
+                    
+                      </div>
+                    ) : null}
                   </td>
                   <td className="p-3">
                     <span className="rounded px-1.5 py-0.5 text-[11px] font-black text-[#071427]" style={{ backgroundColor: r.levelColor }}>
                       {r.level}
                     </span>
                   </td>
-                  <td className="p-3 text-white/70">{r.place}</td>
-                  {[r.academic, r.athletic].map((f, i) => (
-                    <td key={i} className="p-3" title={f.why}>
-                      <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${TONE[f.tone]}`}>{f.label}</span>
-                    </td>
-                  ))}
+                  <td className="p-3">
+                    <span className="flex flex-col items-start gap-1">
+                      {[r.academic, r.athletic].map((f, i) => (
+                        <span key={i} title={f.why} className={`whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-semibold ${TONE[f.tone]}`}>
+                          {f.label}
+                        </span>
+                      ))}
+                    </span>
+                  </td>
                   <td className="p-3">
                     {r.cost ? (
                       <>
@@ -196,40 +277,37 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                       <span className="text-white/35">Not published</span>
                     )}
                   </td>
-                  <td className="p-3">
-                    <span className="flex flex-col gap-1">
-                      {r.viewed ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-300">
-                          <Eye className="h-3.5 w-3.5" aria-hidden /> Viewed {r.viewed.views}×
-                        </span>
-                      ) : null}
-                      {r.messaged ? (
-                        <a href={`/inbox/${r.messaged.threadId}`} className="inline-flex items-center gap-1 text-xs font-semibold text-sky-300 hover:underline">
-                          <MessageSquare className="h-3.5 w-3.5" aria-hidden /> Messaged
-                        </a>
-                      ) : null}
-                      {r.reached ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-200">
-                          <PhoneCall className="h-3.5 w-3.5" aria-hidden /> {r.reached.label} · {r.reached.date}
-                        </span>
-                      ) : null}
-                      {!r.viewed && !r.messaged && !r.reached ? <span className="text-xs text-white/30">None yet</span> : null}
-                    </span>
-                  </td>
-                  <td className="w-56 p-3">
-                    <StageSelect schoolId={r.id} status={r.status} readOnly={readOnly} />
-                    <InterestFormCheck schoolId={r.id} done={Boolean(r.questionnaireDone)} readOnly={readOnly} />
-                    {r.admissions ? <AdmissionsControls schoolId={r.id} value={r.admissions} readOnly={readOnly} /> : null}
+                  <td className="w-48 p-3">
+                    <LastLine last={lastActivity(pc)} today={today} />
+                    <NotePreview memo={r.note} onOpen={() => setPanel(r.id)} />
                   </td>
                   <td className="p-3">
-                    {next.email ? (
-                      <button type="button" onClick={() => setEmailing(r)} disabled={readOnly} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-white/20 px-3 py-1.5 text-xs font-bold text-white hover:border-[#D3B574] disabled:opacity-50">
-                        <Mail className="h-3.5 w-3.5" aria-hidden /> {next.label}
+                    <div className="flex max-w-[15rem] flex-wrap gap-1">
+                      {(r.reach && wrestlerId ? chips.filter((x) => x.key === "apply") : chips).map((x) => (
+                        <Chip key={x.key} a={x} onToggle={x.key === "form" && !readOnly ? () => void toggleForm(r, !x.done) : undefined} />
+                      ))}
+                    </div>
+
+                    <Signals c={pc} today={today} hideLast />
+                  </td>
+                  <td className="w-36 p-3">
+                    <StageSelect schoolId={r.id} status={statusOf(r)} readOnly={readOnly} onChange={(next) => setStages((m) => ({ ...m, [r.id]: next }))} />
+                  </td>
+                  <td className="p-3">
+                    {step ? (
+                      <button
+                        type="button"
+                        onClick={() => act(r, step.action)}
+                        disabled={readOnly}
+                        className={`inline-flex max-w-[13rem] items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black disabled:opacity-50 ${step.tone === "urgent" ? "bg-rose-400 text-[#0A1628]" : "bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]"}`}
+                      >
+                        <span className="truncate">{step.label}</span>
+                        {step.action.kind === "apply" ? <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden /> : <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden />}
                       </button>
                     ) : (
-                      <a href={next.href} className="inline-flex whitespace-nowrap rounded-lg border border-white/20 px-3 py-1.5 text-xs font-bold text-white hover:border-[#D3B574]">
-                        {next.label}
-                      </a>
+                      <button type="button" onClick={() => setPanel(r.id)} className="text-xs font-semibold text-white/55 hover:text-white">
+                        Details
+                      </button>
                     )}
                   </td>
                   <td className="relative p-3">
@@ -238,8 +316,10 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                     </button>
                     {menu === r.id ? (
                       <span className="absolute right-3 top-10 z-10 flex w-44 flex-col rounded-lg border border-white/15 bg-[#0d1d36] py-1 text-sm shadow-xl">
+                        <button type="button" onClick={() => { setMenu(null); setPanel(r.id) }} className="px-3 py-2 text-left hover:bg-white/5">
+                          Details, application, note
+                        </button>
                         <a href={`/recruiting/schools/${r.id}`} className="px-3 py-2 hover:bg-white/5">Open the college</a>
-                        <a href="/my-recruiting/colleges?view=board" className="px-3 py-2 hover:bg-white/5">{r.note ? "Read your note" : "Add a note"}</a>
                         <button type="button" onClick={() => remove(r)} disabled={readOnly} className="px-3 py-2 text-left text-red-300 hover:bg-white/5 disabled:opacity-50">
                           Remove from list
                         </button>
@@ -251,7 +331,7 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
             })}
             {shown.length === 0 ? (
               <tr>
-                <td colSpan={11} className="p-8 text-center text-sm text-white/50">
+                <td colSpan={10} className="p-8 text-center text-sm text-white/50">
                   No colleges here.
                 </td>
               </tr>
@@ -275,6 +355,22 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
         </a>
       </div>
 
+      {(() => {
+        const r = panel ? live.find((x) => x.id === panel) : null
+        if (!r) return null
+        return (
+          <CollegePanel
+            c={asPipeline(r, statusOf(r))}
+            today={today}
+            onClose={() => setPanel(null)}
+            onStage={(st) => void setStage(r, st)}
+            onAct={(a) => act(r, a)}
+            onQuestionnaire={readOnly ? undefined : (done) => void toggleForm(r, done)}
+            onMemo={(memo) => void fetch("/api/college-list", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schoolId: r.id, note: memo }) }).then(() => window.location.reload())}
+          />
+        )
+      })()}
+
       {emailing ? (
         <CoachEmailComposer
           schoolId={emailing.id}
@@ -297,25 +393,3 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
   )
 }
 
-/** The interest form, checked off on its own (Matt, 22 Oct 2026): it was a stage, and families who
- *  emailed a coach first kept it in the note instead ("Need to fill out interest form"). */
-function InterestFormCheck({ schoolId, done, readOnly }: { schoolId: string; done: boolean; readOnly: boolean }) {
-  const [on, setOn] = useState(done)
-  const [failed, setFailed] = useState(false)
-  const toggle = async (next: boolean) => {
-    setOn(next)
-    setFailed(false)
-    const res = await fetch("/api/college-list", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schoolId, questionnaireDone: next }) }).catch(() => null)
-    if (!res?.ok) {
-      setOn(!next)
-      setFailed(true)
-    }
-  }
-  return (
-    <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-[11px] font-semibold text-white/70">
-      <input type="checkbox" checked={on} disabled={readOnly} onChange={(e) => void toggle(e.target.checked)} className="h-3.5 w-3.5 accent-[#D3B574]" />
-      <span className={on ? "text-emerald-300" : ""}>{on ? "Interest form done" : "Interest form done?"}</span>
-      {failed ? <span className="text-amber-200">not saved</span> : null}
-    </label>
-  )
-}

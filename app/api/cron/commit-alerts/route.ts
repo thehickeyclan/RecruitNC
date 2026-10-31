@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendToSubscribers } from "@/lib/push-send"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
+import { inState } from "@/lib/recruiting/states"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -50,6 +52,7 @@ function authorizeCron(request: NextRequest): boolean {
  * announcements whenever a run failed.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -69,11 +72,14 @@ export async function GET(request: NextRequest) {
    * cannot announce anybody — the stamp does not move. `commitmentdate` is when it happened, so
    * a backfill of genuinely old commitments stays quiet even though we learned of them today.
    */
-  const { data: candidates, error } = await admin
-    .from("athletes")
-    .select("id, name, college, commitmentdate, college_set_at")
-    .not("college", "is", null)
-    .neq("college", "")
+  // NC United's alert announces North Carolina's commits, never another state's national profile.
+  const { data: candidates, error } = await inState(
+    admin
+      .from("athletes")
+      .select("id, name, college, commitmentdate, college_set_at")
+      .not("college", "is", null)
+      .neq("college", ""),
+  )
     .gte("commitmentdate", cutoffIso)
     .gte("college_set_at", learnedAfter)
     .order("commitmentdate", { ascending: true })
@@ -112,7 +118,9 @@ export async function GET(request: NextRequest) {
       const outcome = await sendToSubscribers("alert_commits", {
         title: "New commitment",
         body: `${athlete.name} commits to ${athlete.college}`,
-        data: { type: "commit", athleteId: athlete.id },
+        // The app follows `path` on a tap (recruitnc-mobile src/lib/notification-path.ts); without it a
+        // commitment alert just opened the app. /athlete/[id] has been in every build since 20 Sep.
+        data: { type: "commit", athleteId: athlete.id, path: `/athlete/${athlete.id}` },
       })
       results.push({ athlete: athlete.name, college: athlete.college, ...outcome })
     } catch (sendError) {

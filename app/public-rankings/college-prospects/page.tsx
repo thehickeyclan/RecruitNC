@@ -14,12 +14,15 @@ import { publishedDateLabel } from "@/lib/rankings/published-date"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { productName } from "@/lib/recruiting/product-name"
 
 // Per-viewer: gated inside, so it cannot be cached as one document for everybody.
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Top 75 College Prospects | RecruitNC",
+  title: `Top 75 College Prospects | ${productName()}`,
   description:
     "North Carolina's top 75 college wrestling prospects from the classes of 2027 and 2028.",
 }
@@ -48,7 +51,7 @@ export default async function TopHundredPage() {
             This list requires rankings access.
           </p>
           <Link
-            href="/rankings"
+            href={stagedBrandForHost((await headers()).get("host")) === "national" ? "/membership" : "/rankings"}
             className="mt-6 inline-block rounded-lg bg-[#d6b75d] px-5 py-2.5 text-sm font-semibold text-[#061224] hover:bg-[#c5a84d]"
           >
             See what is included
@@ -65,7 +68,7 @@ export default async function TopHundredPage() {
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            RecruitNC · North Carolina prospect rankings
+            <BrandName /> · North Carolina prospect rankings
           </p>
           <h1 className="mt-3 text-center text-4xl font-light uppercase tracking-tight text-white sm:text-5xl">
             Top {board.cap} College Prospects

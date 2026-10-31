@@ -25,16 +25,28 @@ export function shareCardUrl(card: Pick<ShareCard, "title" | "description" | "ki
   return `/api/share-card?${q.toString()}`
 }
 
-export function shareMetadata(card: ShareCard): Metadata {
+/**
+ * RecruitWrestlers' own Vercel project (it serves recruitwrestlers.com only): titles and link
+ * previews carry its name. Page metadata is built per project, so NC United's stays as it is.
+ */
+const RW_PROJECT = /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
+// "NC United · RecruitNC" kickers become plain "RecruitWrestlers", never "NC United · RecruitWrestlers".
+const rwWords = (s: string) => s.replace(/NC United\s*·\s*/gi, "").replace(/RecruitNC/gi, "RecruitWrestlers").replace(/NC United Wrestling/gi, "RecruitWrestlers")
+
+export function shareMetadata(input: ShareCard): Metadata {
+  const card: ShareCard = RW_PROJECT
+    ? { ...input, title: rwWords(input.title), description: rwWords(input.description), kicker: input.kicker ? rwWords(input.kicker) : input.kicker, pageTitle: input.pageTitle ? rwWords(input.pageTitle).replace(/ \| NC United$/, " | RecruitWrestlers") : input.pageTitle }
+    : input
+  const site = RW_PROJECT ? "RecruitWrestlers" : "NC United"
   const image = { url: shareCardUrl(card), width: 1200, height: 630, alt: card.title }
   return {
-    title: { absolute: card.pageTitle ?? `${card.title} | NC United Wrestling` },
+    title: { absolute: card.pageTitle ?? `${card.title} | ${site}` },
     description: card.description,
     openGraph: {
       title: card.title,
       description: card.description,
       url: card.path,
-      siteName: "NC United Wrestling",
+      siteName: site,
       type: "website",
       images: [image],
     },

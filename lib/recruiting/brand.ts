@@ -24,7 +24,7 @@ export const RECRUITING_BRAND = {
    */
   states: [
     { code: "NC", name: "North Carolina", live: true },
-    { code: "SC", name: "South Carolina", live: false },
+    { code: "SC", name: "South Carolina", live: true }, // Live 26 Oct 2026 (Matt); scripts/state-readiness.ts --state SC: all data gates pass
     // Being built (Matt, 21 Oct 2026): profiles first, not open to coaches until he says go.
     { code: "VA", name: "Virginia", live: false },
     /*
@@ -74,7 +74,8 @@ export { NATIONAL_PATH_PREFIXES, isNationalPath } from "@/lib/recruiting/nationa
 /** recruitwrestlers.com or www.recruitwrestlers.com. */
 export function isNationalHost(hostname: string | null | undefined): boolean {
   const h = String(hostname ?? "").toLowerCase()
-  return h === NATIONAL_BRAND.domain || h === `www.${NATIONAL_BRAND.domain}`
+  // next.: the new Vercel project's test address (docs/RECRUITWRESTLERS-VERCEL-SPLIT.md).
+  return h === NATIONAL_BRAND.domain || h === `www.${NATIONAL_BRAND.domain}` || h === `next.${NATIONAL_BRAND.domain}`
 }
 
 /** "RecruitNC", "RecruitSC": a state's own brand to families. */
@@ -83,31 +84,51 @@ export const stateBrand = (code: string) => `Recruit${code.toUpperCase()}`
 export type RecruitingState = (typeof RECRUITING_BRAND.states)[number]
 
 /**
- * States a viewer may open: the live ones, the ones being checked if an admin, and any named
- * for this viewer by `preview`.
+ * The states open on an address. RecruitWrestlers carries every live state; NC United is its NC
+ * licensee and reports North Carolina only (Matt, 26 Oct 2026: "nc united will only report on nc..
+ * like an oem of recruitwrestlers"). Defaults to NC United's view, so a caller that does not say
+ * which address it is on never shows another state there.
+ */
+export function liveStates(onRecruitWrestlers = false): RecruitingState[] {
+  return RECRUITING_BRAND.states.filter((s) => (onRecruitWrestlers ? s.live : s.code === "NC"))
+}
+
+/**
+ * States a viewer may open: the live ones on this address, the ones still being checked if an
+ * admin, and any named for this viewer by `preview`.
  *
  * `preview` exists because the launch checklist asks for a real in-state coach session and a real
- * family claim BEFORE a state goes live, and until now the only account that could see a
+ * family claim BEFORE a state goes live, and until it the only account that could see a
  * not-yet-live state was an admin. That is circular - to launch we need a coach to look, and to
  * let a coach look we had to launch - and the only way through it was handing a college coach the
  * admin surface. A named account previewing a named state is the smaller permission.
+ *
+ * A preview is granted per account and per state, so it holds on either address. The OEM rule
+ * above governs what a brand reports to the public, not what a person who has been handed a
+ * specific state may open - an admin already crosses it the same way.
  */
-export function visibleStates(isAdmin: boolean, preview: readonly string[] = []): RecruitingState[] {
+export function visibleStates(
+  isAdmin: boolean,
+  onRecruitWrestlers = false,
+  preview: readonly string[] = [],
+): RecruitingState[] {
+  const live = new Set(liveStates(onRecruitWrestlers).map((s) => s.code))
   const named = new Set(preview.map((c) => String(c).trim().toUpperCase()).filter(Boolean))
-  return RECRUITING_BRAND.states.filter((s) => s.live || isAdmin || named.has(s.code))
+  return RECRUITING_BRAND.states.filter((s) => live.has(s.code) || isAdmin || named.has(s.code))
 }
 
 export function isVisibleState(
   code: string | null | undefined,
   isAdmin: boolean,
+  onRecruitWrestlers = false,
   preview: readonly string[] = [],
 ): boolean {
-  return visibleStates(isAdmin, preview).some((s) => s.code === String(code ?? "").toUpperCase())
+  return visibleStates(isAdmin, onRecruitWrestlers, preview).some((s) => s.code === String(code ?? "").toUpperCase())
 }
 
 /** "North Carolina", "North Carolina and South Carolina", "North Carolina, South Carolina, and Virginia". */
-export function recruitingCoverage(): string {
-  const names = RECRUITING_BRAND.states.filter((s) => s.live).map((s) => s.name)
+export function recruitingCoverage(onRecruitWrestlers = false): string {
+  const names = liveStates(onRecruitWrestlers).map((s) => s.name)
   return new Intl.ListFormat("en-US", { style: "long", type: "conjunction" }).format(names)
 }
 

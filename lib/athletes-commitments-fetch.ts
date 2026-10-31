@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getCollegesByIds } from "@/lib/colleges"
 import { matchesDivisionFilter } from "@/lib/division-display"
+import { inState } from "@/lib/recruiting/states"
 
 export type CommitmentAthleteFilters = {
   year?: string | null
@@ -8,6 +9,8 @@ export type CommitmentAthleteFilters = {
   division?: string | null
   page?: number
   limit?: number
+  /** Whose commitments: one state's wrestlers (lib/recruiting/states.ts inState). North Carolina when none. */
+  state?: string
 }
 
 export type CommitmentAthleteListItem = {
@@ -122,6 +125,8 @@ function buildFilteredAthletesQuery(
 ) {
   let query = supabase.from("athletes").select(select, withCount ? { count: "exact" } : undefined)
   query = query.not("college", "is", null).neq("college", "").or("is_prospect.is.null,is_prospect.eq.false")
+  // One state's commitments (North Carolina unless asked): national profiles from other states carry a college too.
+  query = inState(query, filters.state)
 
   const yearFilter = filters.year
   if (yearFilter && yearFilter !== "all") {
@@ -142,7 +147,10 @@ function buildFilteredAthletesQuery(
   return query
 }
 
-function mapAthleteRow(athlete: Record<string, unknown>, collegesMap: Map<string, { division?: string; name?: string }>) {
+function mapAthleteRow(
+  athlete: Record<string, unknown>,
+  collegesMap: Map<string, { division?: string; name?: string; logo_url?: string | null }>,
+) {
   const photoUrl = String(athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png")
   const collegeRow = athlete.college_id ? collegesMap.get(String(athlete.college_id)) : null
   const collegeName = collegeRow?.name ?? String(athlete.college ?? "")
@@ -159,10 +167,11 @@ function mapAthleteRow(athlete: Record<string, unknown>, collegesMap: Map<string
       athlete.college_weight_class != null && String(athlete.college_weight_class).trim() !== ""
         ? String(athlete.college_weight_class)
         : undefined,
+    // The athlete's own override first, then the college's logo on the colleges row.
     collegeLogoUrl:
       typeof athlete.collegeLogoUrl === "string" && athlete.collegeLogoUrl.trim() !== ""
         ? athlete.collegeLogoUrl.trim()
-        : undefined,
+        : collegeRow?.logo_url?.trim() || undefined,
     graduationyear: Number(athlete.graduationyear) || 0,
     photourl: photoUrl,
     photoUrl,

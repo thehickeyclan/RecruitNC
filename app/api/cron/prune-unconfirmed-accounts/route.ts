@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { pruneUnconfirmedAccounts } from "@/lib/prune-unconfirmed-accounts"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -15,6 +16,7 @@ function authorizeCron(request: NextRequest): boolean {
 
 /** Daily: delete sign-ups that never confirmed and never signed in within seven days. */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const result = await pruneUnconfirmedAccounts(createAdminClient())

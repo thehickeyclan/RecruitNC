@@ -33,6 +33,7 @@ import {
 import { walletBalanceFromRow } from "@/lib/fundraising/wallet-balance"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
 import { HardLink } from "@/components/hard-link"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   bio: "Bio",
@@ -117,6 +118,7 @@ export function ProfileClient() {
   /** Wallet totals load when the user opens Digital wallet (or links an athlete). */
   const [spartanWalletPanelActivated, setSpartanWalletPanelActivated] = useState(false)
   const [activeProfileTab, setActiveProfileTab] = useState("account")
+  const onRw = useOnRecruitWrestlers()
   const rankingsAccess = useRankingsAccess()
 
   useEffect(() => {
@@ -597,9 +599,12 @@ export function ProfileClient() {
    * empty screen of zeros; it now shows only when a linked athlete still has a balance (or when a
    * link opens it directly).
    */
+  /* The wallet is NC United's fundraising; RecruitWrestlers never shows it (Matt, 28 Oct 2026). */
   const showWalletTab =
-    activeProfileTab === "fundraise" ||
-    (spartanFundraising?.athletes ?? []).some((row) => walletBalanceFromRow(row as never).availableCents > 0)
+    !onRw &&
+    (activeProfileTab === "fundraise" ||
+      (spartanFundraising?.athletes ?? []).some((row) => walletBalanceFromRow(row as never).availableCents > 0))
+  const tabValue = onRw && activeProfileTab === "fundraise" ? "account" : activeProfileTab
 
   return (
     <div className="profile-surface min-h-screen bg-[#0A1628]">
@@ -636,7 +641,7 @@ export function ProfileClient() {
       </div>
 
       <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        <Tabs value={activeProfileTab} onValueChange={onProfileTabChange} className="w-full space-y-6">
+        <Tabs value={tabValue} onValueChange={onProfileTabChange} className="w-full space-y-6">
           <TabsList className={`mb-0 grid w-full grid-cols-2 ${showWalletTab ? "sm:grid-cols-4" : "sm:grid-cols-3"} gap-2 rounded-xl bg-[#0F1E32] border border-[#1e3a5f] p-2 h-auto`}>
             <TabsTrigger
               value="account"
@@ -928,7 +933,7 @@ export function ProfileClient() {
                   variant="outline"
                   className="w-full justify-start sm:max-w-md border-border text-foreground hover:bg-muted"
                 >
-                  <a href="/athletes">Browse athletes</a>
+                  <a href="/prospects/all">Browse athletes</a>
                 </Button>
               </CardContent>
             </Card>
@@ -954,6 +959,7 @@ export function ProfileClient() {
             />
         </TabsContent>
 
+        {onRw ? null : (
         <TabsContent value="fundraise" className="mt-0 space-y-0 focus-visible:outline-none">
           <ProfileFundraiseTab
             walletPanelActivated={spartanWalletPanelActivated}
@@ -977,6 +983,7 @@ export function ProfileClient() {
             }}
           />
         </TabsContent>
+        )}
 
         <TabsContent value="blue" className="mt-0 space-y-6 focus-visible:outline-none">
                 {/* Everything this account pays for, or gets through Blue, in one place. */}
@@ -986,6 +993,7 @@ export function ProfileClient() {
                     already pay for. */}
                 <WiqSubscriptionPanel subscriptions={wiqSubscriptions} />
                 {blueLoading || blueMemberships.length > 0 ? (
+                  <div className="ncu-only">
                   <NcUnitedBlueSection
                     memberships={blueMemberships}
                     loading={blueLoading}
@@ -994,8 +1002,9 @@ export function ProfileClient() {
                     onRefresh={fetchBlueMemberships}
                     billingPortalError={blueBillingPortalError || undefined}
                   />
+                  </div>
                 ) : wiqSubscriptions.length > 0 ? null : (
-                  <Card className="bg-[#0F1E32] border-[#1e3a5f] shadow-md overflow-hidden">
+                  <Card className="ncu-only bg-[#0F1E32] border-[#1e3a5f] shadow-md overflow-hidden">
                     <div className="h-1 w-full bg-gradient-to-r from-[#D3B574] to-[#c4a665]" aria-hidden />
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-white">
@@ -1067,7 +1076,7 @@ function MembershipStrip({
 
   const tiles = [
     {
-      title: <BrandName ncu="RecruitNC Rankings" national="Insider" />,
+      title: "Insider",
       icon: Trophy,
       status: rankingsStatus,
       detail: rankings.loading
@@ -1075,10 +1084,11 @@ function MembershipStrip({
         : isLiveSubscription(rankings.subscription)
           ? "Paid subscription"
           : rankings.hasAccess
-            ? "Through Blue, a coach account or staff"
+            ? <BrandName ncu="Through Blue, a coach account or staff" national="Through a coach account or staff" />
             : "Class rankings and the College Prospects board",
     },
-    { title: "NC United Blue", icon: CreditCard, status: blueStatus, detail: blueLoading ? "Checking…" : blueDetail },
+    // NC United's program: never shown on RecruitWrestlers (Matt, 21 Oct 2026).
+    { title: "NC United Blue", icon: CreditCard, status: blueStatus, detail: blueLoading ? "Checking…" : blueDetail, ncuOnly: true },
   ]
 
   return (
@@ -1088,7 +1098,7 @@ function MembershipStrip({
           key={i}
           type="button"
           onClick={onOpen}
-          className="group flex items-center gap-3 rounded-xl border border-[#1e3a5f] bg-[#0F1E32]/80 px-4 py-3 text-left transition-colors hover:border-[#D3B574]/50"
+          className={`${"ncuOnly" in tile && tile.ncuOnly ? "ncu-only " : ""}group flex items-center gap-3 rounded-xl border border-[#1e3a5f] bg-[#0F1E32]/80 px-4 py-3 text-left transition-colors hover:border-[#D3B574]/50`}
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1e3a5f] text-[#D3B574]">
             <tile.icon className="h-5 w-5" />

@@ -394,3 +394,18 @@ describe("roundRank", () => {
     ])
   })
 })
+
+describe("report order by performance", () => {
+  it("puts the stronger tournament first when a performance rank is set, then falls back to place", async () => {
+    const { compareReports } = await import("./coach-event-report")
+    const base = { athleteId: "x", classYear: 2027, gender: "Male", school: null, competed: true, placementNote: null, weight: "120", bouts: [], significantWins: [], notableLosses: [], unverifiedBouts: 0, opponentSideOnly: 0, summary: "", strength: null }
+    const placed8 = { ...base, name: "Placed Eighth", placement: "8th", place: 8, record: { wins: 6, losses: 3 }, performanceRank: 1 }
+    const bloodRound = { ...base, name: "Blood Round", placement: null, place: null, record: { wins: 5, losses: 2 }, performanceRank: 1 }
+    const unranked = { ...base, name: "No Grade", placement: null, place: null, record: { wins: 7, losses: 1 } }
+    const graded = { ...base, name: "Graded B", placement: null, place: null, record: { wins: 3, losses: 2 }, performanceRank: 4 }
+    const order = [unranked, graded, bloodRound, placed8].sort(compareReports as any).map((r) => r.name)
+    expect(order).toEqual(["Placed Eighth", "Blood Round", "Graded B", "No Grade"])
+    const placedB = { ...placed8, name: "Placed B", performanceRank: 4 }
+    expect([placedB, bloodRound].sort(compareReports as any).map((r) => r.name)).toEqual(["Blood Round", "Placed B"])
+  })
+})

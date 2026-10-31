@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { buildWentHereSnapshot } from "@/lib/college-programs/went-here"
 import { saveWentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
@@ -20,6 +21,7 @@ function authorizeCron(request: NextRequest): boolean {
  * building it.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const started = Date.now()
   try {

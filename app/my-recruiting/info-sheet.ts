@@ -2,7 +2,7 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { getAthleteProfileUrl } from "@/lib/athlete-profile-links"
+import { shareableProfileUrl } from "@/lib/athlete-profile-links"
 import { resultClauses } from "@/lib/college-programs/outreach-results"
 import { loadAthleteCredentials } from "@/lib/credentials/athlete-credentials"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
@@ -14,7 +14,7 @@ import { loadLastCompeted } from "@/lib/prospect-last-competed"
  * the profile does not have is left out, never filled in.
  */
 const COLUMNS =
-  'id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, location, academic_gpa, academic_sat, academic_act, academic_interest, "contactEmail", phone, nhsca_results, super32_results'
+  'id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, location, academic_gpa, academic_sat, academic_act, academic_interest, "contactEmail", phone, nhsca_results, super32_results, state, is_nc_athlete'
 
 export async function buildInfoSheet(admin: SupabaseClient, athleteId: string): Promise<string | null> {
   const { data: a } = await admin.from("athletes").select(COLUMNS).eq("id", athleteId).maybeSingle()
@@ -39,7 +39,7 @@ export async function buildInfoSheet(admin: SupabaseClient, athleteId: string): 
     ["Intended major", text(row.academic_interest) || null],
     ["Phone", text(row.phone) || null],
     ["Email", text(row.contactEmail) || null],
-    ["Profile and results", getAthleteProfileUrl(athleteId)],
+    ["Profile and results", await shareableProfileUrl(athleteId, a as { state?: string | null; is_nc_athlete?: boolean | null })],
   ]
   return lines
     .filter(([, v]) => v)

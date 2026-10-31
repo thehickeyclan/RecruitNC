@@ -7,7 +7,7 @@ import { TOC_EVENT_LOGO, TOC_SATURDAY_COMPETITION_DATE, TOC_VENUE } from "@/lib/
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Tournament of Champions 2026 | NC United Wrestling",
+  title: "Tournament of Champions 2026",
   description:
     `NC United Tournament of Champions — by invitation only. One weigh-in Friday night (no Saturday weigh-in), first round after, brackets finish ${TOC_SATURDAY_COMPETITION_DATE} in Apex, NC.`,
   openGraph: {

@@ -61,7 +61,7 @@ export function FeaturedCompleteAthletes() {
     <section className="mb-12">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-2xl font-bold">Featured Commitments</h2>
-        <Link href="/athletes">
+        <Link href="/college-commitments">
           <Button variant="outline" size="sm">
             View All Athletes
           </Button>
@@ -81,7 +81,7 @@ export function FeaturedCompleteAthletes() {
       </div>
 
       <div className="mt-6 flex justify-center">
-        <Link href="/athletes">
+        <Link href="/college-commitments">
           <Button>View All Commitments</Button>
         </Link>
       </div>

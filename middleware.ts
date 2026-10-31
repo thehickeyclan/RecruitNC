@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { isNationalPath, isOpenWhileStaged, stagedBrandForHost } from "@/lib/recruiting/national-paths"
-import { stagingGateAllows } from "@/lib/staging-gate"
+import { isNationalPath, isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { isCommunityAdminPath } from "@/lib/recruiting/admin-scope"
+import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
 import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
 import { COACH_HOME_PATH, PORTAL_HINT_COOKIE, coachFrontDoor } from "@/lib/coach-front-door"
+import { COACH_RW_CUTOVER, NCU_PRODUCTION_HOSTS, isCoachCutoverPath } from "@/lib/recruiting/coach-cutover"
 
 const APP_ORIGIN = "https://app.ncwrestlingunited.com"
 
@@ -25,7 +27,12 @@ function isFundraisingHubPublicPath(p: string): boolean {
 /** Every response on a pre-launch brand address says: do not index. */
 export async function middleware(request: NextRequest) {
   const response = await routeRequest(request)
-  if (stagedBrandForHost(request.headers.get("host"))) {
+  /*
+   * RecruitWrestlers launched publicly (Matt, 30 Oct 2026): it is indexed and cached like any public
+   * site, each page deciding for itself (a draft or a profile still says noindex in its metadata).
+   * Only the retired Guild address, which forwards everything, stays out of search.
+   */
+  if (stagedBrandForHost(request.headers.get("host")) === "guild") {
     response.headers.set("X-Robots-Tag", "noindex, nofollow")
     response.headers.set("Cache-Control", "private, no-store")
   }
@@ -34,6 +41,14 @@ export async function middleware(request: NextRequest) {
 
 async function routeRequest(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname
+
+  // App alerts open /news/super32-live (a route every shipped app has); send it straight to the
+  // Command Center with a real redirect rather than one the page performs after loading.
+  if (pathname === "/news/super32-live") {
+    const url = request.nextUrl.clone()
+    url.pathname = "/super32/live"
+    return NextResponse.redirect(url, 307)
+  }
 
   /*
    * Recruiting under another brand, before public launch: recruit.wrestlingguild.com (Guild
@@ -53,14 +68,31 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
    * Anything already pointing at recruit.wrestlingguild.com - sign-in links, bookmarks - lands on
    * the same page there. 307 while the product is unlaunched, so nothing caches a permanent move.
    */
+  // State rankers work on recruitwrestlers.com; NC United's copy of the board forwards them.
+  if (!brand && pathname === "/admin/rankings/board" && request.method === "GET" && (await isRankerOnly(request.headers, request.cookies.getAll()))) {
+    return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, "https://www.recruitwrestlers.com"), 307)
+  }
   if (brand === "guild") {
     return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, "https://www.recruitwrestlers.com"), 307)
   }
   if (brand) {
     if (pathname === "/robots.txt") {
-      return new NextResponse("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain", "X-Robots-Tag": "noindex, nofollow" } })
+      // Public pages are open to search; accounts, tools and staff pages are not.
+      const body =
+        brand === "national"
+          ? [
+              "User-agent: *",
+              "Allow: /",
+              ...["/admin", "/api", "/auth", "/dev", "/my-recruiting", "/my-recruits", "/coach-home", "/coach-reports", "/inbox", "/profile", "/edit-profile", "/profile-setup"].map((p) => `Disallow: ${p}`),
+              "Sitemap: https://www.recruitwrestlers.com/sitemap.xml",
+              "",
+            ].join("\n")
+          : "User-agent: *\nDisallow: /\n"
+      return new NextResponse(body, { headers: { "Content-Type": "text/plain" } })
     }
-    if (!isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll()))) {
+    if (brand === "national" && pathname === "/sitemap.xml") return NextResponse.rewrite(new URL("/recruitwrestlers/sitemap.xml", request.url))
+    // Launched 26 Oct 2026: the site is public; only the staff preview tools stay gated.
+    if (isStaffOnlyAfterLaunch(pathname) && !isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll(), pathname))) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json({ error: "Not available yet." }, { status: 403, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } })
       }
@@ -68,9 +100,45 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
       holding.headers.set("Cache-Control", "private, no-store")
       return holding
     }
-    if (pathname === "/") return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
-    if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
+    if (pathname === "/") {
+      // A signed-in college coach's home is My Recruits here too: the home page is for families
+      // and visitors (Matt, 27 Oct 2026: a coach opening recruitwrestlers.com got the family menu).
+      const door = await coachFrontDoor(request.headers, request.cookies.getAll(), false)
+      if (door.redirect) {
+        const response = NextResponse.redirect(new URL(COACH_HOME_PATH, request.url), 307)
+        response.headers.set("Cache-Control", "private, no-store")
+        return response
+      }
+      return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
+    }
+    // NC United's community admin tools stay on NC United's address (lib/recruiting/admin-scope.ts).
+    if (isCommunityAdminPath(pathname)) {
       return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
+    }
+    /*
+     * The boards live at /rankings here (Matt, 29 Oct 2026: "/rankings it should be"). The pages are
+     * app/public-rankings - a name left over from NC United, where /rankings is the Insider checkout,
+     * which stays. Old /public-rankings links move permanently; a checkout link goes to membership.
+     */
+    if (pathname === "/public-rankings" || pathname.startsWith("/public-rankings/")) {
+      return NextResponse.redirect(new URL(`${pathname.replace(/^\/public-rankings/, "/rankings")}${request.nextUrl.search}`, request.url), 308)
+    }
+    if (pathname === "/rankings" && request.nextUrl.searchParams.has("plan")) {
+      return NextResponse.redirect(new URL("/membership#insider", request.url), 307)
+    }
+    if ((pathname === "/rankings" || pathname.startsWith("/rankings/")) && !pathname.startsWith("/rankings/updates")) {
+      return NextResponse.rewrite(new URL(`${pathname.replace(/^\/rankings/, "/public-rankings")}${request.nextUrl.search}`, request.url))
+    }
+    // RecruitWrestlers' own policy, not NC United's (app/recruitwrestlers/privacy).
+    if (pathname === "/privacy") return NextResponse.rewrite(new URL("/recruitwrestlers/privacy", request.url))
+    if (pathname === "/terms") return NextResponse.rewrite(new URL("/recruitwrestlers/terms", request.url))
+    if (pathname === "/contact") return NextResponse.rewrite(new URL("/recruitwrestlers/contact", request.url))
+    if (pathname === "/about") return NextResponse.rewrite(new URL("/recruitwrestlers/about", request.url))
+    if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
+      // Nothing on recruitwrestlers.com leads to NC United (Matt's NC United sweep, 27 Oct 2026):
+      // its pages, asked for here, are RecruitWrestlers' "page not found".
+      // A real 404, not a 200 that looks like one, now that search engines read the site.
+      return NextResponse.rewrite(new URL("/recruitwrestlers/not-found", request.url), { status: 404 })
     }
   }
 
@@ -87,6 +155,27 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
         { error: refusal === 401 ? "Sign in as an admin." : "Admin access required." },
         { status: refusal, headers: { "Cache-Control": "no-store" } },
       )
+    }
+  }
+
+  /*
+   * College coaches work on RecruitWrestlers.com (lib/recruiting/coach-cutover.ts). A coach who
+   * opens the front page or a portal page on NC United's own address is handed across, signed in.
+   * Only on the production address; a partner coach asking for NC United by name stays.
+   */
+  if (
+    COACH_RW_CUTOVER &&
+    !brand &&
+    (request.method === "GET" || request.method === "HEAD") &&
+    NCU_PRODUCTION_HOSTS.has(String(request.headers.get("host") ?? "").toLowerCase().split(":")[0]!) &&
+    isCoachCutoverPath(pathname)
+  ) {
+    const door = await coachFrontDoor(request.headers, request.cookies.getAll(), request.nextUrl.searchParams.has("community"))
+    if (door.redirect) {
+      const next = pathname === "/" ? COACH_HOME_PATH : `${pathname}${request.nextUrl.search}`
+      const response = NextResponse.redirect(new URL(`/auth/rw-handoff?next=${encodeURIComponent(next)}`, request.url), 307)
+      response.headers.set("Cache-Control", "private, no-store")
+      return response
     }
   }
 
@@ -139,7 +228,7 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
       pathname.startsWith("/coaches/") ||
       pathname.startsWith("/colleges/"))
   ) {
-    return NextResponse.redirect(new URL("/athletes", request.url), 308)
+    return NextResponse.redirect(new URL("/college-commitments", request.url), 308)
   }
 
   // Individual-athlete giving is retired. Keep all public giving organizational
@@ -200,7 +289,8 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
   const publicRoutes = [
     '/view-profile',
     '/athletes',
-    '/athletes-public',
+    '/college-commitments',
+    '/wrestlers',
     '/prospects',
     '/schools',
     '/colleges',
@@ -217,6 +307,14 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     '/recruiting/learn',
     '/api/college-map',
     '/news',
+    // Super 32 Command Center: public, and opened from app alerts via /news/super32-live.
+    '/super32/live',
+    '/api/super32-live',
+    // Its rehearsal page; notFound() in production.
+    '/dev/super32-live-preview',
+    // Short profile links, /w/<name>-<class> (lib/profile-short-link.ts). The slash keeps /w from
+    // matching every route that starts with a w.
+    '/w/',
     '/blue',
     '/go',
     '/store',

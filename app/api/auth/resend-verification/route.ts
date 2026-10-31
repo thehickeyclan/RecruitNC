@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +13,8 @@ export async function POST(request: Request) {
 
     const safeReturnTo =
       typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : undefined
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    // Back to the site the person is on (RecruitWrestlers families were sent to NC United).
+    const baseUrl = stagedBrandForHost(request.headers.get("host")) === "national" ? "https://www.recruitwrestlers.com" : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
     const emailRedirectTo = safeReturnTo
       ? `${baseUrl}/auth/callback?next=${encodeURIComponent(safeReturnTo)}`
       : `${baseUrl}/auth/callback`

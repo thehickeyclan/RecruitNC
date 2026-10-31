@@ -7,6 +7,7 @@
  * and the questions families ask. Every link lands on the verified library in lib/recruiting/learn;
  * nothing on this page states a rule itself. The mock's videos are left out until we have them.
  */
+import { LearnTabs } from "@/components/recruiting/learn/learn-tabs"
 import type { LucideIcon } from "lucide-react"
 import {
   ArrowLeftRight,
@@ -14,6 +15,7 @@ import {
   BarChart3,
   BookOpen,
   CalendarDays,
+  Compass,
   ChevronRight,
   DollarSign,
   FileText,
@@ -22,6 +24,7 @@ import {
   ListChecks,
   Mail,
   Map as MapIcon,
+  Plane,
   Scale,
   ShieldAlert,
   Target,
@@ -45,22 +48,12 @@ const GOLD = "var(--recruit-accent)"
 const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
 const TRACKS: D1Track[] = ["men-2028", "men-2027", "women"]
 
-const TABS = [
-  { label: "Overview", href: "/my-recruiting/learn" },
-  { label: "Timeline", href: "/recruiting/learn/timeline" },
-  { label: "Rules", href: "/recruiting/learn/division-1" },
-  { label: "Academics", href: "/recruiting/learn/eligibility-center" },
-  { label: "Costs & aid", href: "/recruiting/learn/paying-for-college" },
-  { label: "Getting recruited", href: "/recruiting/learn/working-the-process" },
-  { label: "Tournaments", href: "/recruiting/learn/tournaments" },
-  { label: "FAQs", href: "/recruiting/learn/questions-families-ask" },
-]
 
 const DOORS = [
-  { image: "/focused-wrestler.png", title: "Recruiting timeline", text: "What to do each year, 8th grade to signing.", cta: "View timeline", href: "/recruiting/learn/timeline" },
-  { image: "/grappling-duel.png", title: "The rules, level by level", text: "Contact, calls, visits and what's allowed.", cta: "Learn the rules", href: "/recruiting/learn/division-1" },
+  { image: "/images/jacob-perry-ground-control.jpeg", title: "Recruiting timeline", text: "What to do each year, 8th grade to signing.", cta: "View timeline", href: "/recruiting/learn/timeline" },
+  { image: "/images/blayden-thompson-action.jpeg", title: "The rules, level by level", text: "Contact, calls, visits and what's allowed.", cta: "Learn the rules", href: "/recruiting/learn/division-1" },
   { image: "/hero-banner-nc-wrestling-arena.png", title: "What college costs", text: "Full cost, aid, and how academics lower it.", cta: "Get the guide", href: "/recruiting/learn/paying-for-college" },
-  { image: "/focused-grappler.png", title: "Find the right fit", text: "Compare colleges on fit, cost and roster.", cta: "Compare colleges", href: "/recruiting/compare" },
+  { image: "/images/braylon-butts-action.jpeg", title: "Find the right fit", text: "Compare colleges on fit, cost and roster.", cta: "Compare colleges", href: "/recruiting/compare" },
 ]
 
 const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
@@ -79,6 +72,7 @@ const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
   { icon: DollarSign, label: "NIL and revenue sharing", href: "/recruiting/learn/nil" },
   { icon: Users, label: "Women's wrestling", href: "/recruiting/learn/womens-wrestling" },
   { icon: CalendarDays, label: "Eligibility clock calculator", href: "/recruiting/learn/eligibility-clock" },
+  { icon: Plane, label: "Official visits", href: "/recruiting/learn/official-visits" },
   { icon: ShieldAlert, label: "Staying eligible in NC", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
 ]
 
@@ -87,11 +81,13 @@ const DO_NEXT: Array<{ icon: LucideIcon; label: string; text: string; href: stri
   { icon: Mail, label: "Write to a coach", text: "From verified results", href: "/my-recruiting/colleges" },
   { icon: MapIcon, label: "Find colleges at a level", text: "Every program on the map", href: "/recruiting/college-map" },
   { icon: BarChart3, label: "Compare your colleges", text: "Fit, full cost, roster", href: "/recruiting/compare" },
-  { icon: Target, label: "Your next steps", text: "The plan for this year", href: "/my-recruiting/plan" },
+  { icon: Target, label: "Your recruiting path", text: "The five steps, and where you are", href: "/my-recruiting" },
 ]
 
 /** Whole guides (Matt, 19 Oct 2026): the pages a family reads start to finish, beside the quick answers. */
 const GUIDES: Array<{ icon: LucideIcon; title: string; text: string; href: string }> = [
+  { icon: Compass, title: "How to use the Command Center", text: "The five steps of the recruiting path, and how to use Scout.", href: "/recruiting/learn/how-to-use-command-center" },
+  { icon: Plane, title: "Get ready for your official visit", text: "The checklist, who pays, the limits by level and the questions to ask.", href: "/recruiting/learn/official-visits" },
   { icon: DollarSign, title: "NIL in wrestling", text: "What it is, what wrestlers really earn, and what's just rumour.", href: "/recruiting/learn/nil" },
   { icon: ArrowLeftRight, title: "The transfer portal", text: "How transfers change recruiting, and the rules at every level.", href: "/recruiting/learn/transfer-portal" },
   { icon: CalendarDays, title: "The eligibility clock", text: "Work out how many college seasons your wrestler has.", href: "/recruiting/learn/eligibility-clock" },
@@ -169,18 +165,7 @@ export default async function CommandCenterLearn() {
           </div>
         </section>
 
-        {/* Tabs */}
-        <nav aria-label="Learn sections" className="-mx-4 mt-4 overflow-x-auto border-b border-white/10 px-4 sm:mx-0 sm:px-0">
-          <ul className="flex gap-6 whitespace-nowrap text-sm font-semibold">
-            {TABS.map((t, i) => (
-              <li key={t.label}>
-                <a href={t.href} className={`block border-b-2 py-3 ${i === 0 ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-white/65 hover:text-white"}`}>
-                  {t.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <LearnTabs className="mt-4" />
 
         {/* Your roadmap: the wrestler's own year first */}
         {year && w ? (

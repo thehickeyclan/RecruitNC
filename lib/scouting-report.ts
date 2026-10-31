@@ -46,6 +46,8 @@ import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } fr
 import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
+import { productName } from "@/lib/recruiting/product-name"
+import { nhscaDivision } from "@/lib/nhsca-division"
 
 export type ScoutingReportIdentity = {
   name: string
@@ -511,8 +513,8 @@ export function buildResultRows(bundle: {
   ]
   for (const [label, list] of national) {
     for (const r of list) {
-      // Fargo runs freestyle and Greco as separate tournaments; the division says which.
-      const division = label === "Fargo" ? String(r.division ?? "").trim() : ""
+      // Fargo runs freestyle and Greco as separate tournaments; NHSCA runs grade divisions (lib/nhsca-division.ts).
+      const division = label === "Fargo" ? String(r.division ?? "").trim() : label === "NHSCA Nationals" ? (nhscaDivision(null, r.division) ?? "") : ""
       // Say "did not place" rather than leaving the placement out.
       //
       // Abdul-Jamil Zaggout went 4-2 at NHSCA 2026 and placed nowhere. His row read
@@ -524,7 +526,7 @@ export function buildResultRows(bundle: {
       const detail = [division, r.weight, placement, r.record ? `${r.record} record` : ""]
         .filter(Boolean)
         .join(" · ")
-      if (detail) rows.push({ event: label, style: styleOfEventForAthlete(label, division, gender), place: placeNumber(r.placement), record: String(r.record ?? "").trim() || null, year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
+      if (detail) rows.push({ event: label, style: styleOfEventForAthlete(label, label === "Fargo" ? division : "", gender), place: placeNumber(r.placement), record: String(r.record ?? "").trim() || null, year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
     }
   }
   for (const r of bundle.other ?? []) {
@@ -862,7 +864,7 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
     membership.ncUnitedTeam ? `NC United: ${membership.ncUnitedTeam}` : "",
     report.commitment ? `Committed: ${report.commitment}` : "",
     report.rankingPublished && report.prospectRanking
-      ? `RecruitNC ranking (North Carolina ${isWomensBoard(identity.gender) ? "women's " : ""}class ranking, not national): #${report.prospectRanking} in the ${isWomensBoard(identity.gender) ? "women's " : ""}Class of ${identity.graduationYear ?? ""}`.trim()
+      ? `${productName()} ranking (North Carolina ${isWomensBoard(identity.gender) ? "women's " : ""}class ranking, not national): #${report.prospectRanking} in the ${isWomensBoard(identity.gender) ? "women's " : ""}Class of ${identity.graduationYear ?? ""}`.trim()
       : /*
          * The absence, stated.
          *
@@ -871,7 +873,7 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
          * of 2029" twice in a row, and the guard threw both away, so the wrestler had no summary
          * at all. A fact it can read beats an instruction it can skip.
          */
-        "RecruitNC ranking: none published for this class. Do not state a ranking.",
+        `${productName()} ranking: none published for this class. Do not state a ranking.`,
   ].filter(Boolean)
 
   /*
@@ -1150,7 +1152,7 @@ Say things in this order, skipping anything the facts do not contain:
    beyond the clock line at the top of the facts, and a February result is a different season
    from a September one.
 4. Then the wins and losses that carry a credential, naming the opponents.
-5. Then the ranking: a national ranking with its outlet, otherwise the RecruitNC class ranking.
+5. Then the ranking: a national ranking with its outlet, otherwise the ${productName()} class ranking.
 6. Then GPA and test scores, last, in one short sentence.
 
 Two lines are worth a sentence of their own when the facts carry them:
@@ -1183,8 +1185,8 @@ Rules:
   record.
 - Never write "ranked" on its own about an opponent. Say "nationally ranked", "ranked in North
   Carolina", or "in the Tournament of Champions field", matching exactly what the facts state.
-- A RecruitNC ranking is a North Carolina class ranking, not a national one. Write it as
-  "RecruitNC #13 in the Class of 2027".
+- A ${productName()} ranking is a North Carolina class ranking, not a national one. Write it as
+  "${productName()} #13 in the Class of 2027".
 - Fargo freestyle and Fargo Greco-Roman are separate tournaments. Name the style when the facts do.
 - If the losses are to strong opponents, say so plainly — a coach reads that as useful.
 - If the facts are thin, say what is known and stop. Do not pad.

@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Mail, CheckCircle, XCircle } from "lucide-react"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export default function VerificationPage() {
   const router = useRouter()
@@ -101,7 +102,7 @@ export default function VerificationPage() {
                 <div className="space-y-2">
                   <h1 className="text-2xl font-semibold tracking-tight">Check your email</h1>
                   <p className="text-sm text-muted-foreground">
-                    We&apos;ve sent a verification link to your email address. Click that link to activate your RecruitNC account.
+                    We&apos;ve sent a verification link to your email address. Click that link to activate your <BrandName /> account.
                   </p>
                 </div>
                 <div className="space-y-4">

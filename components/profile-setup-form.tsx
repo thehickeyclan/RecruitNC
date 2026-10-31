@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Eye, Loader2 } from "lucide-react"
+import { Camera, Eye, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { isHeic, preparePhoto } from "@/lib/images/prepare-photo"
 
 /**
  * The one form behind every door.
@@ -48,16 +49,61 @@ export function ProfileSetupForm({
   athleteName,
   initial,
   mode,
+  photoUrl = null,
+  gender = null,
+  asParent = false,
 }: {
   athleteId: string
   athleteName: string
   initial: ProfileSetupValues
   mode: "verify" | "create"
+  /** The photo already on the profile, if any. */
+  photoUrl?: string | null
+  gender?: string | null
+  /** A parent filling it in for a child: "your wrestler", not "you". */
+  asParent?: boolean
 }) {
   const router = useRouter()
   const [v, setV] = useState<ProfileSetupValues>(initial)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const female = /^f/i.test(gender ?? "")
+  const his = female ? "her" : "his"
+  const first = athleteName.trim().split(/\s+/)[0] || "your wrestler"
+  const yourWrestler = asParent ? first : "you"
+
+  /*
+   * Photo first (Matt, 30 Oct 2026: "do we tell them to add a picture, update academic info and
+   * leave their contact info?"). A claim used to land on name/school/weight - things we already
+   * had - and the photo was not on the page at all. It uploads on pick, so it is saved even if
+   * nothing else is.
+   */
+  const [photo, setPhoto] = useState<string | null>(photoUrl)
+  const [uploading, setUploading] = useState(false)
+  const [photoError, setPhotoError] = useState("")
+  const fileInput = useRef<HTMLInputElement>(null)
+  const pickPhoto = async (file: File | undefined) => {
+    if (!file) return
+    setPhotoError("")
+    if (!file.type.startsWith("image/") && !isHeic(file)) return setPhotoError("That file is not a photo.")
+    // Photos are shrunk in the browser before they go up (lib/images/prepare-photo.ts).
+    if (file.size > 25 * 1024 * 1024) return setPhotoError("That photo is over 25MB. Pick a smaller one.")
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append("file", await preparePhoto(file))
+      form.append("athleteId", athleteId)
+      form.append("category", "profile")
+      const res = await fetch("/api/athletes/upload-image", { method: "POST", body: form, credentials: "include" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.url) throw new Error(data.error || "")
+      setPhoto(data.url)
+    } catch (err) {
+      setPhotoError(err instanceof Error && err.message ? err.message : "The photo did not upload. Please try again.")
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const set = <K extends keyof ProfileSetupValues>(k: K, val: ProfileSetupValues[K]) =>
     setV((p) => ({ ...p, [k]: val }))
@@ -99,10 +145,50 @@ export function ProfileSetupForm({
         </h1>
         <p className="mt-2 text-white/60">
           {mode === "verify"
-            ? "We built this from his results. Correct anything wrong and add what is missing."
-            : "Five things make the profile. The rest is optional and can wait."}
+            ? `We built this from ${his} results. Add the three things coaches look for next, and correct anything wrong.`
+            : "Five things make the profile. Then the three things coaches look for next."}
         </p>
       </div>
+
+      {/* What is still missing, at a glance: the three things only the family can add. */}
+      <ul className="grid grid-cols-3 gap-2 text-center text-xs font-semibold">
+        {[
+          ["Photo", Boolean(photo)],
+          ["GPA", Boolean(v.gpa.trim())],
+          ["Contact", Boolean(v.cell.trim() || v.email.trim())],
+        ].map(([label, done]) => (
+          <li key={String(label)} className={`rounded-lg border px-2 py-2 ${done ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-300" : "border-white/15 bg-white/5 text-white/70"}`}>
+            {done ? "✓ " : ""}{label}
+          </li>
+        ))}
+      </ul>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-semibold text-white">Photo</h2>
+          <p className="mt-1 text-sm text-white/50">
+            The first thing a coach sees. A clear photo of {asParent ? first : "you"}, wrestling or a headshot.
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          {photo ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Blob photo URL
+            <img src={photo} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
+          ) : (
+            <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/30">
+              <Camera className="h-7 w-7" aria-hidden />
+            </span>
+          )}
+          <div>
+            <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={(e) => void pickPhoto(e.target.files?.[0])} />
+            <Button type="button" variant="outline" disabled={uploading} onClick={() => fileInput.current?.click()} className="min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10">
+              {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
+              {photo ? "Change photo" : "Add a photo"}
+            </Button>
+            {photoError ? <p className="mt-2 text-sm text-red-300">{photoError}</p> : null}
+          </div>
+        </div>
+      </section>
 
       <div className="flex items-start gap-3 rounded-lg border border-[#D3B574]/40 bg-[#D3B574]/10 p-4">
         <Eye className="mt-0.5 h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
@@ -160,13 +246,13 @@ export function ProfileSetupForm({
 
       <section className="space-y-4 border-t border-white/10 pt-6">
         <div>
-          <h2 className="font-semibold text-white">Academics<Optional /></h2>
-          <p className="mt-1 text-sm text-white/50">The first thing a college coach asks after results.</p>
+          <h2 className="font-semibold text-white">Academics</h2>
+          <p className="mt-1 text-sm text-white/50">The first thing a college coach asks after results. Coaches filter by GPA.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
             <Label className="text-white">GPA</Label>
-            <Input value={v.gpa} onChange={(e) => set("gpa", e.target.value)} placeholder="3.8" />
+            <Input value={v.gpa} onChange={(e) => set("gpa", e.target.value)} placeholder="e.g. 3.8" />
           </div>
           <div className="space-y-2">
             <Label className="text-white">SAT</Label>
@@ -178,7 +264,7 @@ export function ProfileSetupForm({
           </div>
         </div>
         <div className="space-y-2">
-          <Label className="text-white">What he wants to study</Label>
+          <Label className="text-white">What {asParent ? `${first} wants` : "you want"} to study<Optional /></Label>
           <Input
             value={v.academicInterest}
             onChange={(e) => set("academicInterest", e.target.value)}
@@ -199,9 +285,10 @@ export function ProfileSetupForm({
 
       <section className="space-y-4 border-t border-white/10 pt-6">
         <div>
-          <h2 className="font-semibold text-white">Contact<Optional /></h2>
+          <h2 className="font-semibold text-white">Contact</h2>
           <p className="mt-1 text-sm text-white/50">
-            Released only to verified college coaches. Use a parent&apos;s details if you would rather.
+            How a coach reaches {yourWrestler}. Released only to verified college coaches.{" "}
+            {asParent ? "Use yours, your wrestler's, or both." : "Use a parent's details if you would rather."}
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

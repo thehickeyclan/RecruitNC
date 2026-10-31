@@ -56,6 +56,7 @@ import {
   type ProgramFitPayload,
 } from "./program-fit-panel"
 import { EMPTY_CRITERIA, evaluateProgramFit, summarizeFit, type FitCheck, type FitStatus } from "@/lib/program-fit"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 type Athlete = {
   id: string
@@ -140,7 +141,7 @@ const CAPABILITIES = [
 ]
 
 const STEPS = [
-  { title: "Pick two wrestlers", body: `Search any ${recruitingCoverage()} high schooler by name or school.` },
+  { title: "Pick two wrestlers", body: "Search any high schooler by name or school." },
   { title: "Choose what matters", body: "Strength of opponents and academics are on by default. Add the national events you care about." },
   { title: "Read the edges", body: "Each row shows who has the edge and why. Share the link with your staff." },
 ]
@@ -196,6 +197,7 @@ function Pitch({
   /** This exact comparison, so signing in lands back on it rather than an empty page. */
   returnTo: string
 }) {
+  const onRw = useOnRecruitWrestlers()
   const stats = [
     { value: athleteCount.toLocaleString(), label: "NC wrestlers ready to compare" },
     ...(boutsOnFile ? [{ value: boutsOnFile.toLocaleString(), label: "bouts on file" }] : []),
@@ -220,7 +222,7 @@ function Pitch({
               <span className={GOLD}>Every match that matters.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/70">
-              Who&apos;s better for your program? Put any two {recruitingCoverage()} wrestlers side by side: head to head,
+              Who&apos;s better for your program? Put any two {recruitingCoverage(onRw)} wrestlers side by side: head to head,
               common opponents, strength of schedule, national results and academics, with every edge explained.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -620,6 +622,7 @@ export default function CompareClient({
   /** Which way in the coach came ("profile", "my-recruits", "profile-similar"), for the usage log. */
   initialSource?: string
 }) {
+  const onRw = useOnRecruitWrestlers()
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useAuth()
@@ -800,7 +803,7 @@ export default function CompareClient({
       <section ref={toolRef} id="compare" className="container mx-auto scroll-mt-20 px-4 pb-20">
         <div className={`${PANEL} p-5 sm:p-6`}>
           <h2 className="text-xl font-black text-white">Compare wrestlers</h2>
-          <p className="mt-1 text-sm text-white/50">{recruitingCoverage()} wrestlers for now. Other states open as we check their results.</p>
+          <p className="mt-1 text-sm text-white/50">{recruitingCoverage(onRw)} wrestlers for now. Other states open as we check their results.</p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
             <Picker label="Wrestler" athletes={athletes} value={leftId} exclude={rightId} onChange={pickLeft} />
             <button

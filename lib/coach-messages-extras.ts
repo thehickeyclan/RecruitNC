@@ -251,8 +251,11 @@ export async function moveListsOnCoachMessage(admin: SupabaseClient, threadId: s
   const now = new Date().toISOString()
   const writes = users
     .filter((u) => !at.has(u) || COLLEGE_LIST_STATUSES.indexOf(at.get(u) as (typeof COLLEGE_LIST_STATUSES)[number]) < TALKING)
-    .map((u) => ({ user_id: u, school_id: collegeId, status: "talking", updated_at: now }))
-  if (writes.length) await admin.from("college_list_items").upsert(writes, { onConflict: "user_id,school_id" })
+    .map((u) => ({ user_id: u, school_id: collegeId, status: "talking", updated_at: now, stage_changed_at: now }))
+  if (!writes.length) return
+  const { error } = await admin.from("college_list_items").upsert(writes, { onConflict: "user_id,school_id" })
+  // Before the days-in-stage column exists (scripts/add-college-list-stage-changed.sql).
+  if (error?.code === "42703") await admin.from("college_list_items").upsert(writes.map(({ stage_changed_at: _s, ...w }) => w), { onConflict: "user_id,school_id" })
 }
 
 /** Messages in this account's conversations whose words match, newest first. */

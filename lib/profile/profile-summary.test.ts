@@ -18,7 +18,31 @@ describe("accolades", () => {
       ],
     })
     expect(a.allAmericans).toBe(2)
-    expect(accoladePhrases(a)).toEqual(["two-time All-American", "NCHSAA 7A state runner-up"])
+    expect(accoladePhrases(a)).toEqual(["NHSCA All-American", "Fargo All-American", "NCHSAA 7A state runner-up"])
+  })
+
+  it("drops the class when state titles came in different classes", () => {
+    const a = accoladesFrom({
+      stateRows: [row("2026 NCHSAA 8A State Championships", 2026, "1st"), row("2025 NCHSAA 4A State Championships", 2025, "1st")],
+      tournamentRows: [],
+    })
+    expect(accoladePhrases(a)).toEqual(["two-time NCHSAA state champion"])
+  })
+
+  it("names every event with its own count, a title over All-American", () => {
+    const a = accoladesFrom({
+      stateRows: [],
+      tournamentRows: [
+        row("2026 NHSCA High School Nationals", 2026, "5th"),
+        row("2025 NHSCA High School Nationals", 2025, "6th"),
+        row("Super 32 Challenge", 2025, "4th"),
+        row("Fargo · Freestyle", 2025, "1st"),
+        row("Fargo · Greco", 2025, "8th"),
+      ],
+    })
+    expect(accoladePhrases(a)).toEqual(["two-time NHSCA All-American", "Super 32 All-American", "Fargo national champion"])
+    const out = summarySentences({ name: "Sam Lee", school: "Apex", club: null, accolades: a, scope: "national", styles: ["freestyle"], offSeasonEvents: 2 }).map(sentenceText)
+    expect(out[1]).toBe("Lee is a two-time NHSCA All-American, a Super 32 All-American and a Fargo national champion who competes nationally, year-round, in freestyle.")
   })
 
   it("says placer, qualifier or nothing, never more than the record holds", () => {
@@ -67,11 +91,11 @@ describe("summary sentences", () => {
     ])
   })
 
-  it("uses the surname when gender is not set, and an for All-American", () => {
-    const a = accoladesFrom({ stateRows: [], tournamentRows: [row("Fargo · Freestyle", 2026, "3rd")] })
+  it("uses the surname when gender is not set, and an for NHSCA", () => {
+    const a = accoladesFrom({ stateRows: [], tournamentRows: [row("NHSCA Nationals", 2026, "3rd")] })
     const out = summarySentences({ name: "Sam Lee", school: "Apex", club: "Triangle Wrestling Academy", accolades: a, scope: "national", styles: ["freestyle"], offSeasonEvents: 1 }).map(sentenceText)
     expect(out[0]).toBe("Sam Lee competes for Apex and is part of Triangle Wrestling Academy.")
-    expect(out[1]).toBe("Lee is an All-American who competes nationally in freestyle.")
+    expect(out[1]).toBe("Lee is an NHSCA All-American who competes nationally in freestyle.")
   })
 
   it("says an NCHSAA, by sound", () => {

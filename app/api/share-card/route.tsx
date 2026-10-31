@@ -10,7 +10,20 @@ const NAVY = "#071427"
 const GOLD = "#E8BA5A"
 
 // Only pictures we host: the card must not fetch whatever a link asks for.
-const IMAGE_HOSTS = [/\.public\.blob\.vercel-storage\.com$/, /^app\.ncwrestlingunited\.com$/, /\.supabase\.co$/]
+const IMAGE_HOSTS = [/\.public\.blob\.vercel-storage\.com$/, /^app\.ncwrestlingunited\.com$/, /^(www\.)?recruitwrestlers\.com$/, /\.supabase\.co$/]
+
+/**
+ * The card is drawn in the brand of the address it is asked for on (Matt, 27 Oct 2026: every link
+ * shared from recruitwrestlers.com unfurled with NC United's logo and domain). A RecruitNC kicker
+ * or title passed by a page reads RecruitWrestlers there.
+ */
+function brandFor(hostname: string) {
+  const rw = /(^|\.)recruitwrestlers\.com$/.test(hostname)
+  return rw
+    ? { rw, navy: "#0B1426", accent: "#A3E635", logo: "/recruitwrestlers/mark.png", logoW: 75, kicker: "RECRUITWRESTLERS", title: "RecruitWrestlers", domain: "RECRUITWRESTLERS.COM" }
+    : { rw, navy: NAVY, accent: GOLD, logo: "/images/nc-united-logo-official.png", logoW: 64, kicker: "NC UNITED WRESTLING", title: "NC United", domain: "APP.NCWRESTLINGUNITED.COM" }
+}
+const rwWords = (s: string) => s.replace(/RecruitNC/gi, "RecruitWrestlers").replace(/NC United Wrestling/gi, "RecruitWrestlers")
 
 function allowedImage(raw: string | null, origin: string): string | null {
   if (!raw) return null
@@ -51,33 +64,35 @@ async function asDataUrl(url: string): Promise<string | null> {
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const title = (url.searchParams.get("t") ?? "NC United Wrestling").slice(0, 90)
-  const line = (url.searchParams.get("s") ?? "").slice(0, 160)
-  const kicker = (url.searchParams.get("k") ?? "NC UNITED WRESTLING").slice(0, 50).toUpperCase()
+  const brand = brandFor((request.headers.get("host") ?? url.hostname).split(":")[0].toLowerCase())
+  const words = (s: string) => (brand.rw ? rwWords(s) : s)
+  const title = words(url.searchParams.get("t") ?? brand.title).slice(0, 90)
+  const line = words(url.searchParams.get("s") ?? "").slice(0, 160)
+  const kicker = words(url.searchParams.get("k") ?? brand.kicker).slice(0, 50).toUpperCase()
   const imageUrl = allowedImage(url.searchParams.get("img"), url.origin)
   const [loaded, picture] = await Promise.all([loadFonts(), imageUrl ? asDataUrl(imageUrl) : null])
-  const logo = await asDataUrl(`${url.origin}/images/nc-united-logo-official.png`)
+  const logo = await asDataUrl(`${url.origin}${brand.logo}`)
   const titleSize = title.length > 40 ? 56 : title.length > 24 ? 68 : 80
 
   return new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", display: "flex", background: NAVY, fontFamily: "Inter", position: "relative" }}>
-        <div style={{ position: "absolute", left: 0, top: 0, width: 14, height: "100%", background: GOLD }} />
+      <div style={{ width: "100%", height: "100%", display: "flex", background: brand.navy, fontFamily: "Inter", position: "relative" }}>
+        <div style={{ position: "absolute", left: 0, top: 0, width: 14, height: "100%", background: brand.accent }} />
         <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "56px 56px 48px 76px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {logo ? <img src={logo} width={64} height={64} alt="" /> : null}
-            <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: 5, color: GOLD }}>{kicker}</span>
+            {logo ? <img src={logo} width={brand.logoW} height={64} alt="" /> : null}
+            <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: 5, color: brand.accent }}>{kicker}</span>
           </div>
           <div style={{ display: "flex", marginTop: "auto", fontSize: titleSize, fontWeight: 800, lineHeight: 1.02, color: "#FFFFFF", letterSpacing: -1.5 }}>
             {title}
           </div>
-          <div style={{ marginTop: 18, width: 110, height: 6, background: GOLD }} />
+          <div style={{ marginTop: 18, width: 110, height: 6, background: brand.accent }} />
           {line ? (
             <div style={{ display: "flex", marginTop: 22, fontSize: 30, fontWeight: 400, lineHeight: 1.3, color: "rgba(255,255,255,0.8)" }}>{line}</div>
           ) : null}
           <div style={{ display: "flex", marginTop: "auto", paddingTop: 28, fontSize: 20, letterSpacing: 3, color: "rgba(255,255,255,0.6)" }}>
-            APP.NCWRESTLINGUNITED.COM
+            {brand.domain}
           </div>
         </div>
         {picture ? (

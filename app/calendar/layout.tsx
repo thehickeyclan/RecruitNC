@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     title: calendarTitle,
     description: calendarDescription,
     url: calendarUrl,
-    siteName: "NC United Wrestling",
+    siteName: "NC United",
     type: "website",
     images: [
       {
