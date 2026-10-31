@@ -875,6 +875,12 @@ export default function RankingBoardPage() {
                   {y}
                 </button>
               ))}
+              {/* The Top 75 is its own board (2027 + 2028); a tab here so it is found from the boards (Matt, 30 Oct 2026). */}
+              {state === "NC" && gender === "Male" ? (
+                <Link href="/admin/rankings/top-100" className={pill(false)}>
+                  Top 75
+                </Link>
+              ) : null}
             </div>
             <button
               className="rounded-full p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
