@@ -52,6 +52,9 @@ export function ClaimProfileButton({
    */
   const box = useRef<HTMLDivElement>(null)
   const [asked] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("claim") === "1")
+  // Said on the search already (?as=parent or ?as=self): the sign-up opens on that role, and a parent goes straight to signing.
+  const [as] = useState(() => (typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("as")))
+  const signupRole = as === "parent" ? "&type=parent" : as === "self" ? "&type=athlete" : ""
   const [doneAs, setDoneAs] = useState<"self" | "parent" | null>(null)
   const { toast } = useToast()
 
@@ -103,7 +106,7 @@ export function ClaimProfileButton({
     if (asked && state === "idle") box.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   }, [asked, state])
 
-  const [signing, setSigning] = useState(false)
+  const [signing, setSigning] = useState(as === "parent")
   const [signedName, setSignedName] = useState("")
 
   async function claim(relationship: "self" | "parent") {
@@ -168,7 +171,7 @@ export function ClaimProfileButton({
           */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <a
-            href={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`}
+            href={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}${signupRole}`}
             className="inline-flex min-h-[44px] items-center rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
           >
             Create a free account

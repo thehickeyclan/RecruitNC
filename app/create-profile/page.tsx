@@ -9,6 +9,7 @@ import { CreateProfileForm } from "@/components/create-profile-form"
 import { FindExistingStep, type ExistingMatch } from "@/components/profile-wizard/find-existing-step"
 import { RevealStep } from "@/components/profile-wizard/reveal-step"
 import { ClaimDetails, ClaimExplainer } from "@/components/profile-wizard/claim-explainer"
+import { WhoStep, type Who } from "@/components/profile-wizard/who-step"
 
 /**
  * Creating a profile starts by looking for the one that already exists.
@@ -19,9 +20,22 @@ import { ClaimDetails, ClaimExplainer } from "@/components/profile-wizard/claim-
  * McCord and Jake McCord.
  */
 export default function CreateProfilePage() {
-  const { user, isLoading } = useAuth()
+  const { user, profile, isLoading } = useAuth()
   const router = useRouter()
-  const [step, setStep] = useState<"find" | "reveal" | "create">("find")
+  const [step, setStep] = useState<"who" | "find" | "reveal" | "create">("find")
+  /*
+   * Who is claiming: asked first (Matt, 31 Oct 2026), unless the link already says (?as=) or the
+   * account does. A verified sign-up returning with ?find= is the wrestler searching his own name.
+   */
+  const [who, setWho] = useState<Who | null>(() => {
+    if (typeof window === "undefined") return null
+    const p = new URLSearchParams(window.location.search)
+    const as = p.get("as")
+    if (as === "parent" || as === "self") return as
+    return p.get("find") || p.get("name") ? "self" : null
+  })
+  const role = (profile?.profile_type ?? "").toLowerCase()
+  const knownWho: Who | null = who ?? (role === "parent" ? "parent" : role === "athlete" ? "self" : null)
   const [typedName, setTypedName] = useState("")
   const [matchedId, setMatchedId] = useState<string | null>(null)
 
@@ -58,11 +72,21 @@ export default function CreateProfilePage() {
    * people here cold, so the search and the reveal are public and the wall moves to the two
    * places that genuinely need an owner - claiming, and creating from scratch.
    */
+  if (step === "find" && !knownWho) {
+    return (
+      <div className="min-h-screen bg-[#0A1628] px-4 py-12">
+        <ClaimExplainer />
+        <WhoStep onPick={setWho} />
+      </div>
+    )
+  }
+
   if (step === "find") {
     return (
       <div className="min-h-screen bg-[#0A1628] px-4 py-12">
         <ClaimExplainer />
         <FindExistingStep
+          who={knownWho ?? "self"}
           initialName={findName}
           onClaim={(match: ExistingMatch) => {
             setMatchedId(match.id)
@@ -83,9 +107,10 @@ export default function CreateProfilePage() {
       <div className="min-h-screen bg-[#0A1628] px-4 py-12">
         <RevealStep
           athleteId={matchedId}
+          who={knownWho ?? "self"}
           onConfirm={(reveal) => {
-            /** Claiming happens on the profile itself, where the claim card asks for the account. */
-            router.push(`/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1`)
+            /** Claiming happens on the profile itself, where the claim card asks for the account; `as` carries wrestler or parent there. */
+            router.push(`/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1&as=${knownWho ?? "self"}`)
           }}
           onReject={() => {
             setMatchedId(null)
@@ -109,7 +134,7 @@ export default function CreateProfilePage() {
           </p>
           <Button asChild className="mt-5 w-full rounded-sm bg-[#D3B574] font-bold text-[#0A1628] hover:brightness-110">
             {/* The typed name rides along, so nobody types it twice. */}
-            <a href={`/auth/signup?returnTo=${encodeURIComponent(typedName ? `/create-profile?name=${encodeURIComponent(typedName)}` : "/create-profile")}`}>Create my free account</a>
+            <a href={`/auth/signup?type=${knownWho === "parent" ? "parent" : "athlete"}&returnTo=${encodeURIComponent(`/create-profile?as=${knownWho ?? "self"}${typedName ? `&name=${encodeURIComponent(typedName)}` : ""}`)}`}>Create my free account</a>
           </Button>
           <p className="mt-3 text-center text-sm text-white/60">
             <a href="/auth/signin?returnTo=%2Fcreate-profile" className="underline underline-offset-2">
