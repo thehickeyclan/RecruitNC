@@ -87,12 +87,20 @@ export function CollegeCommitmentsClient({
   const [search, setSearch] = useState("")
   const [gender, setGender] = useState<Gender>("all")
   const [classYear, setClassYear] = useState<string>("all")
+  // RecruitWrestlers lists every live state; a family looks at its own (Matt, 1 Nov 2026).
+  const [stateFilter, setStateFilter] = useState<string>("all")
   const [division, setDivision] = useState<Division | "all">("all")
   const [sort, setSort] = useState<SortChoice>("newest")
   /* The list answers what people arrive with (who went where); cards are a tap away. */
   const [view, setView] = useState<ViewMode>("list")
 
   /* Written out from the commitments on file, never typed: a hand list goes stale every summer. */
+  const stateCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const c of commitments) if (c.state) counts.set(c.state, (counts.get(c.state) ?? 0) + 1)
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])
+  }, [commitments])
+
   const classYears = useMemo(
     () => [...new Set(commitments.map((c) => c.graduationyear).filter((y) => y > 0))].sort((a, b) => b - a).map(String),
     [commitments],
@@ -102,13 +110,14 @@ export function CollegeCommitmentsClient({
   const beforeDivision = useMemo(() => {
     const q = search.trim().toLowerCase()
     return commitments.filter((c) => {
+      if (stateFilter !== "all" && c.state !== stateFilter) return false
       if (gender === "female" && !isFemale(c)) return false
       if (gender === "male" && isFemale(c)) return false
       if (classYear !== "all" && String(c.graduationyear) !== classYear) return false
       if (!q) return true
       return [c.name, c.college, c.highschool, c.wrestlingClub].some((v) => (v ?? "").toLowerCase().includes(q))
     })
-  }, [commitments, search, gender, classYear])
+  }, [commitments, search, gender, classYear, stateFilter])
 
   const divisionCounts = useMemo(() => {
     const counts: Record<Division, number> = { D1: 0, D2: 0, D3: 0, NAIA: 0, NJCAA: 0 }
@@ -127,13 +136,15 @@ export function CollegeCommitmentsClient({
   }, [beforeDivision, division, sort])
 
   const genderCounts = useMemo(() => {
-    const female = commitments.filter(isFemale).length
-    return { all: commitments.length, male: commitments.length - female, female }
-  }, [commitments])
+    const inState = stateFilter === "all" ? commitments : commitments.filter((c) => c.state === stateFilter)
+    const female = inState.filter(isFemale).length
+    return { all: inState.length, male: inState.length - female, female }
+  }, [commitments, stateFilter])
 
-  const filtered = search.trim() !== "" || gender !== "all" || classYear !== "all" || division !== "all"
+  const filtered = search.trim() !== "" || gender !== "all" || classYear !== "all" || division !== "all" || stateFilter !== "all"
   const clearAll = () => {
     setSearch("")
+    setStateFilter("all")
     setGender("all")
     setClassYear("all")
     setDivision("all")
@@ -157,6 +168,18 @@ export function CollegeCommitmentsClient({
 
         <FilterPanel>
           <SearchField value={search} onChange={setSearch} placeholder="Wrestler, college or high school" />
+          {showState && stateCounts.length > 1 ? (
+            <QuickGroup label="State">
+              <QuickChip active={stateFilter === "all"} onClick={() => setStateFilter("all")}>
+                All <span className="ml-1 tabular-nums opacity-60">{commitments.length}</span>
+              </QuickChip>
+              {stateCounts.map(([st, n]) => (
+                <QuickChip key={st} active={stateFilter === st} onClick={() => setStateFilter(st)}>
+                  {st} <span className="ml-1 tabular-nums opacity-60">{n}</span>
+                </QuickChip>
+              ))}
+            </QuickGroup>
+          ) : null}
           <QuickGroup label="Wrestling">
             {([
               ["all", "All"],
