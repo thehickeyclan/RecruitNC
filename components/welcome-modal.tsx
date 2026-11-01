@@ -300,7 +300,7 @@ export function WelcomeModal() {
           <X className="h-4 w-4" />
         </button>
 
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D3B574]"><BrandName ncu="NC United · RecruitNC" /></p>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D3B574]"><BrandName ncu="NC United · RecruitWrestlers" /></p>
         <h2 id="welcome-title" className="mt-2 pr-8 text-xl font-black text-white sm:text-2xl">
           {headingFor(welcome, asked, profile)}
         </h2>

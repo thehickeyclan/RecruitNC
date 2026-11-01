@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   const userName =
     [profileRow.full_name, profileRow.name, [profileRow.first_name, profileRow.last_name].filter(Boolean).join(" ")]
       .map((v) => String(v ?? "").trim())
-      .find(Boolean) ?? (user.email ?? "RecruitNC user")
+      .find(Boolean) ?? (user.email ?? "NC United user")
 
   // Re-requesting updates the existing row rather than stacking duplicates in the queue.
   const { error } = await admin.from("club_claims").upsert(

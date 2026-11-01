@@ -8,7 +8,7 @@ import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata: Metadata = {
   title: `Submit a Wrestling Club | ${productName()}`,
-  description: "Submit a North Carolina wrestling club for review and inclusion on the RecruitNC club map.",
+  description: "Submit a North Carolina wrestling club for review and inclusion on the NC United club map.",
 }
 
 async function getSubmitter() {
@@ -35,7 +35,7 @@ async function getSubmitter() {
     [profileRecord.first_name, profileRecord.last_name].filter(Boolean).join(" ").trim() ||
     String(profileRecord.display_name ?? "").trim() ||
     user.email ||
-    "RecruitNC user"
+    "NC United user"
 
   return { isSignedIn: true, userName, userEmail: user.email ?? "" }
 }
@@ -58,7 +58,7 @@ export default async function SubmitClubPage() {
             Submit a club
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-8 text-white/70">
-            Help RecruitNC build the cleanest public map of North Carolina wrestling rooms. Club owners, coaches,
+            Help NC United build the cleanest public map of North Carolina wrestling rooms. Club owners, coaches,
             parents, and community members can submit a club for review.
           </p>
         </div>

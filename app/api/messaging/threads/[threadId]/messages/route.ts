@@ -241,7 +241,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE
 async function notifyThreadMembersBySms(threadId: string, messageBody: string, senderId: string): Promise<void> {
   const admin = createAdminClient()
   const { data: thread } = await admin.from("messaging_threads").select("name").eq("id", threadId).single()
-  const threadName = (thread as { name?: string } | null)?.name ?? "RecruitNC"
+  const threadName = (thread as { name?: string } | null)?.name ?? "NC United"
   const { data: members, error: membersErr } = await admin
     .from("messaging_thread_members")
     .select("user_id")
@@ -270,7 +270,7 @@ async function notifyThreadMembersBySms(threadId: string, messageBody: string, s
     console.error("[RecruitNC] SMS notify: user_profiles query failed (missing notify_sms_new_messages/cell_phone?)", smsQueryErr.message)
     return
   }
-  const smsBody = `RecruitNC: New message in ${threadName}: ${preview} ${threadUrl}`
+  const smsBody = `NC United: New message in ${threadName}: ${preview} ${threadUrl}`
   let sent = 0
   for (const row of smsProfiles ?? []) {
     const r = row as { user_id: string; cell_phone: string }

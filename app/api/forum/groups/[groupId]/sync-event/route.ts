@@ -78,7 +78,7 @@ export async function POST(
     return NextResponse.json({
       added: 0,
       skipped: emailsLower.length,
-      message: "All registrants with RecruitNC accounts are already in the group.",
+      message: "All registrants with NC United accounts are already in the group.",
     })
   }
 
@@ -102,6 +102,6 @@ export async function POST(
   return NextResponse.json({
     added: toInsert.length,
     skipped: emailsLower.length - userIdsToAdd.length,
-    message: `${toInsert.length} member(s) added. ${emailsLower.length - userIdsToAdd.length} registrant(s) don't have a RecruitNC account yet — share an invite link so they can sign up and join.`,
+    message: `${toInsert.length} member(s) added. ${emailsLower.length - userIdsToAdd.length} registrant(s) don't have a NC United account yet — share an invite link so they can sign up and join.`,
   })
 }

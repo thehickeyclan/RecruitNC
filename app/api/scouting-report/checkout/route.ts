@@ -156,7 +156,7 @@ export async function POST(request: Request) {
             ...(plan ? { recurring: { interval: plan.interval } } : {}),
             product_data: {
               name: isCommandCenterKind(kind)
-                ? `${onRw ? "Recruiting" : "RecruitNC"} Command Center — ${isAnnualKind(kind) ? "annual" : "monthly"}`
+                ? `${onRw ? "Recruiting" : "RecruitWrestlers"} Command Center — ${isAnnualKind(kind) ? "annual" : "monthly"}`
                 : plan
                   ? `Insider — ${plan.label.toLowerCase()}`
                   : `Scouting report — ${athleteName || "athlete"}`,

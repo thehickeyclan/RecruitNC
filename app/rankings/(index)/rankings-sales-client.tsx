@@ -270,7 +270,7 @@ export function RankingsSalesClient({
     const gold = "#D3B574"
     const stats = platform
       ? ([
-          [platform.coaches, "College coaches on RecruitNC"],
+          [platform.coaches, "College coaches on RecruitWrestlers"],
           [platform.programs, "College programs"],
           [platform.profilesViewed, "NC wrestlers viewed by coaches"],
           [platform.coachViews, "Profile views by coaches"],

@@ -118,21 +118,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const programs = programList(club)
   const closed = isClosed(club)
   const description = closed
-    ? `${club.name} is no longer operating. Its RecruitNC record is kept for the wrestlers who trained there${
+    ? `${club.name} is no longer operating. Its NC United record is kept for the wrestlers who trained there${
         where ? ` in ${where}` : ""
       }, including college commitments and tournament results.`
     : [
         `${club.name} is a wrestling club${where ? ` in ${where}` : " in North Carolina"}.`,
         programs.length ? `Programs: ${programs.join(", ")}.` : "",
-        "Find practice location, contact details and college commitments on RecruitNC.",
+        "Find practice location, contact details and college commitments on NC United.",
       ]
         .filter(Boolean)
         .join(" ")
 
   return {
     title: closed
-      ? `${club.name} — Closed Wrestling Club${where ? ` in ${where}` : ""} | RecruitNC`
-      : `${club.name} — Wrestling Club${where ? ` in ${where}` : ""} | RecruitNC`,
+      ? `${club.name} — Closed Wrestling Club${where ? ` in ${where}` : ""} | NC United`
+      : `${club.name} — Wrestling Club${where ? ` in ${where}` : ""} | NC United`,
     description,
     alternates: { canonical: `/clubs/${clubSlug(String(club.name))}` },
     openGraph: {
@@ -385,7 +385,7 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
               ))}
             </ul>
             <p className="mt-3 text-xs text-white/35">
-              RecruitNC publishes a top {DEFAULT_PUBLIC_RANKINGS_CAP} for the{" "}
+              NC United publishes a top {DEFAULT_PUBLIC_RANKINGS_CAP} for the{" "}
               {PUBLISHED_PUBLIC_RANKINGS_YEARS.join(" and ")} classes.
             </p>
           </div>

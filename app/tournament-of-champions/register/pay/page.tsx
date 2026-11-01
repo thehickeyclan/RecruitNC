@@ -26,7 +26,7 @@ export default function TocRegistrationPayPage() {
             Pay registration
           </TocVarsityHeading>
           <p className={`text-white/80 text-lg max-w-2xl ${tocDisplayClass()}`}>
-            Look up your RecruitNC profile to see your payment deadline and complete the secure{" "}
+            Look up your NC United profile to see your payment deadline and complete the secure{" "}
             {formatTocRegistrationFee()} checkout.
           </p>
           <p className="mt-3 text-white/55 text-sm max-w-2xl">

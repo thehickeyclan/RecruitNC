@@ -43,7 +43,7 @@ function rankedLabel(report: ComparisonReport): string | null {
   const national = [...report.nationalRankings].sort((a, b) => a.current - b.current)[0]
   if (national) return `#${national.current} ${national.sourceLabel}`
   if (report.rankingPublished && report.prospectRanking != null) {
-    return `${rankingLabel(report.prospectRanking, report.identity.gender, "")} RecruitNC, Class of ${report.identity.graduationYear}`
+    return `${rankingLabel(report.prospectRanking, report.identity.gender, "")} RecruitWrestlers, Class of ${report.identity.graduationYear}`
   }
   return null
 }

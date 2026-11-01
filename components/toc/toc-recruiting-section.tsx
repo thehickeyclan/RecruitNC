@@ -15,10 +15,10 @@ export function TocRecruitingSection() {
         <ul className="space-y-4">
           {[
             "College coach panel — programs on stage, Q&A for families",
-            "Recruiting workshop — how to build your profile and reach coaches (RecruitNC team)",
+            "Recruiting workshop — how to build your profile and reach coaches (NC United team)",
             "Recruiting guides for college coaches — sent in advance and hard copy in the lounge on event day",
             "College fair — programs at tables in the lobby; RSVP by email",
-            "RecruitNC booth — athlete profile setup and platform walkthrough",
+            "NC United booth — athlete profile setup and platform walkthrough",
           ].map((item) => (
             <li key={item} className="flex gap-3">
               <span className="text-[#CC0000] font-bold shrink-0">▸</span>

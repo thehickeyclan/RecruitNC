@@ -122,7 +122,7 @@ function CompleteProfileForm() {
           <CardDescription>
             {presetType
               ? "You're signed in with Google. Just this, and you're set."
-              : "You're signed in. Tell us what brings you to RecruitNC so we show you the right things."}
+              : "You're signed in. Tell us what brings you to NC United so we show you the right things."}
           </CardDescription>
         </CardHeader>
         <CardContent>

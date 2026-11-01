@@ -48,10 +48,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ].filter(Boolean)
 
   return {
-    title: `${facts.name} Wrestling | RecruitNC`,
+    title: `${facts.name} Wrestling | RecruitWrestlers`,
     description: bits.length
       ? `${facts.name} wrestling record: ${bits.join(", ")}, plus NHSCA, Super32 and state placement history.`
-      : `${facts.name} wrestling history on RecruitNC.`,
+      : `${facts.name} wrestling history on RecruitWrestlers.`,
     robots: NO_INDEX,
   }
 }

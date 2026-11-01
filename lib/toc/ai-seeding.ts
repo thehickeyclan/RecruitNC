@@ -459,7 +459,7 @@ async function scoreAthleteForTocSeed({
     if (ranking != null) {
       const rankPoints = ranking <= 1 ? 32 : ranking <= 3 ? 28 : ranking <= 5 ? 24 : ranking <= 10 ? 18 : ranking <= 20 ? 10 : 5
       score += rankPoints
-      reasons.push(`RecruitNC ranking #${ranking}`)
+      reasons.push(`NC United ranking #${ranking}`)
     }
 
     const [bundle, duals] = await Promise.all([
@@ -569,7 +569,7 @@ async function scoreAthleteForTocSeed({
   }
 
   const confidence: TocAiSeedRecommendation["aiSeedConfidence"] =
-    matchScore.totalMatches >= 20 && reasons.some((r) => /NCHSAA|national|RecruitNC|head-to-head/i.test(r))
+    matchScore.totalMatches >= 20 && reasons.some((r) => /NCHSAA|national|NC United|head-to-head/i.test(r))
       ? "High"
       : matchScore.totalMatches > 0 || reasons.length >= 2
         ? "Medium"

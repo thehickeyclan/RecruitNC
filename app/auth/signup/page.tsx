@@ -30,7 +30,7 @@ function authIntentForPath(path: string | null) {
   if (target.startsWith("/membership")) {
     return {
       badge: "STEP 1: FREE ACCOUNT",
-      title: "Create your free RecruitNC account, then start Insider",
+      title: "Create your free NC United account, then start Insider",
       description: "Make the account, then choose Insider: every published ranking, and which colleges viewed your profile.",
       bullets: ["Every published class ranking", "Which college programs viewed your profile", "Cancel anytime"],
     }
@@ -39,10 +39,10 @@ function authIntentForPath(path: string | null) {
   if (target.startsWith("/public-rankings") || target.startsWith("/rankings") || target.startsWith("/admin/rankings")) {
     return {
       badge: "RANKINGS ACCESS",
-      title: "Create your free account for RecruitNC rankings",
+      title: "Create your free account for NC United rankings",
       description:
-        "Rankings are an account feature so RecruitNC can protect the work, personalize your view, and keep future premium access tied to your profile.",
-      bullets: ["View RecruitNC prospect rankings", "Track ranked athletes and updates", "Use ranking tools tied to your account"],
+        "Rankings are an account feature so NC United can protect the work, personalize your view, and keep future premium access tied to your profile.",
+      bullets: ["View NC United prospect rankings", "Track ranked athletes and updates", "Use ranking tools tied to your account"],
     }
   }
 
@@ -59,7 +59,7 @@ function authIntentForPath(path: string | null) {
   if (target.startsWith("/calendar")) {
     return {
       badge: "EVENT ACCESS",
-      title: "Create your free account for RecruitNC events",
+      title: "Create your free account for NC United events",
       description:
         "Public schedules are easy to browse, but account access lets you manage registrations, reminders, and event-specific tools.",
       bullets: ["Access event registrations", "Manage reminders and account-specific actions", "Use NC United calendar tools"],
@@ -81,14 +81,14 @@ function authIntentForPath(path: string | null) {
       badge: "ADMIN ACCESS",
       title: "Create your free account",
       description:
-        "Admin areas are limited to approved RecruitNC operators and event staff. Create an account only if you’ve been asked to help with a protected workflow.",
-      bullets: ["Request access through an approved account", "Keep changes tied to the signed-in user", "Use protected RecruitNC workflows after approval"],
+        "Admin areas are limited to approved NC United operators and event staff. Create an account only if you’ve been asked to help with a protected workflow.",
+      bullets: ["Request access through an approved account", "Keep changes tied to the signed-in user", "Use protected NC United workflows after approval"],
     }
   }
 
   return {
     badge: "100% FREE • NO CREDIT CARD REQUIRED",
-    title: "Create Your Free RecruitNC Account",
+    title: "Create Your Free NC United Account",
     description:
       "Rankings, profile management, recruiting tools, and account-specific activity live behind a free account.",
     bullets: ["Create, claim, and update athlete profiles", "View rankings plus profile analytics and activity", "Data Dawg, wallet, Blue, messaging, and alerts"],
@@ -299,7 +299,7 @@ function SignUpWizard() {
           <CardHeader>
             <CardTitle>Account created — one last step</CardTitle>
             <CardDescription>
-              We sent a verification link to <span className="font-semibold">{email}</span>. <BrandText text="Tap that link to activate your free RecruitNC account." />
+              We sent a verification link to <span className="font-semibold">{email}</span>. <BrandText text="Tap that link to activate your free NC United account." />
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -323,7 +323,7 @@ function SignUpWizard() {
               </Button>
               <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2">
                 <Button asChild variant="ghost" className="w-full">
-                  <Link href="/" target="_top" rel="noopener"><BrandText text="Browse RecruitNC" /></Link>
+                  <Link href="/" target="_top" rel="noopener"><BrandText text="Browse NC United" /></Link>
                 </Button>
                 <Button asChild variant="ghost" className="ncu-only w-full">
                   <Link href="/news/united-ascent" target="_top" rel="noopener">United Ascent News</Link>

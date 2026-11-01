@@ -10,7 +10,7 @@ export const metadata = shareMetadata({
   title: "North Carolina Wrestling Club Map",
   description: "Every wrestling club and training center in North Carolina, with athlete and college commitment counts.",
   path: "/clubs",
-  kicker: "RecruitNC",
+  kicker: "NC United",
   pageTitle: `North Carolina Wrestling Club Map | ${productName()}`,
 })
 
@@ -26,7 +26,7 @@ export default function ClubsPage() {
         <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:px-8 lg:py-20">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.32em] text-[#D7B968]">
-              RecruitNC · North Carolina Wrestling
+              NC United · North Carolina Wrestling
             </p>
             <h1 className={`mt-5 max-w-4xl text-5xl leading-[0.92] text-white sm:text-7xl ${tocDisplayClass()}`}>
               Club locator
@@ -36,7 +36,7 @@ export default function ClubsPage() {
             </p>
             <p className="mt-6 max-w-2xl text-base leading-8 text-white/70 sm:text-lg">
               A public directory of wrestling clubs and training centers across North Carolina — connected to
-              RecruitNC athletes, verified locations, and the data that shows where talent is developing.
+              NC United athletes, verified locations, and the data that shows where talent is developing.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -87,7 +87,7 @@ export default function ClubsPage() {
             <div className="mt-5 rounded-sm border border-[#D7B968]/20 bg-[#D7B968]/10 p-4">
               <p className="text-sm font-bold text-[#F5D985]">Missing a club?</p>
               <p className="mt-1 text-sm leading-6 text-white/60">
-                Club owners, coaches, and parents can submit a club for review. A free RecruitNC account is required so
+                Club owners, coaches, and parents can submit a club for review. A free NC United account is required so
                 we know who sent it and can follow up before publishing.
               </p>
             </div>

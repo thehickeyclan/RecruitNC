@@ -74,7 +74,7 @@ function asFiniteNumber(value: unknown): number | null {
 
 function athleteName(athlete: AnyRecord): string {
   const composed = [athlete.first_name, athlete.last_name].filter(Boolean).join(" ")
-  return firstNonEmpty(athlete.name, athlete.athlete_name, athlete.full_name, composed, "RecruitNC athlete")
+  return firstNonEmpty(athlete.name, athlete.athlete_name, athlete.full_name, composed, "NC United athlete")
 }
 
 function athleteClubName(athlete: AnyRecord): string {

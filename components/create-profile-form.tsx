@@ -363,7 +363,7 @@ export function CreateProfileForm({
               Create your <span className="text-rnc-gold">athlete profile</span>
             </h1>
             <p className="mt-3 max-w-xl leading-7 text-white/65">
-              College coaches search RecruitNC by class, weight, GPA and test scores. The more of this you fill in, the
+              College coaches search RecruitWrestlers by class, weight, GPA and test scores. The more of this you fill in, the
               more searches you turn up in.
             </p>
           </div>
@@ -507,7 +507,7 @@ export function CreateProfileForm({
             <Section
               title="Contact"
               icon={<Phone className="h-3.5 w-3.5" />}
-              note="Your number is how college coaches reach you. It is never shown publicly — only verified coaches and RecruitNC staff can see it."
+              note="Your number is how college coaches reach you. It is never shown publicly — only verified coaches and RecruitWrestlers staff can see it."
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>

@@ -537,7 +537,7 @@ function stateRankRow(l: ComparisonReport, r: ComparisonReport): ComparisonRow {
     edge = lower(lr, rr)
     basis = `#${Math.min(lr, rr)} against #${Math.max(lr, rr)} on the same board`
   }
-  return { key: "state-rank", group: "rankings", label: "RecruitNC ranking", left: cell(l), right: cell(r), edge, basis, defaultOn: true }
+  return { key: "state-rank", group: "rankings", label: "RecruitWrestlers ranking", left: cell(l), right: cell(r), edge, basis, defaultOn: true }
 }
 
 function starRow(l: ComparisonReport, r: ComparisonReport, personal: boolean): ComparisonRow {

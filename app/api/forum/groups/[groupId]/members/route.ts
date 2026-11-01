@@ -174,7 +174,7 @@ export async function POST(
         const { sendSms, toE164 } = await import("@/lib/sms")
         const e164 = toE164(cellPhone)
         if (e164) {
-          const sent = await sendSms(e164, `RecruitNC: You've been added to ${eventName}. View hub: ${hubUrl}`)
+          const sent = await sendSms(e164, `NC United: You've been added to ${eventName}. View hub: ${hubUrl}`)
           console.log("[RecruitNC] forum add-member SMS", sent ? "sent" : "skipped (Twilio not configured or error)")
         } else {
           console.log("[RecruitNC] forum add-member SMS skipped (phone could not be parsed to E.164)")

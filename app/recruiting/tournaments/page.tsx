@@ -159,7 +159,7 @@ export default async function RecruitingTournamentsPage() {
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-[#D3B574] mb-1">Explore</p>
             <p className="font-semibold text-white">Prospect Rankings</p>
-            <p className="text-sm text-white/55 mt-1">Official RecruitNC class rankings by grad year.</p>
+            <p className="text-sm text-white/55 mt-1">Official RecruitWrestlers class rankings by grad year.</p>
           </HardLink>
         </div>
       </main>

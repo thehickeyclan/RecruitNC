@@ -35,7 +35,7 @@ export async function generateMetadata({
       title,
       description,
       url: `${base}/fundraising/scholarships/${row.slug}/donate`,
-      siteName: "NC United / RecruitNC",
+      siteName: "NC United",
       locale: "en_US",
       type: "website",
       images: isCaden

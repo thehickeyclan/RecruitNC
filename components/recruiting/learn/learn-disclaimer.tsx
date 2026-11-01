@@ -20,7 +20,7 @@ export function LearnDisclaimer({ checkedLabel }: { checkedLabel: string }) {
       </p>
       <p className="mt-2">
         This library is general education for wrestling families. It is not legal, eligibility or compliance advice,
-        and <BrandName ncu="RecruitNC and NC Wrestling United are" national="RecruitWrestlers is" /> not a governing body and{" "}
+        and <BrandName ncu="RecruitWrestlers and NC United are" national="RecruitWrestlers is" /> not a governing body and{" "}
         <BrandName ncu="do" national="does" /> not speak for one.
       </p>
       <p className="mt-2">
@@ -36,7 +36,7 @@ export function LearnDisclaimer({ checkedLabel }: { checkedLabel: string }) {
         how a rule applies.
       </p>
       <p className="mt-2 text-white/60">
-        <BrandName ncu="RecruitNC and NC Wrestling United make" national="RecruitWrestlers makes" /> no guarantee that this information is complete or current and{" "}
+        <BrandName ncu="RecruitWrestlers and NC United make" national="RecruitWrestlers makes" /> no guarantee that this information is complete or current and{" "}
         <BrandName ncu="are" national="is" /> not
         responsible for decisions made in reliance on it. If something looks out of date,{" "}
         <a href="/contact" className="underline hover:text-white">

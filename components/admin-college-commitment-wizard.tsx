@@ -444,7 +444,7 @@ export function AdminCollegeCommitmentWizard({
           <DialogHeader className="text-left space-y-2">
             <div className="flex items-center gap-2 text-[#f0d77a]">
               <GraduationCap className="h-6 w-6" aria-hidden />
-              <span className="text-xs font-semibold uppercase tracking-widest">RecruitNC</span>
+              <span className="text-xs font-semibold uppercase tracking-widest">RecruitWrestlers</span>
             </div>
             <DialogTitle className="text-xl sm:text-2xl font-semibold text-white">College commitment</DialogTitle>
             <DialogDescription className="text-white/85 text-sm">

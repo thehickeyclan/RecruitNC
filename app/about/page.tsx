@@ -477,7 +477,7 @@ export default async function AboutPage() {
             extent allowed by law.
           </p>
           <p className="leading-relaxed text-slate-300">
-            RecruitNC is the platform behind NC United. It began as our recruiting tool and now
+            NC United is the platform behind NC United. It began as our recruiting tool and now
             powers the resources, information and programs available throughout this site.
           </p>
           <p className="leading-relaxed text-slate-300">

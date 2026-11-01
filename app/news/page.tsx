@@ -51,7 +51,7 @@ export default function NewsPage() {
               href="/auth/signup"
               className="inline-flex rounded-xl border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:border-[#D3B574] hover:text-[#D3B574]"
             >
-              Create RecruitNC Account
+              Create NC United Account
             </Link>
           </div>
         </div>

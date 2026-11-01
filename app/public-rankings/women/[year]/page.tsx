@@ -19,7 +19,7 @@ type Params = { params: Promise<{ year: string }> }
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { year } = await params
   return {
-    title: `Women's Class of ${year} Rankings | RecruitNC`,
+    title: `Women's Class of ${year} Rankings | RecruitWrestlers`,
     description: `North Carolina's top women's wrestling prospects in the Class of ${year}, ranked on results.`,
   }
 }

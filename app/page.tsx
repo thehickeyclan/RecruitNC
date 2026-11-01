@@ -438,7 +438,7 @@ export default async function HomePage() {
               <h3 className="text-xl font-black text-white sm:text-2xl">Are you a North Carolina wrestler?</h3>
               <p className="mt-2 leading-7 text-white/70">
                 Put your record, results and academics where college coaches are already looking. Coaches search
-                RecruitNC by class, weight, GPA and test scores.
+                RecruitWrestlers by class, weight, GPA and test scores.
               </p>
             </div>
             <div className="mt-5 flex flex-shrink-0 flex-col gap-2 sm:mt-0 sm:items-end">

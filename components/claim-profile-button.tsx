@@ -252,7 +252,7 @@ export function ClaimProfileButton({
         <div className="mt-4 space-y-3 rounded-sm border border-white/15 bg-[#0A1628] p-4">
           <p className="text-sm leading-relaxed text-white/80">
             I confirm I am the parent or legal guardian of <strong className="text-white">{athleteName}</strong>.
-            I consent, on their behalf, to <BrandText text="RecruitNC" /> showing their wrestling results, school, weight
+            I consent, on their behalf, to <BrandText text="RecruitWrestlers" /> showing their wrestling results, school, weight
             class and graduating year on a public profile, and to managing that profile for them. I
             can ask for it to be removed at any time.
           </p>

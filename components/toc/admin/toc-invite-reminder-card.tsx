@@ -100,7 +100,7 @@ export function TocInviteReminderCard({
       <div>
         <p className="text-sm font-semibold text-[#002147]">Text reminder — {athleteName}</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Sends from RecruitNC via Twilio. Edit the message, then send.{" "}
+          Sends from NC United via Twilio. Edit the message, then send.{" "}
           {lastReminderAt ? (
             <span>
               Last sent <strong>{new Date(lastReminderAt).toLocaleString()}</strong>.
@@ -133,7 +133,7 @@ export function TocInviteReminderCard({
         </p>
       ) : (
         <p className="text-xs text-red-600">
-          No cell phone on file for this athlete or linked parents — add one on their RecruitNC profile first.
+          No cell phone on file for this athlete or linked parents — add one on their NC United profile first.
         </p>
       )}
 
@@ -150,7 +150,7 @@ export function TocInviteReminderCard({
           maxLength={1500}
         />
         <p className="text-[10px] text-muted-foreground">
-          &quot;RecruitNC:&quot; is added automatically if missing.
+          &quot;NC United:&quot; is added automatically if missing.
         </p>
       </div>
 

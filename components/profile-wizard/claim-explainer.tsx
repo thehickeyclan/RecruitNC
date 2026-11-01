@@ -64,7 +64,7 @@ export function ClaimExplainer() {
           {video.kind === "iframe" ? (
             <iframe
               src={video.src}
-              title="How to claim your RecruitNC profile"
+              title="How to claim your RecruitWrestlers profile"
               className="aspect-video w-full"
               allow="accelerometer; encrypted-media; picture-in-picture"
               allowFullScreen

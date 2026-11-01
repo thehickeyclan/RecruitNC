@@ -28,7 +28,8 @@ export function ApproveCommitmentClient(props: {
 }) {
   const [athleteId, setAthleteId] = useState(props.profiles.length === 1 && props.profileWasChosen ? props.profiles[0]!.id : "")
   const [collegeId, setCollegeId] = useState(props.collegeMatchId ?? (props.collegeTyped ? AS_TYPED : ""))
-  const [announce, setAnnounce] = useState(true)
+  // Off unless ticked (Matt, 1 Nov 2026): a South Carolina commitment must not buzz North Carolina phones.
+  const [announce, setAnnounce] = useState(false)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
   const [declined, setDeclined] = useState(false)

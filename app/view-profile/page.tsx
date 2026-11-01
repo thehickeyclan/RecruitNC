@@ -67,9 +67,9 @@ export async function generateMetadata({ searchParams }: ViewProfilePageProps): 
       title: name,
       description,
       path: `/athletes/${id}`,
-      kicker: "RecruitNC · Athlete profile",
+      kicker: "RecruitWrestlers · Athlete profile",
       image: photo ?? null,
-      pageTitle: `${name} | RecruitNC`,
+      pageTitle: `${name} | RecruitWrestlers`,
     }),
     robots: profileRobots(settings as { graduationyear?: unknown; custom_attributes?: unknown } | null),
   }

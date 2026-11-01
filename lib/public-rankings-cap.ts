@@ -151,7 +151,7 @@ export function isPublicRank(rank: unknown, year: unknown, gender: unknown): boo
 }
 
 /** "RecruitNC #4" for the men's board, "RecruitNC Women's #4" for the women's. */
-export function rankingLabel(rank: number | string, gender: unknown, prefix = "RecruitNC"): string {
+export function rankingLabel(rank: number | string, gender: unknown, prefix = "RecruitWrestlers"): string {
   const board = isWomensBoard(gender) ? "Women's " : ""
   return `${prefix ? `${prefix} ` : ""}${board}#${rank}`
 }

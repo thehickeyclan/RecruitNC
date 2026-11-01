@@ -168,7 +168,7 @@ function signOff(facts: OutreachFacts, seed: string): string {
 
 const PROFILE_LINE = (facts: OutreachFacts) =>
   // The profile's own site names it: a recruitwrestlers.com link is a RecruitWrestlers profile.
-  `My verified results and full record are on my ${/recruitwrestlers\.com/.test(facts.profileUrl) ? "RecruitWrestlers" : "RecruitNC"} profile: ${facts.profileUrl}`
+  `My verified results and full record are on my ${/recruitwrestlers\.com/.test(facts.profileUrl) ? "RecruitWrestlers" : "RecruitWrestlers"} profile: ${facts.profileUrl}`
 
 /**
  * Why a draft cannot be written yet, as something the wrestler can act on - or null when it can.

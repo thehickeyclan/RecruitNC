@@ -20,7 +20,7 @@ export const metadata = shareMetadata({
   title: "College Wrestling Recruiting Rules",
   description: "When coaches can contact you, the recruiting calendar, signing, scholarships and eligibility, with sources.",
   path: "/recruiting/learn",
-  kicker: "RecruitNC · Learn",
+  kicker: "RecruitWrestlers · Learn",
   pageTitle: `College Wrestling Recruiting Rules | ${productName()}`,
 })
 
