@@ -252,6 +252,24 @@ function UnlockPanel() {
   )
 }
 
+function CoachesCanReachYou() {
+  return (
+    <section className="mt-10 overflow-hidden rounded-2xl border border-[#A3E635]/60 text-white" style={{ background: "linear-gradient(135deg, #13294b, #0b1730)" }}>
+      <div className="p-6">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">South Carolina wrestlers · free</div>
+        <h2 className="mt-1 text-2xl font-bold leading-tight md:text-3xl">Claim your profile so college coaches can contact you.</h2>
+        <p className="mt-2 text-sm text-[#c9d4ea]">
+          120+ college coaches use RecruitWrestlers to find and message wrestlers. Your profile is probably already here, built from your results. Claim it,
+          add your contact info, GPA and film, and coaches can reach you.
+        </p>
+        <Link href="/create-profile" className="mt-4 inline-flex min-h-[48px] items-center rounded-xl bg-[#A3E635] px-6 text-base font-black text-[#0b1730] hover:bg-[#BEF264]">
+          Claim your free profile →
+        </Link>
+      </div>
+    </section>
+  )
+}
+
 function ClaimCard() {
   return (
     <section className="mt-10 overflow-hidden rounded-2xl border border-[#A3E635]/60 text-white" style={{ background: "linear-gradient(135deg, #13294b, #0b1730)" }}>
@@ -437,7 +455,8 @@ export default async function Super32ScBoysRecapPage({ searchParams }: { searchP
         <NchsaaArticleReactions articleSlug="super32-2026-sc-boys-recap" />
       </section>
 
-      {!unlocked && <ClaimCard />}
+      {/* The ask at the end, for every family reading (Matt, 1 Nov 2026): the recap is open, so this no longer waits on a lock. */}
+      {!viewer.isVerifiedCoach && !viewer.isAdmin && <CoachesCanReachYou />}
     </main>
   )
 }
