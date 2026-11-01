@@ -189,26 +189,37 @@ export default async function HomePage() {
             and the families who want to be found.
           </p>
           <div className="mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
+            {/* Families first, with the search right here (Matt, 1 Nov 2026): on a phone the coaches'
+                card filled the first screen, and 111 people landed on this page while 35 reached the
+                claim page. The name goes to /create-profile, which asks wrestler or parent and has
+                already searched. */}
             <div className="rounded-xl border border-rnc-gold/50 bg-rnc-ink/80 p-5 backdrop-blur-sm">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-rnc-gold">College coaches</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-rnc-gold">Athletes &amp; families</p>
+              <p className="mt-1.5 text-sm text-white/75">Your results are probably already here. Find your profile and claim it, free.</p>
+              <form action="/create-profile" method="get" className="mt-4 flex gap-2">
+                <label htmlFor="home-find" className="sr-only">Wrestler&apos;s name</label>
+                <input
+                  id="home-find"
+                  name="look"
+                  required
+                  minLength={2}
+                  autoComplete="off"
+                  placeholder="Wrestler's name"
+                  className="min-h-[44px] min-w-0 flex-1 rounded-lg border border-white/20 bg-white/5 px-3 text-base text-white placeholder:text-white/40 focus:border-rnc-gold focus:outline-none"
+                />
+                <button type="submit" className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-lg bg-rnc-gold px-4 text-sm font-extrabold text-rnc-ink transition-colors hover:bg-[#c4a665]">
+                  Find <ArrowRight className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+            <div className="rounded-xl border border-white/15 bg-rnc-ink/80 p-5 backdrop-blur-sm">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white/60">College coaches</p>
               <p className="mt-1.5 text-sm text-white/75">Scouting reports, rankings and side-by-side comparisons. Free.</p>
               <Link
                 href="/auth/signup?type=college-coach"
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-rnc-gold px-5 py-2.5 text-sm font-extrabold text-rnc-ink transition-colors hover:bg-[#c4a665]"
+                className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-lg border-2 border-rnc-gold px-5 py-2 text-sm font-bold text-rnc-gold transition-colors hover:bg-rnc-gold/10"
               >
                 Get free access <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="rounded-xl border border-white/15 bg-rnc-ink/80 p-5 backdrop-blur-sm">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-white/60">Athletes &amp; families</p>
-              <p className="mt-1.5 text-sm text-white/75">Your results are probably already here. Claim your profile and get seen.</p>
-              {/* /create-profile is the claim flow: it searches for the existing profile first and
-                  only creates one when there is no match - most NC wrestlers already have one. */}
-              <Link
-                href="/create-profile"
-                className="mt-4 inline-flex items-center gap-2 rounded-lg border-2 border-rnc-gold px-5 py-2 text-sm font-bold text-rnc-gold transition-colors hover:bg-rnc-gold/10"
-              >
-                Claim your profile <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

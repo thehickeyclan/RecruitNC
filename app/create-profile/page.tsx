@@ -43,8 +43,16 @@ export default function CreateProfilePage() {
   const [typedName, setTypedName] = useState("")
   const [matchedId, setMatchedId] = useState<string | null>(null)
 
-  // Just verified with no wrestler yet (?find=): the search opens already looking for that name.
-  const [findName] = useState(() => (typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("find")?.trim() ?? ""))
+  /*
+   * Just verified with no wrestler yet (?find=): the search opens already looking for that name.
+   * The home page's name box sends ?look= instead (1 Nov 2026): same search, but it still asks
+   * wrestler or parent first, because the person typing is as often a parent.
+   */
+  const [findName] = useState(() => {
+    if (typeof window === "undefined") return ""
+    const p = new URLSearchParams(window.location.search)
+    return (p.get("find") || p.get("look") || "").trim().slice(0, 80)
+  })
 
   // Back from making the account with the name already typed (?name=): straight to creating it.
   useEffect(() => {
@@ -120,7 +128,7 @@ export default function CreateProfilePage() {
              */
             const as = knownWho ?? "self"
             const claimAt = `/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1&as=${as}`
-            router.push(user ? claimAt : `/auth/signup?type=${as === "parent" ? "parent" : "athlete"}&returnTo=${encodeURIComponent(claimAt)}`)
+            router.push(user ? claimAt : `/auth/signup?type=${as === "parent" ? "parent" : "athlete"}&for=${encodeURIComponent(reveal.name)}&returnTo=${encodeURIComponent(claimAt)}`)
           }}
           onReject={() => {
             setMatchedId(null)

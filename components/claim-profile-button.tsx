@@ -171,7 +171,7 @@ export function ClaimProfileButton({
           */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <a
-            href={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}${signupRole}`}
+            href={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}${signupRole}&for=${encodeURIComponent(athleteName)}`}
             className="inline-flex min-h-[44px] items-center rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
           >
             Create a free account
