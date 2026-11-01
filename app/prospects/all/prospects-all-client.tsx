@@ -1,7 +1,7 @@
 "use client"
 
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
-import { usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
+import { recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
 import { HOME_STATE } from "@/lib/recruiting/states"
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
@@ -814,7 +814,7 @@ export default function ProspectsAllClient({
           </div>
           <p className="text-white/70 text-lg max-w-2xl leading-relaxed mb-8">
             {stateFilter === ALL_STATES
-              ? `Every wrestler in ${stateChoices.map((st) => st.name).join(" and ")}: browse by name, school, class year, state and commitment status.`
+              ? `Every wrestler in ${recruitingCoverage(onRw)}: browse by name, school, class year, state and commitment status.`
               : stateFilter === HOME_STATE
               ? "All NC wrestlers — browse by name, school, class year, and commitment status. Create your profile and we pull in NCHSAA, NHSCA, and Super 32 results."
               : `${stateChoices.find((st) => st.code === stateFilter)?.name ?? stateFilter} state placers — browse by name, school, class year, and commitment status.`}
