@@ -456,7 +456,7 @@ export default async function Super32ScBoysRecapPage({ searchParams }: { searchP
       </section>
 
       {/* The ask at the end, for every family reading (Matt, 1 Nov 2026): the recap is open, so this no longer waits on a lock. */}
-      {!viewer.isVerifiedCoach && !viewer.isAdmin && <CoachesCanReachYou />}
+      {(viewer.isAdmin || !viewer.isVerifiedCoach) && <CoachesCanReachYou />}
     </main>
   )
 }
