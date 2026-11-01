@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 export const dynamic = "force-dynamic"
 
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       event_type: "scouting_report_download",
       page_url: `/athletes/${id}/scouting-report`,
       user_agent: request.headers.get("user-agent"),
-      event_data: { athlete_id: id, timestamp: new Date().toISOString() },
+      event_data: { athlete_id: id, site: siteFromRequest(request), timestamp: new Date().toISOString() },
       created_at: new Date().toISOString(),
     })
     .then(undefined, () => undefined)

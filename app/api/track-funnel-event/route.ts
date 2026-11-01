@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { isBotRequest } from "@/lib/bot-traffic"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 const ALLOWED_EVENTS = new Set([
   "login_wall_view",
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
       user_agent: request.headers.get("user-agent") || null,
       ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null,
       event_data: {
+        site: siteFromRequest(request),
         source,
         path,
         target,

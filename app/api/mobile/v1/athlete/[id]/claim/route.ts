@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { recordClaimConsent } from "@/lib/profile-claim"
 import { notifyProfileClaim } from "@/lib/profile-claim-notify"
+import { recordProfileClaimed } from "@/lib/analytics-site"
 
 /**
  * Claiming a wrestler's profile from the phone.
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       })
     }
     await fillBlanks()
+    await recordProfileClaimed(admin, { athleteId, userId: viewerId, site: "app", route: "/api/mobile/v1/athlete/claim" })
     // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
     await import("@/lib/coach-messages-notify")
       .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(admin, { athleteId, userId: viewerId }))
@@ -169,6 +171,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     userAgent: request.headers.get("user-agent"),
   })
 
+  await recordProfileClaimed(admin, { athleteId, userId: viewerId, site: "app", route: "/api/mobile/v1/athlete/claim" })
   // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
   await import("@/lib/coach-messages-notify")
     .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(admin, { athleteId, userId: viewerId }))

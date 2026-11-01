@@ -6,6 +6,7 @@ import { notifyNewMessage } from "@/lib/coach-messages-notify"
 import { noteCoachMessaged } from "@/lib/recruiting/program-stage"
 import { moveListsOnCoachMessage } from "@/lib/coach-messages-extras"
 import { coachMessagingCompliance } from "@/lib/coach-messages-compliance-server"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 /**
  * Coach → prospect messaging. Web (cookies) and the app (bearer token) both call this.
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
       user_id: userId,
       event_type: "coach_compliance_override",
       page_url: "/api/coach-messages",
-      event_data: { athlete_id: athleteId, thread_id: result.threadId, status: compliance.status, title: compliance.title, timestamp: new Date().toISOString() },
+      event_data: { site: siteFromRequest(request), athlete_id: athleteId, thread_id: result.threadId, status: compliance.status, title: compliance.title, timestamp: new Date().toISOString() },
     })
   })
   after(() => notifyNewMessage(admin, { threadId: result.threadId, senderUserId: userId, senderRole: result.senderRole, isNewThread: result.isNewThread }))

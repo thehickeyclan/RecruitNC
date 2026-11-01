@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { recordProfileClaimed, type AnalyticsSite } from "@/lib/analytics-site"
 
 /**
  * One way to claim a wrestler's profile, for the website and the app.
@@ -36,6 +37,8 @@ export type ClaimInput = {
   userAgent?: string | null
   /** Why this claim should be looked at regardless of the checks below - e.g. no typed signature. */
   reviewNote?: string | null
+  /** Which site the claim came from, for the RW vs NC United count (lib/analytics-site.ts). */
+  site?: AnalyticsSite
 }
 
 export type ClaimResult =
@@ -180,6 +183,8 @@ export async function claimProfile(admin: SupabaseClient, input: ClaimInput): Pr
     review_reason: reasons.join("; ") || null,
   })
   if (consentError) console.error("[profile-claim] consent row failed:", consentError.message)
+
+  if (input.site) await recordProfileClaimed(admin, { athleteId: input.athleteId, userId: input.userId, site: input.site, route: "claimProfile" })
 
   // Coaches may have written before anyone in the family had an account: tell both sides now.
   await import("@/lib/coach-messages-notify")

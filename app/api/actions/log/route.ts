@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { isBotRequest } from "@/lib/bot-traffic"
 import { createClient as createSupabase } from "@supabase/supabase-js"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 function need(v: string | undefined, key: string) {
   if (!v) throw new Error(`${key} not configured`)
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     const { error: insertErr } = await svc.from("user_analytics").insert({
       user_id: user.id,
       event_type: "action_click",
-      event_data: { action, targetType, targetId, pageTitle },
+      event_data: { action, targetType, targetId, pageTitle, site: siteFromRequest(req) },
       page_url: pageUrl,
     })
 
