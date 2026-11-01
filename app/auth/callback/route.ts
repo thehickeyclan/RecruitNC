@@ -8,6 +8,7 @@ import { alreadyAnswered } from "@/lib/complete-profile"
 import { postSignInDestination } from "@/lib/post-sign-in-destination"
 import { signupLanding } from "@/lib/auth/signup-landing"
 import { familyAthleteIds } from "@/lib/coach-messages"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 export async function GET(req: NextRequest) {
   console.log("[v0] ===== AUTH CALLBACK ROUTE CALLED =====")
@@ -161,6 +162,7 @@ export async function GET(req: NextRequest) {
           user_agent: req.headers.get("user-agent") || null,
           ip_address: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || null,
           event_data: {
+            site: siteFromRequest(req),
             source: "auth_callback",
             target: next,
             auth_type: type || "code",

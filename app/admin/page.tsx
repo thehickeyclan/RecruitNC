@@ -705,6 +705,17 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
+            {/* RecruitWrestlers vs NC United */}
+            <Link href="/admin/sites">
+              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Eye className="h-10 w-10 text-[#D3B574] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">RW vs NC United</h3>
+                  <p className="text-xs text-gray-600">Accounts, claims, visitors by site</p>
+                </CardContent>
+              </Card>
+            </Link>
+
             {/* Profile View Analytics */}
             <Link href="/admin/card-analytics">
               <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { countsAsCoachView } from "@/lib/coach-view-rule"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 /**
  * A verified college coach tapped a wrestler's Call, Text or Email (components/contact-tap-tracker.tsx).
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     event_type: "coach_contact_tap",
     page_url: request.headers.get("referer"),
     user_agent: request.headers.get("user-agent"),
-    event_data: { athlete_id: athleteId, channel },
+    event_data: { athlete_id: athleteId, channel, site: siteFromRequest(request) },
     created_at: new Date().toISOString(),
   })
   if (error) console.error("[contact-tap] not recorded:", error.message)
