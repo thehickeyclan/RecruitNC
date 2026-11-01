@@ -134,7 +134,16 @@ function track(event: string, returnTo: string | null, extra: Record<string, unk
 function SignUpWizard() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo")
-  const authIntent = authIntentForPath(returnTo)
+  /*
+   * Who they are claiming, carried from the claim button (Matt, 1 Nov 2026): 17 of 26 families who
+   * opened this page on launch day left without submitting, and the page no longer said whose
+   * profile it was for.
+   */
+  const claimFor = (searchParams.get("for") ?? "").replace(/[^\p{L}\p{M}' .-]/gu, "").trim().slice(0, 60)
+  const baseIntent = authIntentForPath(returnTo)
+  const authIntent = claimFor && baseIntent.badge === "PROFILE ACCESS"
+    ? { ...baseIntent, badge: "FREE ACCOUNT", title: `Claim ${claimFor}'s profile` }
+    : baseIntent
   const presetType = searchParams.get("type")
 
   const [profileType, setProfileType] = useState<Role | null>(isRole(presetType) ? presetType : null)
@@ -184,7 +193,10 @@ function SignUpWizard() {
     setError("")
     setAccountExists(false)
     if (!profileType) return
-    if (roleNeedsPhone && cellPhone.replace(/\D/g, "").length < 10) {
+    // Required for coaches only. Families add the number coaches use on the next screen, and an
+    // extra required box here cost sign-ups (Matt, 1 Nov 2026); a number they do type must be whole.
+    const phoneDigits = cellPhone.replace(/\D/g, "").length
+    if ((isCollegeCoach && phoneDigits < 10) || (phoneDigits > 0 && phoneDigits < 10)) {
       setError("Enter a 10-digit cell number.")
       return
     }
@@ -456,8 +468,8 @@ function SignUpWizard() {
 
                   {roleNeedsPhone ? (
                     <div className="space-y-2">
-                      <Label htmlFor="cellPhone">Cell</Label>
-                      <Input id="cellPhone" type="tel" inputMode="tel" autoComplete="tel" value={cellPhone} onChange={(e) => setCellPhone(e.target.value)} required disabled={loading} />
+                      <Label htmlFor="cellPhone">{isCollegeCoach ? "Cell" : "Cell (optional)"}</Label>
+                      <Input id="cellPhone" type="tel" inputMode="tel" autoComplete="tel" value={cellPhone} onChange={(e) => setCellPhone(e.target.value)} required={isCollegeCoach} disabled={loading} />
                       <p className="text-xs leading-5 text-muted-foreground">{cellNotice(isCollegeCoach ? "college-coach" : profileType)}</p>
                     </div>
                   ) : null}

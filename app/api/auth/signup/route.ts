@@ -84,14 +84,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Enter your college." }, { status: 400 })
     }
 
-    const roleNeedsPhone = profileType === "athlete" || profileType === "parent"
-    if (roleNeedsPhone) {
+    // Optional for families since 1 Nov 2026 (they add it on profile setup); a typed number must be whole.
+    if (profileType === "athlete" || profileType === "parent") {
       const digits = (cellPhone ?? "").replace(/\D/g, "")
-      if (digits.length < 10) {
+      if (digits.length > 0 && digits.length < 10) {
         return NextResponse.json(
           {
-            error:
-              "Cell phone is required for athlete and parent accounts (enter at least 10 digits, country code optional).",
+            error: "Enter a 10-digit cell number, or leave it blank.",
           },
           { status: 400 },
         )
