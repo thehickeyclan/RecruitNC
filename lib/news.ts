@@ -62,6 +62,8 @@ export interface NewsItem {
   shareStoryImage?: string
   /** Force important launch news above newer items on /news and the homepage carousel. */
   pinToTop?: boolean
+  /** Order among pinned stories, lowest first (default 100), so a pair can lead in a set order. */
+  pinRank?: number
   /** The tap line on the app's Home top-story card (default there: "Read the story"). */
   actionLabel?: string
 }
@@ -149,6 +151,7 @@ const ALL_NEWS: NewsItem[] = [
     author: "NC United",
     isAnnouncement: false,
     pinToTop: true,
+    pinRank: 1,
     premium: true,
     actionLabel: "Read the recap",
   },
@@ -170,7 +173,10 @@ const ALL_NEWS: NewsItem[] = [
     categoryBadgeClass: "bg-[#CC0000]",
     author: "NC United",
     isAnnouncement: false,
-    // Not pinned (Matt, 26 Oct 2026): the men's recap is the featured story; this one sits right after it.
+    // Pinned second (Matt, 1 Nov 2026): unpinned, it fell to 6th behind five pinned stories and
+    // off the 4-story homepage carousel. The men's recap still leads.
+    pinToTop: true,
+    pinRank: 2,
     premium: true,
     actionLabel: "Read the recap",
   },
@@ -1663,6 +1669,7 @@ const ALL_NEWS: NewsItem[] = [
 export function getAllNews(): NewsItem[] {
   return [...ALL_NEWS].sort((a, b) => {
     if (a.pinToTop !== b.pinToTop) return a.pinToTop ? -1 : 1
+    if (a.pinToTop && b.pinToTop && (a.pinRank ?? 100) !== (b.pinRank ?? 100)) return (a.pinRank ?? 100) - (b.pinRank ?? 100)
     return b.date > a.date ? 1 : -1
   })
 }
