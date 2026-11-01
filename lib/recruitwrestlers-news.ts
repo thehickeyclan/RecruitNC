@@ -43,7 +43,8 @@ export const RW_STORIES: Story[] = [
     image: "/recruitwrestlers/recaps/sc-share-card.jpg",
     category: "Super 32",
     state: "SC",
-    premium: true,
+    // Open to everyone for the South Carolina launch (Matt, 1 Nov 2026).
+    premium: false,
     // Published by Matt, 29 Oct 2026.
     published: true,
   },

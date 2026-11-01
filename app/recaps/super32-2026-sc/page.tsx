@@ -315,7 +315,9 @@ export default async function Super32ScBoysRecapPage({ searchParams }: { searchP
 
   // Admins can see the page as a free reader would: ?preview=free.
   const previewFree = viewer.isAdmin === true && (await searchParams).preview === "free"
-  const unlocked = !previewFree && (hasPremiumAccess(viewer) || hasPortalAccess(viewer) || scReviewer)
+  // Open to everyone for the South Carolina launch (Matt, 1 Nov 2026); the per-wrestler coach report stays coach-only.
+  const OPEN_FOR_SC_LAUNCH = true
+  const unlocked = !previewFree && (OPEN_FOR_SC_LAUNCH || hasPremiumAccess(viewer) || hasPortalAccess(viewer) || scReviewer)
   const own = unlocked || previewFree ? new Set<string>() : await ownWrestlerNames(userId, entrants)
   // The top grade awarded is free (A+ is reserved and usually empty, so this is normally the A group).
   const topGrade = GRADES.find((g) => recap.graded.some((w) => w.grade === g))
