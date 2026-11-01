@@ -27,6 +27,7 @@ import path from "node:path"
 import {
   applyClubCorrections,
   buildAthleteIndex,
+  linkedEntrantId,
   matchAthlete,
   parseTrackwrestlingBoutCsv,
   parseTournament,
@@ -102,11 +103,26 @@ async function main() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
-  const { data: roster, error: rosterError } = await supabase
-    .from("athletes")
-    .select('id, name, wrestling_name, highschool, "wrestlingClub", graduationyear')
-  if (rosterError) throw new Error(`Loading athletes: ${rosterError.message}`)
-  const index = buildAthleteIndex((roster ?? []) as MatchableAthlete[])
+  /*
+   * Paged, and ordered by id so the pages don't overlap. This read used to be a plain select,
+   * which PostgREST answers with 1,000 rows and no error - so from the day the athletes table
+   * passed 1,000 the matcher only ever saw the first page of it. The Southeast Open file linked
+   * 1 of 359 entrants on that index; all six North Carolina high schoolers in the field were
+   * simply not in the part of the roster it had loaded.
+   */
+  const roster: MatchableAthlete[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from("athletes")
+      .select('id, name, wrestling_name, highschool, "wrestlingClub", graduationyear')
+      .order("id")
+      .range(from, from + 999)
+    if (error) throw new Error(`Loading athletes: ${error.message}`)
+    roster.push(...((data ?? []) as MatchableAthlete[]))
+    if ((data ?? []).length < 1000) break
+  }
+  console.log(`Loaded ${roster.length} profiles to match against`)
+  const index = buildAthleteIndex(roster)
 
   // Resolve every entrant once; bouts reuse the same decision so an athlete's own row and
   // their opponents' rows always point at the same profile.
@@ -114,8 +130,23 @@ async function main() {
   const ambiguous: Array<{ entrant: string; club: string; candidates: string[] }> = []
   const matchedNames: Array<{ entrant: string; club: string; profile: string; tier: string }> = []
 
+  const byId = new Map(roster.map((a) => [a.id, a]))
   for (const athlete of parsed.athletes) {
     const key = `${athlete.athleteName.toLowerCase()}|${athlete.club.toLowerCase()}`
+    // A link recorded in ENTRANT_LINKS wins: the team cell could not have corroborated it.
+    const forced = linkedEntrantId(eventKey, athlete.athleteName, athlete.club)
+    if (forced) {
+      const profile = byId.get(forced)
+      if (!profile) throw new Error(`ENTRANT_LINKS names a profile that does not exist: ${forced} (${athlete.athleteName})`)
+      resolved.set(key, { id: profile.id, highSchool: profile.highschool ?? null, name: profile.name ?? athlete.athleteName })
+      matchedNames.push({
+        entrant: athlete.athleteName,
+        club: athlete.club,
+        profile: `${profile.name} (${profile.highschool ?? "no school"}, ${profile.graduationyear ?? "?"})`,
+        tier: "recorded",
+      })
+      continue
+    }
     const outcome = matchAthlete(athlete.athleteName, athlete.club, index, { requireTeam: REQUIRE_TEAM })
     if (outcome.status === "matched") {
       resolved.set(key, {

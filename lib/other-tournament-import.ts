@@ -306,6 +306,81 @@ export const CLUB_CORRECTIONS: ClubCorrection[] = [
   },
 ]
 
+/**
+ * Entries we link to a profile by hand, because the team cell cannot corroborate the name.
+ *
+ * `--require-team` exists so a national field cannot put a stranger's bouts on one of our
+ * wrestlers, and it is the right default. But a high schooler in an open tournament often enters
+ * under something the team cell will never match: his own club rather than his school ("NC
+ * United"), or no team at all ("Unaffiliated HS", "Unaffiliated Adult"). Faking the club through
+ * CLUB_CORRECTIONS would be a lie about what the bracket said and would change what the bout
+ * displays, so the link is recorded here instead, against the profile id, with the evidence that
+ * settled it.
+ *
+ * An entry here is a claim that this person is that profile. Weight is what carries it: a high
+ * school wrestler enters an open within a pound or two of his own class, so a 190 lb junior at
+ * 184 is him and a 149 lb entry is not. Name alone is never enough - see `matchAthlete`.
+ */
+export type EntrantLink = {
+  eventKey: string
+  athleteName: string
+  /** The team exactly as the bracket printed it, so a changed export stops matching. */
+  club: string
+  athleteId: string
+  note: string
+}
+
+export const ENTRANT_LINKS: EntrantLink[] = [
+  {
+    eventKey: "southeast-open-2026",
+    athleteName: "Jake Amiott",
+    club: "NC United",
+    athleteId: "7bb99ea9-a0ff-4cd0-91f8-217327959105",
+    note: "Topsail 2028, 150 lb, wrestled 149 — entered under NC United, his profile club is Sly Fox.",
+  },
+  {
+    eventKey: "southeast-open-2026",
+    athleteName: "Paxton Kearns",
+    club: "NC United",
+    athleteId: "d206b724-e587-4721-a1e2-2d23a57f79c2",
+    note: "Trinity 2028, 126 lb, wrestled 133 — entered under NC United, his profile club is Palestra.",
+  },
+  {
+    eventKey: "southeast-open-2026",
+    athleteName: "Ben McCaleb",
+    club: "Unaffiliated HS",
+    athleteId: "ab15038e-c51f-4d0f-947e-bcdfdc75e85b",
+    note: "Topsail 2028, 190 lb, wrestled 184 — teammate of Jake Amiott, entered unattached.",
+  },
+  {
+    eventKey: "southeast-open-2026",
+    athleteName: "Marley Williams",
+    club: "Unaffiliated HS",
+    athleteId: "e0d262ac-e5ac-409b-ac71-50a47d1f3ff2",
+    note: "Mooresville 2028, 175 lb, wrestled 174 — entered unattached.",
+  },
+  {
+    eventKey: "southeast-open-2026",
+    athleteName: "Wesley Sykes",
+    club: "Unaffiliated Adult",
+    athleteId: "5a69c348-dde0-4561-9a2b-0d74f5ddb072",
+    note: "Union Pines 2029, 190 lb at the 2026 NCHSAA state championships, wrestled 184 here. Flo filed him in the adult division; the weight and school are his.",
+  },
+]
+
+/** The profile id a hand-recorded link names for this entry, if there is one. */
+export function linkedEntrantId(eventKey: string, athleteName: string, club: string): string | null {
+  const name = tidy(athleteName).toLowerCase()
+  const team = tidy(club).toLowerCase()
+  const row = ENTRANT_LINKS.find(
+    (link) =>
+      link.eventKey === eventKey &&
+      tidy(link.athleteName).toLowerCase() === name &&
+      tidy(link.club).toLowerCase() === team,
+  )
+  return row ? row.athleteId : null
+}
+
 /** Corrected team name for one entry, or the name unchanged. */
 export function correctClub(eventKey: string, athleteName: string, club: string): string {
   const name = tidy(athleteName).toLowerCase()

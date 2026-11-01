@@ -3,6 +3,7 @@ import {
   applyClubCorrections,
   buildAthleteIndex,
   correctClub,
+  linkedEntrantId,
   matchAthlete,
   nameParts,
   canonicalRound,
@@ -319,5 +320,26 @@ describe("matchAthlete", () => {
       status: "unmatched",
       reason: "unparseable",
     })
+  })
+})
+
+describe("linkedEntrantId", () => {
+  const SE = "southeast-open-2026"
+
+  it("links an entry whose team cell can never corroborate it", () => {
+    expect(linkedEntrantId(SE, "Ben McCaleb", "Unaffiliated HS")).toBe("ab15038e-c51f-4d0f-947e-bcdfdc75e85b")
+    expect(linkedEntrantId(SE, "Jake Amiott", "NC United")).toBe("7bb99ea9-a0ff-4cd0-91f8-217327959105")
+  })
+
+  it("needs the team the bracket actually printed", () => {
+    expect(linkedEntrantId(SE, "Jake Amiott", "Sly Fox")).toBeNull()
+  })
+
+  it("does not leak a link into another event", () => {
+    expect(linkedEntrantId("super32-early-entry-nc-2026", "Jake Amiott", "NC United")).toBeNull()
+  })
+
+  it("says nothing about an entrant it does not name", () => {
+    expect(linkedEntrantId(SE, "Gianni Bottone", "NC State")).toBeNull()
   })
 })
