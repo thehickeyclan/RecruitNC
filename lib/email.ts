@@ -84,7 +84,7 @@ export async function sendBlueWelcomeEmail(params: BlueWelcomeEmailParams): Prom
     </p>
     <p style="color: #6b7280; font-size: 14px;">Use the same email you registered with. This link expires in 24 hours.</p>`
     : `<p style="margin: 20px 0;">
-      <a href="${SITE_URL}/auth/signin" style="display: inline-block; background: #03154C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Sign in to RecruitNC</a>
+      <a href="${SITE_URL}/auth/signin" style="display: inline-block; background: #03154C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Sign in to NC United</a>
     </p>`
 
   try {
@@ -104,7 +104,7 @@ export async function sendBlueWelcomeEmail(params: BlueWelcomeEmailParams): Prom
     <p>Payment is complete — <strong>${athleteName}</strong> is enrolled in NC United Blue. Here’s what you need to know.</p>
 
     <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Manage your subscription</h2>
-    <p>Sign in to RecruitNC → <strong>Profile → NC United Blue</strong> to:</p>
+    <p>Sign in to NC United → <strong>Profile → NC United Blue</strong> to:</p>
     <ul style="padding-left: 20px;">
       <li>View next bill date and payment history</li>
       <li>Update your card (Stripe billing portal)</li>
@@ -553,7 +553,7 @@ export async function sendNewMessageNotificationEmail(
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: #003366; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 22px;">RecruitNC Messages</h1>
+    <h1 style="color: white; margin: 0; font-size: 22px;">NC United Messages</h1>
   </div>
   <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
     <p>You have a new message in <strong>${escapeHtml(threadName)}</strong>.</p>
@@ -570,7 +570,7 @@ export async function sendNewMessageNotificationEmail(
     const result = await resend.emails.send({
       from: FROM_BLUE,
       to: [to.trim()],
-      subject: `New message in ${threadName} – RecruitNC`,
+      subject: `New message in ${threadName} – NC United`,
       html,
     })
 
@@ -607,7 +607,7 @@ export async function sendAddedToHubEmail(
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: #003366; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 22px;">RecruitNC Team Hub</h1>
+    <h1 style="color: white; margin: 0; font-size: 22px;">NC United Team Hub</h1>
   </div>
   <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
     <p>You've been added to <strong>${escapeHtml(eventName)}</strong>.</p>
@@ -623,7 +623,7 @@ export async function sendAddedToHubEmail(
     const result = await resend.emails.send({
       from: FROM_BLUE,
       to: [to.trim()],
-      subject: `You've been added to ${eventName} – RecruitNC`,
+      subject: `You've been added to ${eventName} – NC United`,
       html,
     })
     if (result.error) {
@@ -659,7 +659,7 @@ export async function sendAddedToGroupEmail(
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: #003366; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 22px;">RecruitNC Messages</h1>
+    <h1 style="color: white; margin: 0; font-size: 22px;">NC United Messages</h1>
   </div>
   <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
     <p>You've been added to the group <strong>${escapeHtml(threadName)}</strong>.</p>
@@ -674,7 +674,7 @@ export async function sendAddedToGroupEmail(
     const result = await resend.emails.send({
       from: FROM_BLUE,
       to: [to.trim()],
-      subject: `You've been added to ${threadName} – RecruitNC`,
+      subject: `You've been added to ${threadName} – NC United`,
       html,
     })
     if (result.error) {
@@ -715,12 +715,12 @@ export async function sendAdminBlastEmail(
       htmlBody,
       baseUrl,
       logoVariant,
-      options?.footer ?? "From NC Wrestling United / RecruitNC",
+      options?.footer ?? "From NC United",
     )
     const result = await resend.emails.send({
       from: options?.from?.trim() || FROM_BLUE,
       to: [to.trim()],
-      subject: subject.trim() || "Update from RecruitNC",
+      subject: subject.trim() || "Update from NC United",
       html,
       ...(options?.replyTo ? { reply_to: options.replyTo } : {}),
       ...(options?.headers && Object.keys(options.headers).length > 0

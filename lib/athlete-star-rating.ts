@@ -334,10 +334,10 @@ function participationPart(rows: readonly NationalEventRow[]): StarPart {
 /** RecruitNC's own class ranking, when that class is published. */
 function rankingPoints(ranking: number | null, published: boolean): { points: number; detail: string } {
   if (!published || ranking == null) {
-    return { points: 0, detail: "Not in a published RecruitNC class ranking" }
+    return { points: 0, detail: "Not in a published RecruitWrestlers class ranking" }
   }
   const points = ranking <= 5 ? 34 : ranking <= 10 ? 30 : ranking <= 20 ? 27 : 20
-  return { points, detail: `RecruitNC #${ranking} in the class` }
+  return { points, detail: `RecruitWrestlers #${ranking} in the class` }
 }
 
 function ordinalSuffix(n: number): string {
@@ -551,7 +551,7 @@ export function credentialFloor(input: StarRatingInput): { stars: number; reason
     `state champion who has beaten ${championsBeaten} state champions`,
   ])
   rules.push([4, placer && nationallyRankedBeaten > 0, "state placer with a win over a nationally ranked opponent"])
-  rules.push([4, ranking != null && ranking <= 10, `RecruitNC top 10 (#${ranking})`])
+  rules.push([4, ranking != null && ranking <= 10, `RecruitWrestlers top 10 (#${ranking})`])
   rules.push([4, input.nationallyRanked, "nationally ranked"])
   rules.push([3, placer && championsBeaten >= 3, `state placer who has beaten ${championsBeaten} state champions`])
   rules.push([3, placer && nhsca.some((r) => r.wins > r.losses), "state placer with a winning NHSCA record"])

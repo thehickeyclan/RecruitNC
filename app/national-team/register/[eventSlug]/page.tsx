@@ -422,7 +422,7 @@ export default function NationalTeamRegisterEventPage() {
                 <h2 className={aauPanelTitleClass}>Event registration</h2>
                 <p className={aauPanelDescClass}>
                   Enter athlete and parent contact info, select what you need, then pay at Stripe checkout. School,
-                  weight, and other roster details are pulled from RecruitNC when we match the athlete name.
+                  weight, and other roster details are pulled from NC United when we match the athlete name.
                 </p>
               </header>
               <div className="p-4 sm:p-5 md:p-6">

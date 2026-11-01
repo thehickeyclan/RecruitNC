@@ -65,7 +65,7 @@ export function ClubSubmissionForm({ isSignedIn, userName, userEmail }: ClubSubm
         <ShieldCheck className="h-10 w-10 text-[#D7B968]" />
         <h2 className="mt-4 text-3xl font-black text-white">Sign in to submit a club</h2>
         <p className="mt-3 text-white/70">
-          Club submissions require a free RecruitNC account so we know who submitted the information and can follow up
+          Club submissions require a free NC United account so we know who submitted the information and can follow up
           before approving it for the public map.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -109,7 +109,7 @@ export function ClubSubmissionForm({ isSignedIn, userName, userEmail }: ClubSubm
       <div className="flex items-start gap-3 border-b border-white/10 pb-5">
         <MapPin className="mt-1 h-6 w-6 text-[#D7B968]" />
         <div>
-          <h2 className="text-2xl font-black text-white">Submit a club for the RecruitNC map</h2>
+          <h2 className="text-2xl font-black text-white">Submit a club for the NC United map</h2>
           <p className="mt-1 text-sm text-white/55">
             Submitting as {userName || userEmail}. New clubs stay pending until an admin approves them.
           </p>

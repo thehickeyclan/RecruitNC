@@ -312,7 +312,7 @@ export default async function PublicRankingsHomepage({
         <div className="relative mx-auto max-w-6xl px-4 py-12 sm:py-16">
           <div className="max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#D3B574]">
-              <BrandName ncu="RecruitNC" national="RecruitWrestlers" /> · Recruiting intelligence
+              <BrandName ncu="RecruitWrestlers" national="RecruitWrestlers" /> · Recruiting intelligence
             </p>
             {locked ? (
               /*

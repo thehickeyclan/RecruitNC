@@ -6,7 +6,7 @@ import { HardLink } from "@/components/hard-link"
 export const metadata: Metadata = {
   title: "Staff fundraising tools",
   description:
-    "RecruitNC sign-in for donor CRM and exports. Family playbook pages require a RecruitNC account; the giving hub stays public for donors.",
+    "NC United sign-in for donor CRM and exports. Family playbook pages require a NC United account; the giving hub stays public for donors.",
   robots: { index: false, follow: false },
 }
 
@@ -44,7 +44,7 @@ export default async function FundraisingPlaybookGatePage() {
           Staff fundraising tools
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-white/75">
-          Family fundraising playbook (full walkthrough — RecruitNC sign-in, visit tracking):{" "}
+          Family fundraising playbook (full walkthrough — NC United sign-in, visit tracking):{" "}
           <HardLink href="/fundraising/playbook/members" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
             Open playbook
           </HardLink>
@@ -53,7 +53,7 @@ export default async function FundraisingPlaybookGatePage() {
         <p className="mt-4 text-sm leading-relaxed text-white/75">
           You&apos;re signed in as <span className="font-medium text-white/90">{user.email}</span>. Donor CRM, exports, and
           ops dashboards are available only to{" "}
-          <strong className="text-white">RecruitNC administrators</strong>.
+          <strong className="text-white">NC United administrators</strong>.
         </p>
         <p className="mt-3 text-sm text-white/60">
           Need access? Ask an NC United admin to grant <code className="rounded bg-white/10 px-1">is_admin</code> on your

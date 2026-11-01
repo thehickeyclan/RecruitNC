@@ -196,7 +196,7 @@ export default async function CoachReportPage({ params, searchParams }: {
 
       <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-600">
         <Star className="h-4 w-4 shrink-0 fill-[#f5c518] text-[#f5c518]" aria-hidden />
-        <span><span className="font-semibold text-gray-800">{onRw ? "Star" : "Gold star"} = your recruit:</span> a wrestler you or your staff starred on {onRw ? "RecruitWrestlers" : "RecruitNC"}. Tap &ldquo;Add to my recruits&rdquo; on anyone else to add him.</span>
+        <span><span className="font-semibold text-gray-800">{onRw ? "Star" : "Gold star"} = your recruit:</span> a wrestler you or your staff starred on {onRw ? "RecruitWrestlers" : "RecruitWrestlers"}. Tap &ldquo;Add to my recruits&rdquo; on anyone else to add him.</span>
       </p>
 
       {!starredOnly && overall && (
@@ -226,7 +226,7 @@ export default async function CoachReportPage({ params, searchParams }: {
         </section>
       )}
 
-      <p className="mt-8 text-xs text-gray-400">Every result, credential and placing is computed from the event's brackets and our national results, never typed. {onRw ? "RecruitWrestlers" : "NC United · RecruitNC"}.</p>
+      <p className="mt-8 text-xs text-gray-400">Every result, credential and placing is computed from the event's brackets and our national results, never typed. {onRw ? "RecruitWrestlers" : "NC United · RecruitWrestlers"}.</p>
     </main>
   )
 }

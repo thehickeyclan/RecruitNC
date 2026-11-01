@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest"
 import { buildTocDefaultReminderMessage, formatRecruitNcSmsBody } from "@/lib/toc/reminder-message"
 
 describe("formatRecruitNcSmsBody", () => {
-  it("prefixes RecruitNC when missing", () => {
-    expect(formatRecruitNcSmsBody("Hello")).toBe("RecruitNC: Hello")
-    expect(formatRecruitNcSmsBody("RecruitNC: Already")).toBe("RecruitNC: Already")
+  it("prefixes NC United when missing", () => {
+    expect(formatRecruitNcSmsBody("Hello")).toBe("NC United: Hello")
+    expect(formatRecruitNcSmsBody("NC United: Already")).toBe("NC United: Already")
   })
 })
 

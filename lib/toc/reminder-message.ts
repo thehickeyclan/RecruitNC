@@ -33,6 +33,6 @@ export function buildTocDefaultReminderMessage(params: {
 
 export function formatRecruitNcSmsBody(message: string): string {
   const trimmed = message.trim()
-  if (!trimmed) return "RecruitNC:"
-  return trimmed.startsWith("RecruitNC:") ? trimmed : `RecruitNC: ${trimmed}`
+  if (!trimmed) return "NC United:"
+  return trimmed.startsWith("NC United:") ? trimmed : `NC United: ${trimmed}`
 }

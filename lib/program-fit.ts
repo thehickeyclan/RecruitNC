@@ -84,7 +84,7 @@ export const PRIORITY_OPTIONS: Array<{ key: string; label: string; group: string
   { key: "i64", label: "I-64 Duals", group: "National events" },
   { key: "toc", label: "Tournament of Champions", group: "National events" },
   { key: "national-rank", label: "National ranking", group: "Rankings" },
-  { key: "state-rank", label: "RecruitNC ranking", group: "Rankings" },
+  { key: "state-rank", label: "RecruitWrestlers ranking", group: "Rankings" },
   { key: "stars", label: "Star rating", group: "Rankings" },
   { key: "gpa", label: "GPA", group: "Academics" },
   { key: "sat", label: "SAT", group: "Academics" },

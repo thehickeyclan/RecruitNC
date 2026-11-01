@@ -54,7 +54,7 @@ export default async function TopProspectsPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
         <div className="max-w-md text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            RecruitNC
+            RecruitWrestlers
           </p>
           <h1 className="mt-3 text-3xl font-light uppercase tracking-tight text-white">
             Top {P4P_PUBLIC_CAP} Ranked Prospects

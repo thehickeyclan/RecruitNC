@@ -475,7 +475,7 @@ export const TOC_GOFAN_TICKETS_URL = "https://gofan.co/event/6745154?schoolId=NC
 
 export const TOC_NC_UNITED_ABOUT = {
   headline: "About NC United",
-  body: "NC United is a 501(c)(3) nonprofit building North Carolina's premier wrestling ecosystem — from the RecruitNC recruiting platform to youth development, college coaching access, and signature events. Co-founded by Matt Hickey, Michael Macchiavello, and Colton Palmer.",
+  body: "NC United is a 501(c)(3) nonprofit building North Carolina's premier wrestling ecosystem — from the NC United recruiting platform to youth development, college coaching access, and signature events. Co-founded by Matt Hickey, Michael Macchiavello, and Colton Palmer.",
   href: "https://ncwrestlingunited.com",
   linkLabel: "Learn more at ncwrestlingunited.com",
 } as const
@@ -748,7 +748,7 @@ export const TOC_SPONSORSHIP = {
     "Live stream and video boards — exposure beyond the arena all weekend long",
     "Coaches & Officials Lounge — Champion-tier naming rights and face time with credentialed coaches all weekend",
     "Single-mat championship finals — presentation, jacket moments, and peak attention",
-    "Patriotic NC United brand — red, white, and navy athletics with statewide reach through RecruitNC",
+    "Patriotic NC United brand — red, white, and navy athletics with statewide reach through NC United",
   ],
   formHeadline: "Request sponsorship info",
   formLead: "Tell us about your company and we'll follow up with tier benefits and customization options.",
@@ -769,7 +769,7 @@ export const TOC_ATHLETE_QUOTES = {
     },
     {
       name: "Tobin McNair",
-      credentials: "Wakefield HS • 2× All-American • #2 Ranked on RecruitNC • Binghamton Commit",
+      credentials: "Wakefield HS • 2× All-American • #2 Ranked on NC United • Binghamton Commit",
       quote:
         "What excites me most is the chance to wrestle the actual best NC has at my weight — and finally get clarity on who the best in the state really is. New Jersey and California have that. North Carolina deserves it too. When you're going against seven other elite guys with everything on the line, every match matters.",
     },

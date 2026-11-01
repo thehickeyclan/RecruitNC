@@ -23,7 +23,7 @@ function profileDisplayName(profile: Record<string, unknown> | null, email: stri
     profile?.display_name,
     email,
   ]
-  return candidates.map((value) => String(value ?? "").trim()).find(Boolean) ?? "RecruitNC user"
+  return candidates.map((value) => String(value ?? "").trim()).find(Boolean) ?? "NC United user"
 }
 
 export async function POST(request: Request) {

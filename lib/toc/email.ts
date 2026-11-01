@@ -199,7 +199,7 @@ export async function sendTocAthleteInviteEmail(payload: {
 <p><strong>${confirmLine}</strong></p>
 <p style="margin:20px 0;"><a href="${eventPageUrl()}" style="display:inline-block;background:#0B1D3A;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">Learn more about the tournament</a></p>
 <p style="margin:24px 0;"><a href="${payload.confirmUrl}" style="display:inline-block;background:#CC0000;color:white;padding:14px 28px;text-decoration:none;border-radius:6px;font-weight:bold;letter-spacing:0.04em;">Confirm your spot</a></p>
-<p style="font-size:14px;color:#6b7280;">If you're in, confirm above. We'll match you to your RecruitNC profile — school, grad year, and club are already on file.</p>`
+<p style="font-size:14px;color:#6b7280;">If you're in, confirm above. We'll match you to your NC United profile — school, grad year, and club are already on file.</p>`
 
   assertTocAthleteEmailHasNoPrivateBracketsLink(body)
 

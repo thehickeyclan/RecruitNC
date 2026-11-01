@@ -87,7 +87,7 @@ export default function InvitePage() {
           <Users className="w-14 h-14 text-[#C8A94A] mx-auto mb-4" />
           <h1 className="text-xl font-bold text-white mb-2">Join {preview.group_name}</h1>
           <p className="text-white/70 text-sm mb-6">
-            Sign in or create a RecruitNC account to join this group.
+            Sign in or create a NC United account to join this group.
           </p>
           <HardLink
             href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`}

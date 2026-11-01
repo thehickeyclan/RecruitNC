@@ -12,7 +12,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 const RW = /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
 const BRAND = RW ? "RECRUITWRESTLERS" : "RECRUITNC"
 const DOMAIN = RW ? "RECRUITWRESTLERS.COM" : "APP.NCWRESTLINGUNITED.COM"
-export const alt = RW ? "College programs on RecruitWrestlers" : "College programs on RecruitNC"
+export const alt = RW ? "College programs on RecruitWrestlers" : "College programs on RecruitWrestlers"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 export const revalidate = 3600

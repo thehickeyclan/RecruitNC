@@ -79,7 +79,7 @@ export async function generateMetadata({
       title: `${row.name} | NC United Scholarships`,
       description,
       url: `${base}/fundraising/scholarships/${row.slug}`,
-      siteName: "NC United / RecruitNC",
+      siteName: "NC United",
       locale: "en_US",
       type: "website",
       images: isCaden

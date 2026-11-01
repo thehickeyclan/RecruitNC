@@ -46,7 +46,7 @@ export function buildTocAthleteInviteMessage(payload: {
     "Confirm your spot:",
     confirmUrl,
     "",
-    "If you're in, use the link above. We'll match you to your RecruitNC profile — school, grad year, and club are already on file.",
+    "If you're in, use the link above. We'll match you to your NC United profile — school, grad year, and club are already on file.",
     "",
     "— NC United Wrestling",
   ].join("\n")

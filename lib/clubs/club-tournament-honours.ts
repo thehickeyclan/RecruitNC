@@ -60,7 +60,7 @@ function podiumYears(rows: TournamentResultForDisplay[]): string[] {
 /** Athlete name for display, matching how profiles resolve it. */
 function athleteName(athlete: Record<string, any>): string {
   const composed = [athlete.firstName, athlete.lastName].filter(Boolean).join(" ").trim()
-  return String(athlete.name ?? "").trim() || composed || "RecruitNC athlete"
+  return String(athlete.name ?? "").trim() || composed || "NC United athlete"
 }
 
 export async function loadClubTournamentHonours(

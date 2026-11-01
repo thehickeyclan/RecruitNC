@@ -8,6 +8,7 @@ export function onRecruitWrestlersProject(): boolean {
   return /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
 }
 
+/** RecruitWrestlers on both deployments since 1 Nov 2026: RecruitNC is retired as a name (Matt). */
 export function productName(): "RecruitWrestlers" | "RecruitNC" {
-  return onRecruitWrestlersProject() ? "RecruitWrestlers" : "RecruitNC"
+  return "RecruitWrestlers"
 }

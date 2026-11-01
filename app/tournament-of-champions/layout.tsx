@@ -8,7 +8,7 @@ const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.ncwrestlingunited.c
 export const metadata: Metadata = {
   metadataBase: new URL(base),
   openGraph: {
-    siteName: "NC United / RecruitNC",
+    siteName: "NC United",
     locale: "en_US",
     type: "website",
     images: [

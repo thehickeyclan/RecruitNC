@@ -146,7 +146,7 @@ export function renderFamilyDigest(d: FamilyDigest): { subject: string; html: st
 <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;padding:22px 24px">
 ${first}${names}${messages}
 <p style="margin:20px 0"><a href="${cta.href}" style="display:inline-block;background:#D3B574;color:#0A1628;padding:13px 26px;border-radius:8px;font-weight:800;text-decoration:none">${esc(cta.label)}</a></p>
-<p style="margin:0;font-size:13px;color:#6b7280">College coaches look at NC wrestler profiles on RecruitNC every day. A complete profile, current results and a highlight reel help them decide to reach out.</p>
+<p style="margin:0;font-size:13px;color:#6b7280">College coaches look at NC wrestler profiles on RecruitWrestlers every day. A complete profile, current results and a highlight reel help them decide to reach out.</p>
 </div>
 <p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:16px">NC United Wrestling · <a href="${esc(unsub)}" style="color:#9ca3af">Unsubscribe</a></p>
 </body></html>`
@@ -178,7 +178,7 @@ export async function sendFamilyDigests(admin: SupabaseClient, options: { dryRun
   for (const d of toSend) {
     const { subject, html, text } = renderFamilyDigest(d)
     const result = await resend.emails
-      .send({ from: "RecruitNC <info@ncwrestlingunited.com>", to: [d.email], subject, html, text, headers: { "List-Unsubscribe": `<${unsubscribeUrl(SITE, d.email)}>` } })
+      .send({ from: "RecruitWrestlers <info@ncwrestlingunited.com>", to: [d.email], subject, html, text, headers: { "List-Unsubscribe": `<${unsubscribeUrl(SITE, d.email)}>` } })
       .catch((e: unknown) => ({ error: { message: e instanceof Error ? e.message : String(e) } }))
     if ((result as { error?: unknown }).error) failed++
     else sent++

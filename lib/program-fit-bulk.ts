@@ -168,7 +168,7 @@ export async function loadFitSubjects(
       nationalEvents: nationalEvents.get(a.id)?.size ?? 0,
       stateBestPlace: state?.place ?? null,
       stateBestLabel: state?.label ?? null,
-      rankedLabel: ranked ? `${rankingLabel(rank, a.gender, "")} RecruitNC Class of ${classYear}` : null,
+      rankedLabel: ranked ? `${rankingLabel(rank, a.gender, "")} RecruitWrestlers Class of ${classYear}` : null,
       female: /^(f|female|girl)/i.test(String(a.gender ?? "")),
     })
   }

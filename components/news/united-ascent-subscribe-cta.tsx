@@ -11,7 +11,7 @@ export function UnitedAscentSubscribeCta() {
         Want North Carolina wrestling news in your inbox?
       </h2>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/70 sm:text-base">
-        Subscribe with just your email. Create a RecruitNC account only when you want protected tools like rankings,
+        Subscribe with just your email. Create a NC United account only when you want protected tools like rankings,
         profile management, wallet, TOC actions, and recruiting features.
       </p>
       <div className="mt-5 max-w-2xl">
@@ -28,7 +28,7 @@ export function UnitedAscentSubscribeCta() {
           href="/auth/signup"
           className="inline-flex rounded-xl border border-white/20 px-5 py-3 text-sm font-bold text-white/75 no-underline transition hover:border-[#D3B574] hover:text-[#D3B574]"
         >
-          Create RecruitNC Account
+          Create NC United Account
         </Link>
       </div>
     </div>

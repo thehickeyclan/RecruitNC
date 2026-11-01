@@ -82,8 +82,8 @@ describe("public rankings cap", () => {
   })
 
   it("says whose board a number is from", () => {
-    expect(rankingLabel(4, "Male")).toBe("RecruitNC #4")
-    expect(rankingLabel(4, "Female")).toBe("RecruitNC Women's #4")
+    expect(rankingLabel(4, "Male")).toBe("RecruitWrestlers #4")
+    expect(rankingLabel(4, "Female")).toBe("RecruitWrestlers Women's #4")
     expect(rankingLabel(4, "female", "")).toBe("Women's #4")
     expect(rankingLabel(4, null, "")).toBe("#4")
   })
