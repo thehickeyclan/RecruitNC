@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation"
 import { AlertCircle, ChevronLeft, ChevronRight, Flag, GraduationCap, Heart, Shield, Trophy, Users } from "lucide-react"
 
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
+import { EmailSignInLink } from "@/components/auth/email-sign-in-link"
 import { EMPTY_CONSENT, SignupConsent, type ConsentState } from "@/components/auth/signup-consent"
 import { cellNotice, checkConsent } from "@/lib/legal/consent"
 import { suggestEmailFix } from "@/lib/email-typo"
@@ -424,6 +425,11 @@ function SignUpWizard() {
                       ) : null}
                     </AlertDescription>
                   </Alert>
+                )}
+                {error && accountExists && (
+                  <div className="-mt-2 mb-4">
+                    <EmailSignInLink email={email} returnTo={returnTo} withInput={false} />
+                  </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">

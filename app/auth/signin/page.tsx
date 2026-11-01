@@ -14,6 +14,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Trophy, Users, Edit, ArrowRight } from "lucide-react"
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
+import { EmailSignInLink } from "@/components/auth/email-sign-in-link"
 import { BrandSignInPanel } from "@/components/recruiting/brand-frames"
 
 function isTocScopedAdminTarget(path: string | null): boolean {
@@ -461,6 +462,12 @@ export default function SignInPage() {
                   {redirectingAfterSignIn ? "Sign-in successful, redirecting…" : loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
+
+              {/* No password needed: a link by email (Matt, 1 Nov 2026: "we need it simple to login"). */}
+              <div className="mt-3">
+                <p className="mb-2 text-center text-xs text-muted-foreground">Forgot your password, or never set one?</p>
+                <EmailSignInLink email={email} returnTo={returnTo} withInput={false} />
+              </div>
 
               {/* Above the fold would push the password form down for the 1,217 people who already
                   have one; below it is where somebody looks after deciding they cannot remember. */}
