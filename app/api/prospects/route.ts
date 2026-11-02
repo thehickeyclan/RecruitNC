@@ -50,8 +50,12 @@ export async function GET(request: NextRequest) {
     const minYear = minYearParam ? Number.parseInt(minYearParam, 10) : null
     const maxYear = maxYearParam ? Number.parseInt(maxYearParam, 10) : null
 
-    // A coach previewing a state before it opens gets it in the "ALL" list too, not only on its own.
-    const withStates = allStates ? visibleStates(isAdmin, onRw, preview).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
+    /*
+     * A coach previewing a state before it opens gets it in the "ALL" list too, not only on its own.
+     * An admin's "All states" is the live ones, as families see it (2 Nov 2026): it used to carry
+     * every unlaunched state as well, doubling the list; each of those is still one pick away.
+     */
+    const withStates = allStates ? visibleStates(false, onRw, preview).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
     const { prospects, hasMore } = await fetchProspectDirectoryPage(supabase, {
       graduationYear,
       gender,

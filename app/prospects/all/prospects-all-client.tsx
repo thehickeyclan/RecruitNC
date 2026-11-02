@@ -147,8 +147,11 @@ function stateOfProspect(prospect: Prospect): string {
 
 export default function ProspectsAllClient({
   initialProspects = [],
+  initialScope = null,
 }: {
   initialProspects?: Prospect[]
+  /** The state choice the server's rows are for ("ALL" on RecruitWrestlers), or null when it sent none. */
+  initialScope?: string | null
 }) {
   const onRw = useOnRecruitWrestlers()
   /*
@@ -192,7 +195,12 @@ export default function ProspectsAllClient({
 
   const [prospects, setProspects] = useState<Prospect[]>(initialProspects)
   const [isLoading, setIsLoading] = useState(initialProspects.length === 0)
-  const skipInitialActiveFetch = useRef(initialProspects.length > 0)
+  /*
+   * Which list `prospects` holds: class filter, state choice, preview states. The server sends the
+   * opening list, so the browser fetches only when a choice asks for a different one - it used to
+   * throw the server's rows away on RecruitWrestlers and fetch every state again, 500 at a time.
+   */
+  const loadedList = useRef(initialScope ? `active|${initialScope}|0` : "")
   const [error, setError] = useState<string | null>(null)
 
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
@@ -245,7 +253,7 @@ export default function ProspectsAllClient({
    * One state's wrestlers at a time, North Carolina first: each state is its own list (and its
    * own brand to families). Choosing another state loads it from the server.
    */
-  const [stateFilter, setStateFilter] = useState<string>(HOME_STATE)
+  const [stateFilter, setStateFilter] = useState<string>(initialScope ?? HOME_STATE)
   // On a brand address (Guild Recruiting) the picker names states plainly; RecruitNC is NC United's name.
   const [brandHost, setBrandHost] = useState(false)
   useEffect(() => setBrandHost(document.documentElement.hasAttribute("data-host")), [])
@@ -301,11 +309,11 @@ export default function ProspectsAllClient({
     }
   }, [stateChoices])
 
+  // A preview state widens "All states", so an admin's list is fetched again once those arrive.
+  const previewCount = stateFilter === ALL_STATES ? previewStates.length : 0
   useEffect(() => {
-    if (skipInitialActiveFetch.current && yearFilter === "active") {
-      skipInitialActiveFetch.current = false
-      return
-    }
+    const listKey = `${yearFilter}|${stateFilter}|${previewCount}`
+    if (listKey === loadedList.current) return
 
     const run = async () => {
       setIsLoading(true)
@@ -350,22 +358,32 @@ export default function ProspectsAllClient({
           throw new Error(lastText || "Athlete profiles API failed after retries")
         }
 
+        // Four pages at a time rather than one after another: thirteen pages took thirteen seconds.
+        const WAVE = 4
         for (;;) {
-          const prospectsResponse = await fetchChunk(offset)
-          const prospectsPayload = await prospectsResponse.json()
-          const batch = Array.isArray(prospectsPayload?.prospects)
-            ? prospectsPayload.prospects
-            : Array.isArray(prospectsPayload)
-              ? prospectsPayload
-              : []
-
-          rawProspects.push(...batch)
-          const hasMore = prospectsPayload?.pagination?.hasMore ?? batch.length >= PAGE
-          if (!hasMore) break
-          offset += PAGE
+          const pages = await Promise.all(
+            Array.from({ length: WAVE }, (_, i) => fetchChunk(offset + i * PAGE).then((r) => r.json())),
+          )
+          let done = false
+          for (const prospectsPayload of pages) {
+            const batch = Array.isArray(prospectsPayload?.prospects)
+              ? prospectsPayload.prospects
+              : Array.isArray(prospectsPayload)
+                ? prospectsPayload
+                : []
+            rawProspects.push(...batch)
+            const hasMore = prospectsPayload?.pagination?.hasMore ?? batch.length >= PAGE
+            if (!hasMore) {
+              done = true
+              break
+            }
+          }
+          if (done) break
+          offset += WAVE * PAGE
           if (offset > 20000) break
         }
 
+        loadedList.current = listKey
         setProspects(rawProspects)
       } catch (fetchError: any) {
         console.error("[prospects/all] Error loading athlete profiles:", fetchError)
@@ -377,7 +395,7 @@ export default function ProspectsAllClient({
 
     run()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [yearFilter, stateFilter])
+  }, [yearFilter, stateFilter, previewCount])
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
@@ -1126,6 +1144,7 @@ export default function ProspectsAllClient({
                   defaultSortDirection="asc"
                   additionalDividerLabel=""
                   dividerAfterRank={0}
+                  pageSize={100}
                 />
               </div>
             ) : (
@@ -1136,6 +1155,7 @@ export default function ProspectsAllClient({
                   loading={false}
                   showRankBadges={false}
                   showAdditionalDivider={false}
+                  pageSize={60}
                 />
               </div>
             )}
