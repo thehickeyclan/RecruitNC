@@ -1,5 +1,6 @@
 "use client"
 
+import { metaPixelTrack } from "@/lib/meta-pixel"
 import { useEffect, useRef, useState } from "react"
 import { Check, Loader2, User, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -122,6 +123,7 @@ export function ClaimProfileButton({
       if (!res.ok) throw new Error(data.error || "Could not claim this profile")
       setDoneAs(relationship)
       setState("done")
+      metaPixelTrack("CompleteRegistration", { content_name: "profile_claim" })
       toast({
         title: relationship === "self" ? "Profile claimed" : "Linked",
         description:

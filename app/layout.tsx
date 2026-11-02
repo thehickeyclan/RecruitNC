@@ -16,6 +16,7 @@ import { BulletproofInternalLinks } from "@/components/bulletproof-internal-link
 import { Analytics } from "@vercel/analytics/next"
 import { UserActivityTracker } from "@/components/user-activity-tracker"
 import { ContactTapTracker } from "@/components/contact-tap-tracker"
+import { MetaPixel } from "@/components/analytics/meta-pixel"
 
 const defaultTitle = "NC United"
 const defaultDescription =
@@ -203,6 +204,8 @@ export default function RootLayout({
             <WelcomeModal />
             <Toaster />
             <Analytics />
+            {/* RecruitWrestlers' Meta Pixel, for the Instagram/Facebook ads; NC United never loads it. */}
+            {RW_PROJECT ? <MetaPixel /> : null}
           </AuthProvider>
         </ThemeProvider>
         {/* Disabled: was likely canceling nav to /store. Re-enable if app is embedded in iframe and needs it. */}
