@@ -61,6 +61,8 @@ export type CoachHomeData = {
   suggested: Array<{ id: string; name: string; classYear: number; rank: number; weight: string | null; highSchool: string | null }>
   /** The latest changes on the staff's shared board, and who made them. */
   activity: StaffActivityItem[]
+  /** Open recruiting needs: live, and those a coach should re-confirm. Null when unreadable. */
+  needs?: { available: boolean; live: number; toConfirm: number } | null
   rankingYears: number[]
   top75: boolean
   /** Which board this home was built from, and the program the coach gave at sign-up (null: never asked). */

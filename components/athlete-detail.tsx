@@ -22,6 +22,7 @@ import {
 } from "@/components/profile/profile-banner-parts"
 import { ProfileRow } from "@/components/profile/profile-row"
 import { CompetingNextBlock } from "@/components/profile/competing-next-block"
+import { RecruitingNeedsBlock } from "@/components/profile/recruiting-needs-block"
 import { ParentContactBlock } from "@/components/profile/parent-contact-block"
 import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, useAppProfile } from "@/components/profile/app-profile-rows"
 import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
@@ -1974,6 +1975,8 @@ export function AthleteDetail({
       {/* Where he wrestles next: the family enters it in the Command Center; approved coaches and the
           family see it here, nobody else (the block asks its own private route and hides itself). */}
       <CompetingNextBlock athleteId={String(athlete.id)} firstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.contact} />
+      {/* Coach-confirmed needs that fit him: his family only, free (its own private route). */}
+      <RecruitingNeedsBlock athleteId={String(athlete.id)} className="order-[4]" />
       {/* Contact is for college coaches, and for the family to keep current. Nobody else sees the
           row at all - not the phone, not the Instagram link (Matt, 11 October 2026). */}
       {recruiterOrFamily && (contactButtons || mayCompare || canEdit) ? (
