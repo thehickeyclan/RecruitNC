@@ -1931,10 +1931,6 @@ export function AthleteDetail({
       {canViewProfileStats && athlete.id ? (
         <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} stateCode={typeof athlete.state === "string" ? athlete.state : null} className={ROW_ORDER.views} />
       ) : null}
-      {/* The family's switch for search engines (lib/profile-search.ts). */}
-      {canEdit && athlete.id ? (
-        <SearchVisibilityToggle athleteId={String(athlete.id)} firstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.views} />
-      ) : null}
       <div className={cn("empty:hidden", ROW_ORDER.messages)}>
         <FamilyMessagesPanel athleteId={String(athlete.id)} />
       </div>
@@ -3098,6 +3094,14 @@ export function AthleteDetail({
           </Card>
         </div>
       )}
+
+      {/* The family's switch for search engines (lib/profile-search.ts): small print at the foot of
+          the page (Matt, 2 Nov 2026), not a card among the profile's sections. */}
+      {canEdit && athlete.id ? (
+        <div className={cn("container mx-auto px-4 pb-8", mobileRecruiterLayout && PROFILE_SECTION_ORDER.footer)}>
+          <SearchVisibilityToggle athleteId={String(athlete.id)} firstName={firstNames.split(" ")[0] || athleteName} />
+        </div>
+      ) : null}
 
       {/* Request Profile Edit Modal */}
       <RequestProfileEditModal
