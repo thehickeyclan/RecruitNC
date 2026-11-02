@@ -2,11 +2,13 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { isEntitled } from "@/lib/blue-membership"
+import { hasGraduated, isEntitled } from "@/lib/blue-membership"
 import { collegeForCoach } from "@/lib/college-domain-schools"
 import { isApprovedCoach } from "@/lib/coach-messages"
 import { isInternalAccount } from "@/lib/internal-accounts"
 import { sendToTokens } from "@/lib/push-send"
+import { resolveRankingViewerForUser } from "@/lib/ranking-access"
+import { hasPremiumAccess } from "@/lib/ranking-visibility"
 
 /**
  * "Washington and Jefferson College viewed Liam's profile" - an iPhone alert to the wrestler's
@@ -19,9 +21,12 @@ import { sendToTokens } from "@/lib/push-send"
  * - **Reviewed college coaches only.** Anyone can pick "College coach" at sign-up, and sign-up
  *   sets verified_coach before staff look; until Matt confirms them (verification_status
  *   'approved'), a parent or fan could otherwise trigger alerts to other people's children.
- * - **Blue members only.** It is a benefit of NC United Blue, which belongs to the wrestler: the
- *   alert goes out only when the wrestler holds a current membership (Stripe or WrestlingIQ,
- *   paid or scholarship, not graduated) - the same `isEntitled` every other Blue feature uses.
+ * - **Every family, the name for paid ones (2 Nov 2026).** It was Blue only, so the moment a college
+ *   looked - the best reason to upgrade - reached nobody who could. Now a phone signed in to a
+ *   paid account (the wrestler's Blue, or that account's own Insider or Command Center) gets the
+ *   program; a free account gets "A college program viewed..." and the way to see which. The
+ *   same rule as the "who viewed" panel and the weekly email: names for a subscriber, the
+ *   count for everyone. Graduated wrestlers get nothing.
  * - **Once per program per wrestler per week.** A coach clicking around a profile, or coming back
  *   to it, is one piece of news, not five.
  *
@@ -65,6 +70,11 @@ export async function alertFamilyOfProgramView(
       .maybeSingle()
     if (!athlete) return { sent: 0, skipped: "no athlete" }
 
+    if (hasGraduated(athlete.graduationyear == null ? null : Number(athlete.graduationyear))) {
+      return { sent: 0, skipped: "graduated" }
+    }
+
+    // Blue belongs to the wrestler, so it names the program for every phone in the family.
     const [{ data: stripe }, { data: wiq }] = await Promise.all([
       admin.from("blue_memberships").select("status, stripe_subscription_id, source, ended_at").eq("athlete_id", athlete.id),
       admin.from("blue_wiq_subscriptions").select("status, amount_cents, active_until, discount_code").eq("athlete_id", athlete.id),
@@ -74,7 +84,6 @@ export async function alertFamilyOfProgramView(
       wiq: (wiq ?? []) as never,
       graduationYear: athlete.graduationyear == null ? null : Number(athlete.graduationyear),
     })
-    if (!blue) return { sent: 0, skipped: "not a Blue member" }
 
     const { data: links } = await admin.from("parent_athlete_links").select("user_id").eq("athlete_id", athlete.id)
     const family = new Set<string>(
@@ -85,31 +94,56 @@ export async function alertFamilyOfProgramView(
 
     const { data: devices, error: deviceError } = await admin
       .from("push_devices")
-      .select("expo_push_token")
+      .select("user_id, expo_push_token")
       .in("user_id", [...family])
       .eq("alert_program_views", true)
     if (deviceError) return { sent: 0, skipped: `devices: ${deviceError.message}` }
-    const tokens = [...new Set((devices ?? []).map((d) => (d as { expo_push_token: string }).expo_push_token).filter(Boolean))]
-    if (tokens.length === 0) return { sent: 0, skipped: "no linked phones" }
+    const rows = (devices ?? []) as Array<{ user_id: string; expo_push_token: string }>
+    if (!rows.some((d) => d.expo_push_token)) return { sent: 0, skipped: "no linked phones" }
+
+    // Insider and the Command Center are bought per account, so each phone's owner is asked.
+    const paidUsers = new Set<string>()
+    if (!blue) {
+      for (const userId of new Set(rows.map((d) => d.user_id))) {
+        const { viewer } = await resolveRankingViewerForUser({ admin, userId, athleteId: athlete.id })
+        if (hasPremiumAccess(viewer)) paidUsers.add(userId)
+      }
+    }
+    const named = [...new Set(rows.filter((d) => d.expo_push_token && (blue || paidUsers.has(d.user_id))).map((d) => d.expo_push_token))]
+    const locked = [...new Set(rows.filter((d) => d.expo_push_token && !(blue || paidUsers.has(d.user_id))).map((d) => d.expo_push_token))].filter(
+      (t) => !named.includes(t),
+    )
 
     // Claim this program-week before sending; the unique key makes a second view a no-op.
     const { error: claimError } = await admin.from("push_sent_program_views").insert({
       athlete_id: athlete.id,
       program,
       week_start: weekStart(),
-      recipients: tokens.length,
+      recipients: named.length + locked.length,
     })
     if (claimError) return { sent: 0, skipped: claimError.code === "23505" ? "already alerted this week" : claimError.message }
 
-    const result = await sendToTokens("alert_program_views", tokens, {
-      title: "College interest",
-      body: `${program} viewed ${firstName(String(athlete.name ?? "your wrestler"))}'s profile.`,
-      // Opens the wrestler in the app (app/athlete/[id].tsx).
-      data: { kind: "program_view", athleteId: athlete.id, path: `/athlete/${athlete.id}` },
-    })
-    return { sent: result.sent }
+    const who = firstName(String(athlete.name ?? "your wrestler"))
+    // Opens the wrestler in the app (app/(tabs)/athlete/[id].tsx), a route every shipped build has.
+    const data = { kind: "program_view", athleteId: athlete.id, path: `/athlete/${athlete.id}` }
+    let sent = 0
+    if (named.length > 0) {
+      sent += (await sendToTokens("alert_program_views", named, { title: "College interest", body: programViewBody(program, who), data })).sent
+    }
+    if (locked.length > 0) {
+      // The program stays off a free phone entirely - not in the body, not in the data.
+      sent += (await sendToTokens("alert_program_views", locked, { title: "College interest", body: programViewBody(null, who), data })).sent
+    }
+    return { sent }
   } catch (e) {
     console.error("[program-view-alerts]", e instanceof Error ? e.message : e)
     return { sent: 0, skipped: "error" }
   }
+}
+
+/** The alert text: the program for a paid account, the fact and the way to see it for a free one. */
+export function programViewBody(program: string | null, wrestlerFirstName: string): string {
+  return program
+    ? `${program} viewed ${wrestlerFirstName}'s profile.`
+    : `A college program viewed ${wrestlerFirstName}'s profile. See which with Insider.`
 }
