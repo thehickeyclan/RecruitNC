@@ -90,8 +90,15 @@ describe("stateChampionshipName", () => {
   })
 
   it("names the state itself where we hold no association, rather than inventing one", () => {
-    /* "Georgia State Champion" is unambiguous; a made-up acronym would not be. */
-    expect(stateChampionshipName("TX", "6A")).toBe("Texas")
+    /*
+     * "Oklahoma State Champion" is unambiguous; a made-up acronym would not be. Oklahoma stands in
+     * for Texas here: TX used to be the example, and is now registered with four championships of
+     * its own (UIL, TAPPS, Texas Prep State, SPC), so it no longer tests this rule.
+     */
+    expect(stateChampionshipName("OK", "6A")).toBe("Oklahoma")
+    expect(stateChampionshipName("TX", "6A")).toBe("UIL")
+    expect(stateChampionshipName("TX", "Open", "SPC")).toBe("SPC")
+    expect(stateChampionshipName("TX", "Open", "TX Prep State")).toBe("TX Prep State")
   })
 
   it("both states have a 4A, which is why the state must appear at all", () => {

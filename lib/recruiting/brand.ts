@@ -64,6 +64,12 @@ export const RECRUITING_BRAND = {
      * schools wrestle instead (lib/athlete-state.ts).
      */
     { code: "PA", name: "Pennsylvania", live: false },
+    /*
+     * Texas clears the placer bar on arrival: 1,017 of 1,022 keys (99.5%), no unresolved champion,
+     * and a stable wrestler id on all 3,663 entrant rows. Four championships, so four names a
+     * credential card can carry (lib/athlete-state.ts).
+     */
+    { code: "TX", name: "Texas", live: false },
   ],
 } as const
 

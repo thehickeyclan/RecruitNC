@@ -136,6 +136,12 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
    * name-and-season overlap with PIAA at all - two separate fields, not two spellings of one.
    */
   PA: { public: "PIAA", independent: ["PAISWT"] },
+  /*
+   * Texas runs four championships, not two: the UIL for public schools, and three private layers
+   * that crown their own champions - TAPPS, Texas Prep State and the SPC. The association strings
+   * are the payloads' own ("TX Prep State"), matched case-insensitively here.
+   */
+  TX: { public: "UIL", independent: ["TAPPS", "TX Prep State", "SPC"] },
 }
 
 /**

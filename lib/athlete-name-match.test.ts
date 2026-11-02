@@ -304,3 +304,22 @@ describe("one school, two ways a state's sources print it", () => {
     expect(schoolsLikelySame("Buffalo Grove", "Arlington Heights (Hersey)")).toBe(false)
   })
 })
+
+describe("a trailing state code is not part of the school name", () => {
+  it("folds one school entered into two of a state's championships", () => {
+    /* Texas runs four championships; its payloads suffix the state in one layer and not the other. */
+    expect(schoolsLikelySame("St. John`s School Houston", "St. John`s School (TX)")).toBe(true)
+    expect(schoolsLikelySame("Episcopal Hs Tx", "Episcopal High School- Houston (TX)")).toBe(true)
+    expect(schoolsLikelySame("St.thomas Catholic", "St. Thomas High School (TX)")).toBe(true)
+  })
+
+  it("closes a co-op abbreviation printed two ways", () => {
+    expect(schoolsLikelySame("Chetek-Weyer./Prairie Farm", "Chetek-Weyer/PF")).toBe(true)
+  })
+
+  it("does not fold two schools that merely share a word", () => {
+    expect(schoolsLikelySame("Lewisville Marcus", "All Saints Episcopal School")).toBe(false)
+    expect(schoolsLikelySame("El Paso Eastwood", "Allen")).toBe(false)
+    expect(schoolsLikelySame("Willis", "Conroe Woodlands College Park")).toBe(false)
+  })
+})

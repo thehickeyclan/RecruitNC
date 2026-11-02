@@ -349,7 +349,19 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
    * school whose name begins with one of these words, and stripping it there would leave "latin"
    * to collide with every other Latin school.
    */
-  const dropTrailingMarker = (v: string) => v.replace(/(?: (?:girls|boys|women|womens|mens|men|wrestling))+$/g, "").trim()
+  /*
+   * A trailing two-letter token is the row's own state, not part of the school's name. Texas
+   * writes one school into two of its four championships as "St. John`s School Houston" and
+   * "St. John`s School (TX)", and "Episcopal Hs Tx" against "Episcopal High School- Houston (TX)";
+   * by the time the fold above has run, the bracketed code and the bare one look the same, so one
+   * rule reaches both. It also closes a co-op abbreviation Wisconsin prints two ways,
+   * "Chetek-Weyer/PF" against "Chetek-Weyer./Prairie Farm".
+   */
+  const dropTrailingMarker = (v: string) =>
+    v
+      .replace(/(?: (?:girls|boys|women|womens|mens|men|wrestling))+$/g, "")
+      .replace(/ [a-z]{2}$/, "")
+      .trim()
   const x = dropTrailingMarker(fold(a))
   const y = dropTrailingMarker(fold(b))
   if (!x || !y) return false
