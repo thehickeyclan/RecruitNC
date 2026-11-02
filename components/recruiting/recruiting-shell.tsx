@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Star,
   Target,
+  ClipboardList,
   User,
   Users,
   FileText,
@@ -130,6 +131,8 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   // My Recruits is the coach's home (Matt, 27 Oct 2026): first, and Coach Home folds into it.
   const items: Item[] = [
     recruits,
+    // Coach-confirmed recruiting needs (2 Nov 2026): what the staff is recruiting, and who fits.
+    { href: "/my-recruits/needs", label: "Recruiting Needs", icon: ClipboardList },
     athletes,
     ...rankings,
     { href: "/interested", label: "Interested", icon: HeartHandshake, badge: interestNew },
@@ -143,7 +146,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   const isActive = (link: string) => {
     const href = link.split("?")[0]!
     // Both boards are "My Recruits", whichever one this coach's link points at.
-    if (link === boardHref && (pathname.startsWith("/my-recruits") || /^\/schools\/[^/]+\/portal/.test(pathname))) return true
+    if (link === boardHref && ((pathname.startsWith("/my-recruits") && !pathname.startsWith("/my-recruits/needs")) || /^\/schools\/[^/]+\/portal/.test(pathname))) return true
     return pathname === href || (href !== "/" && pathname.startsWith(href))
   }
   /** An admin looking at the coach interface (COACH_PREVIEW_KEY), not a coach. */

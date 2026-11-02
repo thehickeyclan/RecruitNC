@@ -10,6 +10,7 @@ import Link from "next/link"
  */
 const TABS = [
   { key: "recruits", href: "/my-recruits", label: "My Recruits" },
+  { key: "needs", href: "/my-recruits/needs", label: "Recruiting Needs" },
   { key: "standard", href: "/perfect-recruit", label: "Perfect Recruit" },
   { key: "messages", href: "/inbox", label: "Messages" },
   { key: "compare", href: "/compare?src=coach-tabs", label: "Compare" },
