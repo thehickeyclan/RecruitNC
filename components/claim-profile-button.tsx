@@ -6,6 +6,7 @@ import { Check, Loader2, User, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { BrandText } from "@/components/recruiting/brand-name"
+import { trackClaimStarted } from "@/lib/track-claim-started"
 
 /**
  * "Is this your profile?" — on an unclaimed wrestler's page.
@@ -111,6 +112,7 @@ export function ClaimProfileButton({
   const [signedName, setSignedName] = useState("")
 
   async function claim(relationship: "self" | "parent") {
+    trackClaimStarted(athleteId, "profile")
     setState("claiming")
     try {
       const res = await fetch("/api/profile/claim-existing", {
@@ -174,12 +176,14 @@ export function ClaimProfileButton({
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <a
             href={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}${signupRole}&for=${encodeURIComponent(athleteName)}`}
+            onClick={() => trackClaimStarted(athleteId, "profile")}
             className="inline-flex min-h-[44px] items-center rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
           >
             Create a free account
           </a>
           <a
             href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`}
+            onClick={() => trackClaimStarted(athleteId, "profile")}
             className="text-sm font-semibold text-white/80 underline underline-offset-2 hover:text-white"
           >
             I already have one

@@ -1,5 +1,6 @@
 import { after, type NextRequest, NextResponse } from "next/server"
 import { siteFromRequest } from "@/lib/analytics-site"
+import { firstTouchFromRequest } from "@/lib/traffic-source"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
@@ -221,6 +222,7 @@ export async function POST(request: NextRequest) {
         ip: auditIpFrom(request),
         userAgent: request.headers.get("user-agent"),
         site: siteFromRequest(request),
+        firstTouch: firstTouchFromRequest(request),
       })
       if (!claim.ok) {
         return NextResponse.json({ error: claim.error }, { status: claim.status })
