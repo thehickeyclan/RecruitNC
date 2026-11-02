@@ -73,6 +73,22 @@ describe("stateChampionshipName", () => {
     expect(stateChampionshipName("SC", "SCISA 3A")).toBe("SCISA")
   })
 
+  it("takes the body from the row's own association where the classification does not print it", () => {
+    /*
+     * Pennsylvania's independent-schools rows are classified "Open", so there is nothing in the
+     * classification to read PAISWT out of - and calling one of those placers a PIAA champion
+     * credits him with a title his school cannot win.
+     */
+    expect(stateChampionshipName("PA", "Open", "PAISWT")).toBe("PAISWT")
+    expect(stateChampionshipName("PA", "AAA", "PIAA")).toBe("PIAA")
+    expect(stateChampionshipName("PA", "Open")).toBe("PIAA")
+  })
+
+  it("ignores an association that is not one this state crowns a separate champion for", () => {
+    expect(stateChampionshipName("NC", "4A", "NCHSAA")).toBe("NCHSAA")
+    expect(stateChampionshipName("NC", "4A", "Some Made Up Body")).toBe("NCHSAA")
+  })
+
   it("names the state itself where we hold no association, rather than inventing one", () => {
     /* "Georgia State Champion" is unambiguous; a made-up acronym would not be. */
     expect(stateChampionshipName("TX", "6A")).toBe("Texas")

@@ -128,7 +128,14 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
   NH: { public: "NHIAA" },
   VT: { public: "VPA" },
   ME: { public: "MPA" },
-  PA: { public: "PIAA" },
+  /*
+   * Pennsylvania runs two championships, and PIAA is not the one the prep schools wrestle.
+   * Berks Catholic, Bishop McCort and Faith Christian are PIAA members and wrestle its brackets;
+   * Malvern Prep, Haverford School, Episcopal Academy, Penn Charter and Mercersburg are not, and
+   * crown their own champion at the PAISWT. We hold 520 PAISWT rows (imported 6 Oct 2026) with no
+   * name-and-season overlap with PIAA at all - two separate fields, not two spellings of one.
+   */
+  PA: { public: "PIAA", independent: ["PAISWT"] },
 }
 
 /**
@@ -162,10 +169,20 @@ export function invitationalName(state: string | null | undefined, classificatio
 export function stateChampionshipName(
   state: string | null | undefined,
   classification?: string | null,
+  association?: string | null,
 ): string {
   const code = String(state ?? "").trim().toUpperCase()
   const assoc = ASSOCIATIONS[code]
   const cls = String(classification ?? "")
+  /*
+   * The row's own `association` decides when it has one. Reading the body out of the
+   * classification only works where the independent tournament prints its name there, as NCISA
+   * and SCISA do; Pennsylvania's PAISWT rows carry the classification "Open", so a Malvern Prep
+   * placer read from the classification alone comes back "PIAA" - a championship his school is
+   * not eligible for.
+   */
+  const stated = String(association ?? "").trim()
+  if (stated && assoc?.independent?.some((name) => name.toLowerCase() === stated.toLowerCase())) return stated
   const own = assoc?.independent?.find((name) => new RegExp(`^${name}`, "i").test(cls.trim()))
   if (own) return own
   return assoc?.public ?? (stateName(code) || code)

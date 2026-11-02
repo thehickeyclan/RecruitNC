@@ -59,6 +59,9 @@ export const RECRUITING_BRAND = {
      * (48.6%); the other 356 ship blank and do not mint. Thirty-eight unresolved champions are
      * named in the package note. Registered anyway so the rows are reachable while the gap is
      * worked - a state that is not in this list does not exist to the product, to admins included.
+     *
+     * PA is also the first state where we hold two championships: PIAA, and the PAISWT the prep
+     * schools wrestle instead (lib/athlete-state.ts).
      */
     { code: "PA", name: "Pennsylvania", live: false },
   ],
