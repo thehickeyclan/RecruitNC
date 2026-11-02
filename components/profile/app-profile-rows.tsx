@@ -318,8 +318,16 @@ const scopeOf = (g: EventGroup): "in-state" | "national" =>
 function groupByEvent(rows: AppTournamentRow[], style: EventGroup["style"]): EventGroup[] {
   const groups = new Map<string, AppTournamentRow[]>()
   const stateHs = new Set<string>()
+  /*
+   * Duals are headed by their event, like every other group (Matt, 2 Nov 2026: a "Duals" heading
+   * over "2026 · Capital City" put the team where the tournament belongs). They still sort last.
+   */
+  const duals = new Set<string>()
   for (const row of rows) {
-    let named = isStateHs(row.event) ? STATE_HS : EVENT_ORDER.find(([re]) => re.test(row.event))?.[1] ?? (row.isDuals ? "Duals" : row.event.replace(/^\d{4}\s+/, ""))
+    let named = isStateHs(row.event) ? STATE_HS : EVENT_ORDER.find(([re]) => re.test(row.event))?.[1] ?? row.event.replace(/^\d{4}\s+/, "")
+    // NC United's Select team wrestles the same event as the National team.
+    if (row.isDuals) named = named.replace(/\s*\(select\)$/i, "")
+    if (row.isDuals) duals.add(named)
     if (named === STATE_HS) {
       named = stateHsGroupName(row.event)
       stateHs.add(named)
@@ -328,7 +336,7 @@ function groupByEvent(rows: AppTournamentRow[], style: EventGroup["style"]): Eve
   }
   const rank = (name: string) => {
     const i = EVENT_ORDER.findIndex(([, n]) => n === (stateHs.has(name) ? STATE_HS : name))
-    return i < 0 ? (name === "Duals" ? 99 : 50) : i
+    return i < 0 ? (duals.has(name) ? 99 : 50) : i
   }
   return [...groups.entries()]
     .map(([name, list]) => ({ name, style, stateHs: stateHs.has(name), rows: [...list].sort((a, b) => b.year - a.year) }))
