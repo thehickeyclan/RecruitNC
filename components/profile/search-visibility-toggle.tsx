@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Search } from "lucide-react"
 
 /**
  * The family's switch for whether this profile can be found in search engines (lib/profile-search.ts).
@@ -28,22 +27,12 @@ export function SearchVisibilityToggle({ athleteId, firstName, className = "" }:
     setSaving(false)
   }
   return (
-    <div className={`flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#0f1c2e] p-4 text-sm text-white ${className}`}>
-      <Search className="h-4 w-4 shrink-0 text-[#D3B574]" aria-hidden />
-      <div className="min-w-0 flex-1">
-        <p className="font-bold">{hidden ? `${firstName}'s profile is hidden from Google` : `College coaches can find ${firstName} on Google`}</p>
-        <p className="text-white/60">
-          Search engines see only the public profile: name, school, class and results. Never the photo, GPA, phone or email.
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={flip}
-        disabled={saving}
-        className="rounded-lg border border-white/20 px-3 py-2 text-xs font-bold hover:bg-white/5 disabled:opacity-50"
-      >
+    <p className={`text-xs text-muted-foreground ${className}`}>
+      {hidden ? `${firstName}'s profile is hidden from Google.` : `College coaches can find ${firstName} on Google.`}{" "}
+      Search engines see only name, school, class and results, never the photo, GPA, phone or email.{" "}
+      <button type="button" onClick={flip} disabled={saving} className="underline hover:text-foreground disabled:opacity-50">
         {saving ? "Saving…" : hidden ? "Let coaches find it" : "Hide from Google"}
       </button>
-    </div>
+    </p>
   )
 }
