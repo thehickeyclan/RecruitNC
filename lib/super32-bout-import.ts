@@ -124,6 +124,117 @@ const entrant = (name: string, team: string) => `${name.trim().toLowerCase()}|${
  * The rows of the boys' high school bracket at each high school weight, byes included (they
  * carry the bracket's shape and are dropped by the caller).
  */
+/**
+ * The eleven high school girls' weights.
+ *
+ * A different slate from the boys', and it overlaps in three places (106, 132, 138) where the
+ * girls' bracket is simply the smaller of the two components. The hard part is 95, 100 and 112,
+ * which the girls share with a youth division: at 100 the two brackets hold twenty-eight
+ * wrestlers each, so size cannot tell them apart and the names have to.
+ */
+export const SUPER32_GIRLS_WEIGHTS = new Set([
+  "95", "100", "106", "112", "118", "124", "132", "138", "148", "160", "200",
+])
+
+/**
+ * Enough of a first-name signal to tell a girls' bracket from a boys' one, in aggregate.
+ *
+ * Not a claim about any one wrestler - a name says nothing reliable about a person, and nothing
+ * here is used to decide an individual's gender. It is used only to choose between two whole
+ * brackets at one weight, where the answer is lopsided: on the 2025 file every girls' bracket
+ * scores 54% or higher and every other bracket 30% or lower, so the threshold sits in a gap
+ * forty points wide. A bracket is never classified on this alone - it must also be at one of the
+ * eleven girls' weights.
+ */
+const FEMININE_ENDING = /(a|ah|ia|ya|ee|ie|y|yn|lyn|ette|elle|een|ina|ana|essa|issa)$/
+const MASCULINE_FIRST_NAMES = new Set(
+  `aiden aidan jack james john michael william david daniel joseph matthew anthony brady brayden braxton bryson
+   caleb cameron carter chase christian cody colton connor cooper dominic dylan easton eli elijah ethan evan
+   gabriel gavin grayson henry hunter isaac jace jackson jacob jaxon jayden jeremiah jonathan jordan joshua
+   julian kaden kayden landon leo levi liam lincoln logan lucas luke mason nathan nicholas noah nolan oliver
+   owen parker ryan samuel sawyer sebastian thomas tyler wyatt xavier zachary zane beau brison atticus abram
+   brixton camron benjamin avery angel alonzo antonio`.split(/\s+/),
+)
+const FEMININE_FIRST_NAMES = new Set(
+  `abigail addison alexandria allie alysa bella breanna brianna cassidy emma olivia ava sophia isabella mia
+   charlotte amelia harper evelyn abby grace chloe lily zoey zoe nora riley aubrey ella scarlett victoria
+   madison luna hazel violet aurora savannah audrey brooklyn claire skylar paisley everly anna caroline nova
+   genesis emilia kennedy maya willow kinsley naomi aaliyah elena sarah ariana allison gabriella alice madelyn
+   cora ruby eva serenity autumn adeline hailey gianna valentina isla eliana quinn nevaeh ivy sadie piper lydia
+   alexa josephine emery julia delilah arianna vivian kaylee sophie brielle madeline peyton rylee clara hadley
+   melanie mackenzie reagan adalynn liliana aubree jade katherine isabelle natalie raelynn maria athena ximena
+   arya leilani taylor faith rose kylie alexandra mary margaret lyla ashley amaya eliza bailey andrea khloe
+   jasmine melody iris isabel norah annabelle valeria kayla sara`.split(/\s+/),
+)
+
+export function feminineNameShare(names: readonly string[]): number {
+  let score = 0
+  let counted = 0
+  for (const name of names) {
+    const first = String(name ?? "").trim().toLowerCase().split(/\s+/)[0]
+    if (!first) continue
+    counted += 1
+    if (FEMININE_FIRST_NAMES.has(first)) score += 1
+    else if (MASCULINE_FIRST_NAMES.has(first)) continue
+    else if (FEMININE_ENDING.test(first)) score += 0.75
+  }
+  return counted ? score / counted : 0
+}
+
+/** Within a weight, everyone linked by a chain of bouts is one bracket. */
+function componentsAtWeight(weightRows: readonly Super32Row[]): Super32Row[][] {
+  const parent = new Map<string, string>()
+  const find = (x: string): string => {
+    if (!parent.has(x)) parent.set(x, x)
+    let root = x
+    while (parent.get(root) !== root) root = parent.get(root)!
+    parent.set(x, root)
+    return root
+  }
+  for (const row of weightRows) {
+    const a = find(entrant(row.winner, row.winnerTeam))
+    if (row.loser) parent.set(a, find(entrant(row.loser, row.loserTeam)))
+  }
+  const byRoot = new Map<string, Super32Row[]>()
+  for (const row of weightRows) {
+    const root = find(entrant(row.winner, row.winnerTeam))
+    byRoot.set(root, [...(byRoot.get(root) ?? []), row])
+  }
+  return [...byRoot.values()].sort((a, b) => b.length - a.length)
+}
+
+const entrantsOf = (rows: readonly Super32Row[]): string[] => [
+  ...new Set(rows.flatMap((r) => [r.winner, r.loser]).filter(Boolean) as string[]),
+]
+
+/**
+ * The high school girls' bracket at each girls' weight.
+ *
+ * Two tests, and a bracket has to pass both: the weight is one of the eleven, and the names in
+ * it are mostly girls' names. The weight alone is not enough, because 95, 100 and 112 also carry
+ * a youth boys' bracket; the names alone are not enough either, and on the 2025 file would have
+ * taken a thirteen-man bracket at 175 that is not a girls' weight at all.
+ *
+ * The export carries no age or grade, so if the event ever runs a separate middle school girls'
+ * division at these weights this cannot see it. The division has to come from the source then.
+ */
+export function girlsBracketRows(rows: readonly Super32Row[]): Super32Row[] {
+  const out: Super32Row[] = []
+  const byWeight = new Map<string, Super32Row[]>()
+  for (const row of rows) {
+    if (!SUPER32_GIRLS_WEIGHTS.has(row.weight)) continue
+    byWeight.set(row.weight, [...(byWeight.get(row.weight) ?? []), row])
+  }
+  for (const weightRows of byWeight.values()) {
+    const scored = componentsAtWeight(weightRows)
+      .map((component) => ({ component, share: feminineNameShare(entrantsOf(component)) }))
+      .filter((c) => c.share >= 0.4)
+      .sort((a, b) => b.share - a.share)
+    if (scored[0]) out.push(...scored[0].component)
+  }
+  return out
+}
+
 export function highSchoolBracketRows(rows: readonly Super32Row[]): Super32Row[] {
   const out: Super32Row[] = []
   const byWeight = new Map<string, Super32Row[]>()

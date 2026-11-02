@@ -1,0 +1,24 @@
+{
+  "placers": [
+    {
+      "name": "Ashley Diaz",
+      "school": "Northwood",
+      "season": 2026,
+      "reason": "approved",
+      "note": "3rd at 120, MPSSAA girls 2026. No grade is printed for her anywhere the public record reaches: Muse ran her through two full waves including a dedicated Montgomery County pass, and Legacy Wrestling, the MSWA rankings, the regional PDFs and the local papers all name her without a class. Closed as not found rather than guessed. She gets a profile the moment a family claim or a printed grade supplies the year (22 Oct 2026)."
+    },
+    {
+      "name": "Jariah Washington",
+      "school": "Henry E. Lackey",
+      "season": 2026,
+      "reason": "source-conflict",
+      "note": "MPSSAA girls champion at 170, 2026. A Wrestler-of-the-Year feature and a Who's #1 report both read class of 2027, with an arc that fits her placings exactly - 5th at 155 as a sophomore, champion at 170 as a junior, and a coach quoted on her not having wrestled as a freshman. One Legacy recap from January 2025 calls her a junior, which would make her 2026. Unlike Davy Snyder, Connor Cline and Austin Hayes, neither reading is ruled out: her earliest result is 2025, so both a 2026 and a 2027 are legal under COMAR 13A.06.03.02. Narrative evidence on both sides with no printed tournament grade to rank them, so the year is held rather than forced to close a gate. Her two placements stay on file (22 Oct 2026)."
+    }
+  ],
+  "classYearUnresolved": [
+    {
+      "athleteId": "3236a58e-0022-4991-af6f-00598dd7ea9f",
+      "note": "Austin Hayes, Eleanor Roosevelt. RankWrestlers says class of 2028 (\"RW 2026 So @113\") and that is the only evidence - Flo printed no grade in any of the three Maryland brackets he wrestled. He placed 2nd at the 2024 MPSSAA championship, which a class of 2028 would have wrestled in eighth grade. Unlike Virginia, we have not read the MPSSAA rule on middle schoolers in the state tournament, so neither reading is established: the year is held rather than guessed, and his three placements stay on his profile. Closes when MPSSAA's rule is read or a printed grade turns up (22 Oct 2026)."
+    }
+  ]
+}

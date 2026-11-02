@@ -44,7 +44,8 @@ export async function GET(request: NextRequest) {
   const failures = (data ?? []).filter((e) => {
     if (e.event_type !== "signup_error") return false
     const message = String((e.event_data as { message?: unknown } | null)?.message ?? "")
-    return !/only request this after \d+ seconds/i.test(message)
+    // A rate-limit pause and "you already have an account" are the form working, not failing.
+    return !/only request this after \d+ seconds|already have an account|already exists/i.test(message)
   })
   const people = new Set(failures.map((e) => `${e.ip_address ?? ""}|${e.user_agent ?? ""}`)).size
   const started = (data ?? []).filter((e) => e.event_type === "signup_started").length

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 import { classifyViewer } from "@/lib/viewer-role"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { alertFamilyOfProgramView } from "@/lib/program-view-alerts"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 export async function POST(request: Request) {
   try {
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
       user_agent: request.headers.get("user-agent"),
       ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip"),
       event_data: {
+        site: siteFromRequest(request),
         athlete_id: athleteId,
         athlete_name: athleteName,
         // Kept so the existing admin card-analytics page keeps reading; not a coach signal.

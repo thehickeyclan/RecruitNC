@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle } from "lucide-react"
+import { isHeic, preparePhoto } from "@/lib/images/prepare-photo"
 
 interface AthletePhotoUploadProps {
   athleteId: string
@@ -29,13 +30,13 @@ export default function AthletePhotoUpload({ athleteId, athleteName, onPhotoUplo
     setSuccess(null)
 
     // Validate file
-    if (!file.type.startsWith("image/")) {
+    if (!file.type.startsWith("image/") && !isHeic(file)) {
       setError("Please select an image file")
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be smaller than 5MB")
+    if (file.size > 25 * 1024 * 1024) {
+      setError("Image must be smaller than 25MB")
       return
     }
 
@@ -54,7 +55,7 @@ export default function AthletePhotoUpload({ athleteId, athleteName, onPhotoUplo
 
       // Create form data for upload
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append("file", await preparePhoto(file))
       formData.append("athleteId", athleteId)
       formData.append("category", "commitment") // Specify this is a commitment photo
 
@@ -133,7 +134,7 @@ export default function AthletePhotoUpload({ athleteId, athleteName, onPhotoUplo
             <ul className="list-disc pl-5 mt-1 space-y-1">
               <li>Use a high-quality photo of the athlete</li>
               <li>Ideal aspect ratio is 4:3 (landscape)</li>
-              <li>Maximum file size is 5MB</li>
+              <li>Maximum file size is 25MB</li>
               <li>Supported formats: JPG, PNG, WebP</li>
             </ul>
           </div>

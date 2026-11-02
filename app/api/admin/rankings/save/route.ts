@@ -16,7 +16,7 @@ import { syncPublicRankingsTable } from "@/lib/rankings/publish-public-rankings"
 import { notifyRankingsPublished } from "@/lib/rankings-notification"
 import { athleteStateCode, HOME_STATE, inState, normalizeStateCode } from "@/lib/recruiting/states"
 import { liveStates } from "@/lib/recruiting/brand"
-import { writePublishedSnapshot } from "@/lib/rankings/ranking-snapshot"
+import { loadPublishedSnapshot, writePublishedSnapshot } from "@/lib/rankings/ranking-snapshot"
 
 export const dynamic = "force-dynamic"
 
@@ -24,7 +24,13 @@ export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
 type Body = {
-  action?: "save" | "publish"
+  /** "notify" sends the iPhone alert for what is already published, on its own press. */
+  action?: "save" | "publish" | "notify"
+  /**
+   * Publish alerts the phones only when this is true, and the board never sends it: the push is
+   * its own button (Matt, 30 October 2026: publish 2027 tonight, push tomorrow).
+   */
+  notify?: unknown
   year?: unknown
   gender?: unknown
   /** Whose board. North Carolina when absent, which is every caller before South Carolina. */
@@ -36,7 +42,7 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as Body | null
   const year = Number(body?.year)
   const gender = String(body?.gender ?? "Male")
-  const action = body?.action === "publish" ? "publish" : "save"
+  const action = body?.action === "publish" ? "publish" : body?.action === "notify" ? "notify" : "save"
   const state = normalizeStateCode(String(body?.state ?? "")) ?? HOME_STATE
   if (!Number.isFinite(year)) {
     return NextResponse.json({ error: "A valid graduation year is required." }, { status: 400 })
@@ -51,9 +57,9 @@ export async function POST(request: NextRequest) {
   }
   /*
    * Saving a draft needs edit access to this board, which a scoped ranker can hold. Publishing
-   * stays with full admins: it makes the order public and sends a push to the app.
+   * stays with full admins: it makes the order public, and only an admin can alert the phones.
    */
-  if (action === "publish") {
+  if (action === "publish" || action === "notify") {
     const auth = await requireAdmin()
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
   } else {
@@ -65,6 +71,24 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient()
   const userId = (await (await createClient()).auth.getUser()).data.user?.id ?? null
   const now = new Date().toISOString()
+
+  if (action === "notify") {
+    // The app and its alert carry North Carolina's men's boards only.
+    if (state !== HOME_STATE || isWomensBoard(gender)) {
+      return NextResponse.json({ error: "The iPhone alert is for North Carolina men's boards only." }, { status: 400 })
+    }
+    if (!isPublicRankingsYearPublished(year, gender)) {
+      return NextResponse.json({ error: `Class of ${year} is not released, so there is nothing public to alert about.` }, { status: 400 })
+    }
+    const published = await loadPublishedSnapshot(admin, HOME_STATE, year, gender)
+    if (!published?.length) {
+      return NextResponse.json({ error: "Nothing published for this class yet. Publish first." }, { status: 400 })
+    }
+    const rankedNames = await namesInOrder(admin, published.map((row) => row.athlete_id))
+    const push = await notifyRankingsPublished({ graduationYear: year, gender, rankedNames })
+    if (!push) return NextResponse.json({ error: "The alert did not send. Check the server log." }, { status: 500 })
+    return NextResponse.json({ ok: true, action, push: { sent: push.sent, failed: push.failed } })
+  }
 
   if (action === "save") {
     const rows = (body?.rankings ?? [])
@@ -285,9 +309,6 @@ export async function POST(request: NextRequest) {
     .filter((row) => Number(row.rank) <= cap)
     .sort((a, b) => Number(a.rank) - Number(b.rank))
     .map((row) => String(row.athlete_id))
-  const { data: namedRows } = await admin.from("athletes").select("id, name").in("id", publishedIds)
-  const nameById = new Map((namedRows ?? []).map((r) => [String(r.id), String(r.name ?? "")]))
-  const rankedNames = publishedIds.map((id) => nameById.get(id) ?? "").filter(Boolean)
 
   // Never throws, and deliberately not awaited into the failure path: the rankings are public
   // by now, and failing a publish because a notification failed would be the wrong trade.
@@ -299,7 +320,11 @@ export async function POST(request: NextRequest) {
    * families are told by email when it is; the push comes back when the app has a women's board.
    */
   const womensBoard = isWomensBoard(gender)
-  const push = womensBoard ? null : await notifyRankingsPublished({ graduationYear: year, gender, rankedNames })
+  const wantsAlert = body?.notify === true
+  const push =
+    womensBoard || !wantsAlert
+      ? null
+      : await notifyRankingsPublished({ graduationYear: year, gender, rankedNames: await namesInOrder(admin, publishedIds) })
 
   return NextResponse.json({
     ok: true,
@@ -309,9 +334,16 @@ export async function POST(request: NextRequest) {
     app: appSync,
     push: push
       ? { sent: push.sent, failed: push.failed }
-      : { sent: 0, failed: 0, note: womensBoard ? "no app alert for a women's board" : "not sent" },
+      : { sent: 0, failed: 0, note: womensBoard ? "no app alert for a women's board" : wantsAlert ? "not sent" : "alert held" },
     released: isPublicRankingsYearPublished(year, gender),
   })
+}
+
+/** Names for the alert, in published order. */
+async function namesInOrder(admin: ReturnType<typeof createAdminClient>, ids: string[]): Promise<string[]> {
+  const { data } = await admin.from("athletes").select("id, name").in("id", ids)
+  const nameById = new Map((data ?? []).map((r) => [String(r.id), String(r.name ?? "")]))
+  return ids.map((id) => nameById.get(id) ?? "").filter(Boolean)
 }
 
 /** The one failure worth explaining rather than logging. */

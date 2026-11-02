@@ -337,7 +337,7 @@ export function PerfectRecruitWizard({
                   onChange={(e) => { const checked = e.target.checked; update(() => ({ requireRanked: checked })) }}
                   className="h-4 w-4 accent-[#D3B574]"
                 />
-                <span className="text-sm text-white/80">Ranked only: a published RecruitNC rank or a national ranking</span>
+                <span className="text-sm text-white/80">Ranked only: a published RecruitWrestlers rank or a national ranking</span>
               </label>
             </>
           ) : null}

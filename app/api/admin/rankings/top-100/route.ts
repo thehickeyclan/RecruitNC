@@ -25,7 +25,7 @@ import { TOP_100_CAP } from "@/lib/rankings/top-100-view"
  * was deliberately cut. That silently deleted five hand-placed wrestlers - including a state
  * runner-up - and put four removed wrestlers back above the publishing line.
  */
-const CLASS_DEPTHS: Readonly<Record<number, number>> = { 2027: 75, 2028: 60, 2029: 35 }
+const CLASS_DEPTHS: Readonly<Record<number, number>> = { 2027: 75, 2028: 60 }
 
 export const dynamic = "force-dynamic"
 
@@ -41,7 +41,8 @@ export async function GET(request: Request) {
     const gender = searchParams.get("gender") || "Male"
     const admin = createAdminClient()
 
-    const board = await buildPoundForPoundBoard({ supabase: admin, gender, classDepths: CLASS_DEPTHS })
+    // The Top 75 is the classes of 2027 and 2028 only (Matt, 30 Oct 2026); 2029 never enters its pool.
+    const board = await buildPoundForPoundBoard({ supabase: admin, gender, classes: [2027, 2028], classDepths: CLASS_DEPTHS })
 
     /*
      * A saved hand order replaces the engine's, because the engine is a starting point and the

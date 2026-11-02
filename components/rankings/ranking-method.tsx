@@ -65,24 +65,15 @@ export function RankingMethod({ womens = false }: { womens?: boolean }) {
   )
 }
 
-/** What the marks on a card mean, shown only when the board carries any of them. */
-export function RankingLegend({ moved, isNew }: { moved: boolean; isNew: boolean }) {
-  if (!moved && !isNew) return null
+/** What the NEW mark on a card means, shown only when the board carries one. */
+export function RankingLegend({ isNew }: { isNew: boolean }) {
+  if (!isNew) return null
   return (
     <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/50">
-      <span>Since the last update:</span>
-      {moved ? (
-        <>
-          <span className="text-emerald-300">▲ moved up</span>
-          <span className="text-red-300">▼ moved down</span>
-        </>
-      ) : null}
-      {isNew ? (
-        <span className="inline-flex items-center gap-1.5">
-          <span className="rounded-sm bg-emerald-400 px-1.5 py-0.5 text-[10px] font-black text-[#061224]">NEW</span>
-          new to the board
-        </span>
-      ) : null}
+      <span className="inline-flex items-center gap-1.5">
+        <span className="rounded-sm bg-emerald-400 px-1.5 py-0.5 text-[10px] font-black text-[#061224]">NEW</span>
+        new to the board since the last update
+      </span>
     </div>
   )
 }

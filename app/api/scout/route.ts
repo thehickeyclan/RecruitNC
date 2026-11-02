@@ -6,6 +6,7 @@ import { askScout } from "@/lib/recruiting/scout/run"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 120
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
   // Counted for the daily limit and for usage; the question's words are not stored.
   await admin
     .from("user_analytics")
-    .insert({ user_id: userId, event_type: "scout_question", page_url: "/my-recruiting/scout", event_data: { chars: question.length, ms: Date.now() - started, timestamp: new Date().toISOString() } })
+    .insert({ user_id: userId, event_type: "scout_question", page_url: "/my-recruiting/scout", event_data: { chars: question.length, site: siteFromRequest(request), ms: Date.now() - started, timestamp: new Date().toISOString() } })
     .then(() => null, () => null)
 
   return NextResponse.json(answer)

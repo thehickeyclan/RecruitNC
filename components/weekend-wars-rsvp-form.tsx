@@ -78,7 +78,7 @@ export function WeekendWarsRsvpForm() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmitError(null)
-    if (!selected) return setSubmitError("Choose your RecruitNC profile")
+    if (!selected) return setSubmitError("Choose your NC United profile")
     if (!attendingSaturday && !attendingSunday) return setSubmitError("Select Saturday, Sunday, or both")
     if (!carpool) return setSubmitError("Answer the carpool question")
 
@@ -135,7 +135,7 @@ export function WeekendWarsRsvpForm() {
     <form onSubmit={submit} className="space-y-6">
       <div className="relative">
         <Label htmlFor="weekend-wars-athlete-search" className="text-white">
-          Find your RecruitNC profile
+          Find your NC United profile
         </Label>
         <div className="relative mt-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
@@ -170,7 +170,7 @@ export function WeekendWarsRsvpForm() {
                 <span className="mt-0.5 block text-xs text-white/55">
                   {[athlete.highSchool, athlete.weightClass ? `${athlete.weightClass} lbs` : null, athlete.wrestlingClub]
                     .filter(Boolean)
-                    .join(" · ") || "RecruitNC profile"}
+                    .join(" · ") || "NC United profile"}
                 </span>
               </button>
             ))}
@@ -179,7 +179,7 @@ export function WeekendWarsRsvpForm() {
 
         {!selected && !searching && query.trim().length >= 2 && results.length === 0 && !searchError ? (
           <p className="mt-2 text-sm text-white/55">
-            No RecruitNC athlete profile matched that name. Check the spelling or contact NC United.
+            No NC United athlete profile matched that name. Check the spelling or contact NC United.
           </p>
         ) : null}
         {searchError ? <p className="mt-2 text-sm text-red-300">{searchError}</p> : null}

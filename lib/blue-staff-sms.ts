@@ -76,7 +76,7 @@ export async function notifyStaffBlueNewSubscription(
   const size = String((signup as { tshirt_size?: string | null } | null)?.tshirt_size ?? "").trim()
   if (size) shirt = ` Shirt ${size}.`
 
-  const body = `RecruitNC Blue: New member ${athlete}${email ? ` (${email})` : ""}. ${amount}/mo.${shirt} Admin: /admin/blue/subscriptions`
+  const body = `NC United Blue: New member ${athlete}${email ? ` (${email})` : ""}. ${amount}/mo.${shirt} Admin: /admin/blue/subscriptions`
 
   let sent = 0
   for (const e164 of recipients) {

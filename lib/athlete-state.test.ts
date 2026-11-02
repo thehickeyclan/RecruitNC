@@ -5,6 +5,7 @@ import {
   inState,
   isHomeState,
   normalizeState,
+  invitationalName,
   stateChampionshipName,
   stateName,
 } from "@/lib/athlete-state"
@@ -74,10 +75,49 @@ describe("stateChampionshipName", () => {
 
   it("names the state itself where we hold no association, rather than inventing one", () => {
     /* "Georgia State Champion" is unambiguous; a made-up acronym would not be. */
-    expect(stateChampionshipName("GA", "6A")).toBe("Georgia")
+    expect(stateChampionshipName("TX", "6A")).toBe("Texas")
   })
 
   it("both states have a 4A, which is why the state must appear at all", () => {
     expect(stateChampionshipName("NC", "4A")).not.toBe(stateChampionshipName("SC", "4A"))
+  })
+})
+
+describe("states with more than one association, and events that are not championships", () => {
+  it("names Maryland's three apart", () => {
+    expect(stateChampionshipName("MD", "2A/1A")).toBe("MPSSAA")
+    expect(stateChampionshipName("MD", "MIS")).toBe("MIS")
+    expect(stateChampionshipName("MD", "MIAA")).toBe("MIAA")
+  })
+
+  it("names Georgia's private association GIAA, which it renamed to in 2022", () => {
+    /* GISA is the old name; every event we hold ran under GIAA, so using GISA mislabels them. */
+    expect(stateChampionshipName("GA", "6A")).toBe("GHSA")
+    expect(stateChampionshipName("GA", "GIAA")).toBe("GIAA")
+    expect(stateChampionshipName("GA", "GISA")).toBe("GHSA")
+  })
+
+  it("names Tennessee's", () => {
+    expect(stateChampionshipName("TN", "A-AA")).toBe("TSSAA")
+  })
+
+  it("names Delaware's", () => {
+    expect(stateChampionshipName("DE", "DIAA")).toBe("DIAA")
+    expect(stateChampionshipName("DE", "")).toBe("DIAA")
+  })
+
+  it("names West Virginia's, which has no separate private championship", () => {
+    expect(stateChampionshipName("WV", "AAA")).toBe("WVSSAC")
+    expect(stateChampionshipName("WV", "Division 1")).toBe("WVSSAC")
+  })
+
+  it("will not call West Virginia's girls invitational a championship", () => {
+    /*
+     * The WVSSAC does not sanction girls' wrestling until 2026-27. Crediting a 2026 winner with
+     * a WVSSAC state title would award her something her state did not.
+     */
+    expect(invitationalName("WV", "Girls Invitational")).toBe("WV Girls State Invitational")
+    expect(invitationalName("WV", "AAA")).toBeNull()
+    expect(invitationalName("NC", "Girls Invitational")).toBeNull()
   })
 })

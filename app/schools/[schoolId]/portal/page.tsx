@@ -3926,7 +3926,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
                       >
-                        View Full RecruitNC Profile
+                        View Full RecruitWrestlers Profile
                         <ExternalLink className="h-4 w-4" />
                       </a>
                     </div>

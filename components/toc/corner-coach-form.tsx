@@ -218,7 +218,7 @@ export function CornerCoachForm() {
         <div className="rounded-xl border border-[#D3B574]/40 bg-[#13294B] p-5">
           <p className="text-sm font-bold text-[#D3B574]">While you are here</p>
           <p className="mt-2 text-sm leading-relaxed text-[#A8BBD1]">
-            College coaches read {athlete.name.split(" ")[0]}&apos;s RecruitNC profile directly. A
+            College coaches read {athlete.name.split(" ")[0]}&apos;s NC United profile directly. A
             cell number, GPA and academic interests are the fields they look for first, and a
             profile without them is easy to pass over.
           </p>

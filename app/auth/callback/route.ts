@@ -6,6 +6,9 @@ import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { alreadyAnswered } from "@/lib/complete-profile"
 import { postSignInDestination } from "@/lib/post-sign-in-destination"
+import { signupLanding } from "@/lib/auth/signup-landing"
+import { familyAthleteIds } from "@/lib/coach-messages"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 export async function GET(req: NextRequest) {
   console.log("[v0] ===== AUTH CALLBACK ROUTE CALLED =====")
@@ -16,7 +19,7 @@ export async function GET(req: NextRequest) {
   const type = requestUrl.searchParams.get("type")
   const requestedNext = requestUrl.searchParams.get("next") || "/"
   const next =
-    requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.startsWith("/auth/callback")
+    requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.includes("\\") && !requestedNext.startsWith("/auth/callback")
       ? requestedNext
       : "/"
 
@@ -159,6 +162,7 @@ export async function GET(req: NextRequest) {
           user_agent: req.headers.get("user-agent") || null,
           ip_address: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || null,
           event_data: {
+            site: siteFromRequest(req),
             source: "auth_callback",
             target: next,
             auth_type: type || "code",
@@ -193,6 +197,20 @@ export async function GET(req: NextRequest) {
        * (coaches and athletes to /athletes, admins to /admin, the rest to the homepage).
        */
       redirectPath = await postSignInDestination(createAdminClient(), session.user.id)
+      // A new account goes back where it signed up, or to finding its wrestler (lib/auth/signup-landing.ts).
+      // New accounts only: an old Google account signing in again keeps its usual landing.
+      if (isEmailVerificationCallback && (type === "signup" || !profile)) {
+        const meta = ((session.user as User).user_metadata ?? {}) as Record<string, unknown>
+        const admin = createAdminClient()
+        const landing = signupLanding({
+          returnTo: meta.signup_return_to,
+          role: String(meta.profile_type ?? profile?.profile_type ?? ""),
+          hasWrestler: (await familyAthleteIds(admin, session.user.id).catch(() => [])).length > 0,
+          firstName: typeof meta.first_name === "string" ? meta.first_name : null,
+          lastName: typeof meta.last_name === "string" ? meta.last_name : null,
+        })
+        if (landing) redirectPath = landing
+      }
     }
 
     /*
@@ -223,7 +241,9 @@ export async function GET(req: NextRequest) {
      * first run, and complete-profile asks its own question first - the flag would be stripped by
      * that redirect anyway.
      */
-    if (isEmailVerificationCallback && !redirectPath.startsWith("/auth/")) {
+    // Not over a page that is already asking them to claim: the welcome would cover the one button.
+    const landsOnClaim = redirectPath.startsWith("/create-profile") || /[?&]claim=1/.test(redirectPath)
+    if (isEmailVerificationCallback && !redirectPath.startsWith("/auth/") && !landsOnClaim) {
       const role = String(profile?.role ?? "").trim() || createdRole
       if (role) {
         const url = new URL(redirectPath, requestUrl.origin)

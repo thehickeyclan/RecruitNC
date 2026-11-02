@@ -53,7 +53,7 @@ export function UnitedAscentEmailSubscribeForm({ source = "united_ascent_cta", c
     return (
       <div className="flex items-start gap-2 rounded-xl border border-[#D3B574]/35 bg-[#D3B574]/10 px-4 py-3 text-sm font-semibold text-[#F5DF9A]">
         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-        You’re subscribed to United Ascent. No RecruitNC account required.
+        You’re subscribed to United Ascent. No NC United account required.
       </div>
     )
   }

@@ -6,7 +6,7 @@ export const metadata = shareMetadata({
   title: `Claim your ${productName()} profile`,
   description:
     productName() === "RecruitNC"
-      ? "College coaches recruit North Carolina wrestlers on RecruitNC. Your results are probably already here: find your name and claim it, free."
+      ? "College coaches recruit North Carolina wrestlers on RecruitWrestlers. Your results are probably already here: find your name and claim it, free."
       : `College coaches recruit wrestlers on ${productName()}. Your results are probably already here: find your name and claim it, free.`,
   path: "/create-profile",
   kicker: `${productName()} · Free for every wrestler`,

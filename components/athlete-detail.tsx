@@ -77,6 +77,7 @@ import { BannerViewStats } from "./profile/banner-view-stats"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 import { stateName } from "@/lib/athlete-state"
+import { preparePhoto } from "@/lib/images/prepare-photo"
 
 /**
  * Bio/summary paragraph section.
@@ -521,7 +522,7 @@ export function AthleteDetail({
   // Handler for image upload
   const handleImageUpload = async (file: File): Promise<string> => {
     const formData = new FormData()
-    formData.append("file", file)
+    formData.append("file", await preparePhoto(file))
     formData.append("athleteId", athlete.id)
     formData.append("category", "profile")
 
@@ -548,6 +549,8 @@ export function AthleteDetail({
 
   const athleteName = athlete?.name || "Unknown Athlete"
   const college = athlete?.college || "Not specified"
+  /* Set by lib/college-commitments/provenance.ts; null for a commitment typed in before we recorded a source. */
+  const commitmentProvenance = (athlete as { commitment_provenance?: { status: string; reportedOn: string; source: string; previousCollege: string | null } | null } | null)?.commitment_provenance ?? null
   const previousCollege = String(athlete?.previous_college ?? "").trim() || null
   const collegeTransferLabel =
     previousCollege &&
@@ -1485,6 +1488,18 @@ export function AthleteDetail({
                 <span className="text-[#A8BBD1]">Committed to </span>
                 <span className="font-bold">{college}</span>
                 {collegeTransferLabel ? <span className="block text-xs text-white/55">{collegeTransferLabel}</span> : null}
+                {commitmentProvenance ? (
+                  /*
+                   * Where it came from and when. The National Letter of Intent was abolished in
+                   * 2024, so a commitment read off a published list is reported, never signed,
+                   * and a coach reading this page can see which it is and go and check.
+                   */
+                  <span className="block text-xs text-white/55">
+                    {commitmentProvenance.status === "signed" ? "Signed" : "Reported"} {commitmentProvenance.reportedOn}
+                    {commitmentProvenance.source ? ` · ${commitmentProvenance.source}` : ""}
+                    {commitmentProvenance.previousCollege ? ` · was ${commitmentProvenance.previousCollege}` : ""}
+                  </span>
+                ) : null}
               </span>
             </p>
           ) : null}
@@ -1880,7 +1895,7 @@ export function AthleteDetail({
         <CollegeViewsLanding athleteName={athleteName} signedIn={Boolean(currentUserId)} canSeePanel={canViewProfileStats} />
       </div>
       {canViewProfileStats && athlete.id ? (
-        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.views} />
+        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} stateCode={typeof athlete.state === "string" ? athlete.state : null} className={ROW_ORDER.views} />
       ) : null}
       {/* The family's switch for search engines (lib/profile-search.ts). */}
       {canEdit && athlete.id ? (
@@ -2117,8 +2132,10 @@ export function AthleteDetail({
         >
           {/* Profile completeness (Matt's mock, 10 October 2026): what is done, what is left, and
               one button to the editors. Each open item is a tap to its own form. */}
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <div className="min-w-0 flex-1">
+          {/* Stacked at every width: the card sits in the narrow side column on desktop, and a row
+              layout there squeezed the text to one word per line (Matt, 31 Oct 2026). */}
+          <div className="flex flex-col gap-4">
+            <div className="min-w-0">
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-base font-bold text-white">Profile Completeness</p>
                 <p className="text-base font-black text-white">{completeness.percent}%</p>
@@ -2141,7 +2158,8 @@ export function AthleteDetail({
                 </a>
               ) : null}
             </div>
-            <ul className="space-y-1.5 lg:w-64">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+            <ul className="min-w-0 space-y-1.5">
               {completeness.items.map((item) => (
                 <li key={item.label}>
                   <button
@@ -2175,6 +2193,7 @@ export function AthleteDetail({
             >
               Edit Profile
             </button>
+            </div>
           </div>
           <div className={cn("mt-4 flex flex-wrap gap-2", !showEditors && "hidden")}>
             {(

@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Confirm Your Spot | Tournament of Champions 2026",
-  description: "Invited athletes — look up your RecruitNC profile and confirm your spot at NC United Tournament of Champions.",
+  description: "Invited athletes — look up your NC United profile and confirm your spot at NC United Tournament of Champions.",
   robots: { index: false, follow: false },
 }
 
@@ -32,7 +32,7 @@ export default async function TocConfirmPage() {
             Confirm your spot
           </TocVarsityHeading>
           <p className={`text-white/80 text-lg max-w-2xl ${tocDisplayClass()}`}>
-            For invited athletes only. Look up your RecruitNC profile, verify it, choose weight and jacket size, then complete secure card checkout.
+            For invited athletes only. Look up your NC United profile, verify it, choose weight and jacket size, then complete secure card checkout.
           </p>
           <p className="mt-3 text-white/55 text-sm max-w-2xl">
             Complete registration by <strong className="text-white/75">the deadline shown with your invitation</strong>.{" "}

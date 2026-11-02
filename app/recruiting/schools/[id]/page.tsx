@@ -110,8 +110,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       title: `${name} Wrestling`,
       description: `${levels} · ${school.city}, ${STATE_NAMES[school.state] ?? school.state}`,
       path: `/recruiting/schools/${school.id}`,
-      kicker: "RecruitNC · College program",
-      pageTitle: `${name} wrestling | RecruitNC`,
+      kicker: "RecruitWrestlers · College program",
+      pageTitle: `${name} wrestling | RecruitWrestlers`,
     }),
     description: `${name} wrestling (${levels}) in ${school.city}, ${STATE_NAMES[school.state] ?? school.state}: programs, conference, cost and recruiting information for wrestlers and families.`,
   }

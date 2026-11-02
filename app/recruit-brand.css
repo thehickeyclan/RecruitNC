@@ -1791,6 +1791,10 @@ html[data-host="national"] .focus-visible\:ring-rnc-gold:focus-visible {
   --tw-ring-color: rgb(163 230 53);
 }
 
+html[data-host="national"] .focus\:border-rnc-gold:focus {
+  border-color: rgb(163 230 53);
+}
+
 html[data-host="national"] .from-rnc-ink {
   --tw-gradient-from: rgb(11 20 38) var(--tw-gradient-from-position); --tw-gradient-to: rgb(11 20 38 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
@@ -2705,6 +2709,10 @@ html[data-host="guild"] .border-rnc-line\/60 {
 
 html[data-host="guild"] .focus-visible\:ring-rnc-gold:focus-visible {
   --tw-ring-color: rgb(184 157 96);
+}
+
+html[data-host="guild"] .focus\:border-rnc-gold:focus {
+  border-color: rgb(184 157 96);
 }
 
 html[data-host="guild"] .from-rnc-ink {

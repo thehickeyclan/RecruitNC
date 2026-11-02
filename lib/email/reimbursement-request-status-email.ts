@@ -48,10 +48,10 @@ export async function sendReimbursementRequestStatusEmail(
 
   const subject =
     kind === "approved"
-      ? `RecruitNC: Reimbursement approved (${money} for ${athleteName})`
+      ? `NC United: Reimbursement approved (${money} for ${athleteName})`
       : kind === "rejected"
-        ? `RecruitNC: Reimbursement request update (${athleteName})`
-        : `RecruitNC: Reimbursement paid (${money} for ${athleteName})`
+        ? `NC United: Reimbursement request update (${athleteName})`
+        : `NC United: Reimbursement paid (${money} for ${athleteName})`
 
   const bodyIntro =
     kind === "approved"
@@ -69,7 +69,7 @@ export async function sendReimbursementRequestStatusEmail(
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
 <div style="background:linear-gradient(135deg, #B31B1B 0%, #002147 100%); padding:20px; text-align:center; border-radius:8px 8px 0 0;">
-  <p style="color:#CBAF5D; margin:0; font-size:12px; letter-spacing:0.08em; text-transform:uppercase;">RecruitNC</p>
+  <p style="color:#CBAF5D; margin:0; font-size:12px; letter-spacing:0.08em; text-transform:uppercase;">NC United</p>
   <h1 style="color:#fff; margin:8px 0 0; font-size:20px;">${escapeHtml(title)}</h1>
 </div>
 <div style="background:#fff; padding:24px; border:1px solid #e5e7eb; border-top:none; border-radius:0 0 8px 8px;">

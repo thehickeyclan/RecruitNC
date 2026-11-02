@@ -6,6 +6,7 @@ import { classifyViewer } from "@/lib/viewer-role"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { mostRecentGraduatedClassYear } from "@/lib/class-years"
 import { rankingBoardHome } from "@/lib/rankings/ranking-board-home"
+import { safeReturnPath } from "@/lib/auth/signup-landing"
 
 /**
  * Where somebody lands after signing in, when nothing asked to send them somewhere specific.
@@ -62,6 +63,21 @@ export async function postSignInDestination(admin: SupabaseClient, userId: strin
       const { data: account } = await admin.auth.admin.getUserById(userId)
       const board = rankingBoardHome(account?.user?.app_metadata)
       if (board) return board
+      /*
+       * A wrestler or parent: register, claim, update, upgrade (Matt, 31 Oct 2026). One who has not
+       * claimed yet goes back to the claim they started, or to finding their wrestler - never to a
+       * page selling the rankings. One who has goes to the wrestler's profile.
+       */
+      // `role` is "user" on accounts the callback created (Google sign-ups); the kind lives in profile_type there.
+      const role = [profile?.role, profile?.profile_type, account?.user?.user_metadata?.profile_type]
+        .map((r) => String(r ?? "").toLowerCase())
+        .find((r) => r === "parent" || r === "athlete")
+      if (who.kind !== "admin" && !who.isCollegeCoach && role) {
+        const ids = await familyAthleteIds(admin, userId)
+        if (ids.length && FAMILIES_LAND_ON_COMMAND_CENTER && (await hasWrestlerInSchool(admin, userId))) return COMMAND_CENTER
+        if (ids.length) return `/view-profile?id=${encodeURIComponent(ids[0])}`
+        return safeReturnPath(account?.user?.user_metadata?.signup_return_to) ?? `/create-profile?as=${role === "parent" ? "parent" : "self"}`
+      }
     }
     // Families go to their wrestler. Admins keep the rankings even when they have children.
     if (FAMILIES_LAND_ON_COMMAND_CENTER && profile?.is_admin !== true && who.kind !== "admin" && !who.isCollegeCoach && (await hasWrestlerInSchool(admin, userId))) {

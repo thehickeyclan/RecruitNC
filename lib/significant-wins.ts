@@ -308,6 +308,13 @@ export type NationallyRankedOpponent = {
   weight?: number | null
   /** No NC wrestler or other ranked/placed wrestler shares the name (set by the index loader). */
   distinctive?: boolean
+  /**
+   * "Sep 2026" when the rank comes from an edition that has since been replaced (the lists in
+   * effect on the bout date, lib/rankings/ranking-archive.ts). The win keeps the rank he held that
+   * day, and says when (Matt, 31 Oct 2026: Ty Eversman fell off SI's October list after Jacob
+   * Perry beat him as SI #19 at Super 32 - "this is recruiting").
+   */
+  asOf?: string | null
 }
 
 export type SignificantWin = {
@@ -814,7 +821,7 @@ function findSignificantBouts(
       opponentRanking: ranked?.ranking ?? null,
       ...(strength > 0 ? { strength } : {}),
       ...(national
-        ? { nationalRankLabel: `#${national.rank} ${national.source}`, opponentState: national.state }
+        ? { nationalRankLabel: `#${national.rank} ${national.source}${national.asOf ? `, ${national.asOf}` : ""}`, opponentState: national.state }
         : placer && finishes.some((f) => f.state && f.state !== "NC")
           ? { opponentState: finishes.find((f) => f.state && f.state !== "NC")!.state }
           : eventState

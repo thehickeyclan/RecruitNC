@@ -87,7 +87,7 @@ export function AthleteSearchTypeahead({ onSelect, disabled }: Props) {
   return (
     <div ref={wrapRef} className="relative">
       <label htmlFor="toc-athlete-search" className="block text-sm font-semibold text-[#0B1D3A] mb-2">
-        Find your RecruitNC profile
+        Find your NC United profile
       </label>
       <div className="relative">
         <Input

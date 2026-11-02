@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation"
 import { AlertCircle, ChevronLeft, ChevronRight, Flag, GraduationCap, Heart, Shield, Trophy, Users } from "lucide-react"
 
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
+import { EmailSignInLink } from "@/components/auth/email-sign-in-link"
 import { EMPTY_CONSENT, SignupConsent, type ConsentState } from "@/components/auth/signup-consent"
 import { cellNotice, checkConsent } from "@/lib/legal/consent"
 import { suggestEmailFix } from "@/lib/email-typo"
@@ -29,7 +30,7 @@ function authIntentForPath(path: string | null) {
   if (target.startsWith("/membership")) {
     return {
       badge: "STEP 1: FREE ACCOUNT",
-      title: "Create your free RecruitNC account, then start Insider",
+      title: "Create your free NC United account, then start Insider",
       description: "Make the account, then choose Insider: every published ranking, and which colleges viewed your profile.",
       bullets: ["Every published class ranking", "Which college programs viewed your profile", "Cancel anytime"],
     }
@@ -38,10 +39,10 @@ function authIntentForPath(path: string | null) {
   if (target.startsWith("/public-rankings") || target.startsWith("/rankings") || target.startsWith("/admin/rankings")) {
     return {
       badge: "RANKINGS ACCESS",
-      title: "Create your free account for RecruitNC rankings",
+      title: "Create your free account for NC United rankings",
       description:
-        "Rankings are an account feature so RecruitNC can protect the work, personalize your view, and keep future premium access tied to your profile.",
-      bullets: ["View RecruitNC prospect rankings", "Track ranked athletes and updates", "Use ranking tools tied to your account"],
+        "Rankings are an account feature so NC United can protect the work, personalize your view, and keep future premium access tied to your profile.",
+      bullets: ["View NC United prospect rankings", "Track ranked athletes and updates", "Use ranking tools tied to your account"],
     }
   }
 
@@ -58,7 +59,7 @@ function authIntentForPath(path: string | null) {
   if (target.startsWith("/calendar")) {
     return {
       badge: "EVENT ACCESS",
-      title: "Create your free account for RecruitNC events",
+      title: "Create your free account for NC United events",
       description:
         "Public schedules are easy to browse, but account access lets you manage registrations, reminders, and event-specific tools.",
       bullets: ["Access event registrations", "Manage reminders and account-specific actions", "Use NC United calendar tools"],
@@ -80,14 +81,14 @@ function authIntentForPath(path: string | null) {
       badge: "ADMIN ACCESS",
       title: "Create your free account",
       description:
-        "Admin areas are limited to approved RecruitNC operators and event staff. Create an account only if you’ve been asked to help with a protected workflow.",
-      bullets: ["Request access through an approved account", "Keep changes tied to the signed-in user", "Use protected RecruitNC workflows after approval"],
+        "Admin areas are limited to approved NC United operators and event staff. Create an account only if you’ve been asked to help with a protected workflow.",
+      bullets: ["Request access through an approved account", "Keep changes tied to the signed-in user", "Use protected NC United workflows after approval"],
     }
   }
 
   return {
     badge: "100% FREE • NO CREDIT CARD REQUIRED",
-    title: "Create Your Free RecruitNC Account",
+    title: "Create Your Free NC United Account",
     description:
       "Rankings, profile management, recruiting tools, and account-specific activity live behind a free account.",
     bullets: ["Create, claim, and update athlete profiles", "View rankings plus profile analytics and activity", "Data Dawg, wallet, Blue, messaging, and alerts"],
@@ -133,7 +134,16 @@ function track(event: string, returnTo: string | null, extra: Record<string, unk
 function SignUpWizard() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo")
-  const authIntent = authIntentForPath(returnTo)
+  /*
+   * Who they are claiming, carried from the claim button (Matt, 1 Nov 2026): 17 of 26 families who
+   * opened this page on launch day left without submitting, and the page no longer said whose
+   * profile it was for.
+   */
+  const claimFor = (searchParams.get("for") ?? "").replace(/[^\p{L}\p{M}' .-]/gu, "").trim().slice(0, 60)
+  const baseIntent = authIntentForPath(returnTo)
+  const authIntent = claimFor && baseIntent.badge === "PROFILE ACCESS"
+    ? { ...baseIntent, badge: "FREE ACCOUNT", title: `Claim ${claimFor}'s profile` }
+    : baseIntent
   const presetType = searchParams.get("type")
 
   const [profileType, setProfileType] = useState<Role | null>(isRole(presetType) ? presetType : null)
@@ -143,6 +153,7 @@ function SignUpWizard() {
   const [password, setPassword] = useState("")
   const [cellPhone, setCellPhone] = useState("")
   const [consent, setConsent] = useState<ConsentState>(EMPTY_CONSENT)
+  const [accountExists, setAccountExists] = useState(false)
   const [college, setCollege] = useState("")
   const [program, setProgram] = useState<CoachProgram | null>(null)
   const [website, setWebsite] = useState("")
@@ -152,6 +163,13 @@ function SignUpWizard() {
   const [error, setError] = useState("")
   const [resendMessage, setResendMessage] = useState("")
   const [success, setSuccess] = useState(false)
+  /*
+   * The form is long on a phone and the confirmation short, so it opened at the bottom (Matt, 31 Oct
+   * 2026). Scrolled after it renders, and "instant": a smooth scroll is cut off by the re-render.
+   */
+  useEffect(() => {
+    if (success) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior })
+  }, [success])
 
   // "Did you mean gmail.com?" - a mistyped domain is an account that can never be confirmed.
   const emailFix = suggestEmailFix(email)
@@ -173,8 +191,12 @@ function SignUpWizard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setAccountExists(false)
     if (!profileType) return
-    if (roleNeedsPhone && cellPhone.replace(/\D/g, "").length < 10) {
+    // Required for coaches only. Families add the number coaches use on the next screen, and an
+    // extra required box here cost sign-ups (Matt, 1 Nov 2026); a number they do type must be whole.
+    const phoneDigits = cellPhone.replace(/\D/g, "").length
+    if ((isCollegeCoach && phoneDigits < 10) || (phoneDigits > 0 && phoneDigits < 10)) {
       setError("Enter a 10-digit cell number.")
       return
     }
@@ -247,6 +269,7 @@ function SignUpWizard() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
+        if ((data as { code?: string })?.code === "exists") setAccountExists(true)
         throw new Error((data as { error?: string; message?: string })?.error || (data as { message?: string })?.message || `An error occurred during sign up (${res.status})`)
       }
       track("signup_completed", returnTo, { role: profileType })
@@ -254,7 +277,8 @@ function SignUpWizard() {
       setSuccess(true)
     } catch (err) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred during sign up. Please try again."
-      track("signup_error", returnTo, { message })
+      // An existing account is not a failed sign-up: the signup-health alert would fire on it.
+      track(/already have an account/i.test(message) ? "signup_existing_account" : "signup_error", returnTo, { message })
       setError(message)
     } finally {
       setLoading(false)
@@ -287,14 +311,13 @@ function SignUpWizard() {
           <CardHeader>
             <CardTitle>Account created — one last step</CardTitle>
             <CardDescription>
-              We sent a verification link to <span className="font-semibold">{email}</span>. Tap that link to activate your free RecruitNC account.
+              We sent a verification link to <span className="font-semibold">{email}</span>. <BrandText text="Tap that link to activate your free NC United account." />
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                <strong>Important:</strong> protected actions like rankings, profile claiming/editing, TOC confirmations, wallet, and recruiting tools
-                require email verification. Public RecruitNC pages are still available while you check your inbox.
+                Claiming a profile needs a verified email. You can keep browsing while you check your inbox.
               </p>
               <p className="text-sm text-muted-foreground">
                 If you don&apos;t see the email within a minute, check spam, junk, promotions, or school/work email filters.
@@ -312,9 +335,9 @@ function SignUpWizard() {
               </Button>
               <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2">
                 <Button asChild variant="ghost" className="w-full">
-                  <Link href="/" target="_top" rel="noopener">Browse RecruitNC</Link>
+                  <Link href="/" target="_top" rel="noopener"><BrandText text="Browse NC United" /></Link>
                 </Button>
-                <Button asChild variant="ghost" className="w-full">
+                <Button asChild variant="ghost" className="ncu-only w-full">
                   <Link href="/news/united-ascent" target="_top" rel="noopener">United Ascent News</Link>
                 </Button>
               </div>
@@ -394,8 +417,31 @@ function SignUpWizard() {
                 {error && (
                   <Alert variant="destructive" className="mb-4">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>
+                      {error}
+                      {accountExists ? (
+                        <>
+                          {" "}
+                          <a
+                            href={`/auth/signin${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
+                            className="font-bold underline underline-offset-2"
+                          >
+                            Sign in
+                          </a>{" "}
+                          or{" "}
+                          <a href="/auth/forgot-password" className="font-bold underline underline-offset-2">
+                            reset your password
+                          </a>
+                          .
+                        </>
+                      ) : null}
+                    </AlertDescription>
                   </Alert>
+                )}
+                {error && accountExists && (
+                  <div className="-mt-2 mb-4">
+                    <EmailSignInLink email={email} returnTo={returnTo} withInput={false} />
+                  </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -422,8 +468,8 @@ function SignUpWizard() {
 
                   {roleNeedsPhone ? (
                     <div className="space-y-2">
-                      <Label htmlFor="cellPhone">Cell</Label>
-                      <Input id="cellPhone" type="tel" inputMode="tel" autoComplete="tel" value={cellPhone} onChange={(e) => setCellPhone(e.target.value)} required disabled={loading} />
+                      <Label htmlFor="cellPhone">{isCollegeCoach ? "Cell" : "Cell (optional)"}</Label>
+                      <Input id="cellPhone" type="tel" inputMode="tel" autoComplete="tel" value={cellPhone} onChange={(e) => setCellPhone(e.target.value)} required={isCollegeCoach} disabled={loading} />
                       <p className="text-xs leading-5 text-muted-foreground">{cellNotice(isCollegeCoach ? "college-coach" : profileType)}</p>
                     </div>
                   ) : null}

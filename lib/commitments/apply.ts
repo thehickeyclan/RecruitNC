@@ -123,7 +123,9 @@ export async function approveSubmission(
     .eq("id", sub.id)
 
   let announced: { sent: number } | null = null
-  if (choice.announce !== false && !unchanged) {
+  // Phones are alerted only when Matt chooses to (1 Nov 2026): a South Carolina commitment must not
+  // buzz North Carolina phones. Announce from the approval page or the athlete's admin page.
+  if (choice.announce === true && !unchanged) {
     // Claim before sending: a missed alert is recoverable, a second blast to every phone is not.
     const { error: claimError } = await admin.from("push_sent_commits").insert({ athlete_id: athlete.id })
     if (!claimError) {

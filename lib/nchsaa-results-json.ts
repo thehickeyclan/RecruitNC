@@ -12,6 +12,13 @@ export type NchsaaRowForProfile = {
   wrestler_name: string
   /** Whose championship: SCHSL, SCISA... Absent on NCHSAA rows, which are the default. */
   association?: string | null
+  gender?: string | null
+  /**
+   * Whether the state sanctioned this event. Undefined means yes, which is every state
+   * tournament we hold except West Virginia's girls' invitationals, which the WVSSAC did not
+   * sanction before 2026-27 — see lib/recruiting/state-events.ts.
+   */
+  sanctioned?: boolean
 }
 
 /**

@@ -13,7 +13,7 @@ export const metadata = shareMetadata({
   title: "College Commitments",
   description: "Wrestlers committed to college: DI, DII, DIII, NAIA and NJCAA.",
   path: "/college-commitments",
-  kicker: "RecruitNC",
+  kicker: "RecruitWrestlers",
 })
 
 export const revalidate = 120

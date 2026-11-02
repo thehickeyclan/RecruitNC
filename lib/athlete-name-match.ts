@@ -116,6 +116,32 @@ export function normalizeApostrophes(s: string): string {
     .replace(/(?<=\p{L})[?\uFFFD](?=\p{L})/gu, "'")
 }
 
+/**
+ * The readings of a name that prints a nickname in quotes.
+ *
+ * Florida's 2025 bracket prints `Steven \`Jett\` Johnson` and its 2026 bracket prints
+ * `Jett Johnson`: one 106-pounder at Cocoa Beach, class of 2030, who got two profiles because
+ * the two strings share only a surname. The quotes are the source telling us Jett is what he
+ * goes by, so the name has two readings and both are his — the formal one (Steven Johnson) and
+ * the one the other bracket printed (Jett Johnson). FloArena mangles the quote marks to
+ * backticks, the same way it mangles apostrophes, so those count as quotes here.
+ *
+ * A name with no quoted token has one reading: itself. The formal reading comes first, so a
+ * caller that wants a single canonical spelling can take `nameReadings(name)[0]`.
+ */
+export function nameReadings(name: string): string[] {
+  const t = (name ?? "").trim()
+  if (!t) return []
+  const quoted = /(?:^|\s)["\u201C\u2018'`]([\p{L}][\p{L}.'\u2019-]*)["\u201D\u2019'`](?=\s|$)/u.exec(t)
+  if (!quoted) return [t]
+  const nickname = quoted[1]!
+  const formal = (t.slice(0, quoted.index) + " " + t.slice(quoted.index + quoted[0].length)).replace(/\s+/g, " ").trim()
+  const parts = formal.split(/\s+/).filter(Boolean)
+  if (parts.length < 2) return [t]
+  const withNickname = [nickname, ...parts.slice(1)].join(" ")
+  return formal === withNickname ? [formal] : [formal, withNickname]
+}
+
 function normalizeForAlias(name: string): string {
   return normalizeApostrophes((name ?? "").trim().toLowerCase().replace(/`/g, "'"))
     .replace(/,/g, " ")
@@ -133,9 +159,13 @@ export function namesReferToSamePerson(nameA: string, nameB: string): boolean {
       .filter(Boolean)
       .sort()
       .join(" ")
-  const a = norm(nameA)
-  const b = norm(nameB)
-  return a === b && a !== ""
+  /*
+   * A quoted nickname gives a name two readings and either can be the match — see nameReadings.
+   * Without this, Florida's `Steven \`Jett\` Johnson` and `Jett Johnson` compare as strangers.
+   */
+  const as = nameReadings(nameA).map(norm).filter(Boolean)
+  const bs = nameReadings(nameB).map(norm).filter(Boolean)
+  return as.some((a) => bs.includes(a))
 }
 
 export function firstNamesLikelySame(firstA: string, firstB: string): boolean {
@@ -256,6 +286,14 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
   const fold = (v?: string | null) =>
     normalizeApostrophes((v ?? "").trim().toLowerCase().replace(/`/g, "'"))
       .replace(/\bhigh school\b|\bhigh\b|\bh\.?s\.?\b|\bschool\b/g, " ")
+      /* "Saint" and "St." are the same word, and brackets use both: Virginia's 2026 field has
+         "Saint John Paul the Great Catholic High School" and "St. John Paul the Great Catholic".
+         So are "Mount" and "Mt." - Maryland's MIS bracket writes "Our Lady of Mount Carmel" where
+         its MIAA bracket writes "Our Lady of Mt. Carmel", and three wrestlers' 2026 placements
+         reached nobody because of it - and "Fort" and "Ft.", which the same files mix. */
+      .replace(/\bsaint\b/g, "st")
+      .replace(/\bmount\b/g, "mt")
+      .replace(/\bfort\b/g, "ft")
       .replace(/[^a-z0-9]+/g, " ")
       .split(" ")
       .filter((w) => w.length > 1)
@@ -264,6 +302,14 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
   const x = fold(a)
   const y = fold(b)
   if (!x || !y) return false
+  /*
+   * A word break is not a school either. Maryland's brackets write both "North East" and
+   * "Northeast" for one school, and folding punctuation does not reach that: "north east" and
+   * "northeast" share no token, so the substring test below misses them and the wrestler is
+   * minted twice. Compared with the spaces closed up, and only for equality - the substring
+   * rule is deliberately loose and does not need to be looser.
+   */
+  if (x.replace(/ /g, "") === y.replace(/ /g, "")) return true
   return x.includes(y) || y.includes(x)
 }
 
@@ -462,7 +508,8 @@ function expandFirstNameEquivalents(fullName: string): string[] {
 export function getAthleteNameSearchVariants(name: string): string[] {
   const t = normalizeApostrophes((name ?? "").trim())
   if (!t) return []
-  const set = new Set<string>([t])
+  /* Both readings of a quoted nickname are spellings to look for — see nameReadings. */
+  const set = new Set<string>([t, ...nameReadings(t)])
   const add = (s: string) => {
     if ((s ?? "").trim()) set.add(s.trim())
   }

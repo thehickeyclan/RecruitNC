@@ -10,7 +10,7 @@ import { PlaybookMembersContent } from "./components/playbook-members-content"
 export const metadata: Metadata = {
   title: "Fundraising playbook",
   description:
-    "Family fundraising playbook for NC United Wrestling — nonprofit checkout and outreach ideas. RecruitNC sign-in required.",
+    "Family fundraising playbook for NC United Wrestling — nonprofit checkout and outreach ideas. NC United sign-in required.",
   robots: { index: false, follow: false },
 }
 

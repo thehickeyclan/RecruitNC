@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
+import { recordProfileClaimed, siteFromRequest } from "@/lib/analytics-site"
 
 export const dynamic = "force-dynamic"
 
@@ -97,6 +98,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (updated) {
+    await recordProfileClaimed(admin, { athleteId, userId: user.id, site: siteFromRequest(req), route: "/api/athletes/confirm-profile" })
     // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
     await import("@/lib/coach-messages-notify")
       .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(admin, { athleteId, userId: user.id }))

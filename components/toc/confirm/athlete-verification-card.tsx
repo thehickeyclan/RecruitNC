@@ -104,7 +104,7 @@ export function AthleteVerificationCard({ data, onConfirm, onReject }: Props) {
         )}
 
         <p className="text-xs text-muted-foreground">
-          Wrong school or grad year? Update your RecruitNC profile first, then return here.
+          Wrong school or grad year? Update your NC United profile first, then return here.
         </p>
       </CardContent>
     </Card>

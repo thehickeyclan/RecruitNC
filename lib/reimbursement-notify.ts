@@ -99,7 +99,7 @@ export function notifyStaffNewReimbursementRequestDegraded(params: {
     const athleteName = (ath as { name?: string | null } | null)?.name?.trim() || "Athlete"
     const cat = displayExpenseType(expenseTypeValue)
     const adminUrl = `${BASE}/admin/expense-requests`
-    const body = `RecruitNC: New reimbursement ${formatMoney(amountCents)} — ${athleteName} (${cat}). Parent: ${parentLabel}. Open: ${adminUrl}`
+    const body = `NC United: New reimbursement ${formatMoney(amountCents)} — ${athleteName} (${cat}). Parent: ${parentLabel}. Open: ${adminUrl}`
 
     let sent = 0
     for (const e164 of recipients) {
@@ -184,7 +184,7 @@ export function notifyReimbursementStatusChangeDegraded(params: {
         : kind === "rejected"
           ? `Not approved (see email) for ${athleteName}`
           : `Marked PAID ${formatMoney(lineCents)} for ${athleteName}`
-      const body = `RecruitNC: Reimbursement ${short}. Profile → Fundraise: ${BASE}/profile`
+      const body = `NC United: Reimbursement ${short}. Profile → Fundraise: ${BASE}/profile`
       const ok = await sendSms(e164, body)
       if (!ok) {
         console.warn("[RecruitNC] reimbursement notify: SMS not sent (Twilio or error)")

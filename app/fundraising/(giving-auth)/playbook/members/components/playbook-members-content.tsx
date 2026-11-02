@@ -279,7 +279,7 @@ export function PlaybookMembersContent() {
 
       <DH as="h2">Your athlete&apos;s digital wallet</DH>
       <P>
-        When donors give through NC United with a preference for your athlete, you can track activity in RecruitNC under{" "}
+        When donors give through NC United with a preference for your athlete, you can track activity in NC United under{" "}
         <Strong>Profile → Digital wallet</Strong>. This is an NC United-hosted ledger — not a personal payment app — showing gifts made to NC United where donors
         expressed support for your wrestler&apos;s qualifying costs.
       </P>
@@ -310,10 +310,10 @@ export function PlaybookMembersContent() {
       <p className="mt-6 font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-[0.14em] text-[#C8A94A]">
         How parents access the digital wallet
       </p>
-      <P>Use the same RecruitNC account you use as athlete or parent — the login tied to your wrestler on NC United.</P>
+      <P>Use the same NC United account you use as athlete or parent — the login tied to your wrestler on NC United.</P>
       <ol className="mt-4 list-decimal space-y-3 pl-5 text-base leading-relaxed text-white/82 marker:font-black marker:text-[#C8A94A]">
         <li>
-          <Strong>Sign in</Strong> to RecruitNC —{" "}
+          <Strong>Sign in</Strong> to NC United —{" "}
           <HardLink href="/auth/signin" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
             open sign-in
           </HardLink>{" "}
@@ -605,7 +605,7 @@ export function PlaybookMembersContent() {
         </HardLink>
       </p>
       <P className="mt-6 text-sm text-white/65">
-        Need a RecruitNC profile first?{" "}
+        Need a NC United profile first?{" "}
         <HardLink href="/create-profile" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
           Create one here
         </HardLink>

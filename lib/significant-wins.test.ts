@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { eventPlacementLabel, findSignificantLosses, findSignificantWins, isLoss, isWin, withAccoladesOnly, type OpponentIndex } from "./significant-wins"
+import { eventPlacementLabel, findSignificantLosses, findSignificantWins, isLoss, isWin, withAccoladesOnly, type EventPlacement, type OpponentIndex } from "./significant-wins"
 
 const index: OpponentIndex = {
   tocField: ["Adam Walker", "Liam Myles"],
@@ -474,5 +474,49 @@ describe("rankedOnBoard", () => {
     expect(rankedOnBoard(index, "female").ranked.map((r) => r.ranking)).toEqual([4, 9])
     // No gender on file reads as the men's board, which is what every ranked athlete was.
     expect(rankedOnBoard(index, null).ranked.map((r) => r.ranking)).toEqual([12, 9])
+  })
+})
+
+describe("NHSCA labels name the division", () => {
+  const f = (over: Partial<EventPlacement> = {}): EventPlacement => ({ event: "NHSCA", year: 2026, place: 1, weight: 138, ...over })
+
+  it("says which bracket a title was won in", () => {
+    /* Four wrestlers win each NHSCA weight — one per grade division, named as the tournament does. */
+    expect(eventPlacementLabel([f({ division: "Freshman" })])).toBe("2026 NHSCA Freshman Champion (138)")
+    expect(eventPlacementLabel([f({ division: "Senior" })])).toBe("2026 NHSCA Senior Champion (138)")
+    expect(eventPlacementLabel([f({ place: 3, division: "Sophomore" })])).toBe("2026 NHSCA Sophomore All-American (3rd, 138)")
+  })
+
+  it("carries the division per year across a multi-year All-American", () => {
+    /*
+     * Sean Perez Jr placed in three different brackets as he moved up. A bare list of years would
+     * hide that; this is the label Muse's division file was built to make possible.
+     */
+    const label = eventPlacementLabel([
+      f({ year: 2024, place: 5, weight: 170, division: "Freshman" }),
+      f({ year: 2025, place: 4, weight: 170, division: "Sophomore" }),
+      f({ year: 2026, place: 4, weight: 182, division: "Junior" }),
+    ])
+    expect(label).toBe("3x NHSCA All-American (2024 freshman, 2025 sophomore, 2026 junior)")
+  })
+
+  it("leaves the label bare only where the source has no division", () => {
+    /* Pre-2023 rows have no division in the source at all. */
+    expect(eventPlacementLabel([f({ year: 2022, division: null })])).toBe("2022 NHSCA Champion (138)")
+  })
+
+  it("names the unified brackets too, because they are brackets a title was won in", () => {
+    /*
+     * Girls and Middle School are not grades, and an earlier pass left them out of the label for
+     * that reason. They are still the bracket the title was won in, and naming it is what the
+     * division is for: "2026 NHSCA Girls Champion" tells a coach which field she won, where a
+     * bare "2026 NHSCA Champion" invites him to read it as the open senior title.
+     */
+    expect(eventPlacementLabel([f({ division: "Girls" })])).toBe("2026 NHSCA Girls Champion (138)")
+    expect(eventPlacementLabel([f({ division: "Middle School" })])).toBe("2026 NHSCA Middle School Champion (138)")
+  })
+
+  it("does not touch an event that runs one bracket per weight", () => {
+    expect(eventPlacementLabel([{ event: "Super 32", year: 2025, place: 3, weight: 190 }])).toBe("2025 Super 32 3rd (190)")
   })
 })

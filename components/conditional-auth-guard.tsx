@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
+import { isNationalPath, isOpenWhileStaged, stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 /**
  * Public routes (no sign-in): public record / discovery pages that should be shareable
@@ -129,6 +130,9 @@ export function ConditionalAuthGuard({
     // Short profile links (/w/xavier-bernthal-2029): they redirect to the public profile.
     "/w",
     "/privacy",
+    // Sign-up consent, every footer and the store reviews link here (mobile review, 30 Oct 2026:
+    // the terms showed for four seconds, then a sign-in wall).
+    "/terms",
     "/support",
     "/contact",
   ]
@@ -168,7 +172,17 @@ export function ConditionalAuthGuard({
     /^\/athletes\/[^/]+\/edit(?:\/|$)/.test(path) ||
     /^\/athletes\/[^/]+\/edit-request(?:\/|$)/.test(path)
 
-  const isPublic = !isProfileManagementRoute && (isHomepage || isPublicPrefix || isPublicExact || isAuthRoute)
+  /*
+   * On recruitwrestlers.com a path outside the national site is its "page not found" (middleware
+   * rewrites it with a 404). The guard still saw the address asked for and put a sign-in wall in
+   * front of the 404, so a stale link read as "log in" rather than "not here".
+   */
+  const onRw =
+    process.env.NEXT_PUBLIC_RW_PROJECT === "1" ||
+    (typeof window !== "undefined" && stagedBrandForHost(window.location.hostname) === "national")
+  const isRwNotFound = onRw && !isNationalPath(path) && !isOpenWhileStaged(path)
+
+  const isPublic = !isProfileManagementRoute && (isHomepage || isPublicPrefix || isPublicExact || isAuthRoute || isRwNotFound)
 
   if (isPublic) {
     return <>{children}</>

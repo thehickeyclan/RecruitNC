@@ -145,7 +145,7 @@ export default function ForumLayout({
             <ChevronRight className="w-5 h-5" />
           </button>
           <HardLink href="/" className="font-semibold text-lg tracking-tight" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            RecruitNC
+            NC United
           </HardLink>
           <span className="text-white/60 text-sm">Community</span>
         </div>
@@ -201,7 +201,7 @@ export default function ForumLayout({
               </DialogTrigger>
               <DialogContent className="bg-[#0D1F3C] border-white/10 text-white max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="text-[#F0F4FF]">Message a RecruitNC user</DialogTitle>
+                  <DialogTitle className="text-[#F0F4FF]">Message a NC United user</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3">
                   <div>

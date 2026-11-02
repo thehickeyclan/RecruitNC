@@ -30,7 +30,7 @@ function steps(registerUrl: string | null): Step[] {
      * have not made - which reads as a broken link, not as a step.
      */
     {
-      title: "Create your RecruitNC account",
+      title: "Create your NC United account",
       body: "Free, and you need it before you can register - the registration page signs you in and carries your details across. Pick \u201cParent\u201d so you can manage his page. Your wrestler should make his own too, as \u201cAthlete\u201d, with his own email.",
       href: `${SITE_URL}/auth/signup`,
       cta: "Create an account",

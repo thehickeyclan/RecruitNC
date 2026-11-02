@@ -25,11 +25,36 @@
  */
 const ALL_STATES = process.argv.includes("--all-states")
 
+/**
+ * Which high school division to import: the boys' bracket, the girls' bracket, or both.
+ *
+ * Boys by default, because that is what every earlier run meant. The girls' bracket is picked
+ * out of the same unlabelled export by lib/super32-bout-import.ts. Middle school and elementary
+ * are never imported under any value - no middle school result belongs on a recruiting profile.
+ */
+const DIVISION = (() => {
+  const i = process.argv.indexOf("--division")
+  const v = i >= 0 ? String(process.argv[i + 1] ?? "").toLowerCase() : "boys"
+  if (!["boys", "girls", "both"].includes(v)) throw new Error(`--division must be boys, girls or both`)
+  return v as "boys" | "girls" | "both"
+})()
+const WANTS_GIRLS = DIVISION !== "boys"
+const WANTS_BOYS = DIVISION !== "girls"
+
 import fs from "node:fs"
 import path from "node:path"
 import { createClient } from "@supabase/supabase-js"
 import { namesLikelySamePerson } from "@/lib/athlete-name-match"
-import { highSchoolBracketRows, parseSuper32Csv } from "@/lib/super32-bout-import"
+import { girlsBracketRows, highSchoolBracketRows, parseSuper32Csv } from "@/lib/super32-bout-import"
+import { NICKNAMES, buildAthleteIndex, nameParts, teamMatchesAthlete, type MatchableAthlete } from "@/lib/other-tournament-import"
+
+/** Whether a profile's stated gender belongs in the division being imported. */
+function divisionAdmits(gender: unknown): boolean {
+  const g = String(gender ?? "").toLowerCase()
+  if (!g) return true
+  const female = g.startsWith("f") || g.startsWith("w")
+  return female ? WANTS_GIRLS : WANTS_BOYS
+}
 
 function arg(name: string): string {
   const index = process.argv.indexOf(`--${name}`)
@@ -44,7 +69,8 @@ async function main() {
   const eventKey = `super32-${year}`
 
   const all = parseSuper32Csv(fs.readFileSync(file, "utf8"))
-  const hs = highSchoolBracketRows(all)
+  const hs = [...(WANTS_BOYS ? highSchoolBracketRows(all) : []), ...(WANTS_GIRLS ? girlsBracketRows(all) : [])]
+  console.log(`${all.length} rows in the export; ${hs.length} in the high school ${DIVISION} bracket(s), the rest middle school or elementary`)
 
   const client = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL!,
@@ -61,8 +87,12 @@ async function main() {
   if (error) throw new Error(`Loading athletes: ${error.message}`)
   const pool = (athletes ?? [])
     .filter((a) => hsClasses.has(Number(a.graduationyear)))
-    // Boys' brackets: leave out girls, not profiles with no gender recorded (most of them).
-    .filter((a) => !String(a.gender ?? "").toLowerCase().startsWith("f"))
+    /*
+     * A profile with no gender recorded - most of them - is never excluded by this; only a
+     * stated one is. Importing the boys' bracket leaves out girls, the girls' bracket leaves
+     * out boys, and importing both leaves out nobody.
+     */
+    .filter((a) => divisionAdmits(a.gender))
     .map((a) => ({
       id: String(a.id),
       name: String(a.name ?? ""),
@@ -74,7 +104,7 @@ async function main() {
   const { data: everyone } = await client.from("athletes").select("id,name,wrestling_name,graduationyear,gender")
   const exact = new Map<string, Set<string>>()
   for (const a of everyone ?? []) {
-    if (!hsClasses.has(Number(a.graduationyear)) || String(a.gender ?? "").toLowerCase().startsWith("f")) continue
+    if (!hsClasses.has(Number(a.graduationyear)) || !divisionAdmits(a.gender)) continue
     for (const n of [a.name, a.wrestling_name]) {
       if (!n) continue
       const k = String(n).trim().toLowerCase()
@@ -95,6 +125,65 @@ async function main() {
     return id
   }
 
+  /*
+   * Flo's export (Super 32 2026, Matt: "flo has an export csv") puts the wrestler's club or school
+   * in the team column, not his state; Trackwrestling's put "NC". With no state to go on, a
+   * wrestler links only when his name (or a known nickname) is unique among high school profiles of
+   * any state AND the team names that profile's school or club. A unique name alone is not enough
+   * in a national field (a Nebraska Riley Johnson once landed on an NC girl). The rest are left for
+   * the state and identity linkers, which use weight and season evidence. "Names the school or club"
+   * also counts a club seen on bouts already linked to that profile.
+   */
+  const teams = hs.flatMap((r) => [r.winnerTeam, r.loserTeam]).filter(Boolean) as string[]
+  const FLO = teams.length > 0 && teams.filter((t) => /^[A-Z]{2}$/.test(t)).length / teams.length < 0.5
+  const { data: everyoneHs } = FLO
+    ? await client.from("athletes").select('id,name,wrestling_name,highschool,"wrestlingClub",graduationyear,gender')
+    : { data: [] }
+  const floIndex = buildAthleteIndex(
+    ((everyoneHs ?? []) as Array<MatchableAthlete & { gender?: string | null }>).filter(
+      (a) => hsClasses.has(Number(a.graduationyear)) && divisionAdmits(a.gender),
+    ),
+  )
+  // Each candidate's clubs from bouts already on his profile: "NC United" on Gavin Lopez's past
+  // events is evidence his profile (which lists no club) is the Gavin Lopez wrestling for NC United.
+  const pastClubs = new Map<string, Set<string>>()
+  if (FLO) {
+    const names = new Set(hs.flatMap((r) => [r.winner, r.loser]).filter(Boolean) as string[])
+    const ids = new Set<string>()
+    for (const n of names) {
+      const parts = nameParts(n)
+      if (!parts) continue
+      for (const c of [...(floIndex.get(`${parts.first} ${parts.last}`) ?? []), ...(NICKNAMES[parts.first] ? floIndex.get(`${NICKNAMES[parts.first]} ${parts.last}`) ?? [] : [])]) ids.add(c.id)
+    }
+    const list = [...ids]
+    for (let i = 0; i < list.length; i += 200) {
+      const { data } = await client.from("other_tournament_bouts").select("athlete_id, athlete_club").in("athlete_id", list.slice(i, i + 200)).not("athlete_club", "is", null).limit(20000)
+      for (const r of data ?? []) {
+        const k = String(r.athlete_id)
+        if (!pastClubs.has(k)) pastClubs.set(k, new Set())
+        pastClubs.get(k)!.add(String(r.athlete_club).toLowerCase().replace(/[^a-z0-9 ]/g, "").trim())
+      }
+    }
+  }
+  const clubSeenBefore = (team: string | null, id: string) => {
+    const t = String(team ?? "").toLowerCase().replace(/[^a-z0-9 ]/g, "").trim()
+    if (t.length < 4) return false
+    return [...(pastClubs.get(id) ?? [])].some((c) => c.length >= 4 && (c === t || c.includes(t) || t.includes(c)))
+  }
+  const floResolved = new Map<string, string | null>()
+  const floReview = new Set<string>()
+  const resolveFlo = (name: string, team: string | null): string | null => {
+    const key = `${name.trim().toLowerCase()}|${String(team ?? "").toLowerCase()}`
+    if (floResolved.has(key)) return floResolved.get(key)!
+    const parts = nameParts(name)
+    const cands = parts ? [...(floIndex.get(`${parts.first} ${parts.last}`) ?? []), ...(NICKNAMES[parts.first] ? floIndex.get(`${NICKNAMES[parts.first]} ${parts.last}`) ?? [] : [])] : []
+    const byTeam = [...new Map(cands.filter((c) => teamMatchesAthlete(String(team ?? ""), c) || clubSeenBefore(team, c.id)).map((c) => [c.id, c])).values()]
+    const id = byTeam.length === 1 ? byTeam[0]!.id : null
+    if (!id && cands.length) floReview.add(`${name} (${team ?? "no team"}): ${cands.length} profile${cands.length === 1 ? "" : "s"} by that name, team ${byTeam.length ? "matches more than one" : "matches none"}`)
+    floResolved.set(key, id)
+    return id
+  }
+
   const payload: Record<string, unknown>[] = []
   const seen = new Set<string>()
   // Bracket order as exported; see import-nhsca-nationals-bouts.ts for why not the round label.
@@ -108,14 +197,14 @@ async function main() {
     if (row.winType.toUpperCase() === "BYE" || !row.loser) continue
     for (const won of [true, false]) {
       const myTeam = won ? row.winnerTeam : row.loserTeam
-      if (!ALL_STATES && myTeam !== "NC") continue
+      if (!ALL_STATES && !FLO && myTeam !== "NC") continue
       const me = won ? row.winner : row.loser
       if (!me) continue
       // Unresolved under --all-states is kept: null athlete_id, state in athlete_club.
       // Only a North Carolina entrant can be one of our profiles. Under --all-states this resolved
       // every state's wrestlers by name: Nebraska's 190-pound Riley Johnson landed on Parkwood's girl.
-      const athleteId = myTeam === "NC" ? resolve(me) : null
-      if (!athleteId) { unlinked.add(`${me} (${row.weight})`); if (!ALL_STATES) continue }
+      const athleteId = FLO ? resolveFlo(me, myTeam) : myTeam === "NC" ? resolve(me) : null
+      if (!athleteId) { unlinked.add(`${me} (${row.weight})`); if (!ALL_STATES && !FLO) continue }
       const opponent = won ? row.loser : row.winner
       const opponentTeam = won ? row.loserTeam : row.winnerTeam
       const who = athleteId ?? `${me.toLowerCase()}|${String(myTeam ?? "").toUpperCase()}`
@@ -127,7 +216,7 @@ async function main() {
       payload.push({
         bout_order: order,
         // Head-to-head keys on opponent_id, so an NC opponent we hold is linked too.
-        opponent_id: opponentTeam === "NC" ? resolve(opponent) : null,
+        opponent_id: FLO ? resolveFlo(opponent, opponentTeam) : opponentTeam === "NC" ? resolve(opponent) : null,
         event_key: eventKey,
         event_name: `${year} Super 32`,
         year,
@@ -152,6 +241,10 @@ async function main() {
   console.log(`${all.length} rows in file, ${hs.length} in the boys' high school brackets`)
   console.log(`  NC entrants in those brackets: ${ncEntrants.size}`)
   console.log(`  importing ${payload.length} wrestler-rows`)
+  if (FLO) {
+    console.log(`  Flo export (team = club/school): ${linked.size} wrestlers linked by unique name + matching school/club`)
+    if (floReview.size) console.log(`  for review (a profile by that name, but the team does not single one out):\n    ${[...floReview].slice(0, 60).join("\n    ")}`)
+  }
   if (ALL_STATES) {
     const byName = new Set(payload.filter((p) => !p.athlete_id).map((p) => `${String(p.athlete_name).toLowerCase()}|${p.athlete_club}`))
     const states = new Set(payload.map((p) => String(p.athlete_club ?? "").toUpperCase()).filter(Boolean))

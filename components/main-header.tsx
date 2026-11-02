@@ -21,7 +21,7 @@ export function MainHeader({
         <div className="flex items-center gap-6">
           {showNav && (
             <Link href="/" className="font-semibold text-[#003366] hover:underline">
-              RecruitNC
+              RecruitWrestlers
             </Link>
           )}
           <StoreButton className="text-sm text-muted-foreground hover:text-foreground cursor-pointer border-0 bg-transparent font-inherit p-0">Store</StoreButton>

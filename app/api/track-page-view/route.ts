@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { isBotRequest } from "@/lib/bot-traffic"
 import { type NextRequest, NextResponse } from "next/server"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 function cleanPath(value: unknown): string {
   if (typeof value !== "string") return "/"
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       user_agent: userAgent,
       ip_address: ipAddress,
       event_data: {
+        site: siteFromRequest(request),
         source: source === "global_activity_tracker" ? "global_activity_tracker" : "manual",
         path: cleanPageUrl,
         timestamp: new Date().toISOString(),

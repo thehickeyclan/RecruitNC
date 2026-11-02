@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       const existingProfile = Array.isArray(existingProfiles) ? existingProfiles[0] : existingProfiles
       if (existingProfile) {
         return NextResponse.json({
-          error: "This email is already registered with RecruitNC. Sign in first, then return to this registration link and submit the form again with the password field left blank — we'll link your existing account to this Blue registration.",
+          error: "This email is already registered with NC United. Sign in first, then return to this registration link and submit the form again with the password field left blank — we'll link your existing account to this Blue registration.",
           code: "EMAIL_ALREADY_REGISTERED",
         }, { status: 400 })
       }
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         const alreadyRegistered = /already been registered|already in use|already exists|duplicate/i.test(msg)
         return NextResponse.json({
           error: alreadyRegistered
-            ? "This email is already registered with RecruitNC. Sign in first, then return to this registration link and submit the form again with the password field left blank — we'll link your existing account to this Blue registration."
+            ? "This email is already registered with NC United. Sign in first, then return to this registration link and submit the form again with the password field left blank — we'll link your existing account to this Blue registration."
             : (createErr?.message || "Could not create account. Please try again or sign in if you already have an account."),
           ...(alreadyRegistered ? { code: "EMAIL_ALREADY_REGISTERED" } : {}),
         }, { status: 400 })

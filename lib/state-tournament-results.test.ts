@@ -28,7 +28,7 @@ describe("getStateTournamentResultsForAthlete", () => {
   it("reads a South Carolina wrestler's placements into the shape the profile already renders", async () => {
     const out = await getStateTournamentResultsForAthlete(clientReturning([row]), { id: "a1", state: "SC" })
     expect(out).toEqual([
-      { year: 2026, classification: "4A", association: null, weight_class: "132", place: 2, school: "Fort Dorchester", wrestler_name: "Sample Wrestler" },
+      { year: 2026, classification: "4A", association: null, weight_class: "132", place: 2, school: "Fort Dorchester", wrestler_name: "Sample Wrestler", gender: null, sanctioned: true },
     ])
   })
 
@@ -40,10 +40,12 @@ describe("getStateTournamentResultsForAthlete", () => {
   it("matches on the linked profile id and the state, never on a name", async () => {
     /* `athlete_id`, like the NCHSAA table — not `source_athlete_id`, which is a FloArena id. */
     /* 133 placer names already repeat across states; a wrong placement is worse than none. */
+    /* The second state filter is the sanctioning load, which reads the same state's divisions. */
     const spy = { filters: [] as Array<[string, unknown]> }
     await getStateTournamentResultsForAthlete(clientReturning([row], spy), { id: "a1", state: "SC" })
     expect(spy.filters).toEqual([
       ["athlete_id", "a1"],
+      ["state", "SC"],
       ["state", "SC"],
     ])
   })

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { recordProfileClaimed, type AnalyticsSite } from "@/lib/analytics-site"
 
 /**
  * One way to claim a wrestler's profile, for the website and the app.
@@ -20,7 +21,7 @@ export const CLAIM_CONSENT_VERSION = "2026-10-01"
 export const CLAIM_CONSENT_TEXT: Record<"self" | "parent", string> = {
   self: "I confirm this profile is mine. I understand my results, school, weight class and graduation year are shown publicly, and that I can ask for it to be removed at any time.",
   parent:
-    "I confirm I am the parent or legal guardian of this athlete. I consent, on my child's behalf, to RecruitNC showing their wrestling results, school, weight class and graduation year on a public profile, and to managing that profile for them. I understand I can request removal at any time. Typing my name is my electronic signature.",
+    "I confirm I am the parent or legal guardian of this athlete. I consent, on my child's behalf, to RecruitWrestlers showing their wrestling results, school, weight class and graduation year on a public profile, and to managing that profile for them. I understand I can request removal at any time. Typing my name is my electronic signature.",
 }
 
 export type ClaimRelationship = "self" | "parent"
@@ -36,6 +37,8 @@ export type ClaimInput = {
   userAgent?: string | null
   /** Why this claim should be looked at regardless of the checks below - e.g. no typed signature. */
   reviewNote?: string | null
+  /** Which site the claim came from, for the RW vs NC United count (lib/analytics-site.ts). */
+  site?: AnalyticsSite
 }
 
 export type ClaimResult =
@@ -180,6 +183,8 @@ export async function claimProfile(admin: SupabaseClient, input: ClaimInput): Pr
     review_reason: reasons.join("; ") || null,
   })
   if (consentError) console.error("[profile-claim] consent row failed:", consentError.message)
+
+  if (input.site) await recordProfileClaimed(admin, { athleteId: input.athleteId, userId: input.userId, site: input.site, route: "claimProfile" })
 
   // Coaches may have written before anyone in the family had an account: tell both sides now.
   await import("@/lib/coach-messages-notify")

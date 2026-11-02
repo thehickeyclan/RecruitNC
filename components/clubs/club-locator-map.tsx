@@ -993,7 +993,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ["Mapped clubs", data?.summary.mappedClubs ?? 0],
-          ["Wrestlers on RecruitNC", data?.summary.athletesRepresented ?? 0],
+          ["Wrestlers on NC United", data?.summary.athletesRepresented ?? 0],
           ["College commits", data?.summary.commitsRepresented ?? 0],
           ["Verified clubs", data?.summary.verifiedClubs ?? 0],
         ].map(([label, value]) => (

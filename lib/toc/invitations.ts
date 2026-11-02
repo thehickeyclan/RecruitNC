@@ -146,17 +146,17 @@ export function tocWeightProfileHint(
 ): string {
   const profileNum = parseInt(String(weightclass ?? "").replace(/[^\d]/g, ""), 10)
   if (!Number.isFinite(profileNum)) {
-    return "No weight on their RecruitNC profile — you pick the TOC bracket for this invite."
+    return "No weight on their NC United profile — you pick the TOC bracket for this invite."
   }
   const exact = parseAthleteWeightClass(weightclass)
   if (exact != null) {
-    return `RecruitNC profile: ${exact} lbs (exact TOC class).`
+    return `NC United profile: ${exact} lbs (exact TOC class).`
   }
   const suggested = suggestTocInviteWeight(weightclass)
   if (invitedWeight === suggested) {
-    return `RecruitNC profile: ${profileNum} lbs — not a TOC class; defaulting to nearest bracket (${suggested} lbs). Change if needed.`
+    return `NC United profile: ${profileNum} lbs — not a TOC class; defaulting to nearest bracket (${suggested} lbs). Change if needed.`
   }
-  return `RecruitNC profile: ${profileNum} lbs — you chose ${invitedWeight} lbs for this invite.`
+  return `NC United profile: ${profileNum} lbs — you chose ${invitedWeight} lbs for this invite.`
 }
 
 export function defaultTocWeightForAthlete(weightclass: string | number | null | undefined): number {

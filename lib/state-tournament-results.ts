@@ -19,6 +19,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import { HOME_STATE, normalizeState } from "@/lib/athlete-state"
+import { isSanctioned, loadStateSanctioning } from "@/lib/recruiting/state-events"
 
 /** One row of `state_tournament_placers`, in the columns a profile needs. */
 type PlacerRow = {
@@ -26,6 +27,7 @@ type PlacerRow = {
   state: string | null
   classification: string | null
   association: string | null
+  gender: string | null
   weight: string | number | null
   place: number | null
   wrestler_name: string | null
@@ -50,11 +52,13 @@ export async function getStateTournamentResultsForAthlete(
 
   const { data, error } = await client
     .from("state_tournament_placers")
-    .select("season, state, classification, association, weight, place, wrestler_name, school_clean, school_raw")
+    .select("season, state, classification, association, gender, weight, place, wrestler_name, school_clean, school_raw")
     .eq("athlete_id", id)
     .eq("state", state)
   if (error || !data) return []
 
+  /* Which of these the state actually sanctioned - data, not a guess at the division's name. */
+  const sanctioning = await loadStateSanctioning(client, state)
   return (data as PlacerRow[])
     .map((r) => ({
       year: Number(r.season) || 0,
@@ -65,6 +69,8 @@ export async function getStateTournamentResultsForAthlete(
       school: String(r.school_clean ?? r.school_raw ?? "").trim(),
       wrestler_name: String(r.wrestler_name ?? "").trim(),
       association: String(r.association ?? "").trim().toUpperCase() || null,
+      gender: String(r.gender ?? "").trim() || null,
+      sanctioned: isSanctioned(sanctioning, r.season, r.association, r.gender, r.classification),
     }))
     .filter((r) => r.year > 0)
     .sort((a, b) => b.year - a.year || (a.place ?? 99) - (b.place ?? 99))

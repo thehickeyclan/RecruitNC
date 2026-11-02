@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Loader2, Check, ArrowRight } from "lucide-react"
 import type { ProfileGap, ProfileReveal } from "@/lib/profile-reveal"
+import type { Who } from "@/components/profile-wizard/who-step"
 
 /**
  * "Found you" — the record we already hold, shown before anything is asked for.
@@ -17,11 +18,16 @@ export function RevealStep({
   athleteId,
   onConfirm,
   onReject,
+  who = "self",
 }: {
   athleteId: string
   onConfirm: (reveal: ProfileReveal) => void
   onReject: () => void
+  /** A parent is never asked to tap "that's me". */
+  who?: Who
 }) {
+  const parent = who === "parent"
+
   const [reveal, setReveal] = useState<ProfileReveal | null>(null)
   const [gaps, setGaps] = useState<ProfileGap[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,7 +74,7 @@ export function RevealStep({
     <div className="mx-auto max-w-lg">
       <div className="rounded-sm border border-white/10 bg-[#0f1c2e] p-6">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">
-          {reveal.hasRecord ? "Found you" : "Is this you?"}
+          {parent ? (reveal.hasRecord ? "Found your wrestler" : "Is this your wrestler?") : reveal.hasRecord ? "Found you" : "Is this you?"}
         </p>
 
         <div className="mt-3 flex items-start gap-4">
@@ -95,12 +101,29 @@ export function RevealStep({
             </p>
             {reveal.prospectRanking ? (
               <span className="mt-2 inline-block bg-[#D3B574] px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-[#0A1628]">
-                {reveal.prospectRankingLabel ?? `RecruitNC #${reveal.prospectRanking}`} in the class
+                {reveal.prospectRankingLabel ?? `RecruitWrestlers #${reveal.prospectRanking}`} in the class
               </span>
             ) : null}
           </div>
         </div>
 
+        {/* The claim sits under the name: on a phone it was below every result and the gap list (Matt, 31 Oct 2026). */}
+        <div className="mt-5 flex flex-col gap-2">
+          <button
+            onClick={() => onConfirm(reveal)}
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
+          >
+            <Check className="h-4 w-4" />
+            {parent ? "That's my wrestler — claim this profile" : "That's me — claim this profile"}
+            <ArrowRight className="h-4 w-4" />
+          </button>
+          <button
+            onClick={onReject}
+            className="min-h-[44px] text-sm text-white/50 hover:text-white/80"
+          >
+            {parent ? "Not my wrestler — search again" : "Not me — start a new profile"}
+          </button>
+        </div>
         {reveal.credentials.length > 0 ? (
           <div className="mt-5">
             <p className="text-sm text-white/70">
@@ -141,22 +164,6 @@ export function RevealStep({
           </div>
         ) : null}
 
-        <div className="mt-6 flex flex-col gap-2">
-          <button
-            onClick={() => onConfirm(reveal)}
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
-          >
-            <Check className="h-4 w-4" />
-            {reveal.hasRecord ? `That's me — claim this profile` : "Yes, this is me"}
-            <ArrowRight className="h-4 w-4" />
-          </button>
-          <button
-            onClick={onReject}
-            className="min-h-[44px] text-sm text-white/50 hover:text-white/80"
-          >
-            Not me — start a new profile
-          </button>
-        </div>
       </div>
     </div>
   )

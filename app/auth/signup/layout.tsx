@@ -4,7 +4,7 @@ export const metadata = shareMetadata({
   title: "Create your free account",
   description: "Wrestlers, families and college coaches: create your free account.",
   path: "/auth/signup",
-  kicker: "NC United · RecruitNC",
+  kicker: "NC United",
 })
 
 export default function SignupLayout({ children }: { children: React.ReactNode }) {

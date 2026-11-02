@@ -89,7 +89,7 @@ export async function POST(
     const uid = (profile as { user_id?: string } | null)?.user_id
     if (!uid) {
       return NextResponse.json(
-        { error: "No RecruitNC account found for that email. They need to sign up first, then you can add them." },
+        { error: "No NC United account found for that email. They need to sign up first, then you can add them." },
         { status: 404 }
       )
     }
@@ -171,7 +171,7 @@ export async function POST(
       const { sendSms, toE164 } = await import("@/lib/sms")
       const e164 = toE164(cellPhoneForSms)
       if (e164) {
-        await sendSms(e164, `RecruitNC: You've been added to ${eventName}. View hub: ${hubUrl}`)
+        await sendSms(e164, `NC United: You've been added to ${eventName}. View hub: ${hubUrl}`)
       }
     } catch (e) {
       console.error("[RecruitNC] workspace add-member SMS:", e)

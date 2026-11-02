@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { BrandName } from "@/components/recruiting/brand-name"
+import type { Who } from "@/components/profile-wizard/who-step"
 
 export type ExistingMatch = {
   id: string
@@ -31,11 +32,15 @@ export function FindExistingStep({
   onClaim,
   onCreateNew,
   initialName = "",
+  who = "self",
 }: {
   onClaim: (match: ExistingMatch) => void
   onCreateNew: (typedName: string) => void
   initialName?: string
+  who?: Who
 }) {
+  const parent = who === "parent"
+
   const [name, setName] = useState(initialName)
   const [matches, setMatches] = useState<ExistingMatch[] | null>(null)
   const [searching, setSearching] = useState(false)
@@ -68,21 +73,20 @@ export function FindExistingStep({
 
   return (
     <div className="mx-auto w-full max-w-xl rounded-2xl border border-white/10 bg-[#0f1c2e] p-6 sm:p-8">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">Step 1 of 2</p>
-      <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Let&apos;s find you first</h2>
+      <h2 className="text-2xl font-black text-white sm:text-3xl">{parent ? "Let's find your wrestler" : "Let's find you first"}</h2>
       <p className="mt-3 text-white/70">
         {/* Not "ranked": most profiles are built from tournament results for wrestlers who are not (Matt, 16 Oct 2026). */}
         We build profiles for <BrandName ncu="North Carolina wrestlers" national="wrestlers" /> from state and national tournament results, so yours
-        may already be here. Search your name before creating a new one.
+        may already be here. {parent ? "Search your wrestler's name" : "Search your name"} before creating a new one.
       </p>
 
       <label className="mt-6 block">
-        <span className="mb-2 block text-sm font-semibold text-white">Your full name</span>
+        <span className="mb-2 block text-sm font-semibold text-white">{parent ? "Your wrestler's full name" : "Your full name"}</span>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Jacob McCord"
-          autoComplete="name"
+          autoComplete={parent ? "off" : "name"}
           autoFocus
           className="w-full rounded-lg border border-white/10 bg-[#0A1628] px-4 py-3 text-white outline-none placeholder:text-white/40 focus:border-[#D3B574]"
         />
@@ -121,7 +125,7 @@ export function FindExistingStep({
                   </span>
                 </span>
                 <span className="shrink-0 text-sm font-semibold text-[#D3B574]">
-                  {m.claimedByYou ? "Yours" : m.claimed ? "Claimed" : "That's me"}
+                  {m.claimedByYou ? "Yours" : m.claimed ? "Claimed" : "Claim"}
                 </span>
               </button>
             </li>
@@ -141,7 +145,7 @@ export function FindExistingStep({
         disabled={name.trim().length < 2}
         className="mt-6 w-full rounded-lg border border-white/15 px-6 py-3 font-semibold text-white hover:border-[#D3B574]/60 disabled:opacity-40"
       >
-        {matches && matches.length > 0 ? "None of these are me — create a new profile" : "Create a new profile"}
+        {matches && matches.length > 0 ? (parent ? "None of these — create a new profile" : "None of these are me — create a new profile") : "Create a new profile"}
       </button>
     </div>
   )

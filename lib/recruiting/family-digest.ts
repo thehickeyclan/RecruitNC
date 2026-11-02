@@ -132,7 +132,7 @@ export function renderFamilyDigest(d: FamilyDigest): { subject: string; html: st
   const first = d.firstTime.length ? `<p style="margin:0 0 12px;padding:10px 12px;background:#fef9e7;border-radius:6px;font-size:14px"><b>New:</b> ${esc(d.firstTime.join(", "))} looked for the first time.</p>` : ""
   const names = d.programs.length
     ? `<ul style="margin:0 0 16px;padding-left:18px;font-size:15px">${d.programs.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`
-    : `<p style="margin:0 0 16px;font-size:15px;color:#374151">The program names come with Insider, from $9.99 a month.</p>`
+    : `<p style="margin:0 0 16px;font-size:15px;color:#374151">The program names, rankings and premium content come with Insider, from $9.99 a month.</p>`
   const messages = d.unreadMessages
     ? `<p style="margin:0 0 16px;font-size:15px"><b>${d.unreadMessages}</b> coach message${d.unreadMessages === 1 ? "" : "s"} waiting. <a href="${SITE}/inbox" style="color:#003366">Read ${d.unreadMessages === 1 ? "it" : "them"}</a>.</p>`
     : ""
@@ -146,14 +146,14 @@ export function renderFamilyDigest(d: FamilyDigest): { subject: string; html: st
 <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;padding:22px 24px">
 ${first}${names}${messages}
 <p style="margin:20px 0"><a href="${cta.href}" style="display:inline-block;background:#D3B574;color:#0A1628;padding:13px 26px;border-radius:8px;font-weight:800;text-decoration:none">${esc(cta.label)}</a></p>
-<p style="margin:0;font-size:13px;color:#6b7280">College coaches look at NC wrestler profiles on RecruitNC every day. A complete profile, current results and a highlight reel help them decide to reach out.</p>
+<p style="margin:0;font-size:13px;color:#6b7280">College coaches look at NC wrestler profiles every day. A complete profile, current results and a highlight reel help them decide to reach out.</p>
 </div>
-<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:16px">NC United Wrestling · <a href="${esc(unsub)}" style="color:#9ca3af">Unsubscribe</a></p>
+<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:16px">NC United · <a href="${esc(unsub)}" style="color:#9ca3af">Unsubscribe</a></p>
 </body></html>`
   const text = [
     `${who} viewed ${d.wrestlerFirstName}'s profile this week.`,
     d.firstTime.length ? `New: ${d.firstTime.join(", ")} looked for the first time.` : "",
-    d.programs.length ? d.programs.map((p) => `- ${p}`).join("\n") : "The program names come with Insider, from $9.99 a month.",
+    d.programs.length ? d.programs.map((p) => `- ${p}`).join("\n") : "The program names, rankings and premium content come with Insider, from $9.99 a month.",
     d.unreadMessages ? `${d.unreadMessages} coach message(s) waiting: ${SITE}/inbox` : "",
     `${cta.label}: ${cta.href}`,
     `Unsubscribe: ${unsub}`,
@@ -178,7 +178,7 @@ export async function sendFamilyDigests(admin: SupabaseClient, options: { dryRun
   for (const d of toSend) {
     const { subject, html, text } = renderFamilyDigest(d)
     const result = await resend.emails
-      .send({ from: "RecruitNC <info@ncwrestlingunited.com>", to: [d.email], subject, html, text, headers: { "List-Unsubscribe": `<${unsubscribeUrl(SITE, d.email)}>` } })
+      .send({ from: "NC United <info@ncwrestlingunited.com>", to: [d.email], subject, html, text, headers: { "List-Unsubscribe": `<${unsubscribeUrl(SITE, d.email)}>` } })
       .catch((e: unknown) => ({ error: { message: e instanceof Error ? e.message : String(e) } }))
     if ((result as { error?: unknown }).error) failed++
     else sent++

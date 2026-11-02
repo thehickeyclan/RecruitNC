@@ -565,7 +565,7 @@ const NAME_SUFFIXES = new Set(["jr", "sr", "ii", "iii", "iv", "v"])
  * Common short forms seen in bracket exports. Matching is one-directional per entry, so
  * both directions are listed (a bracket may print either form).
  */
-const NICKNAMES: Record<string, string> = {
+export const NICKNAMES: Record<string, string> = {
   alex: "alexander",
   alexander: "alex",
   andy: "andrew",
@@ -635,7 +635,7 @@ export type MatchTier = "exact" | "nickname"
 
 export type MatchOutcome =
   | { status: "matched"; athlete: MatchableAthlete; tier: MatchTier }
-  | { status: "unmatched"; reason: "unparseable" | "no_candidate" }
+  | { status: "unmatched"; reason: "unparseable" | "no_candidate" | "team_disagrees" }
   | { status: "ambiguous"; candidates: MatchableAthlete[] }
 
 /** Prebuilt name index over our `athletes` rows. */
@@ -659,7 +659,7 @@ export function buildAthleteIndex(athletes: MatchableAthlete[]): AthleteIndex {
   return index
 }
 
-function teamMatchesAthlete(team: string, athlete: MatchableAthlete): boolean {
+export function teamMatchesAthlete(team: string, athlete: MatchableAthlete): boolean {
   const source = normalizeName(team)
   if (!source) return false
   for (const field of [athlete.highschool, athlete.wrestlingClub]) {
@@ -694,10 +694,25 @@ function mostComplete(candidates: MatchableAthlete[]): MatchableAthlete {
  * on last name plus a first initial produced wrong people in this data — "Catoe Byrd" is not
  * "Connor Byrd" — and a wrong match writes another kid's results onto a profile.
  */
+/**
+ * `requireTeam` — for a national field, a unique name is not enough.
+ *
+ * The rule below links a wrestler whenever exactly one profile in the country carries his name,
+ * whatever school either of them names. That is right for a state's own Early Entry field, where
+ * the entrants are the wrestlers we hold and a unique name is almost certainly the right person.
+ * It is wrong at the Beast of the East, the Ironman, Powerade and National Prep, which draw from
+ * every state: on the 2025 Beast file it put a Bishop McCort (PA) wrestler's bouts on a West
+ * Forsyth (NC) profile and a John Jay (NY) wrestler's on a Bradford Prep one, purely because each
+ * name was unique here. Super 32's importer learned the same lesson - "a Nebraska Riley Johnson
+ * once landed on an NC girl" - and already requires the team to name the profile's school or club.
+ *
+ * With `requireTeam`, a single candidate still has to be corroborated by the team cell.
+ */
 export function matchAthlete(
   entrantName: string,
   entrantTeam: string,
   index: AthleteIndex,
+  options: { requireTeam?: boolean } = {},
 ): MatchOutcome {
   const parts = nameParts(entrantName)
   if (!parts) return { status: "unmatched", reason: "unparseable" }
@@ -714,13 +729,20 @@ export function matchAthlete(
   }
 
   if (candidates.length === 0) return { status: "unmatched", reason: "no_candidate" }
-  if (candidates.length === 1) return { status: "matched", athlete: candidates[0]!, tier }
+  if (candidates.length === 1) {
+    if (options.requireTeam && !teamMatchesAthlete(entrantTeam, candidates[0]!)) {
+      return { status: "unmatched", reason: "team_disagrees" }
+    }
+    return { status: "matched", athlete: candidates[0]!, tier }
+  }
 
   const byTeam = candidates.filter((candidate) => teamMatchesAthlete(entrantTeam, candidate))
   if (byTeam.length === 1) return { status: "matched", athlete: byTeam[0]!, tier }
   if (byTeam.length > 1 && allSamePerson(byTeam)) {
     return { status: "matched", athlete: mostComplete(byTeam), tier }
   }
+
+  if (options.requireTeam) return { status: "unmatched", reason: "team_disagrees" }
 
   // A row with no school, club, or class year is a stub, not a rival claim on the name.
   // Prefer the filled-in profile rather than calling the pair ambiguous.

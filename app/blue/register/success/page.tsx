@@ -63,7 +63,7 @@ export default function BlueRegisterSuccessPage() {
                 {firstName ? `Finish ${firstName}'s profile` : "Finish your wrestler's profile"}
               </p>
               <p className="text-sm text-gray-700">
-                College coaches search RecruitNC for North Carolina wrestlers. What you entered at
+                College coaches search NC United for North Carolina wrestlers. What you entered at
                 registration is already on {firstName ? `${firstName}'s` : "his"} page &mdash; check it and add the
                 GPA, film and anything else a coach would want next.
               </p>
@@ -80,7 +80,7 @@ export default function BlueRegisterSuccessPage() {
                 <h2 className="font-semibold text-lg">Manage your subscription</h2>
               </div>
               <p className="text-sm text-gray-700">
-                All billing is in your RecruitNC profile — same email you used to register.
+                All billing is in your NC United profile — same email you used to register.
               </p>
               <ul className="text-sm text-gray-700 space-y-1.5 list-disc pl-5">
                 <li>View <strong>next bill date</strong> and payment history</li>
@@ -139,9 +139,9 @@ export default function BlueRegisterSuccessPage() {
             </section>
 
             <section className="space-y-2 text-sm">
-              <p className="font-semibold text-[#03154C]">RecruitNC recruiting profile</p>
+              <p className="font-semibold text-[#03154C]">NC United recruiting profile</p>
               <p className="text-gray-700">
-                Complete your wrestler&apos;s RecruitNC profile so college coaches can find them.
+                Complete your wrestler&apos;s NC United profile so college coaches can find them.
               </p>
               <HardLink href="/profile" className="text-[#03154C] underline hover:no-underline text-sm font-medium">
                 Set up recruiting profile →
@@ -150,7 +150,7 @@ export default function BlueRegisterSuccessPage() {
 
             <div className="border-t pt-4 flex flex-col gap-2">
               <HardLink href="/auth/signin">
-                <Button className="w-full bg-[#03154C] hover:bg-[#0a2571] text-white">Sign in to RecruitNC</Button>
+                <Button className="w-full bg-[#03154C] hover:bg-[#0a2571] text-white">Sign in to NC United</Button>
               </HardLink>
               <HardLink href="/blue">
                 <Button variant="outline" className="w-full">Back to Blue program</Button>

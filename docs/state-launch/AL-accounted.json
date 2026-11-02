@@ -1,0 +1,223 @@
+{
+  "placers": [
+    {
+      "name": "Payton Carpenter",
+      "school": "Daphne",
+      "season": 2026,
+      "reason": "approved",
+      "note": "Class of 2031: a seventh grader, 2nd at 100 in the 2026 AHSAA girls championship. Alabama lets seventh and eighth graders wrestle for a member school and the medal is real, but the platform mints a profile only for a current class year (2027-2030), so a class of 2031 has nowhere to sit and a guessed one would be worse. The placement is stored and linked; she gets a profile when 2031 enters the window. Class year from the grade the tournament published (28 Oct 2026)."
+    },
+    {
+      "name": "Wyteria Powe",
+      "school": "Gardendale Hs",
+      "season": 2026,
+      "reason": "approved",
+      "note": "Class of 2031: a seventh grader, 3rd at 152 in the 2026 AHSAA girls championship. Same as Payton Carpenter - a real medal, a class year the current window does not reach. The placement is stored and linked; she gets a profile when 2031 enters it (28 Oct 2026)."
+    },
+    {
+      "name": "Katie Lowe",
+      "school": "St. John Paul II",
+      "season": 2026,
+      "reason": "source-conflict",
+      "note": "Class year held blank, so no profile. The 2025 state champion at 152 and 4th in 2026, but the two Flo participant grades contradict each other - 2025 'HS Sophomore' reads 2027, 2026 'HS Senior' reads 2026 - and each is independently corroborated in print: AHSAA's own 2025 recap lists her 'So.' at 31-6, SEWrestle's 2026 Fan's Guide lists her 'Sr.' No RankWrestlers profile exists to break the tie. Held rather than guessed; detail in Muse's AL-IMPORT-NOTE.md (28 Oct 2026)."
+    }
+  ],
+  "preFreshmanVerified": [
+    {
+      "athleteId": "0f9c2543-88bd-4ab5-8935-6e6d378240bb",
+      "note": "Peyton Andrews, Weaver, class of 2028. Before his freshman year he placed 6 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "69c1b638-52e9-49c5-b4aa-5e645d46db28",
+      "note": "Drake Wood, Reeltown, class of 2028. Before his freshman year he placed 2 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "8255bd36-fe8c-4f7d-9f53-c736dc948ab7",
+      "note": "Cael Fulmer, Weaver, class of 2028. Before his freshman year he placed 2 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "07741c03-17f2-4106-80e3-1f470b21ef3a",
+      "note": "Matthew Campbell, Vestavia Hills, class of 2029. Before his freshman year he placed 2 in 2024; placed 2 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "82ac8670-89cb-442b-acac-4001ed446960",
+      "note": "Braylen Johnson, Thompson HS, class of 2028. Before his freshman year he placed 6 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "8b972861-23e5-4964-8266-072565c870ba",
+      "note": "Griffin Gardner, Oak Mountain, class of 2028. Before his freshman year he placed 5 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "954dbdbd-6a5b-4b51-829f-7852effea9a9",
+      "note": "Kaden Clark, Bob Jones, class of 2028. Before his freshman year he placed 3 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "8cc0dcd9-a971-4b93-88ec-bb059865b48b",
+      "note": "Ryker Houston, Alexandria HS, class of 2030. Before his freshman year he placed 2 in 2025; placed 1 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "888ef75c-b8b5-4b6c-8c05-f003544b8321",
+      "note": "Brady Walsh, Thompson HS, class of 2029. Before his freshman year he placed 5 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "1419c889-87e3-4c3a-a18e-da1fa1cc16aa",
+      "note": "Aissatou Bah, Fultondale, class of 2030. Before his freshman year she placed 4 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "02e43862-6199-4a07-99fa-c3b235b2f0d3",
+      "note": "Ashlyn Coleman, Weaver, class of 2029. Before his freshman year she placed 1 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "045c43bb-8d65-4f99-b92c-3c55c5beebd9",
+      "note": "Ariel Sargent, Weaver, class of 2029. Before his freshman year she placed 4 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "a0579c13-5620-4083-9311-2a561bace387",
+      "note": "Emma O'connor, Moody Hs, class of 2030. Before his freshman year she placed 4 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "58b42d55-2b11-4bd5-933d-959a4c8da21c",
+      "note": "Heaven Bishop, Weaver, class of 2029. Before his freshman year she placed 1 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "86510205-8b84-46af-958b-0182ce7b7d40",
+      "note": "Jonathan Hall, Bayside Academy, class of 2030. Before his freshman year he placed 2 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "2072a695-1d8c-402e-9e29-7e25fd32347e",
+      "note": "Artels James, Fultondale, class of 2030. Before his freshman year he placed 3 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "28799c0d-67d4-4750-8b1f-40e0aba534bc",
+      "note": "Braxton Alvarez, Tallassee, class of 2030. Before his freshman year he placed 5 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "4fbddbcb-a7e9-4786-b592-ecb36235b169",
+      "note": "Elliott Harris, Leeds, class of 2030. Before his freshman year he placed 1 in 2026; placed 2 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "6da67c04-350b-4364-a7f7-9fd0195a04d6",
+      "note": "Landry Campbell, Scottsboro, class of 2030. Before his freshman year he placed 3 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "512f6eed-1046-4f36-ae28-57e2c98faad6",
+      "note": "Titus Slaughter, Oak Mountain, class of 2030. Before his freshman year he placed 1 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "8b147cd8-fc59-487e-b5ce-e64f98a68ce8",
+      "note": "Jones Meadow, Vestavia Hills, class of 2030. Before his freshman year he placed 6 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "9fbd47e5-003c-444f-b297-48c983c36361",
+      "note": "Sarah Gokey, Weaver, class of 2030. Before his freshman year she placed 4 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "90e25704-4e3c-40d1-bad7-ee824b2821e6",
+      "note": "Abbigail Meyer, St. John Paul II, class of 2030. Before his freshman year she placed 1 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "7766982e-0fa8-44cb-80cc-cdf54a443dc0",
+      "note": "Judy Hanby, Stanhope Elmore, class of 2030. Before his freshman year she placed 3 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "027a9024-efd6-4b85-9bfd-6c566d2ced8c",
+      "note": "Nya Johannson, Weaver, class of 2030. Before his freshman year she placed 2 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "a5cd9cdd-ee19-499c-b178-d81fd09a102e",
+      "note": "Kade Juergens, Madison County, class of 2030. Before his freshman year he placed 6 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "048d771d-d806-491d-a458-826dd36135f0",
+      "note": "Christian Hill, Oak Grove, class of 2029. Before his freshman year he placed 3 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "776f93fa-af34-4401-8572-1188ae0524ac",
+      "note": "Caleb Barry, Buckhorn, class of 2028. Before his freshman year he placed 5 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "577df060-ce50-453a-8db4-f0ad53372f3d",
+      "note": "Aryanna Ivey, Stanhope Elmore, class of 2030. Before his freshman year she placed 3 in 2026; placed 3 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "32067976-8f48-4821-9c8b-5727a921019b",
+      "note": "Jaxon Lewis, Montevallo, class of 2030. Before his freshman year he placed 2 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "3878f711-5270-4de0-bd8f-1823ce51d471",
+      "note": "Au'nhyiaa Smith, Lincoln, class of 2030. Before his freshman year she placed 2 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "2d0a28b3-f139-49a4-bade-2cf84ba5887e",
+      "note": "Hannah Mayo, East Limestone, class of 2029. Before his freshman year she placed 4 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "0b4f81bb-42c6-4d13-a3b4-781f2c53d4a2",
+      "note": "Elizabeth Hunter, Alexandria HS, class of 2029. Before his freshman year she placed 3 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "1a16b12c-dc29-4c09-9fcc-ade1fb57cef8",
+      "note": "Caylie Brown, Stanhope Elmore, class of 2030. Before his freshman year she placed 4 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "913a8655-ce90-45c6-b6f8-2bfe0d65fd34",
+      "note": "Will Atkinson, Thompson HS, class of 2028. Before his freshman year he placed 4 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "ba55d2ee-b7f9-4f12-9b16-3c01a605c83c",
+      "note": "Maddox Mcdaniel, Pelham, class of 2029. Before his freshman year he placed 3 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "bde524b7-97d3-4db0-a02f-c5df1a659be4",
+      "note": "Maria Contreas, Sparkman, class of 2030. Before his freshman year she placed 1 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "bfc4287d-4311-4a2e-bde9-d0bf5071ef80",
+      "note": "Avalena Williamson, Cleburne County, class of 2030. Before his freshman year she placed 1 in 2025; placed 1 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "d7b2b561-af80-46db-89a4-a97057e96de9",
+      "note": "Dylan Brown, Weaver, class of 2028. Before his freshman year he placed 6 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "d87850e1-43a7-4a56-a315-c5d2bb495932",
+      "note": "Rivers Harbison, Hewitt-Trussville, class of 2029. Before his freshman year he placed 3 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "dade0f57-579e-40fb-9a62-7a201e4e4bec",
+      "note": "Haiden Hise, Weaver, class of 2028. Before his freshman year he placed 3 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "ddf8ee2f-39c6-4aa9-95ef-fc8020bf06a0",
+      "note": "Kellen Mitchell, Oak Grove, class of 2029. Before his freshman year he placed 3 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "e199020e-6d9b-4b7e-bf80-396cacbbc601",
+      "note": "Ebony Hunter, Alexandria HS, class of 2029. Before his freshman year she placed 4 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "e2c7e307-f00b-4813-a4e7-179d16b409db",
+      "note": "Gage Staton, Scottsboro, class of 2029. Before his freshman year he placed 4 in 2024; placed 2 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "e9fcd323-bbdf-4322-877a-2a7754e790db",
+      "note": "Justin Wells, Carver Montgomery HS, class of 2030. Before his freshman year he placed 3 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "ea89dc75-04b6-4318-828e-c12adbcff798",
+      "note": "Jaoquin Salas, Gulf Shores, class of 2029. Before his freshman year he placed 3 in 2025. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "ef75abf6-a6fa-43dd-9577-1beb937154ec",
+      "note": "Micah Woodman, Oak Grove, class of 2028. Before his freshman year he placed 4 in 2024. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "faba1e53-add4-45c0-b90b-16fb95f67cdc",
+      "note": "Jill Pate, Moody Hs, class of 2030. Before his freshman year she placed 3 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    },
+    {
+      "athleteId": "fe9f8ff2-e8de-4c19-97b8-9f8625f48772",
+      "note": "April Perterson, Alexandria HS, class of 2030. Before his freshman year she placed 4 in 2026. Alabama allows it: AHSAA feeder eligibility admits seventh and eighth graders, and the 2026 championship's own participant grades carry 164 eighth-grade and 27 seventh-grade slots. The class year comes from that published grade, which is the same field that flags the result as pre-freshman here. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (28 Oct 2026)."
+    }
+  ]
+}

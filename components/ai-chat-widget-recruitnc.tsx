@@ -524,7 +524,8 @@ export function AIChatWidget() {
         <Button
           onClick={openChat}
           className={cn(
-            "h-16 w-16 rounded-full shadow-lg shadow-[#D3B574]/20",
+            // 48px on a phone: at 64 it sat over the end of result lines and card text (mobile review, 30 Oct 2026).
+            "h-12 w-12 sm:h-16 sm:w-16 rounded-full shadow-lg shadow-[#D3B574]/20",
             "bg-gradient-to-br from-[#13294B] to-[#0A1628] hover:from-[#1e3a5f] hover:to-[#13294B]",
             "border-2 border-[#D3B574]/50 hover:border-[#D3B574]",
             "flex items-center justify-center p-0 overflow-hidden transition-all duration-300"
@@ -533,7 +534,7 @@ export function AIChatWidget() {
           aria-label="Open Data Dawg chat"
         >
           <div className={cn(
-            "relative h-12 w-12",
+            "relative h-9 w-9 sm:h-12 sm:w-12",
             avatarState === "greeting" && "avatar-greeting",
             avatarState === "thinking" && "avatar-thinking",
             avatarState === "success" && "avatar-success"

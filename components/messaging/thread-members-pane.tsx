@@ -139,8 +139,8 @@ export function ThreadMembersPane({
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Add RecruitNC user</DialogTitle>
-                  <DialogDescription>Search by name or email. They must have a RecruitNC account. They’ll get an email with a link to the group.</DialogDescription>
+                  <DialogTitle>Add NC United user</DialogTitle>
+                  <DialogDescription>Search by name or email. They must have a NC United account. They’ll get an email with a link to the group.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-2">
                   <Label htmlFor="add-search">Search</Label>

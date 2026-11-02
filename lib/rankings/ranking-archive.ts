@@ -24,6 +24,12 @@ const surname = (name: string) => name.toLowerCase().replace(/[^a-z\s-]/g, "").t
 
 const YEAR_MS = 365 * 86_400_000
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const monthLabel = (ms: number) => {
+  const d = new Date(ms)
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`
+}
+
 export type RankedOnLookup = (name: string, date: string) => NationallyRankedOpponent[]
 
 export async function loadRankedOnLookup(
@@ -36,7 +42,13 @@ export async function loadRankedOnLookup(
     const name = String(row.athlete_name ?? "").trim()
     const at = Date.parse(`${published.slice(0, 10)}T12:00:00Z`)
     if (!name || !Number.isFinite(rank) || rank < 1 || !Number.isFinite(at)) return
-    const list = `${row.source}|${row.scope}|${Number(row.edition_class_year ?? 0)}|${file}`
+    /*
+     * One timeline per list. The archive file used to be part of this key, which made every archived
+     * edition its own one-edition list - so SI's April final stood "in effect" beside September's
+     * and October's, and an October bout read Ty Eversman's April #28 at 144.
+     */
+    void file
+    const list = `${row.source}|${row.scope}|${Number(row.edition_class_year ?? 0)}`
     const editions = lists.get(list) ?? new Map<number, Entry[]>()
     const scope = String(row.scope ?? "weight")
     const weightClass = (row.weight_class as string | null) ?? null
@@ -81,12 +93,17 @@ export async function loadRankedOnLookup(
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from("national_rankings")
-      .select(`${select}, ranking_month`)
+      .select(`${select}, ranking_month, created_at`)
       .eq("gender", gender)
       .order("id")
       .range(from, from + 999)
     if (error || !data) break
-    for (const r of data) add(r, String(r.ranking_month), "live")
+    /*
+     * In effect from the day we loaded it, not the first of its month: SI's October list is filed
+     * as 1 October and arrived on the 30th, after Super 32 - the list a coach saw that weekend was
+     * September's.
+     */
+    for (const r of data) add(r, String((r as { created_at?: unknown }).created_at ?? r.ranking_month), "live")
     if (data.length < 1000) break
   }
 
@@ -116,9 +133,25 @@ export async function loadRankedOnLookup(
         inEffect = edition
       }
       if (!inEffect || at - inEffect.publishedMs > YEAR_MS) continue
-      for (const e of inEffect.bySurname.get(last) ?? []) if (namesLikelySamePerson(e.name, name)) out.push(e)
+      // A replaced edition says when: the rank was his that day, not today.
+      const asOf = inEffect === timeline[timeline.length - 1] ? null : monthLabel(inEffect.publishedMs)
+      for (const e of inEffect.bySurname.get(last) ?? []) if (namesLikelySamePerson(e.name, name)) out.push(asOf ? { ...e, asOf } : e)
     }
     cache.set(key, out)
     return out
   }
+}
+
+/**
+ * The same lookup, held for ten minutes per server instance: profiles and their bout tables ask on
+ * every view, and the lookup reads every archived edition.
+ */
+const cached = new Map<string, { at: number; lookup: Promise<RankedOnLookup> }>()
+export function rankedOnLookupCached(supabase: SupabaseClient, gender: "M" | "F"): Promise<RankedOnLookup> {
+  const hit = cached.get(gender)
+  if (hit && Date.now() - hit.at < 10 * 60_000) return hit.lookup
+  const lookup = loadRankedOnLookup(supabase, gender)
+  cached.set(gender, { at: Date.now(), lookup })
+  lookup.catch(() => cached.delete(gender))
+  return lookup
 }

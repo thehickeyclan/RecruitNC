@@ -82,7 +82,7 @@ export async function notifyStaffSubscriptionStarted(input: {
   const who = String(input.email ?? "").trim() || "A subscriber"
   const price = input.amountCents ? ` ${money(input.amountCents)}` : ""
   const every = input.interval ? `/${input.interval}` : ""
-  return send(`RecruitNC: new subscription — ${who}${price}${every}.`, "subscription-started")
+  return send(`NC United: new subscription — ${who}${price}${every}.`, "subscription-started")
 }
 
 /**
@@ -98,7 +98,7 @@ export async function notifyStaffSubscriptionCancelled(input: {
 }): Promise<number> {
   const who = String(input.email ?? "").trim() || "A subscriber"
   const why = String(input.status ?? "").trim()
-  return send(`RecruitNC: subscription cancelled — ${who}${why ? ` (${why})` : ""}.`, "subscription-cancelled")
+  return send(`NC United: subscription cancelled — ${who}${why ? ` (${why})` : ""}.`, "subscription-cancelled")
 }
 
 /**

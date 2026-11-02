@@ -376,7 +376,7 @@ export async function resolveBlueSignupPayload(
   }
 
   if (parent.email.toLowerCase() !== userEmail.trim().toLowerCase()) {
-    return { ok: false, error: "Parent email must match your signed-in RecruitNC account." }
+    return { ok: false, error: "Parent email must match your signed-in NC United account." }
   }
 
   let athleteBase: Omit<BlueRegisterAthleteOption, "id" | "name" | "alreadyInBlue" | "missingFields"> | null =

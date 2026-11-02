@@ -252,6 +252,24 @@ function UnlockPanel() {
   )
 }
 
+function CoachesCanReachYou() {
+  return (
+    <section className="mt-10 overflow-hidden rounded-2xl border border-[#A3E635]/60 text-white" style={{ background: "linear-gradient(135deg, #13294b, #0b1730)" }}>
+      <div className="p-6">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">South Carolina wrestlers · free</div>
+        <h2 className="mt-1 text-2xl font-bold leading-tight md:text-3xl">Claim your profile so college coaches can contact you.</h2>
+        <p className="mt-2 text-sm text-[#c9d4ea]">
+          120+ college coaches use RecruitWrestlers to find and message wrestlers. Your profile is probably already here, built from your results. Claim it,
+          add your contact info, GPA and film, and coaches can reach you.
+        </p>
+        <Link href="/create-profile" className="mt-4 inline-flex min-h-[48px] items-center rounded-xl bg-[#A3E635] px-6 text-base font-black text-[#0b1730] hover:bg-[#BEF264]">
+          Claim your free profile →
+        </Link>
+      </div>
+    </section>
+  )
+}
+
 function ClaimCard() {
   return (
     <section className="mt-10 overflow-hidden rounded-2xl border border-[#A3E635]/60 text-white" style={{ background: "linear-gradient(135deg, #13294b, #0b1730)" }}>
@@ -315,7 +333,9 @@ export default async function Super32ScBoysRecapPage({ searchParams }: { searchP
 
   // Admins can see the page as a free reader would: ?preview=free.
   const previewFree = viewer.isAdmin === true && (await searchParams).preview === "free"
-  const unlocked = !previewFree && (hasPremiumAccess(viewer) || hasPortalAccess(viewer) || scReviewer)
+  // Open to everyone for the South Carolina launch (Matt, 1 Nov 2026); the per-wrestler coach report stays coach-only.
+  const OPEN_FOR_SC_LAUNCH = true
+  const unlocked = !previewFree && (OPEN_FOR_SC_LAUNCH || hasPremiumAccess(viewer) || hasPortalAccess(viewer) || scReviewer)
   const own = unlocked || previewFree ? new Set<string>() : await ownWrestlerNames(userId, entrants)
   // The top grade awarded is free (A+ is reserved and usually empty, so this is normally the A group).
   const topGrade = GRADES.find((g) => recap.graded.some((w) => w.grade === g))
@@ -435,7 +455,8 @@ export default async function Super32ScBoysRecapPage({ searchParams }: { searchP
         <NchsaaArticleReactions articleSlug="super32-2026-sc-boys-recap" />
       </section>
 
-      {!unlocked && <ClaimCard />}
+      {/* The ask at the end, for every family reading (Matt, 1 Nov 2026): the recap is open, so this no longer waits on a lock. */}
+      {(viewer.isAdmin || !viewer.isVerifiedCoach) && <CoachesCanReachYou />}
     </main>
   )
 }

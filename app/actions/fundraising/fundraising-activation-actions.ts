@@ -420,7 +420,7 @@ export async function fixParentLinkAction(
 
   const parentUserId = typeof params.parentUserId === "string" ? params.parentUserId.trim() : ""
   if (!parentUserId || !looksLikeAuthUuid(parentUserId)) {
-    return { ok: false, error: "Choose a valid parent RecruitNC account (Supabase Auth user UUID)." }
+    return { ok: false, error: "Choose a valid parent NC United account (Supabase Auth user UUID)." }
   }
 
   if (parentUserId === user.id.trim()) {

@@ -14,6 +14,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Trophy, Users, Edit, ArrowRight } from "lucide-react"
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
+import { EmailSignInLink } from "@/components/auth/email-sign-in-link"
 import { BrandSignInPanel } from "@/components/recruiting/brand-frames"
 
 function isTocScopedAdminTarget(path: string | null): boolean {
@@ -65,10 +66,10 @@ function authIntentForPath(path: string | null) {
   if (target.startsWith("/public-rankings") || target.startsWith("/rankings") || target.startsWith("/admin/rankings")) {
     return {
       badge: "RANKINGS ACCESS",
-      title: "Sign in for RecruitNC rankings",
+      title: "Sign in for NC United rankings",
       description:
         "Rankings are an account feature so we can protect the work, personalize your view, and keep future premium access tied to your profile.",
-      bullets: ["View RecruitNC prospect rankings", "Track ranked athletes and updates", "Use ranking tools tied to your account"],
+      bullets: ["View NC United prospect rankings", "Track ranked athletes and updates", "Use ranking tools tied to your account"],
     }
   }
 
@@ -85,7 +86,7 @@ function authIntentForPath(path: string | null) {
   if (target.startsWith("/calendar")) {
     return {
       badge: "EVENT ACCESS",
-      title: "Sign in for RecruitNC events",
+      title: "Sign in for NC United events",
       description:
         "Public schedules are easy to browse, but account access lets you manage registrations, reminders, and event-specific tools.",
       bullets: ["Access event registrations", "Manage reminders and account-specific actions", "Use NC United calendar tools"],
@@ -107,14 +108,14 @@ function authIntentForPath(path: string | null) {
       badge: "ADMIN ACCESS",
       title: "Admin access required",
       description:
-        "This area is limited to approved RecruitNC operators and event staff. Sign in with an account that has access to this page.",
-      bullets: ["Manage protected RecruitNC workflows", "Use approved admin tools", "Keep changes tied to the signed-in user"],
+        "This area is limited to approved NC United operators and event staff. Sign in with an account that has access to this page.",
+      bullets: ["Manage protected NC United workflows", "Use approved admin tools", "Keep changes tied to the signed-in user"],
     }
   }
 
   return {
     badge: "100% FREE",
-    title: "Create a Free RecruitNC Account",
+    title: "Create a Free NC United Account",
     description:
       "Browse North Carolina wrestling history publicly. Sign up when you want to claim a profile, use tools, or manage your account.",
     bullets: ["Claim or create athlete profiles", "View profile analytics and account activity", "Use Data Dawg, wallet, Blue, messaging, and alerts"],
@@ -332,17 +333,17 @@ export default function SignInPage() {
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                   <Edit className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
                   <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">Claim Profiles</h3>
-                  <p className="text-xs text-blue-100 text-center hidden md:block">{authIntent.bullets[0]}</p>
+                  <p className="text-xs text-blue-100 text-center hidden md:block"><BrandText text={authIntent.bullets[0]} /></p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                   <Users className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
                   <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">View Interest</h3>
-                  <p className="text-xs text-blue-100 text-center hidden md:block">{authIntent.bullets[1]}</p>
+                  <p className="text-xs text-blue-100 text-center hidden md:block"><BrandText text={authIntent.bullets[1]} /></p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                   <Trophy className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
                   <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">Use Tools</h3>
-                  <p className="text-xs text-blue-100 text-center hidden md:block">{authIntent.bullets[2]}</p>
+                  <p className="text-xs text-blue-100 text-center hidden md:block"><BrandText text={authIntent.bullets[2]} /></p>
                 </div>
               </div>
 
@@ -461,6 +462,12 @@ export default function SignInPage() {
                   {redirectingAfterSignIn ? "Sign-in successful, redirecting…" : loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
+
+              {/* No password needed: a link by email (Matt, 1 Nov 2026: "we need it simple to login"). */}
+              <div className="mt-3">
+                <p className="mb-2 text-center text-xs text-muted-foreground">Forgot your password, or never set one?</p>
+                <EmailSignInLink email={email} returnTo={returnTo} withInput={false} />
+              </div>
 
               {/* Above the fold would push the password form down for the 1,217 people who already
                   have one; below it is where somebody looks after deciding they cannot remember. */}

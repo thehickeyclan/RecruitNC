@@ -23,7 +23,7 @@ export function DigitalWalletGovernancePlaybook() {
         <p className="mt-4 text-base leading-relaxed text-white/85">
           Donors give through <strong className="text-white">NC United nonprofit checkout</strong>; NC United retains control of all gifts, records donor preference
           for reporting and reimbursement workflow under campaign policy (not personal custody for the athlete&apos;s wallet).
-          Families track ledger views in RecruitNC under{" "}
+          Families track ledger views in NC United under{" "}
           <strong className="text-white">Profile → Digital wallet</strong> (coins / Wallet tab). Informal Venmo/Cash App puts money{" "}
           <strong className="text-white">outside</strong> that nonprofit custody chain — so you lose institutional lanes, unified receipts, and an
           organization-backed trail for how dollars move after checkout.

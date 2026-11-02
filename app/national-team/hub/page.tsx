@@ -144,7 +144,7 @@ export default function NationalTeamHubPage() {
               <h2 className={hubPanelTitleClass}>Sign in required</h2>
               <p className={hubPanelDescClass}>
                 {data?.reason === "signed_out"
-                  ? "Use your RecruitNC parent account to view schedules, team contacts, and watch links."
+                  ? "Use your NC United parent account to view schedules, team contacts, and watch links."
                   : "We couldn’t load hub data. Try again after signing in."}
               </p>
             </header>

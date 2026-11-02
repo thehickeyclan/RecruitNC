@@ -213,7 +213,7 @@ export function AdminClubsManager() {
                       ) : null}
                     </div>
                     <p className="mt-2 text-sm text-white/55">
-                      Submitted by {submission.submitted_by_name || "RecruitNC user"} · {submission.submitted_by_email || "no email"} ·{" "}
+                      Submitted by {submission.submitted_by_name || "NC United user"} · {submission.submitted_by_email || "no email"} ·{" "}
                       {formatDate(submission.created_at)}
                     </p>
                     <p className="mt-3 flex items-start gap-2 text-white/80">

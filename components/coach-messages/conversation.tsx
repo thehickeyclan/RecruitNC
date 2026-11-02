@@ -441,7 +441,7 @@ export function Conversation({
 
       {thread.viewerRole === "coach" && thread.familyJoined === false && !thread.stopped ? (
         <p className="rounded-lg border border-[#D3B574]/30 bg-[#D3B574]/10 p-3 text-sm text-white/80">
-          This family hasn&apos;t joined RecruitNC yet. Your message is saved on the profile and they&apos;ll see it the
+          This family hasn&apos;t joined RecruitWrestlers yet. Your message is saved on the profile and they&apos;ll see it the
           moment they claim it. We&apos;re reaching out to them, and we&apos;ll email you when they join.
         </p>
       ) : null}

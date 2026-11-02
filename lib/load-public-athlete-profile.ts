@@ -28,6 +28,7 @@ import {
 } from "@/lib/other-tournaments"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
 import { getNchsaaStateBoutsForAthlete, type NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
+import { loadCommitmentProvenance, type CommitmentProvenance } from "@/lib/college-commitments/provenance"
 
 export type PublicAthleteProfile = Record<string, unknown> & {
   nhsca_results: unknown[]
@@ -36,6 +37,9 @@ export type PublicAthleteProfile = Record<string, unknown> & {
     place: number | null
     classification: string
     weight_class: string
+    gender?: string | null
+    /** Undefined means the state sanctioned it — see lib/recruiting/state-events.ts. */
+    sanctioned?: boolean
   }>
   /** Bout-level state championship history when it exists in the athlete's match import. */
   nchsaa_state_bouts: NchsaaStateBout[]
@@ -50,6 +54,8 @@ export type PublicAthleteProfile = Record<string, unknown> & {
   profile_quality_wins: ProfileQualityWinsTournamentBlock[]
   /** Display-only: last tournament weight vs profile-listed weight. */
   profile_weight_display: ProfileWeightDisplay
+  /** Who reported the commitment and when; null for one typed in before we recorded that. */
+  commitment_provenance: CommitmentProvenance | null
 }
 
 export type LoadPublicAthleteProfileResult =
@@ -148,6 +154,13 @@ export async function loadPublicAthleteProfile(
     place: r.place,
     classification: r.classification,
     weight_class: r.weight_class,
+    /*
+     * Carried so the page can name the event correctly. Dropping these made every West Virginia
+     * girl read "WVSSAC State Champion" for a title the WVSSAC did not award: the sanctioned
+     * flag reached this function and stopped here.
+     */
+    gender: (r as { gender?: string | null }).gender ?? null,
+    sanctioned: (r as { sanctioned?: boolean }).sanctioned,
   }))
   const profile_quality_wins = nationalTeamData.qualityWins
   const national_team_results = nationalTeamData.nationalTeamResults
@@ -167,6 +180,7 @@ export async function loadPublicAthleteProfile(
     }>,
     other_tournament_results: otherTournamentBlocks.map((block) => block.result),
   }
+  const commitment_provenance = await loadCommitmentProvenance(client, String(athlete.id ?? ""))
   const lastCompeted = resolveLastCompetedWeight([...candidatesFromPublicProfilePayload(profilePayload), ...datedBouts])
   const listedWeight = (athlete as Record<string, unknown>).weightclass ?? (athlete as Record<string, unknown>).weight_class
   const profile_weight_display = buildProfileWeightDisplay(listedWeight as string | number | null, lastCompeted)
@@ -188,6 +202,7 @@ export async function loadPublicAthleteProfile(
       national_team_highlight_videos,
       profile_quality_wins,
       profile_weight_display,
+      commitment_provenance,
       national_rankings_current: nationalRankingsCurrent,
     },
   }

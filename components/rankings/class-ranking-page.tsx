@@ -3,6 +3,7 @@ import Link from "next/link"
 import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { lastUpdatedLabel } from "@/lib/rankings/published-date"
 import { RankingLegend, RankingMethod } from "@/components/rankings/ranking-method"
+import { MarkBoardSeen } from "@/components/rankings/updated-tile"
 import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
 import { loadStarredAthleteIds } from "@/lib/recruiting/starred-ids"
@@ -76,7 +77,7 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
           <p className="mt-4 text-sm leading-relaxed text-white/60">
             {onRw
               ? "The published rankings are for Insider and Recruiting Command Center members and verified college coaches."
-              : "The published rankings are for NC United Blue members, verified college coaches and RecruitNC subscribers."}
+              : "The published rankings are for NC United Blue members, verified college coaches and RecruitWrestlers subscribers."}
           </p>
           <Link
             href={onRw ? "/membership" : "/rankings"}
@@ -125,6 +126,7 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
             <span className="block text-2xl text-[#D7B95A] sm:text-3xl">{board}Class of {year}</span>
           </h1>
 
+          <MarkBoardSeen board={`${state}:${gender}:${year}`} publishedAt={ranking.publishedAt} />
           {/* The stamp sits under the title, where a reader decides whether the board is current. */}
           {lastUpdatedLabel(ranking.publishedAt) ? (
             <p className="mt-4 flex justify-center">
@@ -187,10 +189,7 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
               <p className="mt-8 text-center text-sm text-white/70">
               Tap any wrestler for full results, significant wins and the scouting report.
               </p>
-              <RankingLegend
-                moved={ranking.athletes.some((a) => a.previousRank != null && a.previousRank !== a.rank)}
-                isNew={ranking.athletes.some((a) => a.isNew === true)}
-              />
+              <RankingLegend isNew={ranking.athletes.some((a) => a.isNew === true)} />
             <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {ranking.athletes.map((athlete) => (
                 <RankedAthleteCard key={athlete.athleteId} athlete={athlete} star={starred ? { starred: starred.has(athlete.athleteId) } : undefined} stateCode={onRw ? state : undefined} />

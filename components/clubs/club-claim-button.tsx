@@ -96,7 +96,7 @@ export function ClubClaimButton({ clubId, clubName }: { clubId: string; clubName
     return (
       <div className="rounded-sm border border-white/15 bg-white/5 p-4 text-sm text-white/70">
         <p className="font-bold text-white">Sign in to claim this club</p>
-        <p className="mt-1">A free RecruitNC account tells us who is asking so we can check it.</p>
+        <p className="mt-1">A free NC United account tells us who is asking so we can check it.</p>
         <div className="mt-3 flex gap-2">
           <Button asChild size="sm" className="rounded-sm bg-[#cc0000] text-white hover:bg-[#a80000]">
             <Link href="/auth/signin?returnTo=/clubs">Sign in</Link>

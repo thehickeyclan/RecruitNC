@@ -9,6 +9,7 @@ import AthleteImage from "./athlete-image"
 import { useToast } from "@/components/ui/use-toast"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+import { isHeic, preparePhoto } from "@/lib/images/prepare-photo"
 
 interface AthleteImageUploadProps {
   athleteId: string
@@ -37,13 +38,13 @@ export default function AthleteImageUpload({ athleteId, athleteName, currentPhot
     if (!file) return
 
     // Validate file
-    if (!file.type.startsWith("image/")) {
+    if (!file.type.startsWith("image/") && !isHeic(file)) {
       setError("Please select an image file")
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be smaller than 5MB")
+    if (file.size > 25 * 1024 * 1024) {
+      setError("Image must be smaller than 25MB")
       return
     }
 
@@ -71,7 +72,7 @@ export default function AthleteImageUpload({ athleteId, athleteName, currentPhot
     try {
       // Create form data for upload
       const formData = new FormData()
-      formData.append("file", selectedFile)
+      formData.append("file", await preparePhoto(selectedFile))
       formData.append("athleteId", athleteId)
 
       console.log(`Uploading image for athlete ${athleteId}`)

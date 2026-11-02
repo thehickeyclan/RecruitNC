@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     }
 
     const outcome = await sendToSubscribers("alert_news", {
-      title: item.category?.trim() || "RecruitNC",
+      title: item.category?.trim() || "RecruitWrestlers",
       body: item.title,
       data: { kind: "news", slug: item.slug, path: `/news/${item.slug}` },
     })

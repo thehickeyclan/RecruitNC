@@ -260,7 +260,7 @@ export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathna
           <DialogContent className="bg-[#0D1F3C] border-white/10 text-[#F0F4FF] max-w-md [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_label]:!text-[#F0F4FF]">
             <DialogHeader>
             <DialogTitle className="text-[#F0F4FF]">Add member</DialogTitle>
-            <DialogDescription className="text-white/70">Search by name or email. They must have a RecruitNC account.</DialogDescription>
+            <DialogDescription className="text-white/70">Search by name or email. They must have a NC United account.</DialogDescription>
             </DialogHeader>
             <div className="space-y-3 pt-2">
               <Input
@@ -298,7 +298,7 @@ export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathna
               <DialogContent className="bg-[#0D1F3C] border-white/10 text-[#F0F4FF] max-w-md [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_label]:!text-[#F0F4FF]">
                 <DialogHeader>
                   <DialogTitle className="text-[#F0F4FF]">Add members from event</DialogTitle>
-                  <DialogDescription className="text-white/70">Add everyone with a paid registration for this event who has a RecruitNC account.</DialogDescription>
+                  <DialogDescription className="text-white/70">Add everyone with a paid registration for this event who has a NC United account.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3 pt-2">
                   <Label className="text-[#F0F4FF]">Event slug</Label>

@@ -1,0 +1,11 @@
+{
+  "homeStateResultsVerified": [
+    {
+      "athleteId": "795e8b29-5281-4ea1-a2fe-24a737cb65bf",
+      "note": "Jack Harty, Greens Farms Academy, class of 2027. He carries two North Carolina 4A results — 2nd in 2024 and the title in 2025, both at Northern Guilford — because he won them, and then moved to a Connecticut prep school. His profile is a Connecticut profile under the rule that a wrestler's state is the state of the school he competes for, and the NCHSAA results stay on it as real history. He has no Connecticut placer row: the CIAC data did not create or touch this profile, which was already Connecticut before Connecticut loaded. Checked rather than assumed (29 Oct 2026)."
+    }
+  ],
+  "notes": [
+    "Nollan Thomas (Griswold/Wheeler) placed 5th in the 2025 CIAC girls bracket, which is in the data, and entered the 2026 boys State Open without placing, which is not. Her Open row is gendered girls — correct about her — so it grouped with the girls slice and arrived as a one-row Open division with no placement, which the importer refuses as the shape of a half-read bracket. The guard now drops only that division instead of the whole 262-row slice, and this is the row it drops: a non-placing entry, so no placement is missing, but her 2026 Open participation is not recorded (29 Oct 2026)."
+  ]
+}

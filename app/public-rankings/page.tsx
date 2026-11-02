@@ -26,6 +26,7 @@ import { BrandName } from "@/components/recruiting/brand-name"
 import { headers } from "next/headers"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { lastUpdatedLabel } from "@/lib/rankings/published-date"
+import { UpdatedTile } from "@/components/rankings/updated-tile"
 
 export const dynamic = "force-dynamic"
 
@@ -240,6 +241,38 @@ export default async function PublicRankingsHomepage({
     .sort()
     .at(-1)
 
+  /*
+   * Which boards a tile stands for, with when each was last published, so a republished class
+   * lights its tile until the visitor opens it (Matt, 30 Oct 2026). Keys match MarkBoardSeen.
+   */
+  // The Top 75 publishes on its own board, so its stamp is its own (top_100_rankings).
+  const { data: top75Row } = await createAdminClient()
+    .from("top_100_rankings")
+    .select("published_at")
+    .eq("gender", "Male")
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  /** When the board behind a tile was last published (Matt, 30 Oct 2026: a stamp on every tile). */
+  const tileUpdated = (href: string, groupKey: string): string | null => {
+    if (/college-prospects/.test(href)) return stateCode === "NC" ? ((top75Row?.published_at as string | undefined) ?? null) : null
+    const gender = groupKey === "womens" ? "Female" : "Male"
+    const year = Number(href.split("?")[0]!.split("/").at(-1))
+    return ((editions ?? []).find((e) => e.state === stateCode && e.gender === gender && Number(e.class_year) === year)?.published_at as string | undefined) ?? null
+  }
+
+  const boardsForTile = (href: string, groupKey: string) => {
+    const gender = groupKey === "womens" ? "Female" : "Male"
+    // The Top 75 publishes on its own board; a class publish is not a Top 75 update (Matt, 30 Oct 2026).
+    if (/college-prospects/.test(href)) return []
+    const years = [Number(href.split("?")[0]!.split("/").at(-1))].filter(Number.isFinite)
+    return years.map((year) => ({
+      board: `${stateCode}:${gender}:${year}`,
+      publishedAt:
+        (editions ?? []).find((e) => e.state === stateCode && e.gender === gender && Number(e.class_year) === year)?.published_at ?? null,
+    }))
+  }
+
   // RecruitWrestlers' boards live at /rankings (middleware); NC United's at /public-rankings.
   const base = onRw ? "/rankings" : "/public-rankings"
   const at = (href: string) => href.replace(/^\/public-rankings/, base)
@@ -279,7 +312,7 @@ export default async function PublicRankingsHomepage({
         <div className="relative mx-auto max-w-6xl px-4 py-12 sm:py-16">
           <div className="max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#D3B574]">
-              <BrandName ncu="RecruitNC" national="RecruitWrestlers" /> · Recruiting intelligence
+              <BrandName ncu="RecruitWrestlers" national="RecruitWrestlers" /> · Recruiting intelligence
             </p>
             {locked ? (
               /*
@@ -393,14 +426,19 @@ export default async function PublicRankingsHomepage({
                   <p className="mt-1 text-sm">{description}</p>
                 </div>
               ) : (
-                <HardLink key={href} href={locked ? INSIDER : at(href)} className="group block h-full rounded-xl border border-white/10 bg-[#13294B]/60 p-5 transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
+                <UpdatedTile key={href} href={locked ? INSIDER : at(href)} boards={boardsForTile(href, group.key)} className="group block h-full rounded-xl border border-white/10 bg-[#13294B]/60 p-5 transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
                   <Icon className="h-6 w-6 text-[#D3B574]" aria-hidden />
                   <p className="mt-3 text-2xl font-black text-white">{cardTitle}</p>
                   <p className="mt-1 text-sm text-white/60">{description}</p>
+                  {lastUpdatedLabel(tileUpdated(href, group.key)) ? (
+                    <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-white/55">
+                      <CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden /> {lastUpdatedLabel(tileUpdated(href, group.key))}
+                    </p>
+                  ) : null}
                   <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">
                     {locked ? <><Lock className="h-4 w-4" aria-hidden /> Unlock with Insider</> : <>View rankings <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden /></>}
                   </span>
-                </HardLink>
+                </UpdatedTile>
               ))}
             </div>
           </div>

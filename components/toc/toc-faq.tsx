@@ -27,7 +27,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How is NC United selecting athletes?",
-    a: "We use the same philosophy as our RecruitNC rankings. We prioritize performance at college opens, national competition, quality of wins, NC United practice performance, and overall body of work. Every field is built by hand, weight by weight, and sized to the wrestlers who earn a place in it rather than to a fixed number.",
+    a: "We use the same philosophy as our NC United rankings. We prioritize performance at college opens, national competition, quality of wins, NC United practice performance, and overall body of work. Every field is built by hand, weight by weight, and sized to the wrestlers who earn a place in it rather than to a fixed number.",
   },
   /**
    * Eligibility / NCHSAA compliance block. Every citation below is quoted from the 2025-26 NCHSAA

@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server"
+import { createEmailLinkClient } from "@/lib/supabase/email-link-client"
 import { NextResponse } from "next/server"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export async function POST(request: Request) {
   try {
     const { email, returnTo } = await request.json()
-    const supabase = await createClient()
+    const supabase = createEmailLinkClient()
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 })

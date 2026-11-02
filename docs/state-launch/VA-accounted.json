@@ -168,5 +168,11 @@
       "reason": "approved",
       "note": "VISAA 113 #5. No class year found (RankWrestlers has none). Not researched further: profiles are for current wrestlers, not history (Matt, 22 Oct 2026). Gets a profile if a family claims or a 2027-2030 year turns up."
     }
+  ],
+  "classYearUnresolved": [
+    {
+      "athleteId": "f0cc8057-dbe0-403f-8bc9-73cff4e3e273",
+      "note": "RankWrestlers says class of 2028. She placed 5th at the 2024 VHSL girls championship, and VHSL Handbook 28-2-1 allows eighth graders on junior varsity only - no middle schooler reaches a VHSL state championship - so 2028 cannot be right. Her own record (state placements 2024, 2025 and 2026) fits class of 2026 or 2027 equally well and nothing on file separates them, so the year is held rather than guessed. Her profile keeps her three placements and gets a year when a family claim or a printed grade settles it. Her school was also corrected from the misspelling 'Albermarle', which was what kept her 2026 placement from reaching her profile at all (22 Oct 2026)."
+    }
   ]
 }

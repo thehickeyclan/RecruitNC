@@ -134,7 +134,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-8 pt-6 border-t border-[#1e3a5f]">
           <p className="text-center text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} NC United Wrestling. All rights reserved.
+            &copy; {new Date().getFullYear()} NC United. All rights reserved.
           </p>
           <p className="mt-2 text-center text-xs text-gray-500">
             <a href="/privacy" className="hover:text-white">Privacy</a> · <a href="/terms" className="hover:text-white">Terms</a>

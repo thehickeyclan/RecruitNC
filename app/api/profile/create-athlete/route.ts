@@ -1,4 +1,5 @@
 import { after, type NextRequest, NextResponse } from "next/server"
+import { siteFromRequest } from "@/lib/analytics-site"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
@@ -219,6 +220,7 @@ export async function POST(request: NextRequest) {
         viewerName: String(formData.signedName ?? "").trim() || null,
         ip: auditIpFrom(request),
         userAgent: request.headers.get("user-agent"),
+        site: siteFromRequest(request),
       })
       if (!claim.ok) {
         return NextResponse.json({ error: claim.error }, { status: claim.status })

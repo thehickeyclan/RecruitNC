@@ -7,7 +7,7 @@ import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata: Metadata = {
   title: `Manage your club | ${productName()}`,
-  description: "Coaches and club owners keep their RecruitNC club listing current.",
+  description: "Coaches and club owners keep their NC United club listing current.",
   // A personal management screen, not something to index.
   robots: { index: false, follow: false },
 }

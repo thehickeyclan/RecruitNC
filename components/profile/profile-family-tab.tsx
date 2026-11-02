@@ -102,7 +102,8 @@ export function ProfileFamilyTab({
             </p>
           )}
           {!blueLoading && blueMembershipsLength === 0 && (
-            <p className="flex items-center gap-2">
+            // Blue is NC United's; RecruitWrestlers never sells it (and /blue is not served there).
+            <p className="ncu-only flex items-center gap-2">
               <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#D3B574]" />
               <HardLink href="/blue" className="text-[#D3B574] font-semibold hover:text-white underline-offset-2 hover:underline">
                 Interested in NC United Blue?

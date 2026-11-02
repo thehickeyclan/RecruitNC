@@ -1,0 +1,83 @@
+{
+  "placers": [
+    {
+      "name": "Coleman Lee",
+      "school": "Trion",
+      "season": 2025,
+      "reason": "source-conflict",
+      "note": "GHSA 1A 144, 2025. Georgia awarded TWO sixth places at this weight and no fifth: Coleman Lee took a medical forfeit and Hogan Sims was disqualified, both marked as such in the brackets ('MFF-' and 'DQ-' name prefixes), so the fifth-place match was never wrestled. The state published the tie, but state_tournament_placers carries a unique index over (season, state, association, gender, classification, weight, place) and cannot store two wrestlers at one place. Both men's placements are blanked rather than one of them arbitrarily keeping sixth; their entries, schools and 2-2 records are on file. Restore both to 6th if the index is ever relaxed (24 Oct 2026)."
+    },
+    {
+      "name": "Hogan Sims",
+      "school": "Commerce Hs",
+      "season": 2025,
+      "reason": "source-conflict",
+      "note": "GHSA 1A 144, 2025 \u2014 the other half of the tie described under Coleman Lee. Disqualified in the consolation round; Georgia still listed him sixth. Placement blanked for the same index reason, not because the result is doubted (24 Oct 2026)."
+    },
+    {
+      "name": "Amir Mamadsaidov",
+      "school": "McIntosh",
+      "season": 2026,
+      "reason": "approved",
+      "note": "GHSA 175, 2nd in 2026. No class year in any source Muse reached, so no profile was minted under the current-classes rule. Closed as not found rather than guessed; he gets a profile the moment a year surfaces or a family claims him (25 Oct 2026)."
+    }
+  ],
+  "preFreshmanVerified": [
+    {
+      "athleteId": "2cf7a601-9a7e-4b95-b0af-204d1cdc2fcf",
+      "note": "Mike Dodd, Stratford Academy, class of 2028. Placed at the 2024 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "6809e714-f727-47c6-a402-5eb232d2e6b6",
+      "note": "Tate Williams, Bulloch Academy, class of 2028. Placed at the 2024 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "7759d91a-4c8b-422b-9e57-98cfa212bd50",
+      "note": "Huck McLaulin, Gatewood, class of 2029. Placed at the 2025 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "7135df13-f973-4123-b11e-c458bbacdf1b",
+      "note": "Reid Gober, Athens Christian, class of 2029. Placed at the 2025 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "165952db-c792-406e-85c4-793915818235",
+      "note": "Bryant Hall, Strong Rock, class of 2029. Placed at the 2025 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "b27216a9-f1d9-435c-839d-ceb569c8089e",
+      "note": "Karson Underwood, Westfield School, class of 2029. Placed at the 2025 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "a3eb69cf-2181-47af-bf82-52a3aa5bca28",
+      "note": "Austin Anglin, Piedmont Academy, class of 2028. Placed at the 2024 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "7b978657-1c0d-4356-97aa-c9417d0de3f3",
+      "note": "Alex Stein, Mill Springs, class of 2028. Placed at the 2024 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "cd945adf-006e-459b-8e38-f854c5e28590",
+      "note": "Ford Cellino, Brookstone, class of 2028. Placed at the 2024 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "db4434f4-49f7-4780-9e90-6024f971b97f",
+      "note": "Kirra Mitchell, Mt. de Sales Girls, class of 2028. Placed at the 2024 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "acfd1d8f-6050-47a1-b324-d1297215ee75",
+      "note": "Anberlin Hardy, Mt. de Sales Girls, class of 2029. Placed at the 2025 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "bc07ac11-c6ee-4cca-8245-ad3c80c19c6f",
+      "note": "Cash Sorrow, George Walton Academy, class of 2029. Placed at the 2025 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "8083120f-9e12-4b34-af8a-383c36739232",
+      "note": "Jack Litten, Valwood, class of 2029. Placed at the 2025 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    },
+    {
+      "athleteId": "fef8a926-a58e-4600-a77f-71e66ee25352",
+      "note": "Hunter Pierce, Gatewood, class of 2029. Placed at the 2025 GIAA championship before his freshman year, which Georgia's private association allows and its public one does not: GHSA By-Law 1.45 makes eighth graders never varsity-eligible, and the GHSA payloads accordingly print zero '8th' grades in any slice, while GIAA's '8th' readings are legitimate and are how these class years were derived. Every one of the fourteen is GIAA-only, checked season by season - none touches a GHSA bracket (25 Oct 2026)."
+    }
+  ]
+}

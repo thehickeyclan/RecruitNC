@@ -2,7 +2,7 @@ import { checkConsent, type ConsentInput, type ConsentRecord } from "@/lib/legal
 import { blockedCoachMatch } from "@/lib/coach-blocklist"
 import { notifyStaffBlockedCoachSignup } from "@/lib/staff-alerts-sms"
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createEmailLinkClient } from "@/lib/supabase/email-link-client"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { canonicalRole, shouldAutoApproveCoach } from "@/lib/coach-auto-approve"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
@@ -84,14 +84,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Enter your college." }, { status: 400 })
     }
 
-    const roleNeedsPhone = profileType === "athlete" || profileType === "parent"
-    if (roleNeedsPhone) {
+    // Optional for families since 1 Nov 2026 (they add it on profile setup); a typed number must be whole.
+    if (profileType === "athlete" || profileType === "parent") {
       const digits = (cellPhone ?? "").replace(/\D/g, "")
-      if (digits.length < 10) {
+      if (digits.length > 0 && digits.length < 10) {
         return NextResponse.json(
           {
-            error:
-              "Cell phone is required for athlete and parent accounts (enter at least 10 digits, country code optional).",
+            error: "Enter a 10-digit cell number, or leave it blank.",
           },
           { status: 400 },
         )
@@ -99,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("[v0] Creating Supabase client...")
-    const supabase = await createClient()
+    const supabase = createEmailLinkClient()
     console.log("[v0] Supabase client created")
 
     const safeReturnTo =
@@ -126,6 +125,8 @@ export async function POST(request: NextRequest) {
           profile_type: profileType || undefined,
           // Which site the account began on: emails and alerts sent later carry that site's name.
           signup_brand: signupBrand,
+          // The confirmation email drops the redirect, so the callback reads this instead.
+          signup_return_to: safeReturnTo,
           consent,
         },
       },
@@ -152,6 +153,18 @@ export async function POST(request: NextRequest) {
     if (!data.user) {
       console.log("[v0] No user returned from Supabase")
       return NextResponse.json({ error: "Failed to create account" }, { status: 400 })
+    }
+
+    /*
+     * An address that already has an account: Supabase answers with a stand-in user, no identities
+     * and no email, so the page said "check your email" and nothing ever came (Matt's own test,
+     * 31 Oct 2026). Say so, and send them to sign in.
+     */
+    if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return NextResponse.json(
+        { error: "You already have an account with this email. Sign in instead.", code: "exists" },
+        { status: 409 },
+      )
     }
 
     console.log("[v0] User created successfully:", data.user.id)

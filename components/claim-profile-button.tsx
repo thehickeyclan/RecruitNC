@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Check, Loader2, User, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { BrandText } from "@/components/recruiting/brand-name"
 
 /**
  * "Is this your profile?" — on an unclaimed wrestler's page.
@@ -36,8 +37,24 @@ export function ClaimProfileButton({
   const [state, setState] = useState<
     "checking" | "hidden" | "signed-out" | "idle" | "claiming" | "done"
   >("checking")
-  // Where to come back to after signing in — this profile, not the home page.
-  const returnTo = typeof window === "undefined" ? "/" : window.location.pathname + window.location.search
+  // Where to come back to after signing in: this profile, opened at this box (?claim=1).
+  const returnTo = (() => {
+    if (typeof window === "undefined") return "/"
+    const url = new URL(window.location.href)
+    url.searchParams.set("claim", "1")
+    return url.pathname + url.search
+  })()
+  /*
+   * On a phone this box is the last thing on the page, under every result. Rahiem Skyers signed
+   * up from his own profile, came back to it and never found the claim (30 Oct 2026). Arriving
+   * with ?claim=1 (back from sign-up or sign-in, or from the create-profile search) scrolls
+   * straight here and marks it.
+   */
+  const box = useRef<HTMLDivElement>(null)
+  const [asked] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("claim") === "1")
+  // Said on the search already (?as=parent or ?as=self): the sign-up opens on that role, and a parent goes straight to signing.
+  const [as] = useState(() => (typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("as")))
+  const signupRole = as === "parent" ? "&type=parent" : as === "self" ? "&type=athlete" : ""
   const [doneAs, setDoneAs] = useState<"self" | "parent" | null>(null)
   const { toast } = useToast()
 
@@ -85,7 +102,11 @@ export function ClaimProfileButton({
     return () => { cancelled = true }
   }, [state, athleteId])
 
-  const [signing, setSigning] = useState(false)
+  useEffect(() => {
+    if (asked && state === "idle") box.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, [asked, state])
+
+  const [signing, setSigning] = useState(as === "parent")
   const [signedName, setSignedName] = useState("")
 
   async function claim(relationship: "self" | "parent") {
@@ -150,7 +171,7 @@ export function ClaimProfileButton({
           */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <a
-            href={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`}
+            href={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}${signupRole}&for=${encodeURIComponent(athleteName)}`}
             className="inline-flex min-h-[44px] items-center rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
           >
             Create a free account
@@ -180,19 +201,20 @@ export function ClaimProfileButton({
   const firstName = athleteName.trim().split(/\s+/)[0]
 
   return (
-    <div className="rounded-sm border border-[#D3B574]/40 bg-[#D3B574]/5 p-4">
+    <div ref={box} className={`scroll-mt-24 rounded-sm border bg-[#D3B574]/5 p-4 ${asked ? "border-[#D3B574] ring-2 ring-[#D3B574]/60" : "border-[#D3B574]/40"}`}>
       {collegeViewed ? (
         <p className="mb-2 inline-flex items-center gap-2 rounded-sm bg-[#D3B574] px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider text-[#0A1628]">
           College programs have viewed this profile
         </p>
       ) : null}
-      <p className="text-sm font-bold text-white">Is this your profile?</p>
+      {/* Said already on the search (?as=): a parent is not asked again whether it is "me". */}
+      <p className="text-sm font-bold text-white">{as === "parent" ? `Claim ${firstName}'s profile` : "Is this your profile?"}</p>
       <p className="mt-1 text-sm text-white/60">
         {collegeViewed
           ? `Claim ${firstName}'s profile to see which programs are looking, and add the film, GPA and contact details they'll want next.`
           : `Nobody has claimed ${firstName} yet. Claiming lets you add film, a GPA and everything college coaches ask for.`}
       </p>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className={`mt-3 flex flex-wrap gap-2 ${as === "parent" && signing ? "hidden" : ""}`}>
         <Button
           onClick={() => void claim("self")}
           disabled={state === "claiming"}
@@ -211,7 +233,7 @@ export function ClaimProfileButton({
           disabled={state === "claiming"}
           variant="outline"
           size="sm"
-          className="min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10"
+          className={`min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10 ${as === "self" ? "hidden" : ""}`}
         >
           <Users className="mr-2 h-4 w-4" />
           This is my son or daughter
@@ -230,7 +252,7 @@ export function ClaimProfileButton({
         <div className="mt-4 space-y-3 rounded-sm border border-white/15 bg-[#0A1628] p-4">
           <p className="text-sm leading-relaxed text-white/80">
             I confirm I am the parent or legal guardian of <strong className="text-white">{athleteName}</strong>.
-            I consent, on their behalf, to RecruitNC showing their wrestling results, school, weight
+            I consent, on their behalf, to <BrandText text="RecruitWrestlers" /> showing their wrestling results, school, weight
             class and graduating year on a public profile, and to managing that profile for them. I
             can ask for it to be removed at any time.
           </p>

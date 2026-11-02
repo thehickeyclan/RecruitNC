@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const openToCarpool = body.openToCarpool
 
     if (!UUID_PATTERN.test(athleteId)) {
-      return NextResponse.json({ ok: false, error: "Choose your RecruitNC athlete profile" }, { status: 400 })
+      return NextResponse.json({ ok: false, error: "Choose your NC United athlete profile" }, { status: 400 })
     }
     if (!attendingSaturday && !attendingSunday) {
       return NextResponse.json({ ok: false, error: "Select Saturday, Sunday, or both" }, { status: 400 })
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "Unable to verify the athlete profile" }, { status: 500 })
     }
     if (!athlete) {
-      return NextResponse.json({ ok: false, error: "RecruitNC athlete profile not found" }, { status: 404 })
+      return NextResponse.json({ ok: false, error: "NC United athlete profile not found" }, { status: 404 })
     }
 
     const payload = {

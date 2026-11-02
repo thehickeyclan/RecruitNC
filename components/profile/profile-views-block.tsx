@@ -12,8 +12,8 @@
  * Programs are named, never the coach. Renders nothing for anyone the endpoint refuses.
  */
 import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { InsiderUpsell } from "@/components/recruiting/insider-upsell"
 
 type Unlocked = {
   locked: false
@@ -65,7 +65,18 @@ function Logo({ school, logo }: { school: string; logo?: string | null }) {
   )
 }
 
-export function ProfileViewsBlock({ athleteId, athleteFirstName, className }: { athleteId: string; athleteFirstName: string; className?: string }) {
+export function ProfileViewsBlock({
+  athleteId,
+  athleteFirstName,
+  stateCode = null,
+  className,
+}: {
+  athleteId: string
+  athleteFirstName: string
+  /** The wrestler's state, for which rankings Insider opens. */
+  stateCode?: string | null
+  className?: string
+}) {
   const [views, setViews] = useState<Views | null>(null)
   const [stats, setStats] = useState<Stats | null>(null)
   const [showAll, setShowAll] = useState(false)
@@ -104,7 +115,6 @@ export function ProfileViewsBlock({ athleteId, athleteFirstName, className }: { 
   if (!views || !model) return null
   const peak = Math.max(1, ...model.weeks)
   const shown = showAll ? model.rows : model.rows.slice(0, 5)
-  const subscribe = `/rankings?plan=subscription&return=${encodeURIComponent(`/view-profile?id=${athleteId}`)}`
 
   return (
     <section id="college-views" aria-label="Profile views" className={cn("scroll-mt-24 rounded-xl border border-[#D3B574] bg-[#0f1c2e] p-4", className)}>
@@ -193,18 +203,15 @@ export function ProfileViewsBlock({ athleteId, athleteFirstName, className }: { 
         </p>
       )}
 
-      {views.locked && views.hasViews ? (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#1a3a5f] pt-3">
-          <p className="max-w-[46ch] text-xs text-[#A8BBD1]">
-            You always see how many programs are looking, and when. Sign up for Insider to see which programs they are.
-          </p>
-          <Link href={subscribe} className="ncu-only rounded-lg bg-[#D3B574] px-4 py-2.5 text-xs font-extrabold uppercase tracking-[0.12em] text-[#0A1628] hover:bg-[#c4a665]">
-            Sign up for Insider · $9.99/mo
-          </Link>
-          <span className="guild-only">
-            <span className="rounded-lg border border-white/15 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-white/60">Program names: coming soon</span>
-          </span>
-        </div>
+      {/* Always under the colleges for a family without Insider, on both sites, views or not (Matt, 31 Oct 2026). */}
+      {views.locked ? (
+        <InsiderUpsell
+          compact
+          firstName={athleteFirstName}
+          state={stateCode}
+          returnTo={`/view-profile?id=${athleteId}`}
+          className="mt-3 border-t border-[#1a3a5f] pt-3"
+        />
       ) : null}
     </section>
   )

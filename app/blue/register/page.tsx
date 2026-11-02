@@ -414,7 +414,7 @@ export default function BlueRegisterPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle className="text-[#03154C]">First, a free RecruitNC account</CardTitle>
+            <CardTitle className="text-[#03154C]">First, a free NC United account</CardTitle>
             <CardDescription>
               {/*
                 * Most people arriving here have no account - they came from the welcome email,
@@ -487,11 +487,11 @@ export default function BlueRegisterPage() {
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-[#03154C]">NC United Blue</h1>
-          <p className="text-gray-600 mt-1">Signed in as {parentLabel}. We use your RecruitNC profile — only fill gaps below.</p>
+          <p className="text-gray-600 mt-1">Signed in as {parentLabel}. We use your NC United profile — only fill gaps below.</p>
           <p className="text-sm text-[#03154C]/80 mt-2">
             After joining, complete your athlete&apos;s{" "}
             <HardLink href="/profile" className="font-medium underline">
-              RecruitNC recruiting profile
+              NC United recruiting profile
             </HardLink>{" "}
             so college coaches can find them.
           </p>
@@ -568,7 +568,7 @@ export default function BlueRegisterPage() {
                       ? invitePrefill
                         ? "We pulled your wrestler's info from your Blue application — fill any gaps below."
                         : "Find your wrestler below, or add him if he is new to us."
-                      : "Select your wrestler — we already have their RecruitNC profile."}
+                      : "Select your wrestler — we already have their NC United profile."}
                   </CardDescription>
                 </div>
 

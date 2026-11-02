@@ -49,7 +49,7 @@ export function FundraisingPlaybookHomeBanner() {
             <span className="text-white/95">your family can too.</span>
           </h2>
           <p className="mt-1.5 text-sm leading-snug text-white/80 md:text-[15px]">
-            Access the <strong className="font-semibold text-white/90">RecruitNC Fundraising Playbook</strong> — charitable gifts through NC United
+            Access the <strong className="font-semibold text-white/90">NC United Fundraising Playbook</strong> — charitable gifts through NC United
             Wrestling&apos;s nonprofit checkout for the NC United Training Fund (with wrestlers documented at checkout), employer matching pathways, business donors,
             and step-by-step outreach. Acknowledgements follow IRC standards; deductions depend on each donor&apos;s facts — ask your advisor. Sign in to read it
             and request gift-page access.

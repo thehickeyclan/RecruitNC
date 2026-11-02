@@ -8,6 +8,7 @@ import { askScout } from "@/lib/recruiting/scout/run"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { siteFromRequest } from "@/lib/analytics-site"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 120
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
   const answer = await askScout(context, question, [])
   await admin
     .from("user_analytics")
-    .insert({ user_id: userId, event_type: "scout_question", page_url: "/email-composer", event_data: { kind, ms: Date.now() - started, timestamp: new Date().toISOString() } })
+    .insert({ user_id: userId, event_type: "scout_question", page_url: "/email-composer", event_data: { kind, site: siteFromRequest(request), ms: Date.now() - started, timestamp: new Date().toISOString() } })
     .then(() => null, () => null)
   if (!answer?.draft?.body) return NextResponse.json({ error: "Scout couldn't write it just now. The draft below is still ready to send." }, { status: 502 })
   return NextResponse.json({ subject: answer.draft.subject, body: answer.draft.body })
