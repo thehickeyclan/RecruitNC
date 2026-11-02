@@ -132,7 +132,7 @@ export function renderFamilyDigest(d: FamilyDigest): { subject: string; html: st
   const first = d.firstTime.length ? `<p style="margin:0 0 12px;padding:10px 12px;background:#fef9e7;border-radius:6px;font-size:14px"><b>New:</b> ${esc(d.firstTime.join(", "))} looked for the first time.</p>` : ""
   const names = d.programs.length
     ? `<ul style="margin:0 0 16px;padding-left:18px;font-size:15px">${d.programs.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`
-    : `<p style="margin:0 0 16px;font-size:15px;color:#374151">The program names come with Insider, from $9.99 a month.</p>`
+    : `<p style="margin:0 0 16px;font-size:15px;color:#374151">The program names, rankings and premium content come with Insider, from $9.99 a month.</p>`
   const messages = d.unreadMessages
     ? `<p style="margin:0 0 16px;font-size:15px"><b>${d.unreadMessages}</b> coach message${d.unreadMessages === 1 ? "" : "s"} waiting. <a href="${SITE}/inbox" style="color:#003366">Read ${d.unreadMessages === 1 ? "it" : "them"}</a>.</p>`
     : ""
@@ -153,7 +153,7 @@ ${first}${names}${messages}
   const text = [
     `${who} viewed ${d.wrestlerFirstName}'s profile this week.`,
     d.firstTime.length ? `New: ${d.firstTime.join(", ")} looked for the first time.` : "",
-    d.programs.length ? d.programs.map((p) => `- ${p}`).join("\n") : "The program names come with Insider, from $9.99 a month.",
+    d.programs.length ? d.programs.map((p) => `- ${p}`).join("\n") : "The program names, rankings and premium content come with Insider, from $9.99 a month.",
     d.unreadMessages ? `${d.unreadMessages} coach message(s) waiting: ${SITE}/inbox` : "",
     `${cta.label}: ${cta.href}`,
     `Unsubscribe: ${unsub}`,
