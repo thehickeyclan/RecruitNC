@@ -151,21 +151,64 @@ function normalizeForAlias(name: string): string {
 }
 
 /** Same person regardless of "First Last" vs "Last, First" token order. */
+/*
+ * Name particles a bracket operator may type attached or detached: "McClelland" and "Mc Clelland",
+ * "LeNoble" and "Le Noble", "DuChemin" and "Du Chemin". Joined to the token that follows, never
+ * standing alone, so "Mack" and "Mc Clelland" are not drawn together by the particle itself.
+ */
+const NAME_PARTICLES = new Set(["mc", "mac", "le", "la", "du", "de", "del", "della", "di", "da", "van", "von", "der", "den", "st", "ste", "o", "al", "el", "bin", "ibn", "abu"])
+
+/**
+ * The letters of each word, and nothing else.
+ *
+ * Punctuation inside a token used to survive this, which split people who differ only by how a
+ * source punctuates an initial: Pennsylvania's 2025 PIAA bracket printed "Cj Caines" and its 2026
+ * bracket "C.J. Caines", one Hanover Area 2028 wrestler who came out of the mint as two profiles.
+ * A stray mark does the same - Ohio's girls bracket carries "Bella Ndinga Mbappe`" against the
+ * same name clean.
+ */
+const letterWords = (s: string) =>
+  normalizeApostrophes((s ?? "").trim().toLowerCase())
+    .replace(/,/g, " ")
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-z]/g, ""))
+    .filter(Boolean)
+
+/** The word list with particles folded forward, when there is one to fold. */
+function joinParticles(words: string[]): string[] | null {
+  const out: string[] = []
+  let joined = false
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i]!
+    if (NAME_PARTICLES.has(w) && i + 1 < words.length && out.length > 0) {
+      out.push(w + words[i + 1]!)
+      i++
+      joined = true
+    } else out.push(w)
+  }
+  return joined ? out : null
+}
+
 export function namesReferToSamePerson(nameA: string, nameB: string): boolean {
-  const norm = (s: string) =>
-    normalizeApostrophes((s ?? "").trim().toLowerCase())
-      .replace(/,/g, " ")
-      .split(/\s+/)
-      .filter(Boolean)
-      .sort()
-      .join(" ")
+  /*
+   * Sorted, because a source may print "Smith, John" or lead with a middle name; the comma is
+   * already a separator above.
+   */
+  const forms = (s: string) => {
+    const words = letterWords(s)
+    if (!words.length) return []
+    const out = [words.slice().sort().join(" ")]
+    const folded = joinParticles(words)
+    if (folded) out.push(folded.slice().sort().join(" "))
+    return out
+  }
   /*
    * A quoted nickname gives a name two readings and either can be the match — see nameReadings.
    * Without this, Florida's `Steven \`Jett\` Johnson` and `Jett Johnson` compare as strangers.
    */
-  const as = nameReadings(nameA).map(norm).filter(Boolean)
-  const bs = nameReadings(nameB).map(norm).filter(Boolean)
-  return as.some((a) => bs.includes(a))
+  const as = nameReadings(nameA).flatMap(forms)
+  const bs = new Set(nameReadings(nameB).flatMap(forms))
+  return as.some((a) => bs.has(a))
 }
 
 export function firstNamesLikelySame(firstA: string, firstB: string): boolean {

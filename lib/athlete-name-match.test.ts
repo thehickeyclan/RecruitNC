@@ -228,3 +228,35 @@ describe("a nickname in quotes", () => {
     expect(nameReadings("Jackson D?Ettore")).toEqual(["Jackson D?Ettore"])
   })
 })
+
+describe("one wrestler, two ways a bracket typed the name", () => {
+  it("reads a punctuated initial and a bare one as one person", () => {
+    /*
+     * Pennsylvania's 2025 PIAA bracket printed "Cj Caines" and its 2026 bracket "C.J. Caines" -
+     * one Hanover Area wrestler, class of 2028, who came out of the mint as two profiles.
+     */
+    expect(namesReferToSamePerson("Cj Caines", "C.J. Caines")).toBe(true)
+    expect(namesReferToSamePerson("A.J. Corp", "A.j. Corp")).toBe(true)
+  })
+
+  it("ignores a stray mark a bracket leaves on a name", () => {
+    expect(namesReferToSamePerson("Bella Ndinga Mbappe`", "Bella Ndinga Mbappe")).toBe(true)
+  })
+
+  it("joins a name particle to the word after it, attached or detached", () => {
+    expect(namesReferToSamePerson("Mackey Mc Clelland", "Mackey McClelland")).toBe(true)
+    expect(namesReferToSamePerson("Jaydon Le Noble", "Jaydon LeNoble")).toBe(true)
+    expect(namesReferToSamePerson("William Du Chemin", "William DuChemin")).toBe(true)
+  })
+
+  it("does not draw two wrestlers together on a particle alone", () => {
+    expect(namesReferToSamePerson("Mack Clelland", "Mackey McClelland")).toBe(false)
+    expect(namesReferToSamePerson("Jaydon Noble", "Jaydon Le Noble")).toBe(false)
+    expect(namesReferToSamePerson("Evan Ours", "Evan Hours")).toBe(false)
+  })
+
+  it("still keeps two different wrestlers apart", () => {
+    expect(namesReferToSamePerson("Jon Smith", "Jonathan Smith")).toBe(false)
+    expect(namesReferToSamePerson("Mason Horwat", "Mason Howard")).toBe(false)
+  })
+})
