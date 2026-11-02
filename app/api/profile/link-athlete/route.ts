@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { siteFromRequest } from "@/lib/analytics-site"
+import { firstTouchFromRequest } from "@/lib/traffic-source"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
@@ -62,6 +63,7 @@ export async function POST(request: NextRequest) {
     ip: auditIpFrom(request),
     userAgent: request.headers.get("user-agent"),
     site: siteFromRequest(request),
+    firstTouch: firstTouchFromRequest(request),
     reviewNote: typed ? null : "linked from profile setup without a typed signature",
   })
   if (!result.ok) {

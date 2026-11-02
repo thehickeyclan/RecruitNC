@@ -6,6 +6,7 @@ import { mapAthleteToDb } from "@/lib/athlete-utils"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 import { unknownColumnFrom } from "@/lib/clubs/update-club"
 import { resolveAthleteOwnership } from "@/lib/mobile/athlete-ownership"
+import { recordRecruitingReadyIfNew } from "@/lib/funnel/readiness"
 
 // Normalize for comparison: lowercase, no underscores (so careerRecord and career_record both match)
 const norm = (s: string) => s.toLowerCase().replace(/_/g, "")
@@ -324,6 +325,8 @@ export async function POST(
         })),
       )
     }
+
+    await recordRecruitingReadyIfNew(adminSupabase, athleteId, user.id)
 
     return NextResponse.json({
       success: true,

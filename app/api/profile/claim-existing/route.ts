@@ -5,6 +5,7 @@ import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 import { notifyProfileClaim } from "@/lib/profile-claim-notify"
 import { recordClaimConsent } from "@/lib/profile-claim"
 import { recordProfileClaimed, siteFromRequest } from "@/lib/analytics-site"
+import { firstTouchFromRequest } from "@/lib/traffic-source"
 
 /**
  * Connect a signed-in account to an existing athlete.
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
         previousOwnerUserId: null,
       })
 
-      await recordProfileClaimed(adminSupabase, { athleteId, userId: user.id, site: siteFromRequest(request), route: "/api/profile/claim-existing" })
+      await recordProfileClaimed(adminSupabase, { athleteId, userId: user.id, site: siteFromRequest(request), firstTouch: firstTouchFromRequest(request), route: "/api/profile/claim-existing" })
       // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
       await import("@/lib/coach-messages-notify")
         .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(adminSupabase, { athleteId, userId: user.id }))
@@ -191,7 +192,7 @@ export async function POST(request: NextRequest) {
       previousOwnerUserId: previousOwner,
     })
 
-    await recordProfileClaimed(adminSupabase, { athleteId, userId: user.id, site: siteFromRequest(request), route: "/api/profile/claim-existing" })
+    await recordProfileClaimed(adminSupabase, { athleteId, userId: user.id, site: siteFromRequest(request), firstTouch: firstTouchFromRequest(request), route: "/api/profile/claim-existing" })
     // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
     await import("@/lib/coach-messages-notify")
       .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(adminSupabase, { athleteId, userId: user.id }))

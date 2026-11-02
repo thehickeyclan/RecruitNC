@@ -3,6 +3,7 @@ import { isBotRequest } from "@/lib/bot-traffic"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { siteFromRequest } from "@/lib/analytics-site"
+import { firstTouchFromRequest } from "@/lib/traffic-source"
 
 const ALLOWED_EVENTS = new Set([
   "login_wall_view",
@@ -25,6 +26,8 @@ const ALLOWED_EVENTS = new Set([
   // The sales funnel (17 Oct 2026): a plan's checkout opened, and a locked college-card action tapped.
   "checkout_started",
   "upsell_click",
+  // Pressed to claim a found wrestler (lib/track-claim-started.ts), for the funnel dashboard.
+  "claim_started",
 ])
 
 function cleanPath(value: unknown): string {
@@ -74,12 +77,14 @@ export async function POST(request: NextRequest) {
       ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null,
       event_data: {
         site: siteFromRequest(request),
+        first_touch: firstTouchFromRequest(request),
         source,
         path,
         target,
         message,
         /* Which role the wizard was on. Whitelisted, not spread: the body is public input. */
         role: typeof body.role === "string" ? body.role.slice(0, 40) : null,
+        athlete_id: typeof body.athlete_id === "string" && /^[0-9a-f-]{36}$/i.test(body.athlete_id) ? body.athlete_id : null,
         timestamp: new Date().toISOString(),
       },
       created_at: new Date().toISOString(),

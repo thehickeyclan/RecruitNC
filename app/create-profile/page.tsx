@@ -10,6 +10,7 @@ import { FindExistingStep, type ExistingMatch } from "@/components/profile-wizar
 import { RevealStep } from "@/components/profile-wizard/reveal-step"
 import { ClaimDetails, ClaimExplainer } from "@/components/profile-wizard/claim-explainer"
 import { WhoStep, type Who } from "@/components/profile-wizard/who-step"
+import { trackClaimStarted } from "@/lib/track-claim-started"
 
 /**
  * Creating a profile starts by looking for the one that already exists.
@@ -127,6 +128,7 @@ export default function CreateProfilePage() {
              * to find a second button. The confirmation link brings them back to the claim box.
              */
             const as = knownWho ?? "self"
+            trackClaimStarted(reveal.athleteId, "find")
             const claimAt = `/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1&as=${as}`
             router.push(user ? claimAt : `/auth/signup?type=${as === "parent" ? "parent" : "athlete"}&for=${encodeURIComponent(reveal.name)}&returnTo=${encodeURIComponent(claimAt)}`)
           }}

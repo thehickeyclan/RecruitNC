@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { recordProfileClaimed, type AnalyticsSite } from "@/lib/analytics-site"
+import type { FirstTouch } from "@/lib/traffic-source"
 
 /**
  * One way to claim a wrestler's profile, for the website and the app.
@@ -39,6 +40,8 @@ export type ClaimInput = {
   reviewNote?: string | null
   /** Which site the claim came from, for the RW vs NC United count (lib/analytics-site.ts). */
   site?: AnalyticsSite
+  /** Where the claimer first came from (lib/traffic-source.ts). */
+  firstTouch?: FirstTouch | null
 }
 
 export type ClaimResult =
@@ -184,7 +187,7 @@ export async function claimProfile(admin: SupabaseClient, input: ClaimInput): Pr
   })
   if (consentError) console.error("[profile-claim] consent row failed:", consentError.message)
 
-  if (input.site) await recordProfileClaimed(admin, { athleteId: input.athleteId, userId: input.userId, site: input.site, route: "claimProfile" })
+  if (input.site) await recordProfileClaimed(admin, { athleteId: input.athleteId, userId: input.userId, site: input.site, route: "claimProfile", firstTouch: input.firstTouch ?? null })
 
   // Coaches may have written before anyone in the family had an account: tell both sides now.
   await import("@/lib/coach-messages-notify")
