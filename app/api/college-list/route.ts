@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server"
+import { after, NextResponse, type NextRequest } from "next/server"
 
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import data from "@/lib/college-programs/programs-2026-27.json"
@@ -7,6 +7,8 @@ import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { siteFromRequest } from "@/lib/analytics-site"
+import { recordCommandCenterAction, type CommandCenterAction } from "@/lib/recruiting/cc-activation"
 
 export const dynamic = "force-dynamic"
 
@@ -103,6 +105,11 @@ export async function PUT(request: NextRequest) {
           : {}),
         updated_at: new Date().toISOString(),
       }
+  // A first save of this school counts toward activation (lib/recruiting/cc-activation.ts); a stage move does not.
+  const isNew =
+    body?.status !== undefined
+      ? await admin.from("college_list_items").select("id").eq("user_id", userId).eq("school_id", schoolId).maybeSingle().then((r) => !r.error && !r.data, () => false)
+      : false
   const save = (extra: Record<string, unknown>) =>
     admin
       .from("college_list_items")
@@ -119,6 +126,15 @@ export async function PUT(request: NextRequest) {
   if (error || !row) {
     console.error("[college-list] save failed", error)
     return NextResponse.json({ error: "Could not save. Try again." }, { status: 500 })
+  }
+  const actions: CommandCenterAction[] = [
+    ...(isNew ? (["school_saved"] as const) : []),
+    ...(body?.emailed === true ? (["coach_emailed"] as const) : []),
+    ...(body?.questionnaireDone === true ? (["interest_form"] as const) : []),
+  ]
+  if (actions.length) {
+    const site = siteFromRequest(request)
+    after(() => Promise.all(actions.map((action) => recordCommandCenterAction(admin, { userId, action, site, schoolId }))))
   }
   return NextResponse.json({ item: toItem(row as unknown as Record<string, unknown>) })
 }

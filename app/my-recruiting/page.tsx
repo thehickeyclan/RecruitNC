@@ -41,6 +41,9 @@ import { StarterSet } from "@/components/portal/starter-set"
 import { daysUntilText, visitDates, visitPhase, VISIT_GUIDE } from "@/lib/recruiting/visits"
 import { journeyFor, remindersOn } from "./journey-data"
 import { starterSet } from "./starter-set"
+import { NextMoves, WhatsChanged } from "@/components/portal/whats-changed"
+import { firstThreeActions } from "@/lib/recruiting/whats-changed"
+import { loadWhatsChanged } from "./whats-changed-data"
 import { CoachNeedsList, programCount } from "@/components/recruiting/coach-needs-list"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
 
@@ -84,10 +87,14 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
     // College programs following the wrestler: a count for the "where he competes next" reminder, never names.
     first ? programsFollowing(admin, first.id).catch(() => 0) : 0,
     blue ? loadListInbound(admin, viewerId, athletes.map((a) => a.id)).catch(() => new Map()) : new Map(),
-    researchNow && first ? starterSet(admin, viewerId, focus?.gender ?? null, schools.map((s) => s.id)).catch(() => []) : [],
+    // A family with nothing saved gets the starter shortlist too, at the top (the "what changed" empty state).
+    (researchNow || schools.length === 0) && first ? starterSet(admin, viewerId, focus?.gender ?? null, schools.map((s) => s.id)).catch(() => []) : [],
     // Coach-confirmed needs at this wrestler's weight and class (never fails: empty on any error).
     first ? loadNeedsForAthlete(admin, first.id) : [],
   ])
+  // What changed for you: the reason to come back each week (lib/recruiting/whats-changed.ts).
+  const lastWeight = first ? Number(String((lastCompeted as Map<string, { weight?: string | number | null }>).get(first.id)?.weight ?? "").replace(/[^0-9]/g, "")) || null : null
+  const feed = first ? await loadWhatsChanged(admin, cc, first.id, lastWeight, needs).catch(() => null) : null
   // Today's moves: the steps across the whole list that advance it most (lib/college-programs/board-activities.ts).
   const todayET = easternToday()
   const moves = blue
@@ -228,6 +235,20 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               ))}
             </div>
           ) : null}
+          {feed && !feed.empty ? <WhatsChanged feed={feed} firstName={first.firstName} weight={lastWeight} levelColors={LEVEL_COLOR} /> : null}
+          {feed?.empty ? (
+            // A brand-new family: value in the first five minutes, with nothing to fill in.
+            <section aria-labelledby="cc-start" className="mt-6 rounded-xl border border-[#D3B574]/40 bg-[#0f1c2e] p-5">
+              <h2 id="cc-start" className="text-lg font-black text-white sm:text-xl">
+                Start here for {first.firstName}
+              </h2>
+              <p className="text-xs text-white/55">
+                {[first.classYear ? `Class of ${first.classYear}` : null, lastWeight ? `${lastWeight} lbs last wrestled` : null, homeState].filter(Boolean).join(" · ")}
+              </p>
+              <NextMoves title="Your first three moves" actions={firstThreeActions({ firstName: first.firstName, athleteId: first.id, upcomingEvents: w ? w.events.filter((e) => (e.endDate ?? e.startDate) >= todayET).length : 0, profilePercent: percent })} />
+              {starter.length ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} /> : null}
+            </section>
+          ) : null}
           {journey ? <RecruitingPath steps={journey.steps} firstName={first.firstName} /> : null}
           {needs.length ? (
             <section className={`${card} mt-4 p-5`} aria-labelledby="cc-needs">
@@ -242,7 +263,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               </div>
             </section>
           ) : null}
-          {starter.length ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} /> : null}
+          {starter.length && !feed?.empty ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} /> : null}
 
           {/* Coming up: visits and the family's own reminders (Matt, 28 Oct 2026). */}
           {upcomingVisits.length || showReminders ? (

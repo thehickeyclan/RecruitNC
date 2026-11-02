@@ -22,7 +22,7 @@ export function StarterSet({ schools, firstName, levelColors, readOnly }: { scho
       <h2 id="cc-starter" className="text-base font-black">
         A starter set for {firstName}
       </h2>
-      <p className="text-xs text-white/50">Two at every level, from academic fit, cost and your state. Save the ones worth a closer look.</p>
+      <p className="text-xs text-white/50">Two at every level, from roster room at the weight last wrestled, class, academic fit, cost and your state. Save the ones worth a closer look.</p>
       <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {schools.map((s) => (
           <li key={s.id} className="flex flex-col rounded-lg border border-white/10 bg-white/[0.03] p-2.5">

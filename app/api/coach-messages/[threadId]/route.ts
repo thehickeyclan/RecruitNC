@@ -1,6 +1,8 @@
 import { after, NextResponse, type NextRequest } from "next/server"
 import { coachMessagingCompliance } from "@/lib/coach-messages-compliance-server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { siteFromRequest } from "@/lib/analytics-site"
+import { recordCommandCenterAction } from "@/lib/recruiting/cc-activation"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { getThread, replyInThread } from "@/lib/coach-messages"
 import { notifyNewMessage } from "@/lib/coach-messages-notify"
@@ -45,6 +47,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   await saveMessageExtras(admin, threadId, result.messageId, { replyToId: body.replyToId, attachment })
 
   after(() => notifyNewMessage(admin, { threadId, senderUserId: userId, senderRole: result.senderRole }))
+  // A family's reply counts toward Command Center activation (lib/recruiting/cc-activation.ts).
+  if (result.senderRole !== "coach") {
+    const site = siteFromRequest(request)
+    after(() => recordCommandCenterAction(admin, { userId, action: "coach_message", site }))
+  }
   // A coach writing again is contact too; a family's reply moves nothing.
   if (result.senderRole === "coach") {
     after(async () => {
