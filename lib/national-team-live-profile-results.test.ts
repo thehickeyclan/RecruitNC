@@ -46,6 +46,12 @@ describe("matchWrestlerRecordForProfile", () => {
     ]
     expect(matchWrestlerRecordForProfile(["Dom Blue"], records)?.wrestlerId).toBe("w1")
   })
+
+  it("does not give a sibling's record to a different first name with the same initial", () => {
+    const records = [{ wrestlerId: "w2", name: "Aidan Gore", displayWeight: "152", wins: 6, losses: 2, pointsFor: 0, pointsAgainst: 0 }]
+    expect(matchWrestlerRecordForProfile(["Addison Gore"], records)).toBeNull()
+    expect(matchWrestlerRecordForProfile(["Aidan Gore"], records)?.wrestlerId).toBe("w2")
+  })
 })
 
 describe("buildNhscaDuals2026LiveProfileResults", () => {
