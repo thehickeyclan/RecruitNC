@@ -38,7 +38,7 @@ async function buildSlice(state: string, classYear: number): Promise<ProspectDir
   })) as unknown as ProspectDirectoryRow[]
 }
 
-const cachedSlice = unstable_cache(buildSlice, ["prospect-directory-slice-v1"], { revalidate: 600, tags: [PROSPECT_DIRECTORY_TAG] })
+const cachedSlice = unstable_cache(buildSlice, ["prospect-directory-slice-v2"], { revalidate: 600, tags: [PROSPECT_DIRECTORY_TAG] })
 
 /** Every wrestler in these states and class years, honours and last competed included; one row per wrestler. */
 export async function loadDirectoryRows(states: readonly string[], classYears: readonly number[]): Promise<ProspectDirectoryRow[]> {

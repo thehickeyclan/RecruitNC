@@ -35,6 +35,24 @@ export function inState<Q>(query: Q, state: string = HOME_STATE): Q {
   return (q.eq("state", code) as Filterable).eq("is_nc_athlete", false) as Q
 }
 
+type OrFilterable = { or(filters: string): unknown }
+
+/**
+ * Narrow a query over `athletes` to several states at once, by the same rule as `inState`: North
+ * Carolina by its flag, every other state by its code and not flagged NC.
+ */
+export function inStates<Q>(query: Q, states: readonly string[]): Q {
+  const codes = [...new Set(states.map((c) => normalizeStateCode(c)).filter((c): c is string => Boolean(c)))]
+  if (!codes.length) return inState(query)
+  if (codes.length === 1) return inState(query, codes[0])
+  const others = codes.filter((c) => c !== HOME_STATE)
+  const parts = [
+    ...(codes.includes(HOME_STATE) ? ["is_nc_athlete.eq.true"] : []),
+    `and(state.in.(${others.join(",")}),is_nc_athlete.eq.false)`,
+  ]
+  return (query as unknown as OrFilterable).or(parts.join(",")) as Q
+}
+
 /**
  * States the head-to-head comparison covers. Its opponent credentials are built from North
  * Carolina's results; a state joins once its own have been checked against real matches.
