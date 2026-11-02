@@ -6,7 +6,8 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { applyFilters, awareness, coachActivity, completion, stages, sources, transitions, type Filters } from "@/lib/funnel/compute"
+import { applyFilters, awareness, coachActivity, completion, launchClock, stages, sources, transitions, type Filters } from "@/lib/funnel/compute"
+import { CHECKPOINT_DAYS, STATE_LAUNCHES } from "@/lib/funnel/launches"
 import { loadFunnel } from "@/lib/funnel/load"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -41,6 +42,7 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
   const trans = transitions(rows, now)
   const aware = awareness(applyFilters(all, { ...filters, state: "all", source: "all" }), windowStart)
   const coach = coachActivity(rows)
+  const launches = STATE_LAUNCHES.map((l) => launchClock(applyFilters(all, { ...filters, state: "all", source: "all" }), l, now, CHECKPOINT_DAYS))
   const src = sources(applyFilters(all, { ...filters, source: "all" }))
   const years = [...new Set(all.map((a) => a.classYear))].sort()
   const sourceOptions = [...new Set(all.filter((a) => a.claimedAt).map((a) => a.source))].sort()
@@ -89,6 +91,45 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
             {readyStage.count} of {readyStage.of} claimed have a GPA, a cell (athlete or parent) and an intended major.
           </p>
         </section>
+
+        {launches.map((l) => (
+          <section key={l.state} className={`mt-6 ${card}`}>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-lg font-bold">{l.state} launch · Day {l.day}</h2>
+              <p className="text-xs text-white/50">Announced {new Date(`${l.announced}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+            </div>
+            <p className="text-sm text-white/55">
+              In launch validation: judge it at Day 7, 30 and 60 against other new states, not against NC&rsquo;s totals. {l.profiles.toLocaleString()} profiles waiting to be claimed.
+            </p>
+            <div className="mt-3 rounded-lg bg-white/5 p-3">
+              <p className="text-xs text-white/55">
+                Target: {l.target.claimsLow}–{l.target.claimsHigh} claims by Day {l.target.byDay}
+              </p>
+              <p className="mt-1 text-2xl font-black tabular-nums">
+                {l.target.soFar} <span className="text-sm font-semibold text-white/50">claimed since launch</span>
+              </p>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full rounded-full bg-[#A3E635]" style={{ width: `${Math.min(100, (l.target.soFar / l.target.claimsLow) * 100)}%` }} />
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-3">
+              {l.checkpoints.map((c) => (
+                <div key={c.day} className="rounded-lg bg-white/5 p-3">
+                  <p className="text-xs text-white/55">Day {c.day}</p>
+                  {c.claims == null ? (
+                    <p className="mt-1 text-sm text-white/40">in {c.day - l.day} days</p>
+                  ) : (
+                    <>
+                      <p className="mt-1 text-2xl font-black tabular-nums">{c.claims}</p>
+                      <p className="text-xs text-white/50">claims · {c.ready} ready</p>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+            {l.claimedBefore > 0 && <p className="mt-2 text-xs text-white/40">{l.claimedBefore} claimed before the announcement, not counted.</p>}
+          </section>
+        ))}
 
         <section className={`mt-6 ${card}`}>
           <h2 className="text-lg font-bold">Stages</h2>
@@ -181,8 +222,8 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
         </section>
 
         <section className={`mt-6 ${card}`}>
-          <h2 className="text-lg font-bold">Awareness or friction, by state</h2>
-          <p className="text-sm text-white/55">Last 30 days. Views are by visitors and families, not coaches. Few views means families aren&rsquo;t finding profiles; views without claim starts, or starts without claims, means the claim is losing them.</p>
+          <h2 className="text-lg font-bold">Views, claim starts and claims, by state</h2>
+          <p className="text-sm text-white/55">Last 30 days. Views are by visitors and families, not coaches. NC is an established market; a new state&rsquo;s raw totals aren&rsquo;t comparable to it until it has been promoted for a while.</p>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <thead>

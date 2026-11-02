@@ -188,3 +188,35 @@ export function sources(rows: readonly FunnelAthlete[]) {
   }
   return [...by.entries()].map(([source, r]) => ({ source, ...r })).sort((x, y) => y.claimed - x.claimed)
 }
+
+/**
+ * A new state's clock: claims (and how many of those became recruiting-ready) by Day 7, 30 and 60
+ * after its family announcement. A checkpoint not yet reached is null, never a partial number
+ * dressed as a final one. Claims made before the announcement are counted apart.
+ */
+export function launchClock(
+  rows: readonly FunnelAthlete[],
+  launch: { state: FunnelState; announced: string; target: { claimsLow: number; claimsHigh: number; byDay: number } },
+  now: Date,
+  checkpoints: readonly number[] = [7, 30, 60],
+) {
+  const start = Date.parse(`${launch.announced}T00:00:00-05:00`)
+  const s = rows.filter((a) => a.state === launch.state)
+  const claimedAfter = s.filter((a) => a.claimedAt && Date.parse(a.claimedAt) >= start)
+  const by = (days: number) => claimedAfter.filter((a) => Date.parse(a.claimedAt!) < start + days * DAY)
+  const day = Math.max(0, Math.floor((now.getTime() - start) / DAY))
+  return {
+    state: launch.state,
+    announced: launch.announced,
+    day,
+    profiles: s.length,
+    claimedBefore: s.filter((a) => a.claimedAt && Date.parse(a.claimedAt) < start).length,
+    claimedSince: claimedAfter.length,
+    readySince: claimedAfter.filter(ready).length,
+    checkpoints: checkpoints.map((d) => {
+      const hit = day >= d ? by(d) : null
+      return { day: d, claims: hit ? hit.length : null, ready: hit ? hit.filter(ready).length : null }
+    }),
+    target: { ...launch.target, soFar: by(launch.target.byDay).length },
+  }
+}

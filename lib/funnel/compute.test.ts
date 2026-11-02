@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { applyFilters, awareness, coachActivity, completion, stages, transition, type FunnelAthlete } from "./compute"
+import { applyFilters, awareness, coachActivity, completion, launchClock, stages, transition, type FunnelAthlete } from "./compute"
 
 const base: FunnelAthlete = {
   id: "x",
@@ -87,5 +87,26 @@ describe("filters and segments", () => {
       a({ claimedAt: "2026-11-01", insiderAt: "2026-11-05" }),
     ])
     expect(c).toMatchObject({ insider: 2, insiderAfterCoachActivity: 1, insiderWithoutCoachActivity: 1, threePrograms30: 1 })
+  })
+})
+
+describe("launchClock", () => {
+  const launch = { state: "SC" as const, announced: "2026-11-01", target: { claimsLow: 25, claimsHigh: 50, byDay: 30 } }
+  it("counts claims since the announcement and leaves unreached checkpoints empty", () => {
+    const rows = [
+      a({ state: "SC", claimedAt: "2026-10-28T12:00:00Z", gpa: true, cell: true, major: true }),
+      a({ state: "SC", claimedAt: "2026-11-02T12:00:00Z", gpa: true, cell: true, major: true }),
+      a({ state: "SC", claimedAt: "2026-11-05T12:00:00Z" }),
+      a({ state: "SC" }),
+      a({ state: "NC", claimedAt: "2026-11-02T12:00:00Z" }),
+    ]
+    const c = launchClock(rows, launch, new Date("2026-11-10T12:00:00Z"))
+    expect(c).toMatchObject({ day: 9, profiles: 4, claimedBefore: 1, claimedSince: 2, readySince: 1 })
+    expect(c.checkpoints).toEqual([
+      { day: 7, claims: 2, ready: 1 },
+      { day: 30, claims: null, ready: null },
+      { day: 60, claims: null, ready: null },
+    ])
+    expect(c.target.soFar).toBe(2)
   })
 })
