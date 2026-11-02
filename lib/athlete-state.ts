@@ -150,6 +150,26 @@ const NOT_A_CHAMPIONSHIP: Record<string, RegExp> = {
   WV: /girls\s*invitational/i,
 }
 
+/**
+ * Does this association run a state's independent-schools championship?
+ *
+ * Asked of the row's `association`, not of its classification text. Callers used to test the
+ * classification, or a `/(ISA|VISAA)$/` suffix on the association, and both miss Pennsylvania:
+ * PAISWT neither ends in "ISA" nor prints its name in a classification, which is always "Open".
+ * The consequence was not cosmetic - the launch gate counts a pre-freshman placement as a
+ * namesake or a wrong class unless the tournament is an independent one, where 7th and 8th
+ * graders wrestle varsity legitimately, so five PAISWT middle-schoolers read as five errors.
+ */
+export function isIndependentChampionship(
+  state: string | null | undefined,
+  association: string | null | undefined,
+): boolean {
+  const code = String(state ?? "").trim().toUpperCase()
+  const name = String(association ?? "").trim()
+  if (!name) return false
+  return (ASSOCIATIONS[code]?.independent ?? []).some((x) => x.toLowerCase() === name.toLowerCase())
+}
+
 /** "WV Girls State Invitational" — the event's own name, where it is not a championship. */
 export function invitationalName(state: string | null | undefined, classification?: string | null): string | null {
   const code = String(state ?? "").trim().toUpperCase()

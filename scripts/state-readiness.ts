@@ -18,6 +18,7 @@ import { execSync } from "child_process"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { HOME_STATE, inState, normalizeStateCode } from "../lib/recruiting/states"
+import { isIndependentChampionship } from "../lib/athlete-state"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -120,7 +121,7 @@ async function linkedPlacements(ids: string[]): Promise<Link[]> {
     ])
     for (const r of nc.data ?? []) out.push({ athlete_id: r.athlete_id, season: Number(r.year), source: "NC", independent: r.classification === "NCISA", label: `NC ${r.year} ${r.classification ?? ""} #${r.place ?? "?"} ${r.school ?? ""}`.trim() })
     for (const r of other.data ?? [])
-      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, independent: /(ISA|VISAA)$/i.test(r.association ?? ""), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
+      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, independent: isIndependentChampionship(r.state, r.association), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
   }
   // The same placement can sit in a table twice; report it once.
   return [...new Map(out.map((l) => [`${l.athlete_id}|${l.label}`, l])).values()]
