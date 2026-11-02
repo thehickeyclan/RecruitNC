@@ -18,6 +18,7 @@ import { STATE_NAMES } from "@/lib/college-programs/states"
 import { loadMapbox, type MapLike } from "@/lib/mapbox/load-mapbox"
 import { BrandName } from "@/components/recruiting/brand-name"
 import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
+import { FIRST_LIST_GOAL, FirstListProgress } from "@/components/portal/first-list-progress"
 import {
   COLLEGE_DIVISIONS,
   DIVISION_COLOR,
@@ -321,6 +322,8 @@ export function CollegeProgramMap({
     query: "",
   })
   const [listAvailable, setListAvailable] = useState(false)
+  // Whether this visit began under the first five, so reaching five here shows the next step once.
+  const [startedUnderGoal, setStartedUnderGoal] = useState<boolean | null>(null)
   /** Each college's logo for the list under the map (not the map): { schoolId: url }. */
   const [logos, setLogos] = useState<Record<string, string>>({})
   useEffect(() => {
@@ -397,6 +400,7 @@ export function CollegeProgramMap({
         const body = (await res.json()) as CollegeListResponse
         setListAvailable(body.available)
         setSaved(new Map(body.items.map((item) => [item.schoolId, item])))
+        setStartedUnderGoal(body.items.length < FIRST_LIST_GOAL)
       })
       .catch(() => {})
   }, [])
@@ -771,7 +775,7 @@ export function CollegeProgramMap({
             }`}
           >
             <Star className="h-3.5 w-3.5 fill-[#F5D985] text-[#F5D985]" />
-            My List ({saved.size})
+            My List {saved.size < FIRST_LIST_GOAL ? `· ${saved.size} of ${FIRST_LIST_GOAL}` : `(${saved.size})`}
           </button>
         ) : null}
         {(full && filtersActive) || filters.onRecruitNCOnly || filters.fromState ? (
@@ -784,6 +788,11 @@ export function CollegeProgramMap({
           </button>
         ) : null}
       </div>
+
+      {/* The first five (Matt, 2 Nov 2026): progress while under five, the next step once a save here reaches it. */}
+      {full && listAvailable && startedUnderGoal ? (
+        <FirstListProgress count={saved.size} firstName={response?.focus?.names.join(" and ") || null} />
+      ) : null}
 
       {fromCompare ? (
         <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-[#D7B968] bg-[#0B1D3A] px-4 py-3 text-sm text-white shadow-lg">

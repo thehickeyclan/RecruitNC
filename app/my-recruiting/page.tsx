@@ -246,7 +246,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                 {[first.classYear ? `Class of ${first.classYear}` : null, lastWeight ? `${lastWeight} lbs last wrestled` : null, homeState].filter(Boolean).join(" · ")}
               </p>
               <NextMoves title="Your first three moves" actions={firstThreeActions({ firstName: first.firstName, athleteId: first.id, upcomingEvents: w ? w.events.filter((e) => (e.endDate ?? e.startDate) >= todayET).length : 0, profilePercent: percent })} />
-              {starter.length ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} /> : null}
+              {starter.length ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
             </section>
           ) : null}
           {journey ? <RecruitingPath steps={journey.steps} firstName={first.firstName} /> : null}
@@ -263,7 +263,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               </div>
             </section>
           ) : null}
-          {starter.length && !feed?.empty ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} /> : null}
+          {starter.length && !feed?.empty ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
 
           {/* Coming up: visits and the family's own reminders (Matt, 28 Oct 2026). */}
           {upcomingVisits.length || showReminders ? (
