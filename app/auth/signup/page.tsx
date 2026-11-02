@@ -1,5 +1,6 @@
 "use client"
 
+import { metaPixelTrack } from "@/lib/meta-pixel"
 import { BrandText } from "@/components/recruiting/brand-name"
 import { CoachProgramField } from "@/components/recruiting/coach-program-field"
 import type { CoachProgram } from "@/lib/recruiting/coach-program"
@@ -273,6 +274,8 @@ function SignUpWizard() {
         throw new Error((data as { error?: string; message?: string })?.error || (data as { message?: string })?.message || `An error occurred during sign up (${res.status})`)
       }
       track("signup_completed", returnTo, { role: profileType })
+      // A family account made: the Meta Pixel's Lead (RecruitWrestlers only; a no-op elsewhere).
+      metaPixelTrack("Lead", { content_name: profileType ?? "family" })
       track("verification_email_sent", returnTo)
       setSuccess(true)
     } catch (err) {
