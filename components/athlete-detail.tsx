@@ -337,6 +337,39 @@ export function AthleteDetail({
   /** The owner's editor buttons, behind "Edit Profile" on the completeness card. */
   const [showEditors, setShowEditors] = useState(false)
   /*
+   * "Request an edit", in the owner's own words (Matt, 2 Nov 2026): the editor buttons cover the
+   * fields a family can change; results, a bout that isn't theirs, a name or class year are ours
+   * to fix, and they had no way to tell us short of the non-owner form. Queued, never applied.
+   */
+  const [ownerRequest, setOwnerRequest] = useState("")
+  const [ownerRequestSending, setOwnerRequestSending] = useState(false)
+  const [ownerRequestSent, setOwnerRequestSent] = useState(false)
+  const sendOwnerRequest = async () => {
+    const text = ownerRequest.trim()
+    if (!text || ownerRequestSending) return
+    setOwnerRequestSending(true)
+    try {
+      const res = await fetch("/api/edit-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: athlete.id,
+          editType: "profile_update",
+          description: `Request: ${text}`,
+          currentData: { other: text },
+          reporterEmail: currentUserEmail || null,
+        }),
+      })
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not send your request")
+      setOwnerRequest("")
+      setOwnerRequestSent(true)
+    } catch (e) {
+      toast({ title: "Not sent", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" })
+    } finally {
+      setOwnerRequestSending(false)
+    }
+  }
+  /*
    * The college-views email, the claim flow and the checkout all land on the views panel
    * (components/profile/college-views-landing.tsx); open its row so the panel is there.
    */
@@ -2208,6 +2241,7 @@ export function AthleteDetail({
                 { key: "highlight-video", label: "Video", icon: Video, target: "highlights" },
                 { key: "school-club", label: "School & club", icon: School, target: "programs" },
                 { key: "academics", label: "Academics", icon: GraduationCap, target: "[data-section=academics]" },
+                { key: "request", label: "Request an edit", icon: MessageSquare, target: null },
               ] as const
             ).map(({ key, label, icon: Icon, target }) => (
               <button
@@ -2215,6 +2249,7 @@ export function AthleteDetail({
                 type="button"
                 onClick={() => {
                   if (key === "bio") setBioExpanded(true)
+                  if (key === "request") setOwnerRequestSent(false)
                   setEditingSection(key)
                   // Forms for photo, weight and contact open just below this bar; the rest open in
                   // their own section, so take the owner there.
@@ -2229,7 +2264,9 @@ export function AthleteDetail({
                   "inline-flex min-h-[40px] items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-semibold transition-colors",
                   editingSection === key
                     ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]"
-                    : "border-white/20 bg-white/10 text-white hover:bg-white/20",
+                    : key === "request"
+                      ? "border-dashed border-[#D3B574] bg-transparent text-[#D3B574] hover:bg-[#D3B574]/10"
+                      : "border-white/20 bg-white/10 text-white hover:bg-white/20",
                 )}
               >
                 <Icon className="h-4 w-4" aria-hidden />
@@ -2271,6 +2308,49 @@ export function AthleteDetail({
       )}
 
       {/* Weight / contact edit forms (opened from hero) */}
+      {canEdit && editingSection === "request" && (
+        <Card
+          data-owner-editor
+          className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.weightEdit)}
+        >
+          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-2xl font-bold text-white">Request an edit</h2>
+              <Button size="sm" variant="ghost" className="text-white hover:bg-white/20" onClick={() => setEditingSection(null)}>
+                Done
+              </Button>
+            </div>
+          </div>
+          <div className="profile-card-body space-y-3 p-6">
+            {ownerRequestSent ? (
+              <p className="text-sm font-semibold text-foreground">Sent. We&apos;ll make the change and it will show on the profile.</p>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  For anything you can&apos;t change with the buttons above: a wrong or missing result, a match that
+                  isn&apos;t you, your name or class year. Tell us in your own words.
+                </p>
+                <textarea
+                  value={ownerRequest}
+                  onChange={(e) => setOwnerRequest(e.target.value)}
+                  rows={5}
+                  maxLength={3000}
+                  placeholder="e.g. I placed 3rd at the Southeast Open at 157, and the loss to John Smith on Jan 10 isn't me."
+                  className="w-full rounded-lg border border-border bg-background p-3 text-sm text-foreground"
+                />
+                <Button
+                  onClick={sendOwnerRequest}
+                  disabled={!ownerRequest.trim() || ownerRequestSending}
+                  className="bg-[#D3B574] font-bold text-[#0A1628] hover:bg-[#c4a665]"
+                >
+                  {ownerRequestSending ? "Sending..." : "Send request"}
+                </Button>
+              </>
+            )}
+          </div>
+        </Card>
+      )}
+
       {canEdit && editingSection === "weight" && (
         <Card
           data-owner-editor
