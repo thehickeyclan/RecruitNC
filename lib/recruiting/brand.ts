@@ -52,6 +52,15 @@ export const RECRUITING_BRAND = {
     { code: "NH", name: "New Hampshire", live: false },
     { code: "VT", name: "Vermont", live: false },
     { code: "ME", name: "Maine", live: false },
+    /*
+     * Pennsylvania ships below the 95% placer bar and says so: the PIAA event prints no grades at
+     * all for 2025, so a wrestler who placed only that season has nothing to resolve a class year
+     * from, and RankWrestlers holds little of the state. 336 of 692 placer keys carry a year
+     * (48.6%); the other 356 ship blank and do not mint. Thirty-eight unresolved champions are
+     * named in the package note. Registered anyway so the rows are reachable while the gap is
+     * worked - a state that is not in this list does not exist to the product, to admins included.
+     */
+    { code: "PA", name: "Pennsylvania", live: false },
   ],
 } as const
 
