@@ -342,8 +342,16 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
       .filter((w) => w.length > 1)
       .join(" ")
       .trim()
-  const x = fold(a)
-  const y = fold(b)
+  /*
+   * A trailing gender or sport marker is not part of the school's name. Wisconsin's 2026 WIAA
+   * print writes "Freedom", "Freedom Girls" and "Freedom Wrestling" for one program, and Michigan
+   * writes "Mio-Au Sable Hs Girls" against "Mio (Girls)". Only ever TRAILING: Boys' Latin is a
+   * school whose name begins with one of these words, and stripping it there would leave "latin"
+   * to collide with every other Latin school.
+   */
+  const dropTrailingMarker = (v: string) => v.replace(/(?: (?:girls|boys|women|womens|mens|men|wrestling))+$/g, "").trim()
+  const x = dropTrailingMarker(fold(a))
+  const y = dropTrailingMarker(fold(b))
   if (!x || !y) return false
   /*
    * A word break is not a school either. Maryland's brackets write both "North East" and
@@ -353,7 +361,49 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
    * rule is deliberately loose and does not need to be looser.
    */
   if (x.replace(/ /g, "") === y.replace(/ /g, "")) return true
-  return x.includes(y) || y.includes(x)
+  if (x.includes(y) || y.includes(x)) return true
+  /*
+   * Word order is not a school either. Michigan's MHSAA print names the school then the town in
+   * brackets - "Huron HS (New Boston)", "Adams HS (Rochester)", "John Glenn HS (Bay City)" - where
+   * its Flo payload leads with the town: "New Boston Huron", "Rochester Adams", "Bay City John
+   * Glenn". Same words, no shared prefix, so the substring test above misses every one of them and
+   * six wrestlers lose their earlier placement to the namesake guard.
+   */
+  const words = (v: string) => v.split(" ").filter(Boolean)
+  const xs = words(x)
+  const ys = words(y)
+  if (xs.length === ys.length && xs.length > 1) {
+    const sx = [...xs].sort()
+    const sy = [...ys].sort()
+    if (sx.every((w, i) => w === sy[i])) return true
+    /*
+     * An abbreviated word, marked as one by the period the source printed: Ohio writes "Mass.
+     * Perry" for Massillon Perry, "Dub. Coffman" for Dublin Coffman, "Med. Highland" for Medina
+     * Highland. The period is required - a bare prefix would fold "North Allegheny" into
+     * "Northampton Allegheny", two real and different Pennsylvania schools - and every other word
+     * must match, so the abbreviation is the only thing being forgiven.
+     */
+    const marked = (v?: string | null) =>
+      new Set(
+        normalizeApostrophes((v ?? "").toLowerCase())
+          .split(/[^a-z0-9.]+/)
+          .filter((w) => w.endsWith(".") && w.length > 2)
+          .map((w) => w.replace(/\.+$/, "")),
+      )
+    const abbrev = new Set([...marked(a), ...marked(b)])
+    if (abbrev.size) {
+      const aligns = (p: string[], q: string[]) =>
+        p.every((w, i) => {
+          const v = q[i]!
+          if (w === v) return true
+          if (abbrev.has(w) && v.startsWith(w)) return true
+          if (abbrev.has(v) && w.startsWith(v)) return true
+          return false
+        })
+      if (aligns(xs, ys) || aligns(sx, sy)) return true
+    }
+  }
+  return false
 }
 
 export function tournamentYearFitsGradYear(tournamentYear: number, gradYear: number): boolean {

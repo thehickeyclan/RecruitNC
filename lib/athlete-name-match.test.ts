@@ -260,3 +260,47 @@ describe("one wrestler, two ways a bracket typed the name", () => {
     expect(namesReferToSamePerson("Mason Horwat", "Mason Howard")).toBe(false)
   })
 })
+
+describe("one school, two ways a state's sources print it", () => {
+  it("ignores a trailing gender or sport marker", () => {
+    /* Wisconsin's 2026 WIAA print writes all three of these for one Freedom program. */
+    expect(schoolsLikelySame("Freedom Girls", "Freedom Wrestling")).toBe(true)
+    expect(schoolsLikelySame("Mio-Au Sable Hs Girls", "Mio (Girls)")).toBe(true)
+    expect(schoolsLikelySame("Dowagiac Union HS", "Dowagiac (Girls)")).toBe(true)
+  })
+
+  it("keeps a school whose name BEGINS with one of those words", () => {
+    /* Boys' Latin is a school; stripping the first word would collide it with every Latin school. */
+    expect(schoolsLikelySame("Boys Latin", "Chicago Latin")).toBe(false)
+    expect(schoolsLikelySame("Girls Preparatory School", "Memphis Preparatory")).toBe(false)
+  })
+
+  it("reads school-then-town and town-then-school as one place", () => {
+    /*
+     * Michigan's MHSAA print brackets the town where its Flo payload leads with it. Six wrestlers
+     * lost an earlier placement to the namesake guard over this.
+     */
+    expect(schoolsLikelySame("Huron HS (New Boston)", "New Boston Huron")).toBe(true)
+    expect(schoolsLikelySame("Adams HS (Rochester)", "Rochester Adams")).toBe(true)
+    expect(schoolsLikelySame("John Glenn HS (Bay City)", "Bay City John Glenn")).toBe(true)
+    expect(schoolsLikelySame("Gabriel Richard (Riverview)", "Riverview Gabriel Richard")).toBe(true)
+  })
+
+  it("forgives a word the source abbreviated with a period", () => {
+    expect(schoolsLikelySame("Mass. Perry", "Massillon Perry")).toBe(true)
+    expect(schoolsLikelySame("Dub. Coffman", "Dublin Coffman")).toBe(true)
+    expect(schoolsLikelySame("Med. Highland", "Medina Highland")).toBe(true)
+  })
+
+  it("will not take a bare prefix as an abbreviation", () => {
+    /* Northampton and North Allegheny are two real and different Pennsylvania schools. */
+    expect(schoolsLikelySame("North Allegheny", "Northampton Allegheny")).toBe(false)
+    expect(schoolsLikelySame("Beaver Local", "Lisbon Beaver")).toBe(false)
+  })
+
+  it("still keeps two different schools apart", () => {
+    expect(schoolsLikelySame("Carlyle", "Vandalia")).toBe(false)
+    expect(schoolsLikelySame("Dundee", "Springport")).toBe(false)
+    expect(schoolsLikelySame("Buffalo Grove", "Arlington Heights (Hersey)")).toBe(false)
+  })
+})
