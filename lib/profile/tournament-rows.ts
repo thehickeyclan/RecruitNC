@@ -393,16 +393,19 @@ export function buildTournamentRows(input: {
     ucdBouts.set(b.eventKey, [...(ucdBouts.get(b.eventKey) ?? []), b])
   }
   const ucdRows: TournamentRow[] = [...ucdBouts.entries()].map(([key, bouts]): TournamentRow => {
-    const [, year, ...team] = key.split("-")
+    const [, year, ...rest] = key.split("-")
+    // The spring freestyle duals (May) and the fall duals (September) are separate events.
+    const spring = rest[rest.length - 1] === "spring"
+    const team = spring ? rest.slice(0, -1) : rest
     const wins = bouts.filter((b) => b.win).length
     return {
       id: key,
-      event: "Ultimate Club Duals",
+      event: spring ? "Ultimate Club Spring Duals" : "Ultimate Club Duals",
       // "ucd-2026-nc-gold" -> "NC Gold"; the team is what tells two entries of ours apart.
       team: team.map((w) => (w === "nc" ? "NC" : w.charAt(0).toUpperCase() + w.slice(1))).join(" ") || null,
       isDuals: true,
       year: Number(year),
-      sortKey: `${year}-09-19`,
+      sortKey: bouts.find((b) => b.eventDate)?.eventDate?.slice(0, 10) ?? `${year}-09-19`,
       weight: bouts[0]?.weight || null,
       placement: null,
       record: `${wins}-${bouts.length - wins}`,

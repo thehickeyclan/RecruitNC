@@ -18,6 +18,7 @@
  *
  *   npx tsx scripts/import-ultimate-club-duals.ts          # dry run
  *   npx tsx scripts/import-ultimate-club-duals.ts --write
+ *   npx tsx scripts/import-ultimate-club-duals.ts --file 2026UltimateClubFreestyleDuals.csv [--write]
  */
 import fs from "fs"
 import path from "path"
@@ -45,7 +46,20 @@ const SOURCES = [
     teams: { "Carolina Gold": "ucd-2025-carolina-gold" } },
   { file: "2026UltimateClubFallDuals.csv", year: 2026, date: "2026-09-19",
     teams: { "NC Gold - GK12E": "ucd-2026-nc-gold", "Capital City Wrestling Club - GK12E": "ucd-2026-capital-city" } },
-] as const
+  /*
+   * The spring freestyle duals, Harrisburg, 2 May 2026 (Addison Gore's dad, 2 Nov 2026). Capital
+   * City took two teams: GHSE, the high-school girls, and BK8, boys K-8 - youth, which never goes
+   * on a profile. No profiles are minted from this file: a duals export carries no class year.
+   */
+  { file: "2026UltimateClubFreestyleDuals.csv", year: 2026, date: "2026-05-02", eventName: "2026 Ultimate Club Spring FS Duals", mint: false,
+    teams: { "Capital City Wrestling Club - GHSE": "ucd-2026-capital-city-spring" } },
+] as {
+  file: string; year: number; date: string; teams: Record<string, string>; eventName?: string; mint?: boolean
+}[]
+/** `--file <name>` imports one source only; the others are left exactly as they are. */
+const ONLY = process.argv.includes("--file") ? process.argv[process.argv.indexOf("--file") + 1] : null
+const RUN = ONLY ? SOURCES.filter((s) => s.file === ONLY) : SOURCES
+if (ONLY && RUN.length === 0) throw new Error(`no source named ${ONLY}`)
 
 const unwrap = (v: string) => {
   const inner = v.trim().replace(/^"|"$/g, "")
@@ -76,14 +90,22 @@ function readCsv(file: string): Array<Record<string, string>> {
 
 async function main() {
   console.log(WRITE ? "WRITING\n" : "DRY RUN — nothing is written\n")
-  const { data: athRaw } = await sb.from("athletes").select("id, name, gender")
-  const athletes = (athRaw ?? []) as Array<{ id: string; name: string }>
+  // Paged: one select stops at 1,000 rows, and a wrestler past that read as "no profile".
+  const athletes: Array<{ id: string; name: string }> = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from("athletes").select("id, name").order("id").range(from, from + 999)
+    if (error) throw error
+    athletes.push(...((data ?? []) as Array<{ id: string; name: string }>))
+    if (!data || data.length < 1000) break
+  }
 
   const rows: Array<Record<string, unknown>> = []
   const guesting = new Map<string, string>()
   const created = new Set<string>()
+  /** Unmatched names from a source that mints nobody. */
+  const unlinked = new Set<string>()
 
-  for (const src of SOURCES) {
+  for (const src of RUN) {
     const bouts = readCsv(src.file)
     let order = 0
     for (const b of bouts) {
@@ -109,10 +131,11 @@ async function main() {
         if (!name) continue
         const other = side === "Winning" ? "Losing" : "Winning"
         const hit = athletes.filter((a) => namesLikelySamePerson(a.name, name))
-        if (hit.length === 0) created.add(name)
+        if (hit.length === 0 && src.mint !== false) created.add(name)
+        else if (hit.length === 0) unlinked.add(name)
         rows.push({
           event_key: key,
-          event_name: `${src.year} Ultimate Club Duals`,
+          event_name: src.eventName ?? `${src.year} Ultimate Club Duals`,
           year: src.year,
           event_date: src.date,
           weight_class: b.Weight || null,
@@ -144,6 +167,9 @@ async function main() {
   if (created.size) {
     console.log(`\non an NC team with no profile (${created.size}): ${[...created].slice(0, 15).join(", ")}${created.size > 15 ? " …" : ""}`)
   }
+  if (unlinked.size) console.log(`\nno profile, left unlinked (${unlinked.size}): ${[...unlinked].join(", ")}`)
+  const multi = rows.filter((r) => !r.athlete_id && !unlinked.has(String(r.athlete_name)) && !created.has(String(r.athlete_name)))
+  if (multi.length) console.log(`\nmore than one possible profile, left unlinked: ${[...new Set(multi.map((r) => r.athlete_name))].join(", ")}`)
   if (guesting.size) {
     console.log(`\nwrestlers we hold who appear on another state's team — check before trusting (${guesting.size}):`)
     for (const [n, t] of guesting) console.log(`   ${n.padEnd(22)} ${t}`)
@@ -176,7 +202,7 @@ async function main() {
   }
   if (created.size) console.log(`created ${created.size} profiles for wrestlers on the NC teams`)
 
-  for (const src of SOURCES) await sb.from("other_tournament_bouts").delete().eq("source_file", src.file)
+  for (const src of RUN) await sb.from("other_tournament_bouts").delete().eq("source_file", src.file)
   let inserted = 0
   for (let i = 0; i < rows.length; i += 300) {
     const { error } = await sb.from("other_tournament_bouts").insert(rows.slice(i, i + 300) as never)
