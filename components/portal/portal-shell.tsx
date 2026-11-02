@@ -4,6 +4,7 @@ import Link from "next/link"
 import { unreadCount } from "@/lib/coach-messages"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { usesRecruitingShell } from "@/lib/recruiting/brand"
 import { Activity, BookOpen, CalendarDays, ClipboardList, Compass, LayoutDashboard, Map as MapIcon, MessageSquare, Scale, Send, Sparkles } from "lucide-react"
 
 /**
@@ -55,16 +56,21 @@ const GROUPS: Group[] = [
 const ITEMS: Item[] = GROUPS.flatMap((g) => g.items)
 
 export async function PortalShell({ active, children }: { active: PortalSection; children: React.ReactNode }) {
+  const { data: auth } = await (await createClient()).auth.getUser()
+  const admin = createAdminClient()
+  // A college coach always works in the My Recruits menu, never this one (Matt, 2 Nov 2026): the
+  // page's content shows inside the coach frame app-chrome already draws around it.
+  if (auth.user) {
+    const { data: profile } = await admin.from("user_profiles").select("role, profile_type, is_admin").eq("user_id", auth.user.id).maybeSingle()
+    if (usesRecruitingShell(profile)) return <>{children}</>
+  }
   // Unread recruiting messages, shown on Messages in the menu. A failure shows no badge, never an error.
-  const unread = await (async () => {
-    const { data } = await (await createClient()).auth.getUser()
-    return data.user ? unreadCount(createAdminClient(), data.user.id).catch(() => 0) : 0
-  })().catch(() => 0)
+  const unread = auth.user ? await unreadCount(admin, auth.user.id).catch(() => 0) : 0
   const badge = (key: PortalSection) =>
     key === "messages" && unread > 0 ? <span className="ml-auto rounded-full bg-[#D3B574] px-1.5 text-[10px] font-black text-[#0A1628]">{unread}</span> : null
   return (
     <div className="min-h-screen bg-[#0A1628] text-white">
-      <nav aria-label="Command Center" className="sticky top-0 z-30 border-b border-white/10 bg-[#0A1628]/95 backdrop-blur lg:hidden">
+      <nav aria-label="Command Center" className="sticky top-0 z-30 border-b border-white/10 bg-[#0A1628]/95 backdrop-blur md:hidden">
         <ul className="flex gap-1 overflow-x-auto px-3 py-2">
           {ITEMS.map(({ key, label, href, icon: Icon }) => (
             <li key={key} className="shrink-0">
@@ -81,7 +87,7 @@ export async function PortalShell({ active, children }: { active: PortalSection;
         </ul>
       </nav>
       <div className="mx-auto flex max-w-7xl">
-        <aside className="sticky top-0 hidden max-h-screen w-56 shrink-0 flex-col self-start overflow-y-auto border-r border-white/10 px-3 py-6 lg:flex">
+        <aside className="sticky top-0 hidden max-h-screen w-56 shrink-0 flex-col self-start overflow-y-auto border-r border-white/10 px-3 py-6 md:flex">
           <p className="px-3 text-[11px] font-black uppercase tracking-widest text-[#D3B574]">Recruiting Portal</p>
           <div className="mt-4 space-y-3">
             {GROUPS.map((g) => (
