@@ -140,6 +140,7 @@ export function renderFamilyDigest(d: FamilyDigest): { subject: string; html: st
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.5;color:#111827;max-width:560px;margin:0 auto;padding:20px">
 <div style="background:#0B1D3A;padding:22px 24px;border-radius:10px 10px 0 0">
+<img src="${SITE}/images/nc-united-logo-official.png" alt="NC United" width="60" style="display:block;border:0;margin:0 0 14px;max-width:60px;height:auto">
 <p style="margin:0;color:#D3B574;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Your week in recruiting</p>
 <h1 style="margin:6px 0 0;color:#fff;font-size:24px;line-height:1.2">${esc(who)} viewed ${esc(d.wrestlerFirstName)}&rsquo;s profile</h1>
 </div>
