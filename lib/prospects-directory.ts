@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { currentClassYears, mostRecentGraduatedClassYear } from "@/lib/class-years"
-import { HOME_STATE, inState, normalizeStateCode } from "@/lib/recruiting/states"
+import { HOME_STATE, inStates, normalizeStateCode } from "@/lib/recruiting/states"
 
 /**
  * Directory list columns only — omit bio and other large fields.
@@ -140,67 +140,6 @@ export function normalizeProspectDirectoryRow(p: Record<string, unknown>): Prosp
   }
 }
 
-const KNOWN_NON_NC_STATES = new Set([
-  "sc",
-  "south carolina",
-  "ga",
-  "georgia",
-  "va",
-  "virginia",
-  "tn",
-  "tennessee",
-  "fl",
-  "florida",
-  "oh",
-  "ohio",
-  "pa",
-  "pennsylvania",
-  "ny",
-  "new york",
-  "tx",
-  "texas",
-  "ca",
-  "california",
-  "al",
-  "alabama",
-])
-
-const NON_NC_LOCATION_SUBSTRINGS = [
-  "south carolina",
-  "georgia",
-  "virginia",
-  "tennessee",
-  "florida",
-  "ohio",
-  "pennsylvania",
-  "new york",
-  "texas",
-  "california",
-  "alabama",
-] as const
-
-/** Same rules as /prospects/all client filter. */
-export function isNorthCarolinaProspect(prospect: { state?: unknown; location?: unknown }): boolean {
-  const state = String(prospect.state ?? "").trim().toLowerCase()
-  if (state) {
-    if (state === "nc" || state === "north carolina") return true
-    if (KNOWN_NON_NC_STATES.has(state)) return false
-    return true
-  }
-
-  const location = String(prospect.location ?? "").trim().toLowerCase()
-  if (location) {
-    if (/\bnorth carolina\b/.test(location) || /\bnc\b/.test(location.replace(/[.,]/g, " "))) {
-      return true
-    }
-    if (NON_NC_LOCATION_SUBSTRINGS.some((token) => location.includes(token))) {
-      return false
-    }
-  }
-
-  return true
-}
-
 export async function fetchProspectDirectoryPage(
   supabase: SupabaseClient,
   filters: ProspectDirectoryFilters = {},
@@ -232,22 +171,20 @@ export async function fetchProspectDirectoryPage(
     )
   }
 
-  // Another state's wrestlers by the one state rule (lib/recruiting/states.ts). North Carolina keeps
-  // this directory's own rule below, so its list is what it always was.
+  /*
+   * Every state, North Carolina included, by the one state rule (lib/recruiting/states.ts), in the
+   * query itself. North Carolina used to read every athlete and keep anyone whose state was not on a
+   * short list of neighbours, so once placer profiles were minted in other states the NC list
+   * carried 2,154 wrestlers from Louisiana, Maryland, Mississippi... (2 Nov 2026).
+   */
   const others = (filters.withStates ?? []).map((c) => normalizeStateCode(c)).filter((c): c is string => Boolean(c) && c !== HOME_STATE)
-  const state = others.length ? HOME_STATE : (normalizeStateCode(filters.state) ?? HOME_STATE)
-  if (!others.length && state !== HOME_STATE) query = inState(query, state)
+  const states = others.length ? [HOME_STATE, ...others] : [normalizeStateCode(filters.state) ?? HOME_STATE]
+  query = inStates(query, states)
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
 
-  const normalized = (data ?? []).map((row) => normalizeProspectDirectoryRow(row as Record<string, unknown>))
-  const where = (p: unknown) => p as { state?: string | null; location?: unknown }
-  const inList = others.length
-    ? normalized.filter((p) => isNorthCarolinaProspect(where(p)) || others.includes(normalizeStateCode(where(p).state) ?? ""))
-    : state === HOME_STATE
-      ? normalized.filter((p) => isNorthCarolinaProspect(where(p)))
-      : normalized
+  const inList = (data ?? []).map((row) => normalizeProspectDirectoryRow(row as Record<string, unknown>))
 
   return {
     prospects: inList,
