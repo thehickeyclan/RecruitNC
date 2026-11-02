@@ -90,7 +90,12 @@ const yy = (y: number) => `’${String(y).slice(-2)}`
  * school attached (the old page told them "Access Unavailable").
  */
 /** The board for one coach - split out so it can be checked against a real account. */
-export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>, userId: string) {
+export async function loadMyRecruits(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  /** One wrestler's row only (the recruiting file, app/my-recruits/[athleteId]); the rest is skipped. */
+  opts: { only?: string } = {},
+) {
   const user = { id: userId }
   const { data: me } = await admin.from("user_profiles").select("school_id, role, is_admin").eq("user_id", user.id).maybeSingle()
 
@@ -119,7 +124,7 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
     if (!cur) byAthlete.set(s.athlete_id, { starredAt: s.starred_at, starredBy: staffName.get(s.coach_user_id) ?? "Staff", mine })
     else if (mine) cur.mine = true
   }
-  const ids = [...byAthlete.keys()]
+  const ids = [...byAthlete.keys()].filter((id) => !opts.only || id === opts.only)
   if (!ids.length) return { recruits: [] as MyRecruitRow[], hasSchool: Boolean(me?.school_id), schoolId: (me?.school_id as string | null) ?? null }
 
   /*

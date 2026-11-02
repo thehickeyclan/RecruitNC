@@ -5,6 +5,7 @@ import { isInternationalStyle, styleOfEventForAthlete } from "@/lib/wrestling-st
 import { SignificantWinsSection } from "@/components/significant-wins-section"
 import { Medal, Trophy } from "lucide-react"
 import { AthleteDetail } from "@/components/athlete-detail"
+import { RecruitFileBar } from "@/components/coach/recruit-file-bar"
 import { TournamentAccordion, isTocRow } from "@/components/profile/tournament-accordion"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { ProfileBackLink } from "@/components/profile/profile-back-link"
@@ -117,6 +118,8 @@ export function ViewProfileClient({
 
       <div className="container mx-auto min-w-0 max-w-full px-4 pb-4 pt-0 lg:py-8">
         <ProfileViewTracker athleteId={String(athlete.id)} athleteName={athleteName} />
+        {/* A college coach with him on the program's board: the one link to the private file. */}
+        <RecruitFileBar athleteId={String(athlete.id)} />
         <AthleteDetail
           rankerMayUploadPhoto={rankerMayUploadPhoto}
           theme="dark"
