@@ -1,45 +1,26 @@
-import { createAdminClient } from "@/lib/supabase/admin"
-import { fetchProspectDirectoryAll, yearFilterToApiParams } from "@/lib/prospects-directory"
-import { highestAchievement, loadAchievements } from "@/lib/prospect-achievements"
-import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
+import { currentClassYears } from "@/lib/class-years"
+import { loadDirectoryRows } from "@/lib/prospect-directory-cache"
+import { visibleStates } from "@/lib/recruiting/brand"
+import { onRecruitWrestlersProject } from "@/lib/recruiting/product-name"
+import { HOME_STATE } from "@/lib/recruiting/states"
 import ProspectsAllClient from "./prospects-all-client"
 
 export const revalidate = 120
 
 export default async function ProspectsAllPage() {
-  let initialProspects: Awaited<ReturnType<typeof fetchProspectDirectoryAll>> = []
-
+  /*
+   * The list this address opens on, so the browser never has to fetch it again: RecruitWrestlers
+   * opens on every live state at once, NC United on North Carolina (prospects-all-client.tsx).
+   */
+  const onRw = onRecruitWrestlersProject()
+  const liveCodes = visibleStates(false, onRw).map((s) => s.code)
+  const scope = onRw && liveCodes.length > 1 ? "ALL" : HOME_STATE
+  let initialProspects: Awaited<ReturnType<typeof loadDirectoryRows>> = []
   try {
-    const supabase = createAdminClient()
-    initialProspects = await fetchProspectDirectoryAll(supabase, yearFilterToApiParams("active"))
-
-    /*
-     * Achievements come from the tables that hold them, not from JSON on the athlete row.
-     * The client used to derive these itself from `state_results` — a column that does not
-     * exist — so filtering by "State Champion" returned two wrestlers out of 261. It is 37.
-     */
-    const ids = (initialProspects as Array<{ id: string }>).map((p) => String(p.id))
-    const [facts, lastCompeted] = await Promise.all([
-      loadAchievements(
-        supabase,
-        (initialProspects as Array<{ id: string; name?: string | null }>).map((p) => ({ id: p.id, name: p.name })),
-      ),
-      loadLastCompeted(
-        supabase,
-        ids,
-        new Map((initialProspects as Array<{ id: string; graduationyear?: unknown }>).map((p) => [String(p.id), Number(p.graduationyear) || null])),
-      ),
-    ])
-    initialProspects = (initialProspects as Array<Record<string, unknown>>).map((p) => ({
-      ...p,
-      achievement_facts: facts.get(String(p.id)) ?? {},
-      achievement_level: highestAchievement(facts.get(String(p.id)) ?? {}).level,
-      last_competed: lastCompetedLabel(lastCompeted.get(String(p.id))),
-      last_competed_weight: lastCompeted.get(String(p.id))?.weight ?? null,
-    })) as unknown as typeof initialProspects
+    initialProspects = await loadDirectoryRows(scope === "ALL" ? liveCodes : [HOME_STATE], currentClassYears())
   } catch (error) {
     console.error("[prospects/all] SSR prefetch failed:", error)
   }
 
-  return <ProspectsAllClient initialProspects={initialProspects as never[]} />
+  return <ProspectsAllClient initialProspects={initialProspects as never[]} initialScope={initialProspects.length ? scope : null} />
 }

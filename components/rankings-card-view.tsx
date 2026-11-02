@@ -9,6 +9,7 @@ import { ExternalLink, Star } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { isValidProfileId } from "@/lib/profile-id"
+import { ShowMore, useShowMore } from "@/components/show-more"
 
 interface Athlete {
   id?: string
@@ -34,6 +35,8 @@ interface RankingsCardViewProps {
   showRankBadges?: boolean
   showAdditionalDivider?: boolean
   theme?: "light" | "dark"
+  /** Draw this many cards, then more as the reader scrolls (components/show-more.tsx). All of them when absent. */
+  pageSize?: number
 }
 
 export function RankingsCardView({
@@ -42,8 +45,10 @@ export function RankingsCardView({
   showRankBadges = true,
   showAdditionalDivider = true,
   theme = "light",
+  pageSize,
 }: RankingsCardViewProps) {
   const isDark = theme === "dark"
+  const page = useShowMore(athletes.length, pageSize, athletes)
   const { user, profile, isAdmin, isCoach } = useAuth()
   const [canSeeWatchList, setCanSeeWatchList] = useState(false)
   const [starredAthletes, setStarredAthletes] = useState<Set<string>>(new Set())
@@ -151,7 +156,7 @@ export function RankingsCardView({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {athletes.map((athlete, index) => (
+      {athletes.slice(0, page.limit).map((athlete, index) => (
         <>
           {showAdditionalDivider &&
             (athlete.prospect_ranking ?? 0) === 20 &&
@@ -325,6 +330,12 @@ export function RankingsCardView({
         </Card>
         </>
       ))}
+
+      {pageSize ? (
+        <div className="col-span-full">
+          <ShowMore remaining={page.remaining} pageSize={pageSize} onMore={page.more} dark={isDark} />
+        </div>
+      ) : null}
 
       {athletes.length === 0 && (
         <div className={`col-span-full text-center py-12 ${isDark ? "text-white/50" : "text-gray-500"}`}>
