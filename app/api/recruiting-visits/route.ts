@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server"
+import { after, NextResponse, type NextRequest } from "next/server"
 
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { listStatusAfter } from "@/lib/college-programs/contacts"
@@ -6,6 +6,8 @@ import { isCollegeListStatus } from "@/lib/college-programs/list"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { cleanVisit, isVisitOutcome, visitFromRow, VISIT_KIND_LABEL } from "@/lib/recruiting/visits"
 import { familyWriter, TABLE_MISSING } from "@/lib/recruiting/visits-server"
+import { siteFromRequest } from "@/lib/analytics-site"
+import { recordCommandCenterAction } from "@/lib/recruiting/cc-activation"
 
 export const dynamic = "force-dynamic"
 
@@ -32,6 +34,8 @@ export async function POST(request: NextRequest) {
     console.error("[recruiting-visits] save failed", error?.message)
     return NextResponse.json({ error: error?.code === TABLE_MISSING ? SWITCHING_ON : "Could not save. Try again." }, { status: 500 })
   }
+  const site = siteFromRequest(request)
+  after(() => recordCommandCenterAction(w.admin, { userId: w.userId, action: "visit_added", site, schoolId, athleteId }))
   return NextResponse.json({ visit: visitFromRow(row) })
 }
 

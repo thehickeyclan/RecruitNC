@@ -716,6 +716,17 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
+            {/* Command Center activation */}
+            <Link href="/admin/command-center-activation">
+              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <BarChart3 className="h-10 w-10 text-[#D3B574] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Command Center activation</h3>
+                  <p className="text-xs text-gray-600">First visits · acted within 7 days</p>
+                </CardContent>
+              </Card>
+            </Link>
+
             {/* Profile View Analytics */}
             <Link href="/admin/card-analytics">
               <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">

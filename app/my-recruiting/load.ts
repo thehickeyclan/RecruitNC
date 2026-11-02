@@ -167,7 +167,7 @@ export async function loadCommandCenter(returnTo: string) {
   const views = new Map(
     athletes.map((a, i) => {
       const summary = summaries[i]
-      return [a.id, summary ? { programs: summary.schools.length, total: summary.totalViews, schools: premium ? summary.schools : [] } : null] as const
+      return [a.id, summary ? { programs: summary.schools.length, total: summary.totalViews, schools: premium ? summary.schools : [], visits: premium ? summary.visits : [] } : null] as const
     }),
   )
 
