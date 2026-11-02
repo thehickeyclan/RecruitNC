@@ -82,9 +82,9 @@ export async function PortalShell({ active, children }: { active: PortalSection;
         </ul>
       </nav>
       <div className="mx-auto flex max-w-7xl">
-        <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 px-3 py-6 lg:flex">
+        <aside className="sticky top-0 hidden max-h-screen w-56 shrink-0 flex-col self-start overflow-y-auto border-r border-white/10 px-3 py-6 lg:flex">
           <p className="px-3 text-[11px] font-black uppercase tracking-widest text-[#D3B574]">Recruiting Portal</p>
-          <div className="mt-4 space-y-3 overflow-y-auto">
+          <div className="mt-4 space-y-3">
             {GROUPS.map((g) => {
               const single = g.step !== null && g.items.length === 1
               return (
@@ -115,7 +115,7 @@ export async function PortalShell({ active, children }: { active: PortalSection;
               )
             })}
           </div>
-          <PoweredByRw className="mt-auto shrink-0 px-3 pt-3" />
+          <PoweredByRw className="mt-6 shrink-0 px-3" />
           <Link href="/profile" className="mt-3 shrink-0 px-3 text-xs font-semibold text-white/45 hover:text-white">
             Account settings
           </Link>

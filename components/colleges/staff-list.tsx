@@ -118,9 +118,8 @@ export function StaffList({ school, focus }: { school: Pick<CollegeMapSchool, "i
   return (
     <>
     {questionnaireLinks}
-    <div className="mt-3 border-t border-white/10 pt-3">
-      <p className="text-xs font-bold uppercase tracking-wider text-white/45">Coaching staff</p>
-      <ul className="mt-2 space-y-1.5">
+    <div className={questionnaireLinks ? "mt-3 border-t border-white/10 pt-3" : "mt-3"}>
+      <ul className="space-y-3">
         {(shown.length > 0 ? shown : ordered.slice(0, 1)).map((m) => (
           <li key={`${m.name}-${m.title}-${m.division}`} className="text-sm leading-5">
             <span className={m.head ? "font-semibold text-white" : "text-white/85"}>{m.name}</span>
@@ -137,17 +136,17 @@ export function StaffList({ school, focus }: { school: Pick<CollegeMapSchool, "i
               </a>
             ) : null}
             {m.background ? (
-              <span className="mt-0.5 block text-xs leading-5 text-white/60">
-                {m.background}
+              <>
+                {/* Two lines of the background; the coach's own bio page has the rest. */}
+                <span className="mt-0.5 line-clamp-2 text-xs leading-5 text-white/60" title={m.background}>
+                  {m.background}
+                </span>
                 {m.bio ? (
-                  <>
-                    {" "}
-                    <a href={m.bio} target="_blank" rel="noopener noreferrer" className="text-white/40 underline-offset-2 hover:underline">
-                      Bio
-                    </a>
-                  </>
+                  <a href={m.bio} target="_blank" rel="noopener noreferrer" className="text-xs text-white/40 underline-offset-2 hover:underline">
+                    Full bio
+                  </a>
                 ) : null}
-              </span>
+              </>
             ) : null}
           </li>
         ))}
