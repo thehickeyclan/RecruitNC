@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { isBalanced, journeySteps, type JourneyInput, type JourneySchool } from "./journey"
+import { costItem, isBalanced, journeySteps, type JourneyInput, type JourneySchool } from "./journey"
 
 const base: JourneyInput = { firstName: "Jake", grade: "junior", schools: [], rulesSeen: false, allowedLine: null, upcomingEvents: 0, unreadMessages: 0, upcomingVisits: 0, visitsToConfirm: 0 }
 const school = (over: Partial<JourneySchool> = {}): JourneySchool => ({ status: "interested", level: "D1", interest: null, formDone: false, emailed: false, ...over })
@@ -40,5 +40,23 @@ describe("journeySteps", () => {
   it("balance needs two levels", () => {
     expect(isBalanced(["D1", "D1"])).toBe(false)
     expect(isBalanced(["D1", "D3"])).toBe(true)
+  })
+})
+
+describe("Know what you'll pay (step 3)", () => {
+  it("counts priced schools until an offer is entered", () => {
+    const it0 = costItem({ schools: [school(), school(), school()], offers: 0, priced: 2 })
+    expect(it0).toMatchObject({ done: false, label: "2 of 3 schools priced" })
+    expect(it0.links.map((l) => l.href)).toEqual(["/my-recruiting/colleges#cost", "/recruiting/learn/what-will-we-owe"])
+  })
+  it("is done once an offer is entered, and says how many are compared", () => {
+    expect(costItem({ schools: [school()], offers: 1, priced: 1 })).toMatchObject({ done: true, label: "1 offer entered" })
+    expect(costItem({ schools: [school(), school()], offers: 2, priced: 2 }).label).toBe("2 offers compared")
+  })
+  it("sits inside step 3 without changing its tick", () => {
+    const steps = journeySteps({ firstName: "Sam", grade: "junior", schools: [school()], rulesSeen: false, allowedLine: null, upcomingEvents: 0, unreadMessages: 0, upcomingVisits: 0, visitsToConfirm: 0, offers: 1, priced: 1 })
+    const rules = steps.find((s) => s.key === "rules")!
+    expect(rules.items?.[0].done).toBe(true)
+    expect(rules.status).not.toBe("done")
   })
 })

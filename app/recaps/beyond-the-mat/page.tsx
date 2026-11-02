@@ -19,6 +19,8 @@ export const dynamic = "force-dynamic"
 
 const HREF = "/recaps/beyond-the-mat"
 const story = RW_STORIES.find((s) => s.href === HREF)!
+/** "What Will We Actually Owe?", the next column. */
+const owe = RW_STORIES.find((s) => s.href === "/recaps/what-will-we-owe")
 const isRwHost = (host: string) => /recruitwrestlers\.com$|^localhost|\.vercel\.app$/.test(host.toLowerCase())
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -253,6 +255,15 @@ export default async function BeyondTheMat() {
             Of course, affordability matters. Families should understand the complete cost of attendance, explore academic and need-based aid,
             and evaluate the financial commitment carefully.
           </P>
+          {/* The follow-up column, linked only once it is published, so this page never links to a staff-only one. */}
+          {owe?.published ? (
+            <p className="mt-4 text-[17px] font-bold leading-[1.75] text-[#0b1730]">
+              New to this? Start here:{" "}
+              <Link href={owe.href} className="text-[#3f6212] underline decoration-[#A3E635] decoration-2 underline-offset-4 hover:text-[#0b1730]">
+                what you&apos;ll actually pay
+              </Link>
+            </p>
+          ) : null}
           <P>
             Many programs now help their athletes find support beyond scholarships, including name, image and likeness (NIL) opportunities.
             The scholarship is only one part of what a program can put together.

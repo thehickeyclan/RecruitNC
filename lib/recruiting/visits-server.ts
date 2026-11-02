@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { offerFromRow, type Offer } from "@/lib/recruiting/offers"
 import { reminderFromRow, type Reminder } from "@/lib/recruiting/reminders"
 import { visitFromRow, type Visit } from "@/lib/recruiting/visits"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -22,6 +23,17 @@ export async function loadVisits(admin: SupabaseClient, athleteIds: string[]): P
     return { available: false, visits: [] }
   }
   return { available: true, visits: (data ?? []).map((r) => visitFromRow(r as Record<string, unknown>)) }
+}
+
+/** What each college offered the family's wrestlers (scripts/add-college-offers.sql). `available` is false before the table exists. */
+export async function loadOffers(admin: SupabaseClient, athleteIds: string[]): Promise<{ available: boolean; offers: Offer[] }> {
+  if (!athleteIds.length) return { available: true, offers: [] }
+  const { data, error } = await admin.from("college_offers").select("*").in("athlete_id", athleteIds)
+  if (error) {
+    if (error.code !== TABLE_MISSING) console.error("[offers] read failed", error.message)
+    return { available: false, offers: [] }
+  }
+  return { available: true, offers: (data ?? []).map((r) => offerFromRow(r as Record<string, unknown>)) }
 }
 
 /** The family's reminders still to come, and the last week's sent ones. */

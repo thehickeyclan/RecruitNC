@@ -104,6 +104,18 @@ export const SOURCES = {
     url: "https://collegecost.ed.gov/net-price",
   },
   fafsa: { label: "Federal Student Aid (FAFSA)", url: "https://studentaid.gov/h/apply-for-aid/fafsa" },
+  // The money words (lib/recruiting/learn/money-words.ts), read 31 Oct 2026 (MONEY_CHECKED there).
+  aidDictionary: { label: "Federal Student Aid: financial aid dictionary", url: "https://studentaid.gov/articles/financial-aid-dictionary/" },
+  aidTypes: { label: "Federal Student Aid: types of financial aid", url: "https://studentaid.gov/understand-aid/types" },
+  pell: { label: "Federal Student Aid: Federal Pell Grants", url: "https://studentaid.gov/understand-aid/types/grants/pell" },
+  directLoans: { label: "Federal Student Aid: Direct Subsidized and Unsubsidized Loans", url: "https://studentaid.gov/understand-aid/types/loans/subsidized-unsubsidized" },
+  parentPlus: { label: "Federal Student Aid: Direct PLUS Loans for parents", url: "https://studentaid.gov/understand-aid/types/loans/plus/parent" },
+  workStudy: { label: "Federal Student Aid: Federal Work-Study", url: "https://studentaid.gov/understand-aid/types/work-study" },
+  saiExplained: { label: "Federal Student Aid: the Student Aid Index explained", url: "https://studentaid.gov/sites/default/files/sai-explained.pdf" },
+  fsaReport: { label: "Federal Student Aid annual report, fiscal year 2023", url: "https://studentaid.gov/sites/default/files/fy2023-fsa-annual-report.pdf" },
+  cssProfile: { label: "College Board: why complete the CSS Profile", url: "https://cssprofile.collegeboard.org/help-center/why-do-i-need-complete-css-profile" },
+  irs529: { label: "IRS: 529 plans, questions and answers", url: "https://www.irs.gov/newsroom/529-plans-questions-and-answers" },
+  investor529: { label: "Investor.gov (SEC): 529 plans", url: "https://www.investor.gov/introduction-investing/investing-basics/glossary/529-plans" },
   nwcaPortal: {
     label: "NWCA: transfer window approved by the Division I Cabinet, January 2026",
     url: "https://nwcaonline.com/news/2026/1/14/national-wrestling-coaches-association-nwca-initiative-on-transfer-portal-approved-by-ncaa-division-i-cabinet.aspx",
