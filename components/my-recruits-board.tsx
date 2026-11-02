@@ -112,6 +112,17 @@ export function MyRecruitsBoard({
       .catch(() => {})
   }, [initialData])
   const unread = [...threads.values()].filter((t) => t.unread).length
+  /**
+   * Every row and card opens the wrestler's recruiting file (app/my-recruits/[athleteId]); the
+   * profile is one tap further, from the file. A click on a control - stage, applied, star,
+   * message, log - does its own job and never navigates.
+   */
+  const fileHref = (id: string) => (asUserId ? `/my-recruits/${id}?as=${encodeURIComponent(asUserId)}` : `/my-recruits/${id}`)
+  const openFile = (e: React.MouseEvent, id: string) => {
+    if ((e.target as HTMLElement).closest("a, button, select, input, textarea, label, [role=dialog]")) return
+    if (window.getSelection()?.toString()) return
+    router.push(fileHref(id))
+  }
   const onMessage = (row: MyRecruitRow) => {
     const t = threads.get(row.athleteId)
     if (t) router.push(`/inbox/${t.id}`)
@@ -362,9 +373,9 @@ export function MyRecruitsBoard({
                   </thead>
                   <tbody className="divide-y divide-white/10">
                     {shown.map((r) => (
-                      <tr key={r.athleteId} className={cn("align-top", justLost(r) ? "bg-red-500/10 shadow-[inset_3px_0_0_#ef4444]" : "hover:bg-white/[0.03]")}>
+                      <tr key={r.athleteId} onClick={(e) => openFile(e, r.athleteId)} className={cn("cursor-pointer align-top", justLost(r) ? "bg-red-500/10 shadow-[inset_3px_0_0_#ef4444]" : "hover:bg-white/[0.03]")}>
                         <td className="px-4 py-3">
-                          <Link href={`/view-profile?id=${r.athleteId}`} className="flex items-center gap-3">
+                          <Link href={fileHref(r.athleteId)} className="flex items-center gap-3">
                             <Avatar row={r} />
                             <span className="min-w-0">
                               <span className="block font-bold text-white hover:text-[#D3B574]">
@@ -418,13 +429,13 @@ export function MyRecruitsBoard({
               {/* Phones: a card per wrestler. */}
               <ul className="mt-4 space-y-2 md:hidden">
                 {shown.map((r) => (
-                  <li key={r.athleteId} className={cn("rounded-xl border p-3", justLost(r) ? "border-red-500/60 bg-red-500/10" : "border-white/10 bg-white/[0.03]")}>
+                  <li key={r.athleteId} onClick={(e) => openFile(e, r.athleteId)} className={cn("cursor-pointer rounded-xl border p-3", justLost(r) ? "border-red-500/60 bg-red-500/10" : "border-white/10 bg-white/[0.03]")}>
                     <div className="flex items-start gap-3">
-                      <Link href={`/view-profile?id=${r.athleteId}`}>
+                      <Link href={fileHref(r.athleteId)}>
                         <Avatar row={r} />
                       </Link>
                       <div className="min-w-0 flex-1">
-                        <Link href={`/view-profile?id=${r.athleteId}`} className="font-bold text-white">
+                        <Link href={fileHref(r.athleteId)} className="font-bold text-white">
                           {r.name}
                         </Link>
                         {manyStates && r.state ? <StatePill code={r.state} /> : null}
@@ -912,7 +923,8 @@ function LastContact({ row, className }: { row: MyRecruitRow; className?: string
  * to the program's activity log; a first contact or a visit also moves the wrestler along the
  * funnel (activity-helpers.ts).
  */
-function LogActivityDialog({ row, onClose, onSaved }: { row: MyRecruitRow; onClose: () => void; onSaved: () => void }) {
+/** Also the recruiting file's "Log contact" (components/coach/recruit-file.tsx). */
+export function LogActivityDialog({ row, onClose, onSaved }: { row: Pick<MyRecruitRow, "athleteId" | "name">; onClose: () => void; onSaved: () => void }) {
   const today = new Date().toISOString().slice(0, 10)
   const [type, setType] = useState<string>("call")
   const [date, setDate] = useState(today)

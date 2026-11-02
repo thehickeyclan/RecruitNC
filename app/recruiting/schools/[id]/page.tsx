@@ -72,6 +72,7 @@ import { MAJOR_FAMILIES, type FitLine, type FitStatus } from "@/lib/recruiting/f
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { isDemoFamily } from "@/lib/recruiting/demo-family"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
+import { isCollegeCoachRole } from "@/lib/coach-auto-approve"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -241,6 +242,8 @@ export default async function SchoolPage({ params, searchParams }: Params) {
     questionnaires.map((q) => q[team === "mens" ? "womens" : "mens"]).find(Boolean) ??
     null
   const button = "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition sm:px-4 sm:py-2.5"
+  // Families: a college coach, verified or not, never sees it; an admin in coach view is hidden client-side.
+  const showInterest = Boolean(userId) && !viewer.isVerifiedCoach && !isCollegeCoachRole(viewer.role)
 
   const page = (
     <div className="mx-auto max-w-7xl text-white">
@@ -328,15 +331,24 @@ export default async function SchoolPage({ params, searchParams }: Params) {
             </div>
           </div>
         </div>
-        {familySide ? (
-          <div className="relative border-t border-white/10 px-5 py-4 sm:px-8">
-            <SchoolActions schoolId={school.id} schoolName={name} />
-          </div>
-        ) : null}
-        {/* "Tell the coaches you're interested": every family, free, when this program's coaches are here to see it (Matt, 21 Oct 2026). */}
-        {userId && onPlatform && !viewer.isVerifiedCoach ? (
-          <div className="relative border-t border-white/10 px-5 py-4 sm:px-8">
-            <InterestButton schoolId={school.id} schoolName={name} />
+        {/*
+          Save to My List and "Tell the coaches you're interested", side by side (Matt, 2 Nov 2026):
+          the interest tap is a primary button, every family, free. Where this program's coaches are
+          not on the platform it becomes the Command Center's reach-out checklist.
+          Never for a coach (components/colleges/interest-button.tsx also hides it in coach view).
+        */}
+        {familySide || showInterest ? (
+          <div className="relative flex flex-col gap-3 border-t border-white/10 px-5 py-4 sm:flex-row sm:flex-wrap sm:items-start sm:px-8">
+            {familySide ? (
+              <div className="w-full sm:w-72 [&>div]:max-w-none">
+                <SchoolActions schoolId={school.id} schoolName={name} />
+              </div>
+            ) : null}
+            {showInterest ? (
+              <div className={familySide ? "sm:mt-3" : ""}>
+                <InterestButton schoolId={school.id} schoolName={name} onPlatform={onPlatform} />
+              </div>
+            ) : null}
           </div>
         ) : null}
       </section>

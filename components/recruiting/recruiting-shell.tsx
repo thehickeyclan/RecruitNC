@@ -146,7 +146,8 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   const isActive = (link: string) => {
     const href = link.split("?")[0]!
     // Both boards are "My Recruits", whichever one this coach's link points at.
-    if (link === boardHref && ((pathname.startsWith("/my-recruits") && !pathname.startsWith("/my-recruits/needs")) || /^\/schools\/[^/]+\/portal/.test(pathname))) return true
+    // A wrestler's recruiting file (/my-recruits/<id>) is part of My Recruits; its dev preview too.
+    if (link === boardHref && ((pathname.startsWith("/my-recruits") && !pathname.startsWith("/my-recruits/needs")) || /^\/schools\/[^/]+\/portal/.test(pathname) || pathname.startsWith("/dev/coach-preview/file"))) return true
     return pathname === href || (href !== "/" && pathname.startsWith(href))
   }
   /** An admin looking at the coach interface (COACH_PREVIEW_KEY), not a coach. */
