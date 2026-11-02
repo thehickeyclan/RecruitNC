@@ -44,6 +44,8 @@ import { starterSet } from "./starter-set"
 import { NextMoves, WhatsChanged } from "@/components/portal/whats-changed"
 import { firstThreeActions } from "@/lib/recruiting/whats-changed"
 import { loadWhatsChanged } from "./whats-changed-data"
+import { CoachNeedsList, programCount } from "@/components/recruiting/coach-needs-list"
+import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: `Recruiting Command Center | ${productName()}` }
@@ -77,7 +79,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
   const journey = first ? journeyFor(cc, first.id) : null
   const researchNow = journey?.steps.find((s) => s.key === "research")?.status === "now"
 
-  const [lastCompeted, sheet, contacts, following, inbound, starter] = await Promise.all([
+  const [lastCompeted, sheet, contacts, following, inbound, starter, needs] = await Promise.all([
     // Every wrestler's last competed weight: a parent of two saw only one son's (Cheryl Shuster, 28 Oct 2026).
     athletes.length ? loadLastCompeted(admin, athletes.map((a) => a.id), new Map(athletes.map((a) => [a.id, a.classYear]))).catch(() => new Map()) : new Map(),
     blue && first ? buildInfoSheet(admin, first.id).catch(() => null) : null,
@@ -87,10 +89,12 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
     blue ? loadListInbound(admin, viewerId, athletes.map((a) => a.id)).catch(() => new Map()) : new Map(),
     // A family with nothing saved gets the starter shortlist too, at the top (the "what changed" empty state).
     (researchNow || schools.length === 0) && first ? starterSet(admin, viewerId, focus?.gender ?? null, schools.map((s) => s.id)).catch(() => []) : [],
+    // Coach-confirmed needs at this wrestler's weight and class (never fails: empty on any error).
+    first ? loadNeedsForAthlete(admin, first.id) : [],
   ])
   // What changed for you: the reason to come back each week (lib/recruiting/whats-changed.ts).
   const lastWeight = first ? Number(String((lastCompeted as Map<string, { weight?: string | number | null }>).get(first.id)?.weight ?? "").replace(/[^0-9]/g, "")) || null : null
-  const feed = first ? await loadWhatsChanged(admin, cc, first.id, lastWeight).catch(() => null) : null
+  const feed = first ? await loadWhatsChanged(admin, cc, first.id, lastWeight, needs).catch(() => null) : null
   // Today's moves: the steps across the whole list that advance it most (lib/college-programs/board-activities.ts).
   const todayET = easternToday()
   const moves = blue
@@ -246,6 +250,19 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
             </section>
           ) : null}
           {journey ? <RecruitingPath steps={journey.steps} firstName={first.firstName} /> : null}
+          {needs.length ? (
+            <section className={`${card} mt-4 p-5`} aria-labelledby="cc-needs">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 id="cc-needs" className={title}>
+                  Programs recruiting {first.firstName}&apos;s weight and class
+                </h2>
+                <span className="text-sm font-black text-white/60">{programCount(needs)}</span>
+              </div>
+              <div className="mt-2">
+                <CoachNeedsList needs={needs} />
+              </div>
+            </section>
+          ) : null}
           {starter.length && !feed?.empty ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} /> : null}
 
           {/* Coming up: visits and the family's own reminders (Matt, 28 Oct 2026). */}

@@ -14,8 +14,9 @@ import { mapSchoolIdFor } from "@/lib/college-programs/load"
 import { nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
 import { roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
 import { listTarget } from "@/lib/college-programs/roadmap"
+import type { FamilyNeed } from "@/lib/recruiting/needs-server"
 import { visitPhase } from "@/lib/recruiting/visits"
-import { buildFeed, type Feed, type FeedNeed } from "@/lib/recruiting/whats-changed"
+import { buildFeed, coachConfirmedNeeds, type Feed, type FeedNeed } from "@/lib/recruiting/whats-changed"
 import { reachStateFor } from "./journey-data"
 import type { CommandCenter } from "./load"
 
@@ -53,44 +54,16 @@ export function inferredNeeds(schools: Array<{ id: string; name: string; level: 
   return out
 }
 
-/**
- * Needs a college coach has posted (weights and class years they recruit), built in a sibling
- * session. Read only once its table exists; until then there are none and the feed shows the
- * inferred ones alone. Never throws.
- */
-export async function coachConfirmedNeeds(
-  admin: SupabaseClient,
-  schools: Array<{ id: string; name: string; level: string }>,
-  team: "mens" | "womens",
-  weight: number,
-  classYear: number,
-): Promise<FeedNeed[]> {
-  if (!schools.length) return []
-  const { data, error } = await admin.from("coach_recruiting_needs").select("*").in("school_id", schools.map((s) => s.id))
-  if (error || !data) return []
-  const near = nearestCollegeWeights(weight, team)
-  const byId = new Map(schools.map((s) => [s.id, s]))
-  return (data as Array<Record<string, unknown>>).flatMap((r) => {
-    const s = byId.get(String(r.school_id))
-    const w = Number(r.weight)
-    const years = Array.isArray(r.class_years) ? (r.class_years as unknown[]).map(Number) : r.class_year != null ? [Number(r.class_year)] : []
-    const rowTeam = r.team === "womens" || r.gender === "womens" ? "womens" : "mens"
-    if (!s || rowTeam !== team || !near.includes(w) || (years.length && !years.includes(classYear))) return []
-    return [{ schoolId: s.id, name: s.name, level: s.level, weight: w, source: "coach" as const, line: `Their coach is recruiting ${w}${years.length ? ` for the Class of ${classYear}` : ""}` }]
-  })
-}
-
-export async function loadWhatsChanged(admin: SupabaseClient, cc: CommandCenter, athleteId: string, weight: number | null, now = new Date()): Promise<Feed | null> {
+/** `needs`: loadNeedsForAthlete for this wrestler, read once by the page. */
+export async function loadWhatsChanged(admin: SupabaseClient, cc: CommandCenter, athleteId: string, weight: number | null, needs: FamilyNeed[] = [], now = new Date()): Promise<Feed | null> {
   const athlete = cc.athletes.find((a) => a.id === athleteId)
   const wrestler = cc.wrestlers.find((w) => w.id === athleteId)
   if (!athlete || !wrestler) return null
   const today = now.toISOString().slice(0, 10)
   const team: "mens" | "womens" = cc.focus?.gender ?? (athlete.gender?.toLowerCase().startsWith("f") ? "womens" : "mens")
   const listed = cc.schools.filter((s) => !s.noTeam)
-  const [threads, confirmed] = await Promise.all([
-    listThreads(admin, cc.viewerId, { athleteId }).catch(() => []),
-    weight && athlete.classYear ? coachConfirmedNeeds(admin, listed, team, weight, athlete.classYear).catch(() => []) : Promise.resolve([]),
-  ])
+  const threads = await listThreads(admin, cc.viewerId, { athleteId }).catch(() => [])
+  const confirmed = coachConfirmedNeeds(needs, listed, now)
   const inferred = weight && athlete.classYear ? inferredNeeds(listed, team, weight, athlete.classYear) : []
   const views = (cc.views.get(athleteId)?.visits ?? []).flatMap((v) => {
     if (!v.school) return []

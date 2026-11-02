@@ -14,6 +14,8 @@
  * - the next two actions are picked by the fixed order in nextTwoActions().
  */
 
+import type { FamilyNeed } from "@/lib/recruiting/needs-server"
+
 export type Level = string
 
 /** One college program's profile view. `schoolId` is null when the map has no such school. */
@@ -175,4 +177,20 @@ export function firstThreeActions(input: { firstName: string; athleteId: string;
         : { key: "map", label: "Find more colleges on the map", why: "Filter by level, state and cost.", href: "/recruiting/college-map" },
     { key: "rules", label: "Check when coaches can contact you", why: `The rules for ${name}'s class, by level.`, href: "/my-recruiting/rules" },
   ]
+}
+
+/**
+ * Needs a college coach has posted for this wrestler's weight and class (lib/recruiting/needs-server.ts:
+ * live, confirmed within 90 days, approved coaches, matched on the weight last competed), kept to
+ * the colleges on the family's list. Empty before college_recruiting_needs exists.
+ */
+export function coachConfirmedNeeds(needs: FamilyNeed[], schools: Array<{ id: string; name: string; level: string }>, now: Date): FeedNeed[] {
+  const byId = new Map(schools.map((s) => [s.id, s]))
+  const week = new Date(now.getTime() - 7 * 864e5).toISOString()
+  return needs.flatMap((n) => {
+    const s = n.mapSchoolId ? byId.get(n.mapSchoolId) : null
+    if (!s) return []
+    const what = n.postedAt >= week ? "New: their coach posted" : "Their coach is recruiting"
+    return [{ schoolId: s.id, name: s.name, level: n.division ?? s.level, weight: n.weight, source: "coach" as const, line: `${what} ${n.weight}${n.lookingFor.length ? ` · ${n.lookingFor.join(", ")}` : ""}` }]
+  })
 }
