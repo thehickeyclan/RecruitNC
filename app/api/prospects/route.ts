@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
       offset,
       state: allStates ? HOME_STATE : state,
       withStates,
+      withClaimedElsewhere: allStates && onRw,
     })
 
     /*
