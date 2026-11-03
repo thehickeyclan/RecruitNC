@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { canSeeProspectRanking, hasPortalAccess } from "@/lib/ranking-visibility"
+import { familyStateForUser, plansForState } from "@/lib/recruiting/plans-for-state"
 
 export const dynamic = "force-dynamic"
 
@@ -13,8 +14,12 @@ export const dynamic = "force-dynamic"
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ signedIn: false, insider: false, commandCenter: false, via: null })
-  const { viewer } = await resolveRankingViewer({ supabase, admin: createAdminClient() })
+  if (!user) return NextResponse.json({ signedIn: false, insider: false, commandCenter: false, via: null, plans: plansForState(null) })
+  const admin = createAdminClient()
+  const [{ viewer }, state] = await Promise.all([
+    resolveRankingViewer({ supabase, admin }),
+    familyStateForUser(admin, user.id).catch(() => null),
+  ])
   const via = viewer.isAdmin
     ? "staff"
     : viewer.isBlueMember
@@ -25,7 +30,15 @@ export async function GET() {
           ? "coach"
           : null
   return NextResponse.json(
-    { signedIn: true, email: user.email ?? null, insider: canSeeProspectRanking(viewer), commandCenter: hasPortalAccess(viewer), via },
+    {
+      signedIn: true,
+      email: user.email ?? null,
+      insider: canSeeProspectRanking(viewer),
+      commandCenter: hasPortalAccess(viewer),
+      via,
+      // What this family is sold, by the wrestler's state (lib/recruiting/plans-for-state.ts).
+      plans: plansForState(state),
+    },
     { headers: { "Cache-Control": "no-store" } },
   )
 }
