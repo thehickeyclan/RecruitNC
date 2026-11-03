@@ -128,3 +128,37 @@ describe("a or an before an association", () => {
     expect(s.map(sentenceText).join(" ")).toContain("an SCHSL state champion who competes in South Carolina")
   })
 })
+
+describe("a wrestler's state names his own championship", () => {
+  const titleRow = (event: string): SummaryRow => row(event, 2026, "1st")
+  it("does not call a Virginia champion an NCHSAA one", () => {
+    /*
+     * Virginia's rows read "Virginia 3A State Championships" and name no association, so the
+     * parsed value is null. It used to fall back to NCHSAA, which told Paden Alyea - a two-time
+     * VHSL champion from Skyline - that he had won a North Carolina title, on RecruitWrestlers.
+     */
+    const a = accoladesFrom({ stateRows: [titleRow("Virginia 3A State Championships"), row("Virginia 3A State Championships", 2025, "1st")], tournamentRows: [] })
+    expect(accoladePhrases(a, "VA")).toEqual(["two-time VHSL 3A state champion"])
+    expect(accoladePhrases(a, "NC")).toEqual(["two-time NCHSAA 3A state champion"])
+  })
+
+  it("names each state's own body", () => {
+    const a = accoladesFrom({ stateRows: [titleRow("Pennsylvania AAA State Championships")], tournamentRows: [] })
+    expect(accoladePhrases(a, "PA")[0]).toBe("PIAA state champion")
+    expect(accoladePhrases(a, "TX")[0]).toBe("UIL state champion")
+    expect(accoladePhrases(a, "MI")[0]).toBe("Michigan state champion")
+  })
+
+  it("lets an association the event named beat the state code", () => {
+    /* The event naming it is the strongest evidence there is; a disagreeing code does not win. */
+    const a = accoladesFrom({ stateRows: [titleRow("SCISA 3A State Championships")], tournamentRows: [] })
+    expect(accoladePhrases(a, "SC")[0]).toBe("SCISA 3A state champion")
+    expect(accoladePhrases(a, "NC")[0]).toBe("SCISA 3A state champion")
+  })
+
+  it("still says NCHSAA for North Carolina", () => {
+    const a = accoladesFrom({ stateRows: [titleRow("NCHSAA 4A State Championships")], tournamentRows: [] })
+    expect(accoladePhrases(a, "NC")[0]).toBe("NCHSAA 4A state champion")
+    expect(accoladePhrases(a)[0]).toBe("NCHSAA 4A state champion")
+  })
+})
