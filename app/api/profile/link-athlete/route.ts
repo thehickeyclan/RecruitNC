@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 import { claimProfile } from "@/lib/profile-claim"
+import { loadClaimAccount, relationshipForRole } from "@/lib/account-claim-role"
 
 export const dynamic = "force-dynamic"
 
@@ -44,6 +45,22 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
   const { data: me } = await admin.from("user_profiles").select("full_name").eq("user_id", user.id).maybeSingle()
+
+  /*
+   * The account's role decides, as on every other claim route (lib/account-claim-role.ts). A wrestler
+   * who owns this profile is not also its parent - Kade Mustin linked himself as his own parent here
+   * minutes after claiming (3 Nov 2026) - and a wrestler's account links no one as a parent.
+   */
+  const { data: target } = await admin.from("athletes").select("claimed_by_user_id").eq("id", athleteId).maybeSingle()
+  if (String(target?.claimed_by_user_id ?? "") === user.id) {
+    return NextResponse.json({ success: true, athleteId, already: true, message: "This profile is already yours." })
+  }
+  if (relationshipForRole(await loadClaimAccount(admin, user.id), "parent") === "self") {
+    return NextResponse.json(
+      { error: "This is a wrestler's account. A parent links from their own account." },
+      { status: 400 },
+    )
+  }
   const typed = String(body.signedName ?? "").trim()
   const accountName = String(me?.full_name ?? "").trim()
   const signedName = typed || accountName
