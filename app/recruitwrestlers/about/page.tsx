@@ -52,11 +52,11 @@ export default async function AboutRecruitWrestlers() {
     <main className="min-h-screen bg-[#0B1426] text-white">
       <section className="border-b border-white/10 bg-gradient-to-br from-[#15243B] via-[#11203A] to-[#0B1426] px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-4xl">
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-[#A3E635]">About</p>
-          <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">Recruiting, out of the dark.</h1>
+          <p className="text-xs font-black uppercase tracking-[0.3em] text-[#A3E635]">About · Recruiting, out of the dark</p>
+          <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">One platform for families and coaches.</h1>
           <p className="mt-5 max-w-3xl text-lg text-[#A8B3C5]">
-            We&apos;re changing how high school wrestlers get recruited: one platform where families and the college coaches
-            recruiting them finally meet.
+            We&apos;re changing how high school wrestlers get recruited: the families planning the path and the college coaches
+            recruiting them, finally in the same place.
           </p>
         </div>
       </section>
