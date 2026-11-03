@@ -111,10 +111,17 @@ interface ProfileFormData {
 export function CreateProfileForm({
   accountEmail,
   initialName = "",
+  forParent = false,
 }: {
   accountEmail: string
   /** Carried from the search step, so nobody types their name twice. */
   initialName?: string
+  /**
+   * A parent building their wrestler's profile. The form spoke only to the wrestler ("Create your
+   * athlete profile", "your number"), and both parents who reached it from RecruitWrestlers in the
+   * first week of November left without submitting (Matt, 3 Nov 2026).
+   */
+  forParent?: boolean
 }) {
   const [initialFirst, ...initialRest] = initialName.trim().split(/\s+/).filter(Boolean)
   const router = useRouter()
@@ -196,6 +203,8 @@ export function CreateProfileForm({
       ...formData,
       academicInterest: resolveAcademicMajor(formData.academicMajor, formData.academicMajorOther),
       forceCreate: force ? true : undefined,
+      // Without this the API took every creator as the wrestler: a parent became claimed_by, never a linked parent.
+      relationship: forParent ? "parent" : "self",
     }
     if (Number.isFinite(prospectRanking)) payload.prospect_ranking = prospectRanking
     return payload
@@ -360,11 +369,20 @@ export function CreateProfileForm({
         <header className="border-b border-rnc-line bg-rnc-raised">
           <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-12">
             <h1 className="text-4xl font-black leading-[1.05] sm:text-5xl">
-              Create your <span className="text-rnc-gold">athlete profile</span>
+              {forParent ? (
+                <>
+                  Create your <span className="text-rnc-gold">wrestler&apos;s profile</span>
+                </>
+              ) : (
+                <>
+                  Create your <span className="text-rnc-gold">athlete profile</span>
+                </>
+              )}
             </h1>
             <p className="mt-3 max-w-xl leading-7 text-white/65">
-              College coaches search RecruitWrestlers by class, weight, GPA and test scores. The more of this you fill in, the
-              more searches you turn up in.
+              {forParent
+                ? "The basics and it's live. Everything else can be added later from the profile."
+                : "The basics and it's live. Everything else can be added later from your profile."}
             </p>
           </div>
         </header>
@@ -507,7 +525,11 @@ export function CreateProfileForm({
             <Section
               title="Contact"
               icon={<Phone className="h-3.5 w-3.5" />}
-              note="Your number is how college coaches reach you. It is never shown publicly — only verified coaches and RecruitWrestlers staff can see it."
+              note={
+                forParent
+                  ? "Yours or your wrestler's: it is how college coaches reach the family. Never shown publicly — only verified coaches and staff can see it. Optional now."
+                  : "Your number is how college coaches reach you. It is never shown publicly — only verified coaches and RecruitWrestlers staff can see it."
+              }
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -519,7 +541,7 @@ export function CreateProfileForm({
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-white/80">
-                    Cell number *
+                    {forParent ? "Cell number" : "Cell number *"}
                   </Label>
                   <Input
                     id="phone"
@@ -528,12 +550,21 @@ export function CreateProfileForm({
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
                     placeholder="(555) 123-4567"
-                    required
+                    required={!forParent}
                   />
                 </div>
               </div>
             </Section>
 
+            {/*
+              The optional half of the form, folded away: seventeen fields on one page read as a chore,
+              and every one of these is editable from the profile once it is live.
+            */}
+            <details className="group rounded-sm border border-rnc-line bg-rnc-surface/40">
+              <summary className="cursor-pointer list-none px-5 py-4 text-sm font-bold text-rnc-gold">
+                Add academics, video and bio now <span className="font-normal text-white/50">(optional)</span>
+              </summary>
+              <div className="space-y-4 p-4 pt-0">
             <Section
               title="Academics"
               icon={<GraduationCap className="h-3.5 w-3.5" />}
@@ -683,6 +714,8 @@ export function CreateProfileForm({
                 />
               </div>
             </Section>
+              </div>
+            </details>
 
             <div className="rounded-sm border border-rnc-gold/25 bg-rnc-gold/5 p-5">
               <h3 className="text-sm font-bold text-rnc-gold">What happens next</h3>
