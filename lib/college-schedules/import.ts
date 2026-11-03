@@ -51,6 +51,8 @@ export function toScheduleRow(
   collegeId: string,
   season: string,
 ): Record<string, unknown> {
+  // Only a dual has a score anyone can read as a result; a tournament's "30" is a team total.
+  const result = event.opponent && event.outcome ? event : null
   return {
     college_id: collegeId,
     season,
@@ -67,8 +69,18 @@ export function toScheduleRow(
     // The broadcaster is not its own column; it belongs with the note a reader sees.
     notes: event.tv ? `TV: ${event.tv}` : null,
     status: event.status,
+    outcome: result?.outcome ?? null,
+    team_score: result?.teamScore ?? null,
+    opponent_score: result?.opponentScore ?? null,
     updated_at: new Date().toISOString(),
   }
+}
+
+const RESULT_COLUMNS = ["outcome", "team_score", "opponent_score"] as const
+
+/** PostgREST's answer when a column in the insert is not in the table (or its schema cache). */
+export function isMissingResultColumn(message: string): boolean {
+  return RESULT_COLUMNS.some((column) => message.includes(`'${column}'`) || message.includes(`"${column}"`))
 }
 
 async function fetchSchedule(url: string, season: string): Promise<{ html: string } | { error: string }> {
@@ -111,7 +123,20 @@ async function writeSeason(
 
   if (!rows.length) return null
   const { error } = await admin.from("college_schedules").insert(rows)
-  return error ? error.message : null
+  if (!error) return null
+
+  // The result columns are added by hand-run SQL. Until that lands, write the schedule without
+  // them rather than leave a school's calendar empty — the season was cleared a moment ago.
+  if (isMissingResultColumn(error.message)) {
+    const withoutResults = rows.map((row) => {
+      const copy = { ...row }
+      for (const column of RESULT_COLUMNS) delete copy[column]
+      return copy
+    })
+    const { error: retryError } = await admin.from("college_schedules").insert(withoutResults)
+    return retryError ? retryError.message : null
+  }
+  return error.message
 }
 
 export async function importCollegeSchedules({

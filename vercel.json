@@ -20,7 +20,7 @@
     },
     {
       "path": "/api/cron/college-schedules",
-      "schedule": "0 9 * * *"
+      "schedule": "0 3,9 * * *"
     },
     {
       "path": "/api/cron/college-alerts",
