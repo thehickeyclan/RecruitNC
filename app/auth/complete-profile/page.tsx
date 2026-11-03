@@ -140,8 +140,7 @@ function CompleteProfileForm() {
                   <SelectItem value="parent">Parent of a wrestler</SelectItem>
                   {eduEmail ? null : <SelectItem value="college-coach">College Coach</SelectItem>}
                   <SelectItem value="hs-club-coach">High School/Club Coach</SelectItem>
-                  <SelectItem value="referee">Referee</SelectItem>
-                  <SelectItem value="fan">Just following (no wrestler in the family)</SelectItem>
+                  <SelectItem value="fan">Fan</SelectItem>
                 </SelectContent>
               </Select>
               {eduEmail && profileType === "college-coach" ? (
