@@ -53,12 +53,27 @@ const arg = (n: string, d?: string) => {
 /*
  * An unknown flag stops the run rather than being ignored.
  *
- * Several state imports were invoked with `--link-only`, which this script has never had. It was
+ * Several state imports were invoked with `--link-only`, which this script did not have. It was
  * silently dropped and the run did something subtly different from what the command said - it
  * minted as well as linked. The behaviour was the right one, so nothing was damaged, but a flag
- * that does nothing and says nothing is how a real mistake gets made on the run after.
+ * that does nothing and says nothing is how a real mistake gets made on the run after. It now
+ * means what it says (below), so a recorded command that carries it links without minting.
+ *
+ * The guard itself had the opposite hole: this list was never extended when --include-qualifiers
+ * and --max-place were added, so the two flags in this script's own usage line - and the one in
+ * the standing instruction for minting a state - threw `unknown flag` instead of running. Anything
+ * read from argv belongs here.
  */
-const KNOWN_FLAGS = new Set(["--write", "--include-graduated", "--only-with-class-year", "--state", "--season"])
+const KNOWN_FLAGS = new Set([
+  "--write",
+  "--include-graduated",
+  "--only-with-class-year",
+  "--include-qualifiers",
+  "--link-only",
+  "--state",
+  "--season",
+  "--max-place",
+])
 for (let i = 0; i < process.argv.length; i += 1) {
   const a = process.argv[i]!
   if (!a.startsWith("--")) continue
@@ -77,6 +92,19 @@ const INCLUDE_GRADUATED = process.argv.includes("--include-graduated")
  * year (the profile rule: never mint without one), so this flag also turns on --only-with-class-year.
  */
 const INCLUDE_QUALIFIERS = process.argv.includes("--include-qualifiers")
+/**
+ * Attach this season's placements to profiles that already exist, and create nothing.
+ *
+ * A state is minted from the last two seasons, because a wrestler whose last podium finish is two
+ * years old is either graduated or no longer the recruit the file describes. But the earlier
+ * seasons still belong to the wrestlers who ARE minted: 67 of Arkansas's class-2027 placers had a
+ * 2024 podium finish that reached no profile, because the 2024 pass was never run - and running it
+ * the ordinary way would have minted 22 wrestlers whose only placement is that old season.
+ *
+ * Opponent detail is the product, so an unattached placement is a hole in it. This is how a state's
+ * back seasons are swept in after the mint: --season 2024 --link-only.
+ */
+const LINK_ONLY = process.argv.includes("--link-only")
 const ONLY_KNOWN = process.argv.includes("--only-with-class-year") || INCLUDE_QUALIFIERS
 const STATE = normalizeState(arg("state"))
 const SEASON = Number(arg("season", "2026"))
@@ -278,7 +306,7 @@ async function main() {
 
   console.log(`   distinct wrestlers                        : ${groups.size}`)
   console.log(`   already have a profile, to LINK           : ${toLink.length}`)
-  console.log(`   need a profile created                    : ${toCreate.length}`)
+  console.log(`   need a profile created                    : ${toCreate.length}${LINK_ONLY ? " (--link-only: not created)" : ""}`)
   console.log(`      of those, class year known             : ${toCreate.filter((c) => c.row.graduationyear).length}`)
   if (ONLY_KNOWN) console.log(`   no class year, held (--only-with-class-year): ${heldNoYear.length}`)
   console.log(`   graduated, skipped${INCLUDE_GRADUATED ? " (OVERRIDDEN)" : "                      "}: ${graduated.length}`)
@@ -303,6 +331,10 @@ async function main() {
 
   let made = 0
   let attached = 0
+  if (LINK_ONLY) {
+    console.log(`--link-only: ${toCreate.length} profile(s) NOT created`)
+    return
+  }
   for (const c of toCreate) {
     const { data, error } = await sb.from("athletes").insert(c.row).select("id").single()
     if (error || !data) {

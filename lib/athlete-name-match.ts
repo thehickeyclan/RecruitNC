@@ -384,7 +384,52 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
    * rule is deliberately loose and does not need to be looser.
    */
   if (x.replace(/ /g, "") === y.replace(/ /g, "")) return true
+  /*
+   * A sibling school is NOT its parent town's school. Arkansas runs Bentonville and Bentonville
+   * West in the same 6A bracket, Springdale and Springdale Har-Ber, Southside and Southside
+   * Batesville; Oklahoma runs Moore, Southmoore and Westmoore. The substring test below folds
+   * every one of those pairs, because the shorter name sits inside the longer - so two different
+   * schools read as one, and two different wrestlers of the same name would merge into one profile.
+   *
+   * Checked before the fold rather than after: where the ONLY difference is a trailing compass
+   * word, that word is the school, not a spelling of it. Deliberately narrow. "Fort Smith
+   * Northside" against "Northside" still folds, because the extra words are a town and not a
+   * direction, and that is the far more common shape - the loose substring rule below is carrying
+   * sixteen of Arkansas's nineteen real school-form pairs and must not be tightened past this.
+   */
+  const COMPASS = new Set(["north", "south", "east", "west"])
+  const trailingCompassApart = (p: string, q: string) => {
+    const ps = p.split(" ").filter(Boolean)
+    const qs = q.split(" ").filter(Boolean)
+    const [shortSide, longSide] = ps.length < qs.length ? [ps, qs] : [qs, ps]
+    if (longSide.length !== shortSide.length + 1) return false
+    if (!COMPASS.has(longSide[longSide.length - 1]!)) return false
+    return shortSide.every((w, i) => w === longSide[i])
+  }
+  /*
+   * The same thing written closed up, which is how Oklahoma prints it: Moore, Westmoore and
+   * Southmoore are three schools in one district, and "westmoore" simply contains "moore". The
+   * equality test above has already run, so "North East" against "Northeast" - one school spelled
+   * two ways - is folded before this can refuse it.
+   */
+  const joinedCompassApart = (p: string, q: string) => {
+    const [shortSide, longSide] = p.length < q.length ? [p, q] : [q, p]
+    if (shortSide.includes(" ") || longSide.includes(" ")) return false
+    return [...COMPASS].some((c) => longSide === c + shortSide)
+  }
+  if (trailingCompassApart(x, y) || joinedCompassApart(x, y)) return false
   if (x.includes(y) || y.includes(x)) return true
+  /*
+   * An initialism the source printed instead of the name: Arkansas writes "CAC" in its 2026 field
+   * for the Central Arkansas Christian it spells out in 2024 and 2025, and a state champion's two
+   * earlier titles reached no profile because of it. The letters must spell the other name's word
+   * initials exactly and in order, and three letters are required - a two-letter initialism is too
+   * easy to collide with - so the only thing forgiven is the abbreviation itself.
+   */
+  const initialsOf = (v: string) => v.split(" ").filter(Boolean).map((w) => w[0]).join("")
+  const acronymOf = (one: string, other: string) =>
+    !one.includes(" ") && one.length >= 3 && other.includes(" ") && initialsOf(other) === one
+  if (acronymOf(x, y) || acronymOf(y, x)) return true
   /*
    * Word order is not a school either. Michigan's MHSAA print names the school then the town in
    * brackets - "Huron HS (New Boston)", "Adams HS (Rochester)", "John Glenn HS (Bay City)" - where

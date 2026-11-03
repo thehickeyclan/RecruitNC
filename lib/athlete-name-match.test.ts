@@ -338,3 +338,69 @@ describe("an apostrophe is not part of a school name either", () => {
     expect(schoolsLikelySame("St. John's", "St. Joseph's Prep")).toBe(false)
   })
 })
+
+describe("a sibling school is not its town's school", () => {
+  it("keeps a trailing compass sibling apart", () => {
+    /* Arkansas runs both in the same 6A bracket; the substring rule folded them. */
+    expect(schoolsLikelySame("Bentonville", "Bentonville West")).toBe(false)
+    expect(schoolsLikelySame("BENTONVILLE HIGH SCHOOL", "Bentonville West High School")).toBe(false)
+    expect(schoolsLikelySame("Norman High School", "Norman North")).toBe(false)
+  })
+
+  it("keeps a compass sibling apart when it is written closed up", () => {
+    /* Oklahoma's Moore district: three schools, and "westmoore" simply contains "moore". */
+    expect(schoolsLikelySame("Moore", "Westmoore")).toBe(false)
+    expect(schoolsLikelySame("Moore", "Southmoore High School")).toBe(false)
+  })
+
+  it("still folds the far commoner shape, where the extra words are a town", () => {
+    expect(schoolsLikelySame("Fort Smith Northside", "Northside")).toBe(true)
+    expect(schoolsLikelySame("Heritage", "Rogers Heritage High School")).toBe(true)
+    expect(schoolsLikelySame("Central", "Little Rock Central High School")).toBe(true)
+  })
+
+  it("one school spelled open and closed up is still one school", () => {
+    expect(schoolsLikelySame("North East", "Northeast")).toBe(true)
+  })
+
+  /*
+   * The boundary, recorded rather than implied. A sibling distinguished by anything OTHER than a
+   * compass word is still folded: Springdale against Springdale Har-Ber, Southside against
+   * Southside Batesville. Tightening that would need the substring rule to go, and it is carrying
+   * sixteen of Arkansas's nineteen real school-form pairs. No wrestler in Arkansas or Oklahoma
+   * appears at both halves of such a pair, so nothing merges wrongly today; the next state that
+   * does will need evidence, not a looser string rule.
+   */
+  it("documents the siblings it still folds", () => {
+    expect(schoolsLikelySame("Springdale", "Springdale Har-Ber")).toBe(true)
+    expect(schoolsLikelySame("Southside", "Southside Batesville")).toBe(true)
+  })
+})
+
+describe("an initialism the source printed instead of the name", () => {
+  it("folds CAC into Central Arkansas Christian", () => {
+    expect(schoolsLikelySame("CAC", "Central Arkansas Christian")).toBe(true)
+    expect(schoolsLikelySame("CAC", "Central Arkansas Christian School")).toBe(true)
+  })
+
+  it("needs three letters, so a two-letter collision is refused", () => {
+    expect(schoolsLikelySame("LR", "Little Rock")).toBe(false)
+  })
+
+  it("needs the initials to spell it exactly, in order", () => {
+    expect(schoolsLikelySame("PAC", "Central Arkansas Christian")).toBe(false)
+    expect(schoolsLikelySame("CAC", "Central Christian Arkansas")).toBe(false)
+    expect(schoolsLikelySame("CACS", "Central Arkansas Christian")).toBe(false)
+  })
+
+  /*
+   * The limit of the rule: any other school whose words begin with the same three letters folds
+   * too, so the initials alone do not identify a school. The wrestler's NAME still has to match
+   * before anything merges, which is what makes this safe in practice rather than in principle -
+   * two same-named wrestlers at two same-initialled schools in one state is the case it would get
+   * wrong, and no state we hold has one.
+   */
+  it("cannot tell two schools with the same initials apart", () => {
+    expect(schoolsLikelySame("CAC", "Cabot Area Comprehensive High School")).toBe(true)
+  })
+})
