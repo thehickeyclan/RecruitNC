@@ -91,6 +91,17 @@ export const RECRUITING_BRAND = {
      * state running in a row whose podium is not the assumed six.
      */
     { code: "OK", name: "Oklahoma", live: false },
+    /*
+     * Iowa clears the placer bar at 1,108 of 1,109 keys (99.9%), with one named unresolved
+     * champion - Koy Davidson, whose Flo print reads 'HS Senior' in two different years and whom
+     * RankWrestlers does not hold at all.
+     *
+     * It is the first state with a separate girls championship body: IHSAA for the boys, IGHSAU
+     * for the girls (lib/athlete-state.ts). Girls ran a single class in 2024 and split into 1A/2A
+     * for 2025, so their 2024 placements carry the classification "Girls". Top 8 in all 196
+     * brackets, and every figure lands exactly on the scoping ceiling in all three years.
+     */
+    { code: "IA", name: "Iowa", live: false },
   ],
 } as const
 

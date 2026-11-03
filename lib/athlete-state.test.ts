@@ -6,6 +6,7 @@ import {
   isHomeState,
   normalizeState,
   invitationalName,
+  isIndependentChampionship,
   stateChampionshipName,
   stateName,
 } from "@/lib/athlete-state"
@@ -157,5 +158,34 @@ describe("states with more than one association, and events that are not champio
     expect(invitationalName("WV", "Girls Invitational")).toBe("WV Girls State Invitational")
     expect(invitationalName("WV", "AAA")).toBeNull()
     expect(invitationalName("NC", "Girls Invitational")).toBeNull()
+  })
+})
+
+describe("a state with a separate girls championship body", () => {
+  it("names the girls' own association, not the boys'", () => {
+    /*
+     * Iowa's boys wrestle the IHSAA and its girls the IGHSAU. Reading the boys' body off the state
+     * would hand every Iowa girls champion a title her association does not award - the same fault
+     * PAISWT exposed in Pennsylvania.
+     */
+    expect(stateChampionshipName("IA", "1A", "IHSAA")).toBe("IHSAA")
+    expect(stateChampionshipName("IA", "1A", "IGHSAU")).toBe("IGHSAU")
+    /* Girls ran a single class in 2024, so those rows carry the classification "Girls". */
+    expect(stateChampionshipName("IA", "Girls", "IGHSAU")).toBe("IGHSAU")
+  })
+
+  it("falls back to the boys' body only where the row names none", () => {
+    expect(stateChampionshipName("IA", "1A")).toBe("IHSAA")
+  })
+
+  it("does not treat the girls' body as an independent one", () => {
+    /*
+     * `isIndependentChampionship` excuses 7th and 8th grade placements, because independent
+     * schools roster middle-schoolers and public ones do not. Putting the IGHSAU in that list
+     * would have named it correctly above and switched the namesake check off for every Iowa girl.
+     */
+    expect(isIndependentChampionship("IA", "IGHSAU")).toBe(false)
+    expect(isIndependentChampionship("IA", "IHSAA")).toBe(false)
+    expect(isIndependentChampionship("PA", "PAISWT")).toBe(true)
   })
 })

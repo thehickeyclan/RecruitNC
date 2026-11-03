@@ -9,14 +9,9 @@ together, linked and unlinked, with both tests that settled Tripp Price computed
 at two schools, or class years DISAGREEING across the rows. Either one firing means two people;
 neither firing is the benign shape, not a verdict.
 
-19 unlinked placement(s) across AR, VA, SC. Nothing here has been linked or merged.
+15 unlinked placement(s) across AR, VA, SC. Nothing here has been linked or merged.
 
-## AR — 2 wrestler(s), 2 unlinked placement(s)
-
-### Noah Madrid — profile Jacksonville, class of 2027 · 6b8c1d94-7a94-4ffd-a3f3-0bc9c692cf25
-  - 2025 Vilonia · 5A 132 #5 · class 2027 · UNLINKED
-  - 2026 Jacksonville · 5A 138 #5 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 132, 138 (spread 6 lb)
+## AR — 1 wrestler(s), 1 unlinked placement(s)
 
 ### Cameron Moats — profile CAC, class of 2028 · 04090f12-7baf-4b3c-b6a1-7b875fb4da10
   - 2025 Pottsville · 1A-4A 132 #1 · class 2028 · UNLINKED
@@ -24,13 +19,7 @@ neither firing is the benign shape, not a verdict.
   verdict inputs: concurrent seasons none · class years agree (2028) · weights 132, 157 (spread 25 lb)
 
 
-## VA — 12 wrestler(s), 14 unlinked placement(s)
-
-### Royce Wetzler — profile Benedictine College Preparatory, class of 2027 · f3d4a5a4-0b81-45a3-b569-7abed42c3397
-  - 2024 Cosby · 6A 106 #2 · class 2027 · UNLINKED
-  - 2025 Benedictine College Preparatory · VISAA 106 #1 · class 2027 · LINKED
-  - 2026 Benedictine College Preparatory · VISAA 113 #1 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 106, 113 (spread 7 lb)
+## VA — 9 wrestler(s), 11 unlinked placement(s)
 
 ### Colton McGuire — profile Staunton River, class of 2027 · 7a05300c-c647-4771-8de5-134cd51d5e1d
   - 2024 Franklin County · 5A 175 #6 · class 2027 · UNLINKED
@@ -63,16 +52,6 @@ neither firing is the benign shape, not a verdict.
   - 2024 Mountain View · Girls 107 #1 · class 2027 · UNLINKED
   - 2025 Mountainview · Girls 107 #1 · class 2027 · LINKED
   verdict inputs: concurrent seasons none · class years agree (2027) · weights 107
-
-### Sean Boyd — profile Cosby, class of 2027 · b4d6f2fd-fe38-4703-9b7d-aa49db312388
-  - 2025 Cosby · 6A 285 #3 · class 2027 · LINKED
-  - 2026 Benedictine College Preparatory · VISAA 285 #1 · class 2027 · UNLINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 285
-
-### Elliott Crews — profile Liberty Christian, class of 2028 · 20af7c67-d5a3-4970-bded-56c64ccb7b0f
-  - 2025 Liberty Christian Academy · 3A 144 #2 · class 2028 · LINKED
-  - 2026 Benedictine College Preparatory · VISAA 150 #1 · class 2028 · UNLINKED
-  verdict inputs: concurrent seasons none · class years agree (2028) · weights 144, 150 (spread 6 lb)
 
 ### Nathan Taylor — profile Eastern View, class of 2029 · e00a8554-964a-40c5-b63f-9c36351b7a91
   - 2025 Hopewell · 3A 126 #6 · class 2029 · UNLINKED

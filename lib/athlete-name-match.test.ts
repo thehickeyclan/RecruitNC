@@ -450,3 +450,31 @@ describe("Oklahoma rotates its school strings every year", () => {
     expect(schoolsLikelySame("SOUTHMOORE", "Southmoore-Girls")).toBe(true)
   })
 })
+
+describe('Iowa prints some schools as "School, City"', () => {
+  it("folds the city-suffixed form onto the school's other name", () => {
+    /* Eve Skrocki and Jillian Worthen would each have been minted twice. */
+    expect(schoolsLikelySame("Wahlert, Dubuque", "Wahlert Catholic")).toBe(true)
+    expect(schoolsLikelySame("Union, LaPorte City", "Union Community")).toBe(true)
+  })
+
+  it("is additive, so it never breaks a fold that worked on the full strings", () => {
+    /*
+     * Greta Brus's 2024 row is the bare string "Davenport" against her "Assumption, Davenport"
+     * key. Dropping the city would pit "Assumption" against "Davenport" and lose her; tried as an
+     * extra form instead, the full-string fold still carries her.
+     */
+    expect(schoolsLikelySame("Assumption, Davenport", "Davenport")).toBe(true)
+  })
+
+  it("still keeps two different schools apart when both carry a city", () => {
+    expect(schoolsLikelySame("Assumption, Davenport", "Wahlert, Dubuque")).toBe(false)
+    expect(schoolsLikelySame("Union, LaPorte City", "Wahlert Catholic")).toBe(false)
+  })
+
+  it("keeps Iowa's proven namesakes apart", () => {
+    /* Ben Walsh of Sergeant Bluff-Luton and Benjamin Walsh of Ankeny placed in the SAME
+       tournaments in consecutive years - two wrestlers who both resolve to the class of 2026. */
+    expect(schoolsLikelySame("Sergeant Bluff-Luton", "Ankeny")).toBe(false)
+  })
+})

@@ -319,6 +319,39 @@ export function rowNameMatchesAthleteContext(rowName: string, context: AthleteMa
  */
 export function schoolsLikelySame(a?: string | null, b?: string | null): boolean {
   /*
+   * "School, City" is one of the forms Iowa prints, and the city is not part of the name: the same
+   * school arrives as "Wahlert, Dubuque" one year and "Wahlert Catholic" the next, "Union, LaPorte
+   * City" and then "Union Community". Neither pair shares enough to fold, so Eve Skrocki and
+   * Jillian Worthen would each have been minted twice.
+   *
+   * Tried as an ADDITIONAL form, never a replacement, so this can only ever create a fold and
+   * never remove one. That matters for the opposite case in the same state: Greta Brus's 2024 row
+   * is the bare string "Davenport" against her "Assumption, Davenport" key, which still folds on
+   * the full strings - and bare "Davenport" is genuinely ambiguous there (Davenport Central, North
+   * and West all exist, and another wrestler carries "Davenport" alone), which is why dropping the
+   * city is offered here rather than imposed.
+   */
+  const beforeComma = (v?: string | null) => {
+    const raw = String(v ?? "")
+    const i = raw.indexOf(",")
+    return i > 0 ? raw.slice(0, i).trim() : ""
+  }
+  const ca = beforeComma(a)
+  const cb = beforeComma(b)
+  if (ca || cb) {
+    const fullA = String(a ?? "").trim()
+    const fullB = String(b ?? "").trim()
+    for (const [x, y] of [
+      [ca, fullB],
+      [fullA, cb],
+      [ca, cb],
+    ] as Array<[string, string]>) {
+      if (!x || !y) continue
+      if (x === fullA && y === fullB) continue
+      if (schoolsLikelySame(x, y)) return true
+    }
+  }
+  /*
    * Punctuation is not a school. One tournament writes "Corinth-Holders" and the next "Corinth
    * Holders"; "R.J. Reynolds" and "R J Reynolds" are one place, as are "Rutherfordton-Spindale
    * Central" and its unhyphenated spelling. Folding every non-letter to a space settles all of

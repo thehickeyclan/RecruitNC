@@ -100,7 +100,17 @@ export function isHomeState(state: string | null | undefined): boolean {
  * West Virginia has none: the WVSSAC has included private schools in its own brackets since
  * 1979, so there is no separate championship to name.
  */
-const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> = {
+/*
+ * `girls` is a SECOND PUBLIC championship, for the states that run one. Iowa's girls wrestle the
+ * IGHSAU and its boys the IHSAA - two public bodies, not a public one and a private one.
+ *
+ * It is deliberately not folded into `independent`, although that list would have made
+ * `stateChampionshipName` return the right name. `isIndependentChampionship` reads `independent`
+ * to decide whether a 7th or 8th grade placement is legitimate, because independent schools roster
+ * middle-schoolers and public ones do not - so calling the IGHSAU independent would have switched
+ * off that namesake check for every girl in the state.
+ */
+const ASSOCIATIONS: Record<string, { public: string; girls?: string; independent?: string[] }> = {
   NC: { public: "NCHSAA", independent: ["NCISA"] },
   SC: { public: "SCHSL", independent: ["SCISA"] },
   VA: { public: "VHSL", independent: ["VISAA"] },
@@ -153,6 +163,11 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
    * wrestle its brackets, so there is no independent championship to name.
    */
   OK: { public: "OSSAA" },
+  /*
+   * Iowa is the first state with a separate girls championship body. Its private schools compete
+   * inside both associations, so there is no independent layer to name.
+   */
+  IA: { public: "IHSAA", girls: "IGHSAU" },
 }
 
 /**
@@ -219,7 +234,8 @@ export function stateChampionshipName(
    * not eligible for.
    */
   const stated = String(association ?? "").trim()
-  if (stated && assoc?.independent?.some((name) => name.toLowerCase() === stated.toLowerCase())) return stated
+  const named = [assoc?.girls, ...(assoc?.independent ?? [])].filter(Boolean) as string[]
+  if (stated && named.some((name) => name.toLowerCase() === stated.toLowerCase())) return stated
   const own = assoc?.independent?.find((name) => new RegExp(`^${name}`, "i").test(cls.trim()))
   if (own) return own
   return assoc?.public ?? (stateName(code) || code)
