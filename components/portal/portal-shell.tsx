@@ -4,6 +4,8 @@ import Link from "next/link"
 import { unreadCount } from "@/lib/coach-messages"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { Activity, BookOpen, CalendarDays, ClipboardList, Compass, GraduationCap, LayoutDashboard, Map as MapIcon, MessageSquare, Scale, Send, Sparkles } from "lucide-react"
 
 /**
@@ -68,7 +70,7 @@ export async function PortalShell({ active, children }: { active: PortalSection;
     key === "messages" && unread > 0 ? <span className="ml-auto rounded-full bg-[#D3B574] px-1.5 text-[10px] font-black text-[#0A1628]">{unread}</span> : null
   return (
     <div className="min-h-screen bg-[#0A1628] text-white">
-      <nav aria-label="Command Center" className="sticky top-0 z-30 border-b border-white/10 bg-[#0A1628]/95 backdrop-blur lg:hidden">
+      <nav aria-label="Command Center" className="sticky top-0 z-30 border-b border-white/10 bg-[#0A1628]/95 backdrop-blur md:hidden">
         <ul className="flex gap-1 overflow-x-auto px-3 py-2">
           {ITEMS.map(({ key, label, href, icon: Icon }) => (
             <li key={key} className="shrink-0">
@@ -85,7 +87,7 @@ export async function PortalShell({ active, children }: { active: PortalSection;
         </ul>
       </nav>
       <div className="mx-auto flex max-w-7xl">
-        <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 px-3 py-6 lg:flex">
+        <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 px-3 py-6 md:flex">
           <p className="px-3 text-[11px] font-black uppercase tracking-widest text-[#D3B574]">Recruiting Portal</p>
           <div className="mt-4 space-y-3 overflow-y-auto">
             {GROUPS.map((g) => {
@@ -139,4 +141,17 @@ function StepNumber({ n, active = false }: { n: number; active?: boolean }) {
       {n}
     </span>
   )
+}
+
+/**
+ * A page the Command Center links to that also serves the public and college coaches (the college
+ * map, Learn, announcing a commitment): inside the menu for a family with the Command Center, as
+ * itself for everyone else (Matt, 3 Nov 2026: "no matter what i click on i should always have side
+ * menu"). A coach reads these pages, but never inside the family's Command Center.
+ */
+export async function FamilyPortalFrame({ active, children }: { active: PortalSection; children: React.ReactNode }) {
+  const family = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient() })
+    .then(({ viewer }) => hasPortalAccess(viewer))
+    .catch(() => false)
+  return family ? <PortalShell active={active}>{children}</PortalShell> : <>{children}</>
 }
