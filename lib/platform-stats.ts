@@ -4,18 +4,26 @@
  *
  * Counted, never typed. A coach is a non-admin profile whose role is college coach
  * (lib/viewer-role.ts), less our own test accounts and the App Store review login, which would
- * otherwise each be "a coach" and "a program". A program is the coach's linked school, or the
- * institution they typed when no school is linked yet, so "UNC Pembroke" and "UNC-Pembroke" on two
- * linked coaches count once. Views are profile_view events by those coaches, all time.
+ * otherwise each be "a coach" and "a program". Views are profile_view events by those coaches,
+ * all time.
+ *
+ * A program is a dot on the college map with an approved coach on it — the same set the map's
+ * "On RecruitWrestlers" filter counts (lib/college-programs/load.ts). It used to be the coach's
+ * linked school or whatever institution they had typed, which counted two more than the map did:
+ * the /command-center page said 86 programs a few hundred pixels above a filter reading 84
+ * (Matt's review, 3 Nov 2026). The map's number is the one a family can click and check, so it
+ * wins, and every surface reads it from here.
  *
  * Cached for an hour in memory: these move by a handful a day, and the page is public.
  */
 import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { schoolsWithApprovedCoaches } from "@/lib/college-programs/load"
 import { classifyViewer } from "@/lib/viewer-role"
 
 export type PlatformStats = {
   coaches: number
+  /** College map programs with an approved coach: the map's own "On RecruitWrestlers" count. */
   programs: number
   /** Every profile view by a college coach, all time. */
   coachViews: number
@@ -51,11 +59,10 @@ export async function loadPlatformStats(admin: SupabaseClient): Promise<Platform
       !NOT_A_COACH_EMAIL.test(String(p.email ?? "")) &&
       !NOT_A_PROGRAM.test(String(p.institution ?? "").trim()),
   )
-  const programs = new Set<string>()
-  for (const c of coaches) {
-    const key = c.school_id ? `school:${c.school_id}` : String(c.institution ?? "").trim().toLowerCase()
-    if (key) programs.add(key)
-  }
+  // The map's own count, so the stats band and the map filter never disagree on the same page.
+  // A failed lookup leaves it at 0, which the sales bands drop rather than print, and the hour's
+  // cache is skipped below so the next request tries again instead of hiding the row all hour.
+  const programs = (await schoolsWithApprovedCoaches(admin).catch(() => null))?.size ?? 0
 
   const coachIds = new Set(coaches.map((c) => String(c.user_id)))
   let coachViews = 0
@@ -77,7 +84,7 @@ export async function loadPlatformStats(admin: SupabaseClient): Promise<Platform
     if (data.length < 1000) break
   }
 
-  const value = { coaches: coaches.length, programs: programs.size, coachViews, profilesViewed: reached.size }
-  cached = { at: Date.now(), value }
+  const value = { coaches: coaches.length, programs, coachViews, profilesViewed: reached.size }
+  if (programs > 0) cached = { at: Date.now(), value }
   return value
 }
