@@ -17,7 +17,7 @@ import {
   type TournamentResultForDisplay,
 } from "@/lib/public-profile-data"
 import { loadLinkedSourceRows, resultLinksEnabled } from "@/lib/identity/linked-results"
-import { isHighSchoolEvent } from "@/lib/high-school-window"
+import { isHighSchoolEvent, isVarsityStateYear } from "@/lib/high-school-window"
 import { loadNationalResultsFromBouts } from "@/lib/national-results-from-bouts"
 import {
   getOtherTournamentResultsForAthleteRecord,
@@ -89,9 +89,13 @@ export async function loadAthleteTournamentBundle(
   return {
     // Except a high school state tournament itself: NCISA private schools wrestle eighth graders on
     // varsity, and Josh Stonebraker's 2023 NCISA title is a state title (Matt, 1 October 2026).
-    nchsaa: [...nchsaa, ...outOfState].filter(
-      (r) => /^(NC|SC)ISA/i.test(r.classification) || hs(r.year, "NCHSAA"),
-    ),
+    // Another state's championship is varsity and linked by evidence, not by name, so it counts
+    // from seventh grade where that state allows it (NY, PA). NCHSAA has no middle schoolers, so a
+    // younger NCHSAA hit by name is a namesake and the high school line stays.
+    nchsaa: [
+      ...nchsaa.filter((r) => /^(NC|SC)ISA/i.test(r.classification) || hs(r.year, "NCHSAA")),
+      ...outOfState.filter((r) => isVarsityStateYear(r.year, grad)),
+    ],
     nhsca: nhsca.filter((r) => hs(r.year, "NHSCA")),
     super32: super32.filter((r) => hs(r.year, "Super 32")),
     fargo: fargo.filter((r) => hs(r.year, "Fargo")),

@@ -32,7 +32,7 @@ import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 import { HEAD_TO_HEAD_WINDOW_DAYS } from "@/lib/head-to-head"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
-import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
+import { highSchoolBouts, isVarsitySeason } from "@/lib/high-school-window"
 import { loadSignificantOpponentIndex } from "@/lib/significant-opponent-index"
 import { mergeBoutSources } from "@/lib/bout-source-deduplication"
 import { styleOfEventForAthlete } from "@/lib/wrestling-style"
@@ -90,7 +90,7 @@ export async function loadAthleteSignificantWins(
   const homeState = String((gradRow as { state?: string | null } | null)?.state ?? "NC").trim().toUpperCase() || "NC"
   const scopeFor = (opponentState: string | null | undefined) =>
     (String(opponentState ?? "NC").trim().toUpperCase() || "NC") === homeState ? ("in-state" as const) : ("national" as const)
-  const rows = (rawRows ?? []).filter((r: any) => isHighSchoolSeason(r.season, grad, r.grade))
+  const rows = (rawRows ?? []).filter((r: any) => isVarsitySeason(r.season, grad, r.grade))
   const tournamentBouts = highSchoolBouts(rawTournamentBouts as never[], grad) as Bout[]
   // Inside the head-to-head window they count for every reason; older ones only for a state
   // placer, like the earlier seasons of the match import below.
