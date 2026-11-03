@@ -52,12 +52,13 @@ export async function postSignInDestination(admin: SupabaseClient, userId: strin
   try {
     const { data: profile } = await admin
       .from("user_profiles")
-      .select("role, profile_type, verified_coach, is_admin")
+      .select("role, profile_type, verified_coach, verification_status, is_admin")
       .eq("user_id", userId)
       .maybeSingle()
     const who = classifyViewer(profile ?? null)
     // Admins keep the rankings: they hold the coach flags too, and are not recruiting.
-    if (who.kind !== "admin" && profile?.is_admin !== true && who.isCollegeCoach && who.verifiedCoach) return COACH_HOME
+    // Every college coach, approved or not yet (access first, review after); only one staff turned down is not.
+    if (who.kind !== "admin" && profile?.is_admin !== true && who.isCollegeCoach && profile?.verification_status !== "rejected") return COACH_HOME
     // Somebody who ranks a board for us goes to their board, not to a page selling the rankings.
     if (profile?.is_admin !== true) {
       const { data: account } = await admin.auth.admin.getUserById(userId)
@@ -88,4 +89,25 @@ export async function postSignInDestination(admin: SupabaseClient, userId: strin
   } catch {
     return RANKINGS_SALES
   }
+}
+
+/**
+ * A college coach lands on My Recruits every time they sign in, on either site (Matt, 3 Nov 2026),
+ * whatever page the sign-in started from. The one exception is a link to a particular piece of
+ * work - a wrestler, a report, a comparison, a message - which is where a coach following an
+ * email or a shared link meant to go. Everything else (the home page, rankings, calendar, the old
+ * Coach Home) gives way to My Recruits.
+ */
+const COACH_DEEP_LINKS = ["/view-profile", "/athlete/", "/athletes/", "/coach-reports", "/compare", "/inbox", "/my-recruits", "/submit-commitment", "/scouting"]
+
+export function coachLanding(returnTo: string | null | undefined): string {
+  const path = String(returnTo ?? "")
+  return COACH_DEEP_LINKS.some((p) => path.startsWith(p)) ? path : COACH_HOME
+}
+
+/** Where a sign-in lands: a coach by coachLanding, everyone else where they asked to go, or their usual landing. */
+export async function landingAfterSignIn(admin: SupabaseClient, userId: string | null | undefined, returnTo: string | null | undefined): Promise<string> {
+  const usual = await postSignInDestination(admin, userId)
+  if (usual === COACH_HOME) return coachLanding(returnTo)
+  return returnTo || usual
 }
