@@ -46,6 +46,11 @@ export function SignupConsent({ role, value, onChange, disabled }: { role: strin
           <a href="/privacy" target="_blank" rel="noopener" className="underline">Privacy Policy</a>.
         </span>
       </label>
+      {/* Section 12 of the Terms is an arbitration agreement; it is enforceable on how plainly it was put
+          in front of the person, so it is said here as well as in the Terms themselves (3 Nov 2026). */}
+      <p className="text-xs text-muted-foreground">
+        The Terms include an agreement to settle disputes by individual arbitration and not to bring a class action (section 12). You can opt out within 30 days.
+      </p>
     </div>
   )
 }

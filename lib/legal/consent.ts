@@ -9,7 +9,12 @@
  *   13 to 17 needs a parent or guardian's agreement.
  * - Email updates are a separate, optional yes.
  */
-export const TERMS_VERSION = "2026-10-30.2"
+/**
+ * 3 Nov 2026: the Terms added arbitration with a class-action waiver, a DMCA agent, the user's
+ * promises and indemnity, and transfers - material, so the version moves and every account made
+ * from here on records that it agreed to this text. The Privacy Policy did not change.
+ */
+export const TERMS_VERSION = "2026-11-03.1"
 export const PRIVACY_VERSION = "2026-10-30.2"
 
 export type AgeBand = "18+" | "13-17" | "under-13"
