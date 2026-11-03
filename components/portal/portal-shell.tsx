@@ -45,7 +45,8 @@ const GROUPS: Group[] = [
     ],
   },
   // The end of the path: the family hears first, so the family announces it (Matt, 3 Nov 2026).
-  { step: 6, name: "Commit", items: [{ key: "commit", label: "Announce a commitment", href: "/submit-commitment", icon: GraduationCap }] },
+  // Unnumbered, like Help: the path is five steps everywhere else (tour, home cards, Learn).
+  { step: null, name: "Commit", items: [{ key: "commit", label: "Announce a commitment", href: "/submit-commitment", icon: GraduationCap }] },
   {
     step: null,
     name: "Help",
