@@ -151,6 +151,21 @@ export function invitationalName(state: string | null | undefined, classificatio
 }
 
 /**
+ * The association a state-championship row belongs to, read from the event text: an independent
+ * schools' championship when the event names it ("VISAA"), else the state's public association
+ * ("VHSL"), else the state itself. A Virginia champion was called an NCHSAA one (Reza Massjouni,
+ * 3 Nov 2026).
+ */
+export function associationForEvent(state: string | null | undefined, event: string | null | undefined): string {
+  const code = String(state ?? "").trim().toUpperCase()
+  const assoc = ASSOCIATIONS[code]
+  const text = String(event ?? "")
+  const own = assoc?.independent?.find((name) => new RegExp(`\\b${name}\\b`, "i").test(text))
+  if (own) return own
+  return assoc?.public ?? (stateName(code) || code)
+}
+
+/**
  * How to name a state championship on a credential card.
  *
  * `classification` is the division as the result carries it, and is what says whether the

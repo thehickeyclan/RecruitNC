@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { extractNchsaaStateBouts, isNchsaaIndividualStateEvent } from "@/lib/nchsaa-state-bouts"
+import { extractNchsaaStateBouts, isHighSchoolStateEventKey, isNchsaaIndividualStateEvent } from "@/lib/nchsaa-state-bouts"
 
 describe("NCHSAA state bout extraction", () => {
   it("keeps individual states and excludes regionals and state duals", () => {
@@ -46,5 +46,14 @@ describe("NCHSAA state bout extraction", () => {
       outcome: "W",
       method: "Fall",
     }])
+  })
+})
+
+describe("isHighSchoolStateEventKey", () => {
+  it("takes every state's high school championship", () => {
+    for (const k of ["nchsaa-states-2026", "vhsl-states-2026", "schsl-states-2025", "visaa-states-2024", "girls-wrestling-committee-states-2026"]) expect(isHighSchoolStateEventKey(k)).toBe(true)
+  })
+  it("leaves out USA Wrestling state events and anything else", () => {
+    for (const k of ["nc-usaw-states-2026-16u-boys-fs", "sc-usaw-states-2025-junior-girls-gr", "united-states-open-2026", "super32-2026", "vhsl-regionals-2026"]) expect(isHighSchoolStateEventKey(k)).toBe(false)
   })
 })
