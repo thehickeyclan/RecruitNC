@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { importCollegeSchedules } from "@/lib/college-schedules/import"
 import { currentSeason } from "@/lib/college-schedules/season"
+import { alertDualResults } from "@/lib/college-schedules/result-alerts"
 import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
@@ -18,9 +19,11 @@ function authorizeCron(request: NextRequest): boolean {
 }
 
 /**
- * Refresh the NC college wrestling schedules once a day.
+ * Refresh the NC college wrestling schedules twice a day, then send any dual results.
  *
- * Daily rather than hourly, and sequential rather than parallel: these are other people's
+ * 03:00 UTC is late evening in North Carolina, after a 7pm dual has finished, so its followers
+ * hear the final that night; 09:00 UTC catches a score a school posted overnight. Twice a day
+ * rather than hourly, and sequential rather than parallel: these are other people's
  * athletics sites, one of them sits behind bot protection, and a dozen pages a day is a rounding
  * error to them where a dozen an hour is a pattern. It is also enough — a schedule changes when a
  * meet is rescheduled, not by the minute.
@@ -38,7 +41,11 @@ export async function GET(request: NextRequest) {
 
   const season = currentSeason()
   try {
-    const summary = await importCollegeSchedules({ admin: createAdminClient(), season })
+    const admin = createAdminClient()
+    const summary = await importCollegeSchedules({ admin, season })
+    // A score first appears at import, so followers hear about a final straight after one.
+    const results = await alertDualResults(admin)
+    if (results.skipped) console.error("[college-schedules] result alerts skipped:", results.skipped)
 
     if (summary.broken.length) {
       // Logged loudly on purpose. Everything else here is routine.
@@ -54,6 +61,7 @@ export async function GET(request: NextRequest) {
       notAnnounced: summary.notAnnounced,
       broken: summary.broken.map((r) => ({ college: r.college, outcome: r.outcome, detail: r.detail })),
       rows: summary.results.reduce((sum, r) => sum + r.rows, 0),
+      results,
       schools: summary.results.map((r) => ({
         college: r.college,
         outcome: r.outcome,
