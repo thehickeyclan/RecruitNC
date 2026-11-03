@@ -31,7 +31,8 @@ const NC_UNITED_PROJECT = /ncwrestlingunited/i.test(process.env.VERCEL_PROJECT_P
 /** True on RecruitWrestlers' own Vercel project (Guild Ventures), which serves recruitwrestlers.com only. */
 const RW_PROJECT = /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
 
-const rwDescription = "College wrestling recruiting built on verified results: athlete profiles, rankings, recaps and the Recruiting Command Center."
+const rwDescription =
+  "The recruiting platform where high school wrestlers and college coaches meet. Families get a plan, a college list and see which programs are watching. Coaches find, evaluate and reach recruits, free."
 
 /** RecruitWrestlers' defaults: its tab titles, link previews and icons, never NC United's (Matt's product review, 26 Oct 2026). */
 const rwMetadata: Metadata = {

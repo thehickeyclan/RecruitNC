@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: { absolute: "For college coaches | RecruitWrestlers" },
-  description: "Free for college coaching staff: every wrestler's results, scouting reports, contact details and a board for your recruits.",
+  description: "Free for college coaching staff: find high school wrestlers, evaluate them with scouting reports and comparisons, and reach the family.",
 }
 
 const SIGNUP = "/auth/signup?type=college-coach"
@@ -88,7 +88,7 @@ export default async function ForCoaches() {
       <section className="border-b border-white/10 bg-gradient-to-br from-[#15243B] via-[#11203A] to-[#0B1426] px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-5xl">
           <p className="text-xs font-black uppercase tracking-[0.3em] text-[#A3E635]">For college coaches · free</p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Your recruiting board, built on verified results.</h1>
+          <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Find, evaluate and recruit high school wrestlers.</h1>
           <p className="mt-5 max-w-2xl text-lg text-[#A8B3C5]">
             Every {recruitingCoverage(true)} wrestler in the current classes, with their results, the wins that matter and a way to reach the family. Free for college coaching staff.
           </p>
