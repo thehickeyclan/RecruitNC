@@ -7,7 +7,8 @@ export const EMPTY_CONSENT: ConsentState = { termsAccepted: false, ageBand: null
 
 /**
  * The consent block on sign-up and on the Google finish-up page (lib/legal/consent.ts): an athlete's
- * age, a guardian's agreement for 13 to 17, the Terms and Privacy Policy, and an optional yes to email.
+ * age, a guardian's agreement for 13 to 17, and the Terms and Privacy Policy.
+ * The optional email box was taken off (Matt, 3 Nov 2026); marketing_opt_in is simply recorded false.
  */
 export function SignupConsent({ role, value, onChange, disabled }: { role: string | null; value: ConsentState; onChange: (v: ConsentState) => void; disabled?: boolean }) {
   const athlete = role === "athlete"
@@ -44,10 +45,6 @@ export function SignupConsent({ role, value, onChange, disabled }: { role: strin
           <a href="/terms" target="_blank" rel="noopener" className="underline">Terms of Service</a> and{" "}
           <a href="/privacy" target="_blank" rel="noopener" className="underline">Privacy Policy</a>.
         </span>
-      </label>
-      <label className="flex gap-2 text-muted-foreground">
-        <input type="checkbox" className={box} checked={value.marketingOptIn} disabled={disabled} onChange={(e) => set({ marketingOptIn: e.target.checked })} />
-        <span>Email me recruiting news and updates (optional).</span>
       </label>
     </div>
   )
