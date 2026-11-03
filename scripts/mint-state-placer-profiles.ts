@@ -17,14 +17,17 @@
  *   - A placer who has already graduated is NOT, by default. Minting 113 South Carolina seniors
  *     who left in June only to prune them again is churn, and a graduated profile is what
  *     scripts/prune-graduated-profiles.ts exists to remove. --include-graduated overrides it.
- *   - A placer with no class year IS minted. We may learn the year later, and a profile with a
- *     placement and no year is recoverable; a wrestler we never created is invisible.
+ *   - A placer with no class year is NOT minted. The profile rule is never to mint without one
+ *     (Matt; the Sarissa Tucker miss), and the opposite default cost two deletions in one day -
+ *     Alyssa Beasley in Arkansas and Koy Davidson in Iowa, both unresolved state placers the
+ *     package had deliberately held, both minted here and removed again within the hour.
+ *     --include-no-class-year restores the old behaviour for a state that wants it.
  *
  * A name that already belongs to a profile at the same school is LINKED, never duplicated, and a
  * name matching a profile at a DIFFERENT school is left alone and printed — out of state we have
  * no school list to rule a namesake out, and 133 placer names already repeat nationally.
  *
- *   npx tsx scripts/mint-state-placer-profiles.ts --state SC [--season 2026] [--include-qualifiers] [--include-graduated] [--write]
+ *   npx tsx scripts/mint-state-placer-profiles.ts --state SC [--season 2026] [--include-qualifiers] [--include-graduated] [--include-no-class-year] [--link-only] [--write]
  */
 import fs from "fs"
 import path from "path"
@@ -69,6 +72,7 @@ const KNOWN_FLAGS = new Set([
   "--include-graduated",
   "--only-with-class-year",
   "--include-qualifiers",
+  "--include-no-class-year",
   "--link-only",
   "--state",
   "--season",
@@ -83,9 +87,14 @@ for (let i = 0; i < process.argv.length; i += 1) {
 const WRITE = process.argv.includes("--write")
 const INCLUDE_GRADUATED = process.argv.includes("--include-graduated")
 /**
- * Skip placers with no class year (21 Oct 2026, VISAA 2026: 62 of 92 had none, and most of a
- * podium with no year are seniors who have left). Hold them until the year is known.
+ * Mint placers with no class year after all, which is NOT the default (see the header).
+ *
+ * Holding them is the rule: 62 of VISAA 2026's 92 placers had no year, and most of a podium with no
+ * year are seniors who have left. The states that ship an unresolved key ship it deliberately -
+ * Arkansas held Alyssa Beasley's conflicting prints and Iowa held Koy Davidson's, and each arrives
+ * named in docs/state-launch/<STATE>-accounted.json rather than as a profile to create.
  */
+const INCLUDE_NO_CLASS_YEAR = process.argv.includes("--include-no-class-year")
 /**
  * State qualifiers who did not place, too (Matt, 30 Oct 2026: SC's launch push). The state files hold
  * every entrant; a non-placer is a row with no place. Qualifiers are minted only with a current class
@@ -105,7 +114,8 @@ const INCLUDE_QUALIFIERS = process.argv.includes("--include-qualifiers")
  * back seasons are swept in after the mint: --season 2024 --link-only.
  */
 const LINK_ONLY = process.argv.includes("--link-only")
-const ONLY_KNOWN = process.argv.includes("--only-with-class-year") || INCLUDE_QUALIFIERS
+/* Kept as an explicit no-op flag: it names the default, and recorded commands still pass it. */
+const ONLY_KNOWN = !INCLUDE_NO_CLASS_YEAR
 const STATE = normalizeState(arg("state"))
 const SEASON = Number(arg("season", "2026"))
 const MAX_PLACE = Number(arg("max-place", "8"))
@@ -308,7 +318,7 @@ async function main() {
   console.log(`   already have a profile, to LINK           : ${toLink.length}`)
   console.log(`   need a profile created                    : ${toCreate.length}${LINK_ONLY ? " (--link-only: not created)" : ""}`)
   console.log(`      of those, class year known             : ${toCreate.filter((c) => c.row.graduationyear).length}`)
-  if (ONLY_KNOWN) console.log(`   no class year, held (--only-with-class-year): ${heldNoYear.length}`)
+  if (ONLY_KNOWN && heldNoYear.length) console.log(`   no class year, held (the default; --include-no-class-year mints them): ${heldNoYear.length}`)
   console.log(`   graduated, skipped${INCLUDE_GRADUATED ? " (OVERRIDDEN)" : "                      "}: ${graduated.length}`)
   console.log(`   name matches a profile elsewhere, skipped : ${ambiguous.length}`)
   for (const a of ambiguous) console.log(`      ${a}`)
