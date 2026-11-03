@@ -19,6 +19,7 @@ import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { HOME_STATE, inState, normalizeStateCode } from "../lib/recruiting/states"
 import { isIndependentChampionship } from "../lib/athlete-state"
+import { namesReferToSamePerson } from "../lib/athlete-name-match"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -130,7 +131,12 @@ async function linkedPlacements(ids: string[]): Promise<Link[]> {
 const key = (name: string | null, year: unknown) => `${String(name ?? "").toLowerCase().replace(/\s+/g, " ").trim()}|${year ?? ""}`
 const pct = (n: number, d: number) => (d ? Math.round((n / d) * 1000) / 10 : 100)
 
-type Row = { check: string; kind: "GATE" | "INFO"; value: string; baseline?: string; pass: boolean; detail?: string[] }
+/*
+ * `alwaysList` prints an INFO row's names without --all. For the INFO rows that are volume - 91
+ * champions with no profile - a count is the useful shape and the names are for the Muse report.
+ * For one that is a short worklist somebody has to clear, a count alone is how it gets forgotten.
+ */
+type Row = { check: string; kind: "GATE" | "INFO"; value: string; baseline?: string; pass: boolean; detail?: string[]; alwaysList?: boolean }
 
 /*
  * Every official placer accounted for (Muse's review, 20 Oct 2026): the launch line says "every
@@ -320,6 +326,31 @@ async function measure(state: string) {
     })
     .map((p) => `${p.name}, ${p.school ?? "?"}, ${p.weight ?? "?"} #${p.place ?? "?"} - "graduated" with no class year in any source and no note`)
 
+  /*
+   * A placement that reaches no profile although the wrestler HAS one here.
+   *
+   * The gate above asks whether every official PLACER is accounted for; it does not ask whether
+   * every PLACEMENT reached its wrestler. A transfer is the gap between the two: the minter leaves
+   * a name matching a profile at a DIFFERENT school alone on purpose, because out of state there is
+   * no school list to rule out a namesake, and Arkansas proved the caution right - Tripp Price is
+   * two wrestlers at CAC and Pottsville, not one who moved. But leaving it alone is only safe if
+   * somebody is told. Cameron Moats's 2025 state title sat off his profile with nothing in any
+   * report naming it; it survived as a line in a chat message, which is not a system.
+   *
+   * So: every current-class placement with no profile, where a profile of that name exists in this
+   * state, is listed here on every run until it is either linked or ruled a namesake. INFO, not a
+   * gate - the right answer is sometimes "two different wrestlers", and that must not block a
+   * state. An omitted fact becomes an invented one.
+   */
+  const profilesByName = current.map((a) => ({ id: a.id, name: String(a.name ?? ""), school: a.highschool ?? null }))
+  const transferQueue = placements
+    .filter((p) => !p.athlete_id && p.place != null && p.grad_year != null && CURRENT.includes(Number(p.grad_year)))
+    .flatMap((p) => {
+      const hit = profilesByName.find((a) => namesReferToSamePerson(a.name, p.name))
+      if (!hit) return []
+      return [`${p.name}, ${p.school ?? "?"} ${p.season} #${p.place} (class of ${p.grad_year}) - profile is at ${hit.school ?? "no school"} · ${hit.id}`]
+    })
+
   const reasons = new Map<string, number>()
   for (const p of unlinked) {
     const r = accountedPlacer(p)?.reason ?? (graduatedByRegistry(p) ? "graduated" : undefined)
@@ -355,6 +386,7 @@ async function measure(state: string) {
       { check: "Championship-linked profiles with no state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
       { check: "Unexplained results before freshman year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
       { check: "Independent-school results from 7th/8th grade (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
+      { check: "Placements reaching no profile though the wrestler has one (transfer or namesake)", kind: "INFO", value: String(transferQueue.length), pass: true, detail: transferQueue, alwaysList: true },
       { check: "NC results on this state's profiles (unnamed)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
       { check: "Duplicate profiles (same name and class)", kind: "GATE", value: String(dups.length), pass: dups.length === 0, detail: dups },
       {
@@ -390,7 +422,9 @@ async function main() {
     console.log(`${mark}  ${r.kind}  ${r.check.padEnd(w)}  ${r.value}${nc}`)
   }
   const failed = target.rows.filter((r) => r.kind === "GATE" && !r.pass)
-  const listed = process.argv.includes("--all") ? target.rows.filter((r) => !r.pass || r.detail?.length) : failed
+  const listed = process.argv.includes("--all")
+    ? target.rows.filter((r) => !r.pass || r.detail?.length)
+    : [...failed, ...target.rows.filter((r) => r.alwaysList && r.detail?.length && r.kind === "INFO")]
   for (const r of listed) {
     console.log(`\n${r.check}:`)
     /*
