@@ -1,7 +1,7 @@
 "use client"
 
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
-import { recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
+import { directoryStates, recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
 import { HOME_STATE } from "@/lib/recruiting/states"
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
@@ -279,7 +279,8 @@ export default function ProspectsAllClient({
       cancelled = true
     }
   }, [viewerId])
-  const stateChoices = visibleStates(
+  // RecruitWrestlers lists every state, ranked or not; "All states" is still the live ones (lib/recruiting/brand.ts).
+  const stateChoices = (onRw ? directoryStates : visibleStates)(
     viewerProfile?.is_admin === true || viewerProfile?.role === "admin",
     onRw,
     previewStates,
@@ -501,10 +502,42 @@ export default function ProspectsAllClient({
     return typeof rank === "number" && Number.isFinite(rank) ? rank : NaN
   }
 
+  /*
+   * "All states" loads the live states only (2.5 MB already); a name typed there is also looked up
+   * in every other state, so a family in Virginia finds their wrestler (Matt, 3 Nov 2026).
+   */
+  const [elsewhere, setElsewhere] = useState<Prospect[]>([])
+  useEffect(() => {
+    const term = searchTerm.trim()
+    if (!onRw || stateFilter !== ALL_STATES || term.length < 3) {
+      setElsewhere([])
+      return
+    }
+    let cancelled = false
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams({ state: ALL_STATES, q: term, limit: "50" })
+      const years = yearFilterToApiParams(yearFilter)
+      if (years.graduationYear) params.set("graduationYear", years.graduationYear)
+      if (years.minYear != null) params.set("minYear", String(years.minYear))
+      if (years.maxYear != null) params.set("maxYear", String(years.maxYear))
+      void fetch(`/api/prospects?${params.toString()}`, { headers: { Accept: "application/json" } })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => !cancelled && setElsewhere(Array.isArray(d?.prospects) ? (d.prospects as Prospect[]) : []))
+        .catch(() => {})
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, stateFilter, yearFilter])
+
   const filteredProspects = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
+    const loaded = new Set(prospects.map((p) => String(p.id)))
+    const pool = elsewhere.length ? [...prospects, ...elsewhere.filter((p) => !loaded.has(String(p.id)))] : prospects
 
-    return prospects.filter((prospect) => {
+    return pool.filter((prospect) => {
       if (term) {
         const name = prospect.name ?? ""
         const highschool = (prospect as any).highschool ?? (prospect as any).highSchool ?? ""
@@ -620,7 +653,7 @@ export default function ProspectsAllClient({
 
       return true
     })
-  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, honorFilters, stateFilter, ranks])
+  }, [prospects, elsewhere, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, honorFilters, stateFilter, ranks])
 
   const sortedProspects = useMemo(() => {
     return [...filteredProspects].sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
@@ -975,7 +1008,7 @@ export default function ProspectsAllClient({
                   {stateChoices.map((st) => (
                     <option key={st.code} value={st.code}>
                       {brandHost ? st.name : `Recruit${st.code} · ${st.name}`}
-                      {st.live ? "" : " (staff only)"}
+                      {st.live ? "" : onRw ? " · not ranked yet" : " (staff only)"}
                     </option>
                   ))}
                 </select>

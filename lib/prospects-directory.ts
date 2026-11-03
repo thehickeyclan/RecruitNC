@@ -67,6 +67,11 @@ export type ProspectDirectoryFilters = {
    * New York had not launched (Kade Mustin, 3 November 2026). RecruitWrestlers only.
    */
   withClaimedElsewhere?: boolean
+  /**
+   * A name search across every state, ignoring `state` and `withStates`: RecruitWrestlers' search
+   * box finds a wrestler in any state, not just the ones loaded (Matt, 3 Nov 2026).
+   */
+  nameAnyState?: string | null
   graduationYear?: string | null
   minYear?: number | null
   maxYear?: number | null
@@ -208,7 +213,10 @@ export async function fetchProspectDirectoryPage(
    */
   const others = (filters.withStates ?? []).map((c) => normalizeStateCode(c)).filter((c): c is string => Boolean(c) && c !== HOME_STATE)
   const claimedOutside = claimedElsewhereStates(filters.state)
-  if (claimedOutside) {
+  const nameTerm = String(filters.nameAnyState ?? "").replace(/[%_,()*\\]/g, " ").trim()
+  if (nameTerm) {
+    query = query.ilike("name", `%${nameTerm}%`)
+  } else if (claimedOutside) {
     query = claimedElsewhere(query, claimedOutside)
   } else {
     const states = others.length ? [HOME_STATE, ...others] : [normalizeStateCode(filters.state) ?? HOME_STATE]

@@ -126,6 +126,29 @@ export function isVisibleState(
   return visibleStates(isAdmin, onRecruitWrestlers, preview).some((s) => s.code === String(code ?? "").toUpperCase())
 }
 
+/**
+ * States the athlete directory lists. RecruitWrestlers lists every state we hold profiles for,
+ * ranked or not (Matt, 3 Nov 2026: "why not have it there too?"): the profiles are public by link
+ * already, and a family who cannot find their wrestler makes a second one. Rankings and state
+ * pages stay on the live states. NC United lists what it always did.
+ */
+export function directoryStates(
+  isAdmin: boolean,
+  onRecruitWrestlers = false,
+  preview: readonly string[] = [],
+): RecruitingState[] {
+  return onRecruitWrestlers ? RECRUITING_BRAND.states : visibleStates(isAdmin, false, preview)
+}
+
+export function isDirectoryState(
+  code: string | null | undefined,
+  isAdmin: boolean,
+  onRecruitWrestlers = false,
+  preview: readonly string[] = [],
+): boolean {
+  return directoryStates(isAdmin, onRecruitWrestlers, preview).some((s) => s.code === String(code ?? "").toUpperCase())
+}
+
 /** "North Carolina", "North Carolina and South Carolina", "North Carolina, South Carolina, and Virginia". */
 export function recruitingCoverage(onRecruitWrestlers = false): string {
   const names = liveStates(onRecruitWrestlers).map((s) => s.name)
