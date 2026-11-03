@@ -76,3 +76,11 @@ describe("athleteStateCode", () => {
     expect(normalizeStateCode("Virginia")).toBeNull()
   })
 })
+
+describe("inStates with another condition", () => {
+  it("admits rows the extra condition matches, alongside the states", () => {
+    let filter = ""
+    inStates({ or: (f: string) => ((filter = f), null) }, ["NC", "SC"], ["and(is_nc_athlete.eq.false,claimed_at.not.is.null)"])
+    expect(filter).toBe("is_nc_athlete.eq.true,and(state.in.(SC),is_nc_athlete.eq.false),and(is_nc_athlete.eq.false,claimed_at.not.is.null)")
+  })
+})

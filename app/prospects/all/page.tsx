@@ -3,6 +3,7 @@ import { loadDirectoryRows } from "@/lib/prospect-directory-cache"
 import { visibleStates } from "@/lib/recruiting/brand"
 import { onRecruitWrestlersProject } from "@/lib/recruiting/product-name"
 import { HOME_STATE } from "@/lib/recruiting/states"
+import { claimedElsewhereSlice } from "@/lib/prospects-directory"
 import ProspectsAllClient from "./prospects-all-client"
 
 export const revalidate = 120
@@ -17,7 +18,8 @@ export default async function ProspectsAllPage() {
   const scope = onRw && liveCodes.length > 1 ? "ALL" : HOME_STATE
   let initialProspects: Awaited<ReturnType<typeof loadDirectoryRows>> = []
   try {
-    initialProspects = await loadDirectoryRows(scope === "ALL" ? liveCodes : [HOME_STATE], currentClassYears())
+    // RecruitWrestlers' "All" also lists claimed profiles from states not open yet (lib/prospects-directory.ts).
+    initialProspects = await loadDirectoryRows(scope === "ALL" ? [...liveCodes, claimedElsewhereSlice(liveCodes)] : [HOME_STATE], currentClassYears())
   } catch (error) {
     console.error("[prospects/all] SSR prefetch failed:", error)
   }

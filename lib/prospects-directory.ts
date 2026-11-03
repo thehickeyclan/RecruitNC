@@ -61,6 +61,12 @@ export type ProspectDirectoryFilters = {
    * 2026: "should show all kids 2027-2030"). Overrides `state`.
    */
   withStates?: string[] | null
+  /**
+   * With `withStates`: also every claimed profile from a state not open yet. A family that claims
+   * a profile has put him on the platform; NY's first claim was invisible to every coach because
+   * New York had not launched (Kade Mustin, 3 November 2026). RecruitWrestlers only.
+   */
+  withClaimedElsewhere?: boolean
   graduationYear?: string | null
   minYear?: number | null
   maxYear?: number | null
@@ -140,6 +146,29 @@ export function normalizeProspectDirectoryRow(p: Record<string, unknown>): Prosp
   }
 }
 
+/** PostgREST: a claimed profile outside North Carolina (the live states are already in the list). */
+const CLAIMED_ELSEWHERE_FILTER = "and(is_nc_athlete.eq.false,claimed_at.not.is.null)"
+
+/**
+ * The cache slice for claimed profiles in states not open yet: `claimedElsewhereSlice(["NC","SC"])`
+ * is "CLAIMED:NC,SC", the live states it leaves out.
+ */
+export const claimedElsewhereSlice = (liveCodes: readonly string[]) => `CLAIMED:${[...liveCodes].sort().join(",")}`
+
+function claimedElsewhereStates(state: string | null | undefined): string[] | null {
+  const m = String(state ?? "").match(/^CLAIMED:([A-Z,]*)$/)
+  return m ? m[1]!.split(",").filter(Boolean) : null
+}
+
+function claimedElsewhere<Q>(query: Q, liveCodes: string[]): Q {
+  const q = (query as unknown as { eq: (c: string, v: unknown) => unknown }).eq("is_nc_athlete", false) as {
+    not: (c: string, op: string, v: unknown) => unknown
+  }
+  const claimed = q.not("claimed_at", "is", null) as { not: (c: string, op: string, v: unknown) => unknown }
+  const others = liveCodes.filter((c) => c !== HOME_STATE)
+  return (others.length ? claimed.not("state", "in", `(${others.join(",")})`) : claimed) as Q
+}
+
 export async function fetchProspectDirectoryPage(
   supabase: SupabaseClient,
   filters: ProspectDirectoryFilters = {},
@@ -178,8 +207,13 @@ export async function fetchProspectDirectoryPage(
    * carried 2,154 wrestlers from Louisiana, Maryland, Mississippi... (2 Nov 2026).
    */
   const others = (filters.withStates ?? []).map((c) => normalizeStateCode(c)).filter((c): c is string => Boolean(c) && c !== HOME_STATE)
-  const states = others.length ? [HOME_STATE, ...others] : [normalizeStateCode(filters.state) ?? HOME_STATE]
-  query = inStates(query, states)
+  const claimedOutside = claimedElsewhereStates(filters.state)
+  if (claimedOutside) {
+    query = claimedElsewhere(query, claimedOutside)
+  } else {
+    const states = others.length ? [HOME_STATE, ...others] : [normalizeStateCode(filters.state) ?? HOME_STATE]
+    query = inStates(query, states, filters.withClaimedElsewhere && others.length ? [CLAIMED_ELSEWHERE_FILTER] : [])
+  }
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
