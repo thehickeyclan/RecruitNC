@@ -142,6 +142,12 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
    * are the payloads' own ("TX Prep State"), matched case-insensitively here.
    */
   TX: { public: "UIL", independent: ["TAPPS", "TX Prep State", "SPC"] },
+  /*
+   * Arkansas has one layer. Central Arkansas Christian, Catholic High School For Boys, Shiloh
+   * Christian and Pulaski Academy are AAA members and wrestle its brackets, so unlike PA and TX
+   * there is no independent championship to name.
+   */
+  AR: { public: "AAA" },
 }
 
 /**

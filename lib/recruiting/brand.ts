@@ -70,6 +70,17 @@ export const RECRUITING_BRAND = {
      * credential card can carry (lib/athlete-state.ts).
      */
     { code: "TX", name: "Texas", live: false },
+    /*
+     * Arkansas clears the placer bar: 1,040 of 1,042 keys (99.8%), every champion resolved, and
+     * one association - the private schools wrestle inside the AAA brackets, so there is no second
+     * championship to name.
+     *
+     * It is the first state whose podium is not unique. Arkansas wrestles no fifth-place match, so
+     * both consolation semi-final losers take fifth: 420 tied placements across 210 brackets, in
+     * every bracket of every year. `state_tournament_placers` cannot hold them until its unique
+     * index admits a tie, so the rows in the table are the 6 Oct build - places 1-4 only.
+     */
+    { code: "AR", name: "Arkansas", live: false },
   ],
 } as const
 
