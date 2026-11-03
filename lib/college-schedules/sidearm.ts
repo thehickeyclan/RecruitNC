@@ -42,7 +42,7 @@ export function looksLikeTournament(name: string): boolean {
   // An intra-squad scrimmage is billed as two colours, never as a school: Montreat's
   // "Navy vs. Gold" was landing in the calendar as a dual against the Naval Academy.
   if (/\svs\.?\s/i.test(value)) return true
-  return /\b(open|invitationals?|invite|championships?|duals|classic|tournament|showcase|scramble|challenge|battle|wrestle-?offs?)\b/i.test(
+  return /\b(open|invitationals?|invite|championships?|duals|classic|tournament|showcase|scramble|challenge|battle|wrestle[- ]?offs?)\b/i.test(
     value,
   )
 }
