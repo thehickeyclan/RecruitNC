@@ -281,7 +281,7 @@ export async function loadOpponentIndex(supabase: SupabaseClient): Promise<Oppon
   for (let from = 0; ; from += 1000) {
     const { data } = await supabase
       .from("athletes")
-      .select("name,prospect_ranking,graduationyear,gender")
+      .select("name,prospect_ranking,graduationyear,gender,state")
       .not("prospect_ranking", "is", null)
       .range(from, from + 999)
     if (!data?.length) break
@@ -293,6 +293,7 @@ export async function loadOpponentIndex(supabase: SupabaseClient): Promise<Oppon
           graduationYear: row.graduationyear == null ? null : Number(row.graduationyear),
           // Whose board: narrowed per athlete by rankedOnBoard before any name is matched.
           gender: (row.gender as string | null) ?? null,
+          state: (row.state as string | null) ?? null,
         })
       }
     }

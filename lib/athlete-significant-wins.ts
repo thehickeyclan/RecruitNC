@@ -183,6 +183,8 @@ export async function loadAthleteSignificantWins(
     result: win.result,
     weight: win.weight,
     reason: win.reason,
+    // Whose state board ranks him, so the profile says "SC-ranked" rather than assume NC.
+    rankState: win.reason === "ranked" ? win.opponentRankState ?? null : null,
     // The opponent's state finish, when they have one, is the label a reader recognises - beside
     // the stronger reason rather than instead of it (lib/significant-wins.ts).
     credential: significantWinCredential(win),
