@@ -57,8 +57,9 @@ export async function postSignInDestination(admin: SupabaseClient, userId: strin
       .maybeSingle()
     const who = classifyViewer(profile ?? null)
     // Admins keep the rankings: they hold the coach flags too, and are not recruiting.
-    // Every college coach, approved or not yet (access first, review after); only one staff turned down is not.
-    if (who.kind !== "admin" && profile?.is_admin !== true && who.isCollegeCoach && profile?.verification_status !== "rejected") return COACH_HOME
+    // Approved coaches only - the same test My Recruits uses (app/coach-home/load-coach-home.ts), so nobody
+    // lands on an empty page. Sign-up approves coaches at once (access first), so in practice that is all of them.
+    if (who.kind !== "admin" && profile?.is_admin !== true && who.isCollegeCoach && who.verifiedCoach) return COACH_HOME
     // Somebody who ranks a board for us goes to their board, not to a page selling the rankings.
     if (profile?.is_admin !== true) {
       const { data: account } = await admin.auth.admin.getUserById(userId)
