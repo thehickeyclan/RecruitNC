@@ -109,7 +109,7 @@ const ROLES: Array<{ value: Role; title: string; blurb: string; icon: typeof Tro
   { value: "college-coach", title: "College coach", blurb: "Free rankings and athlete profiles, instantly", icon: GraduationCap },
   { value: "hs-club-coach", title: "High school or club coach", blurb: "Follow your wrestlers and events", icon: Shield },
   { value: "referee", title: "Referee", blurb: "Officials and event staff", icon: Flag },
-  { value: "fan", title: "Fan", blurb: "Follow rankings, results and commitments", icon: Heart },
+  { value: "fan", title: "Fan", blurb: "Follow rankings, results, commitments and news", icon: Heart },
 ]
 
 const isRole = (value: string | null): value is Role => ROLES.some((r) => r.value === value)
