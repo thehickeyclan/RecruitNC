@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { loadClaimAccount, relationshipForRole } from "@/lib/account-claim-role"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { recordProfileClaimed, siteFromRequest } from "@/lib/analytics-site"
 import { firstTouchFromRequest } from "@/lib/traffic-source"
@@ -33,6 +34,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   )
 
   // 1) Update athletes (source of truth). If this succeeds, we'll return 200.
+  // A parent confirming is linked as the parent, never made the owner (lib/account-claim-role.ts).
+  const isParent = relationshipForRole(await loadClaimAccount(admin, user.id), null) === "parent"
   let updated = false
   let updateError: any = null
   try {
@@ -41,11 +44,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       .update({
         profile_verified: true,
         profile_claimed: true,
-        claimed_by_user_id: user.id,
+        ...(isParent ? {} : { claimed_by_user_id: user.id }),
         verification_status: "verified",
       })
       .eq("id", athleteId)
-    if (error) updateError = error
+    if (!error && isParent) {
+      const { error: linkError } = await admin
+        .from("parent_athlete_links")
+        .upsert({ user_id: user.id, athlete_id: athleteId }, { onConflict: "user_id,athlete_id", ignoreDuplicates: true })
+      if (linkError) updateError = linkError
+      else updated = true
+    } else if (error) updateError = error
     else updated = true
   } catch (e) {
     updateError = e

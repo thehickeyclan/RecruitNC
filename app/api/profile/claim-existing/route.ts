@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { loadClaimAccount, relationshipForRole, saveCellIfMissing } from "@/lib/account-claim-role"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 import { notifyProfileClaim } from "@/lib/profile-claim-notify"
@@ -40,9 +41,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "athleteId is required" }, { status: 400 })
     }
     // Defaults to "self" so existing callers that predate the parent option keep working.
-    const relationship = body?.relationship === "parent" ? "parent" : "self"
-
     const adminSupabase = createAdminClient()
+    const claimAccount = await loadClaimAccount(adminSupabase, user.id)
+    const relationship = relationshipForRole(claimAccount, body?.relationship === "parent" ? "parent" : "self") ?? "self"
+    await saveCellIfMissing(adminSupabase, user.id, claimAccount, body?.cellPhone)
     const { data: athlete, error: fetchError } = await adminSupabase
       .from("athletes")
       .select("id, name, claimed_by_user_id")
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         athleteId,
         relationship: "parent",
-        signedName: typeof body?.signedName === "string" ? body.signedName : null,
+        signedName: typeof body?.signedName === "string" && body.signedName.trim() ? body.signedName : claimAccount.fullName,
         athleteName: (athlete as { name?: string }).name ?? null,
         viewerName: user.user_metadata?.full_name ?? user.email ?? null,
         ip: auditIpFrom(request),

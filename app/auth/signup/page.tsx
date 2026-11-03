@@ -9,7 +9,7 @@ import type React from "react"
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { AlertCircle, ChevronLeft, ChevronRight, Flag, GraduationCap, Heart, Shield, Trophy, Users } from "lucide-react"
+import { AlertCircle, ChevronLeft, ChevronRight, Flag, GraduationCap, Shield, Trophy, Users } from "lucide-react"
 
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
 import { EmailSignInLink } from "@/components/auth/email-sign-in-link"
@@ -103,12 +103,12 @@ type Role = "athlete" | "parent" | "college-coach" | "hs-club-coach" | "referee"
  * dropdown halfway down the page, so coaches signed up as nobody and never got access.
  */
 const ROLES: Array<{ value: Role; title: string; blurb: string; icon: typeof Trophy }> = [
-  { value: "athlete", title: "Athlete", blurb: "Claim and manage your wrestling profile", icon: Trophy },
+  { value: "athlete", title: "Wrestler", blurb: "Claim and manage your wrestling profile", icon: Trophy },
   { value: "parent", title: "Parent", blurb: "Manage your wrestler's profile and recruiting", icon: Users },
   { value: "college-coach", title: "College coach", blurb: "Free rankings and athlete profiles, instantly", icon: GraduationCap },
   { value: "hs-club-coach", title: "High school or club coach", blurb: "Follow your wrestlers and events", icon: Shield },
   { value: "referee", title: "Referee", blurb: "Officials and event staff", icon: Flag },
-  { value: "fan", title: "Fan", blurb: "Follow commitments, rankings and results", icon: Heart },
+  { value: "fan", title: "Fan", blurb: "Follow commitments, rankings and results", icon: Users },
 ]
 
 const isRole = (value: string | null): value is Role => ROLES.some((r) => r.value === value)
@@ -368,7 +368,7 @@ function SignUpWizard() {
                 <CardDescription>We&apos;ll only ask for what you need.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                {ROLES.map(({ value, title, blurb, icon: Icon }) => (
+                {ROLES.filter((r) => r.value !== "fan").map(({ value, title, blurb, icon: Icon }) => (
                   <button
                     key={value}
                     type="button"
@@ -383,6 +383,13 @@ function SignUpWizard() {
                     <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden />
                   </button>
                 ))}
+                {/* Fan is a quiet link, not a card: families picked it and never got linked to their wrestler. */}
+                <p className="pt-1 text-center text-xs text-muted-foreground">
+                  No wrestler in the family?{" "}
+                  <button type="button" onClick={() => pickRole("fan")} className="underline hover:text-white">
+                    Just following
+                  </button>
+                </p>
                 <p className="pt-3 text-center text-sm text-muted-foreground">
                   Already have an account?{" "}
                   <Link

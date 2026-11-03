@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildLinkedAthletesPayloadForWallet, type ProfileLinkedAthleteDbRow } from "@/lib/profile-linked-athletes-payload"
 import { getWalletAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
+import { loadClaimAccount, relationshipForRole } from "@/lib/account-claim-role"
 
 export const dynamic = "force-dynamic"
 
@@ -19,6 +20,9 @@ export async function GET() {
   }
 
   const admin = createAdminClient()
+  // For the claim box: the account's role decides parent or wrestler, and a missing cell is asked for there.
+  const account = await loadClaimAccount(admin, user.id)
+  const claimer = { claimAs: relationshipForRole(account, null), needsCell: !account.cellPhone, fullName: account.fullName }
   let athleteIds: string[]
   try {
     athleteIds = await getWalletAthleteIdsForParentUser(admin, user.id)
@@ -46,7 +50,7 @@ export async function GET() {
     if (id && !athleteIds.includes(id)) athleteIds.push(id)
   }
 
-  if (athleteIds.length === 0) return NextResponse.json({ athletes: [], profileAthleteId: null as string | null })
+  if (athleteIds.length === 0) return NextResponse.json({ athletes: [], profileAthleteId: null as string | null, ...claimer })
 
   const { data: prof } = await admin.from("user_profiles").select("athlete_id").eq("user_id", user.id).maybeSingle()
   const profileAthleteId =
@@ -86,5 +90,5 @@ export async function GET() {
     profileAthleteId,
   })
 
-  return NextResponse.json({ athletes: list, profileAthleteId })
+  return NextResponse.json({ athletes: list, profileAthleteId, ...claimer })
 }
