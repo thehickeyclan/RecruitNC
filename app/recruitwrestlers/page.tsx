@@ -25,7 +25,7 @@ export const revalidate = 3600
 
 const SHARE_TITLE = "RecruitWrestlers | The college recruiting platform for high school wrestlers"
 const SHARE_DESCRIPTION =
-  "The recruiting platform where high school wrestlers and college coaches meet. Families get a plan, a college list and see which programs are watching. Coaches find, evaluate and reach recruits, free."
+  "One platform for families and coaches. High school wrestlers get a recruiting plan, a college list and see which programs are watching; college coaches find, evaluate and reach recruits, free."
 
 /*
  * Every field the site-wide metadata sets (app/layout.tsx) is replaced here. Left alone, a link to
@@ -133,8 +133,8 @@ export default async function RecruitWrestlersHome() {
               Where wrestlers get <span className="text-[#A3E635]">recruited.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/80">
-              High school families and college coaches on one recruiting platform. Families know who is watching and what to do
-              next; coaches find, evaluate and reach their next recruits.
+              One platform for families and coaches. Families know who is watching and what to do next; coaches find,
+              evaluate and reach their next recruits.
             </p>
             <div className="mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
               {/* Families first, with the search right here (Matt, 1 Nov 2026): on a phone the coaches'
