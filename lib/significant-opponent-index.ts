@@ -28,7 +28,7 @@ export async function loadRankedOpponents(admin: SupabaseClient): Promise<Ranked
   for (let from = 0; ; from += 1000) {
     const { data } = await admin
       .from("athletes")
-      .select("name,prospect_ranking,graduationyear,gender")
+      .select("name,prospect_ranking,graduationyear,gender,state")
       .not("prospect_ranking", "is", null)
       .range(from, from + 999)
     if (!data?.length) break
@@ -39,6 +39,7 @@ export async function loadRankedOpponents(admin: SupabaseClient): Promise<Ranked
           ranking: row.prospect_ranking == null ? null : Number(row.prospect_ranking),
           graduationYear: row.graduationyear == null ? null : Number(row.graduationyear),
           gender: (row.gender as string | null) ?? null,
+          state: (row.state as string | null) ?? null,
         })
       }
     }

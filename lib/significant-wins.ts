@@ -39,6 +39,8 @@ export type RankedOpponent = {
   graduationYear: number | null
   /** athletes.gender: whose board the ranking is on. The men's and the women's share numbers. */
   gender?: string | null
+  /** athletes.state: whose state board ranks him - NC's or SC's, not the winner's state. */
+  state?: string | null
 }
 
 /**
@@ -355,6 +357,8 @@ export type SignificantWin = {
    * comparing two résumés needs to know whether a win came against #2 or #38.
    */
   opponentRanking: number | null
+  /** The state whose board ranks the opponent ("SC"), set with `opponentRanking`. Safe to publish. */
+  opponentRankState?: string | null
   /**
    * How strong the win is, from the opponent's whole record - every state finish with its
    * division, every national placing, a national rank (lib/win-strength.ts). The profile's Top 5
@@ -819,6 +823,7 @@ function findSignificantBouts(
       ...(fargo ? { fargoLabel: fargo } : {}),
       opponentGraduationYear: ranked?.graduationYear ?? null,
       opponentRanking: ranked?.ranking ?? null,
+      ...(ranked ? { opponentRankState: ranked.state ?? null } : {}),
       ...(strength > 0 ? { strength } : {}),
       ...(national
         ? { nationalRankLabel: `#${national.rank} ${national.source}${national.asOf ? `, ${national.asOf}` : ""}`, opponentState: national.state }

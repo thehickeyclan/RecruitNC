@@ -24,7 +24,8 @@ import { ProfileRow } from "@/components/profile/profile-row"
 import { CompetingNextBlock } from "@/components/profile/competing-next-block"
 import { RecruitingNeedsBlock } from "@/components/profile/recruiting-needs-block"
 import { ParentContactBlock } from "@/components/profile/parent-contact-block"
-import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, useAppProfile } from "@/components/profile/app-profile-rows"
+import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, stateRankedLabel,
+  useAppProfile } from "@/components/profile/app-profile-rows"
 import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
 import { SearchVisibilityToggle } from "@/components/profile/search-visibility-toggle"
 import { summarySentences, type Accolades } from "@/lib/profile/profile-summary"
@@ -1598,7 +1599,7 @@ export function AthleteDetail({
               "…"
             )}
           </dd>
-          <dd className="mt-0.5 text-[11px] text-[#A8BBD1]">{appData.winsLoaded ? `${ranked12.nc} NC-ranked · last 12 months` : "Loading"}</dd>
+          <dd className="mt-0.5 text-[11px] text-[#A8BBD1]">{appData.winsLoaded ? `${stateRankedLabel(ranked12, athlete?.state)} · last 12 months` : "Loading"}</dd>
         </div>
         <div className={cn(FACT, "border-l")}>
           <dt className={FACT_LABEL}>GPA</dt>
@@ -1965,7 +1966,7 @@ export function AthleteDetail({
               <p className="text-xs text-[#A8BBD1]">
                 <span className="block text-[13px] font-bold text-white">{f.label}</span>
                 {f.key === "rankedWins"
-                  ? `Last 12 months: ${ranked12.national} nationally ranked, ${ranked12.nc} NC-ranked · ${appData.wins.length} significant wins in all`
+                  ? `Last 12 months: ${ranked12.national} nationally ranked, ${stateRankedLabel(ranked12, athlete?.state)} · ${appData.wins.length} significant wins in all`
                   : f.key === "yearRound"
                     ? `${f.detail}, career`
                     : f.detail}
