@@ -23,9 +23,9 @@ import { NationalHeader } from "@/components/recruiting/national-frame"
 
 export const revalidate = 3600
 
-const SHARE_TITLE = "RecruitWrestlers | College wrestling recruiting, built on verified results"
+const SHARE_TITLE = "RecruitWrestlers | The college recruiting platform for high school wrestlers"
 const SHARE_DESCRIPTION =
-  "The recruiting platform where college wrestling coaches and families meet: verified results, a Command Center for families, and a free recruiting portal for college coaches."
+  "The recruiting platform where high school wrestlers and college coaches meet. Families get a plan, a college list and see which programs are watching. Coaches find, evaluate and reach recruits, free."
 
 /*
  * Every field the site-wide metadata sets (app/layout.tsx) is replaced here. Left alone, a link to
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     url: "/",
     siteName: NATIONAL_BRAND.name,
     type: "website",
-    images: [{ url: "/recruitwrestlers/share.jpg", width: 1200, height: 630, alt: "RecruitWrestlers: get recruited on verified results" }],
+    images: [{ url: "/recruitwrestlers/share.jpg", width: 1200, height: 630, alt: "RecruitWrestlers: the college recruiting platform for high school wrestlers" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -133,8 +133,8 @@ export default async function RecruitWrestlersHome() {
               Where wrestlers get <span className="text-[#A3E635]">recruited.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/80">
-              Verified results, rankings and commitments in one place, built for the college coaches looking and the families
-              who want to be found.
+              High school families and college coaches on one recruiting platform. Families know who is watching and what to do
+              next; coaches find, evaluate and reach their next recruits.
             </p>
             <div className="mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
               {/* Families first, with the search right here (Matt, 1 Nov 2026): on a phone the coaches'
@@ -301,7 +301,7 @@ export default async function RecruitWrestlersHome() {
           <div className="flex flex-col gap-5 rounded-2xl border border-[#A3E635]/30 bg-gradient-to-br from-[#15243B] to-[#0B1426] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-[#A3E635]">Free for college coaches</p>
-              <h2 className="mt-2 text-2xl font-extrabold">Recruit on verified results.</h2>
+              <h2 className="mt-2 text-2xl font-extrabold">Find your next recruits.</h2>
               <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-white/65">
                 Scouting reports, side-by-side comparisons, rankings and a shared watch list for your staff. Access is immediate.
               </p>
@@ -319,7 +319,7 @@ export default async function RecruitWrestlersHome() {
         <section id="states" className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A3E635]">State by state</p>
           <h2 className="mt-2 text-3xl font-extrabold">Opening one state at a time, done right.</h2>
-          <p className="mt-2 max-w-2xl text-white/65">Every state placer gets a profile before a state opens, built from verified results.</p>
+          <p className="mt-2 max-w-2xl text-white/65">Every state placer has a profile waiting before a state opens.</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {RECRUITING_BRAND.states.map((s) => (
               <a

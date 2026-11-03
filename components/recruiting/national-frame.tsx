@@ -169,7 +169,7 @@ export function NationalFooter() {
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
           <NationalLockup />
-          <p className="mt-2 text-sm text-white/45">College wrestling recruiting, built on verified results.</p>
+          <p className="mt-2 text-sm text-white/45">The recruiting platform for high school wrestlers and college coaches.</p>
         </div>
         <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/60">
           {FOOTER.map((l) => (
