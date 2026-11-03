@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { CommitmentForm, type AthleteHit, type CollegeOption } from "@/components/commitments/commitment-form"
 import { SUBMITTER_ROLES, type SubmitterRole } from "@/lib/commitments/intake"
+import { FamilyPortalFrame } from "@/components/portal/portal-shell"
 
 /** The college list is read live so a newly added programme is selectable immediately. */
 export const dynamic = "force-dynamic"
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 }
 
 /** `?athlete=<id>` starts from that profile (its own page links here); `?role=` from Coach Home. */
-export default async function SubmitCommitmentPage({ searchParams }: { searchParams: Promise<{ athlete?: string; role?: string }> }) {
+async function SubmitCommitmentPageBody({ searchParams }: { searchParams: Promise<{ athlete?: string; role?: string }> }) {
   const sp = await searchParams
   const admin = createAdminClient()
   let initialAthlete: AthleteHit | null = null
@@ -60,5 +61,15 @@ export default async function SubmitCommitmentPage({ searchParams }: { searchPar
         <CommitmentForm colleges={colleges} initialAthlete={initialAthlete} initialRole={initialRole} />
       </div>
     </div>
+  )
+}
+
+
+/** Inside the Command Center menu for a family (components/portal/portal-shell.tsx). */
+export default async function SubmitCommitmentPage(props: Parameters<typeof SubmitCommitmentPageBody>[0]) {
+  return (
+    <FamilyPortalFrame active="commit">
+      <SubmitCommitmentPageBody {...props} />
+    </FamilyPortalFrame>
   )
 }

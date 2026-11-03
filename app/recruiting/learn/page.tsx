@@ -15,6 +15,7 @@ import { shareMetadata } from "@/lib/share-metadata"
 import { headers } from "next/headers"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { productName } from "@/lib/recruiting/product-name"
+import { FamilyPortalFrame } from "@/components/portal/portal-shell"
 
 export const metadata = shareMetadata({
   title: "College Wrestling Recruiting Rules",
@@ -26,7 +27,7 @@ export const metadata = shareMetadata({
 
 const checkedLabel = new Date(`${CHECKED}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
 
-export default async function LearnIndexPage() {
+async function LearnIndexPageBody() {
   // The lock names the plan that opens the guide on this site: the Command Center on RecruitWrestlers.
   const lockLabel = stagedBrandForHost((await headers()).get("host")) === "national" ? "Recruiting Command Center" : "NC United Blue"
   return (
@@ -84,5 +85,15 @@ export default async function LearnIndexPage() {
         <LearnDisclaimer checkedLabel={checkedLabel} />
       </div>
     </main>
+  )
+}
+
+
+/** Inside the Command Center menu for a family (components/portal/portal-shell.tsx). */
+export default async function LearnIndexPage() {
+  return (
+    <FamilyPortalFrame active="learn">
+      <LearnIndexPageBody />
+    </FamilyPortalFrame>
   )
 }

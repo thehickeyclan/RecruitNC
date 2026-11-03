@@ -4,6 +4,7 @@ import { CollegeProgramMap } from "@/components/colleges/college-program-map"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { BrandName } from "@/components/recruiting/brand-name"
 import { productName } from "@/lib/recruiting/product-name"
+import { FamilyPortalFrame } from "@/components/portal/portal-shell"
 
 export const metadata: Metadata = {
   title: `College Wrestling Program Map | ${productName()}`,
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 }
 
-export default function CollegeMapPage() {
+function CollegeMapPageBody() {
   return (
     <main className="min-h-screen bg-[#060f1f] text-white">
       <section className="relative border-b border-white/10 bg-[#0B1D3A]">
@@ -44,5 +45,15 @@ export default function CollegeMapPage() {
         <CollegeProgramMap accessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""} />
       </section>
     </main>
+  )
+}
+
+
+/** Inside the Command Center menu for a family (components/portal/portal-shell.tsx). */
+export default async function CollegeMapPage() {
+  return (
+    <FamilyPortalFrame active="map">
+      <CollegeMapPageBody />
+    </FamilyPortalFrame>
   )
 }
