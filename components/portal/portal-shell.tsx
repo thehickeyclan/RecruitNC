@@ -4,14 +4,14 @@ import Link from "next/link"
 import { unreadCount } from "@/lib/coach-messages"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { Activity, BookOpen, CalendarDays, ClipboardList, Compass, LayoutDashboard, Map as MapIcon, MessageSquare, Scale, Send, Sparkles } from "lucide-react"
+import { Activity, BookOpen, CalendarDays, ClipboardList, Compass, GraduationCap, LayoutDashboard, Map as MapIcon, MessageSquare, Scale, Send, Sparkles } from "lucide-react"
 
 /**
  * The family portal's frame (Matt's design, 14 Oct 2026): one menu down the left on a computer, a
  * scrolling bar of the same items on a phone. Every Command Center page sits inside it, so a
  * family always knows where they are and how to get to the rest.
  */
-export type PortalSection = "home" | "plan" | "colleges" | "map" | "messages" | "scout" | "learn" | "activity" | "forms" | "rules" | "reach"
+export type PortalSection = "home" | "plan" | "colleges" | "map" | "messages" | "scout" | "learn" | "activity" | "forms" | "rules" | "reach" | "commit"
 
 type Item = { key: PortalSection; label: string; href: string; icon: typeof Activity }
 
@@ -44,6 +44,8 @@ const GROUPS: Group[] = [
       { key: "plan", label: "Schedule and visits", href: "/my-recruiting/plan", icon: CalendarDays },
     ],
   },
+  // The end of the path: the family hears first, so the family announces it (Matt, 3 Nov 2026).
+  { step: 6, name: "Commit", items: [{ key: "commit", label: "Announce a commitment", href: "/submit-commitment", icon: GraduationCap }] },
   {
     step: null,
     name: "Help",
