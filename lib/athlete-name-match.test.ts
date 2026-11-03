@@ -323,3 +323,18 @@ describe("a trailing state code is not part of the school name", () => {
     expect(schoolsLikelySame("Willis", "Conroe Woodlands College Park")).toBe(false)
   })
 })
+
+describe("an apostrophe is not part of a school name either", () => {
+  it("folds the spellings that differ by nothing but the mark", () => {
+    expect(schoolsLikelySame("Gray's Creek", "Grays Creek")).toBe(true)
+    expect(schoolsLikelySame("Gray`s Creek", "Grays Creek")).toBe(true)
+    expect(schoolsLikelySame("Bishop O`Connell High School", "Bishop OConnell")).toBe(true)
+    expect(schoolsLikelySame("The King`s Academy", "The Kings Academy")).toBe(true)
+    expect(schoolsLikelySame("St. Benedict`s Prep School", "St. Benedicts Prep School")).toBe(true)
+  })
+
+  it("still keeps two different saints apart", () => {
+    expect(schoolsLikelySame("St. Mary's", "St. Michael's")).toBe(false)
+    expect(schoolsLikelySame("St. John's", "St. Joseph's Prep")).toBe(false)
+  })
+})

@@ -328,6 +328,17 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
    */
   const fold = (v?: string | null) =>
     normalizeApostrophes((v ?? "").trim().toLowerCase().replace(/`/g, "'"))
+      /*
+       * An apostrophe is DELETED, not spaced. The comment below has always said apostrophes are
+       * folded the way names are, and for a one-word name they were - but turning "'" into a space
+       * leaves an orphaned "s" that the single-letter filter then drops, so "Gray's Creek" folded
+       * to "gray creek" and never met "Grays Creek". The accidental passes were substring hits:
+       * "st andrew" sits inside "st andrews". Where a word follows the apostrophe it failed
+       * outright - "Bishop O'Connell High School" against "Bishop OConnell", "The King's Academy"
+       * against "The Kings Academy". Thirteen school-name groups in the data differ by nothing but
+       * this mark, across SC, MD, DE, PA, NJ, TN, FL and GA.
+       */
+      .replace(/'/g, "")
       .replace(/\bhigh school\b|\bhigh\b|\bh\.?s\.?\b|\bschool\b/g, " ")
       /* "Saint" and "St." are the same word, and brackets use both: Virginia's 2026 field has
          "Saint John Paul the Great Catholic High School" and "St. John Paul the Great Catholic".
