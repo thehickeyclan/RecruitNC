@@ -1930,7 +1930,7 @@ export function AthleteDetail({
         <CollegeViewsLanding athleteName={athleteName} signedIn={Boolean(currentUserId)} canSeePanel={canViewProfileStats} />
       </div>
       {canViewProfileStats && athlete.id ? (
-        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} stateCode={typeof athlete.state === "string" ? athlete.state : null} className={ROW_ORDER.views} />
+        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} stateCode={typeof athlete.state === "string" ? athlete.state : null} complete={completeness.percent === 100} className={ROW_ORDER.views} />
       ) : null}
       <div className={cn("empty:hidden", ROW_ORDER.messages)}>
         <FamilyMessagesPanel athleteId={String(athlete.id)} />
@@ -2167,8 +2167,10 @@ export function AthleteDetail({
               one button to the editors. Each open item is a tap to its own form. */}
           {/* Stacked at every width: the card sits in the narrow side column on desktop, and a row
               layout there squeezed the text to one word per line (Matt, 31 Oct 2026). */}
-          <div className="flex flex-col gap-4">
-            <div className="min-w-0">
+          {/* Complete: one slim row, the editors and the commitment link only - a full card announcing
+              100% is noise on a finished profile (Matt, 3 Nov 2026). */}
+          <div className={cn("flex flex-col gap-4", completeness.percent === 100 && "gap-0")}>
+            <div className={cn("min-w-0", completeness.percent === 100 && "hidden")}>
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-base font-bold text-white">Profile Completeness</p>
                 <p className="text-base font-black text-white">{completeness.percent}%</p>
@@ -2176,22 +2178,29 @@ export function AthleteDetail({
               <div className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/15 bg-[#0A1628]">
                 <div className="h-full rounded-full bg-[#D3B574]" style={{ width: `${completeness.percent}%` }} />
               </div>
-              <p className="mt-2 text-sm text-white/70">
-                {completeness.percent === 100
-                  ? "Your profile is complete. Keep it current: college coaches read this page."
-                  : "Complete your profile to get more views from college coaches."}
-              </p>
-              {/* The family hears the news first: one tap to report it, starting from this profile. */}
-              {!String(athlete.college ?? "").trim() ? (
+              <p className="mt-2 text-sm text-white/70">Complete your profile to get more views from college coaches.</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* The family hears the news first: one tap to report it, starting from this profile. */}
+            {completeness.percent === 100 ? (
+              !String(athlete.college ?? "").trim() ? (
                 <a
                   href={`/submit-commitment?athlete=${encodeURIComponent(String(athlete.id))}&role=${isViewingOwnProfile ? "athlete" : "parent"}`}
-                  className="mt-2 inline-block text-sm font-bold text-[#D3B574] hover:underline"
+                  className="text-sm font-bold text-[#D3B574] hover:underline"
                 >
                   Committed to a college? Tell us →
                 </a>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-4">
+              ) : <span />
+            ) : (
+            <div className="min-w-0">
+            {!String(athlete.college ?? "").trim() ? (
+              <a
+                href={`/submit-commitment?athlete=${encodeURIComponent(String(athlete.id))}&role=${isViewingOwnProfile ? "athlete" : "parent"}`}
+                className="mb-2 inline-block text-sm font-bold text-[#D3B574] hover:underline"
+              >
+                Committed to a college? Tell us →
+              </a>
+            ) : null}
             <ul className="min-w-0 space-y-1.5">
               {completeness.items.map((item) => (
                 <li key={item.label}>
@@ -2218,6 +2227,8 @@ export function AthleteDetail({
                 </li>
               ))}
             </ul>
+            </div>
+            )}
             <button
               type="button"
               onClick={() => setShowEditors((v) => !v)}
