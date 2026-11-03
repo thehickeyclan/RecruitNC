@@ -81,6 +81,16 @@ export const RECRUITING_BRAND = {
      * index admits a tie, so the rows in the table are the 6 Oct build - places 1-4 only.
      */
     { code: "AR", name: "Arkansas", live: false },
+    /*
+     * Oklahoma clears the placer bar: 926 of 932 keys (99.4%), every one of its 235 champion keys
+     * resolved, and all 252 champions verified against the winner of their own final. One
+     * association - the private schools are OSSAA members and wrestle its brackets.
+     *
+     * OSSAA places TOP 4 ONLY. Every one of the 252 brackets carries a final and one third-place
+     * match and nothing below, so unlike Arkansas there are no ties to store - but it is the second
+     * state running in a row whose podium is not the assumed six.
+     */
+    { code: "OK", name: "Oklahoma", live: false },
   ],
 } as const
 

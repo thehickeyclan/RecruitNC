@@ -351,9 +351,22 @@ describe("a sibling school is not its town's school", () => {
     /* Oklahoma's Moore district: three schools, and "westmoore" simply contains "moore". */
     expect(schoolsLikelySame("Moore", "Westmoore")).toBe(false)
     expect(schoolsLikelySame("Moore", "Southmoore High School")).toBe(false)
+    expect(schoolsLikelySame("MOORE", "WESTMOORE (Girls)")).toBe(false)
   })
 
-  it("still folds the far commoner shape, where the extra words are a town", () => {
+  it("does not match containment that starts or ends mid-word", () => {
+    /*
+     * Perry and Sperry are separate Oklahoma 3A schools wrestling the same brackets in all three
+     * years, and "perry" sits inside "sperry" - so a Perry wrestler and a different Sperry
+     * wrestler of the same name folded into one person. Muse's own grouping of the state kept the
+     * two apart; ours did not.
+     */
+    expect(schoolsLikelySame("PERRY", "Sperry")).toBe(false)
+    expect(schoolsLikelySame("Perry-Girls", "SPERRY (Girls)")).toBe(false)
+    expect(schoolsLikelySame("Edmond North", "Edmond Santa Fe")).toBe(false)
+  })
+
+  it("still folds the far commoner shape, where the extra words are whole words", () => {
     expect(schoolsLikelySame("Fort Smith Northside", "Northside")).toBe(true)
     expect(schoolsLikelySame("Heritage", "Rogers Heritage High School")).toBe(true)
     expect(schoolsLikelySame("Central", "Little Rock Central High School")).toBe(true)
@@ -402,5 +415,38 @@ describe("an initialism the source printed instead of the name", () => {
    */
   it("cannot tell two schools with the same initials apart", () => {
     expect(schoolsLikelySame("CAC", "Cabot Area Comprehensive High School")).toBe(true)
+  })
+})
+
+describe("Oklahoma rotates its school strings every year", () => {
+  /*
+   * One school, four strings across three events: ALL CAPS with no suffix in 2024, Title Case with
+   * a "-Girls" suffix in 2025, ALL CAPS with a " (Girls)" suffix in 2026 - plus two operator
+   * artifacts the source shipped and we keep verbatim, a stray backtick and a missing paren.
+   * Every one of these has to reach the same wrestler or her 2024 placement mints a second
+   * profile.
+   */
+  it("folds a school across all of its yearly forms", () => {
+    expect(schoolsLikelySame("BIXBY", "Bixby-Girls")).toBe(true)
+    expect(schoolsLikelySame("Bixby-Girls", "BIXBY (Girls)")).toBe(true)
+    expect(schoolsLikelySame("UNION", "UNION (Girls)")).toBe(true)
+    expect(schoolsLikelySame("Bishop McGuinness-Girls", "BISHOP MCGUINNESS (Girls)")).toBe(true)
+  })
+
+  it("folds the two operator artifacts in the 2026 girls strings", () => {
+    /* The real strings: a backtick after the closing paren, and a closing paren never typed. */
+    expect(schoolsLikelySame("SHAWNEE (Girls)`", "SHAWNEE")).toBe(true)
+    expect(schoolsLikelySame("SHAWNEE (Girls)`", "Shawnee-Girls")).toBe(true)
+    expect(schoolsLikelySame("BARNSDALL (Girls", "BARNSDALL")).toBe(true)
+    expect(schoolsLikelySame("BARNSDALL (Girls", "Barnsdall-Girls")).toBe(true)
+  })
+
+  it("keeps all three Moore-district schools apart in every suffix form", () => {
+    expect(schoolsLikelySame("MOORE (Girls)", "WESTMOORE (Girls)")).toBe(false)
+    expect(schoolsLikelySame("Moore-Girls", "Southmoore-Girls")).toBe(false)
+    expect(schoolsLikelySame("Westmoore", "Southmoore")).toBe(false)
+    /* But each one still folds across its own yearly forms. */
+    expect(schoolsLikelySame("WESTMOORE (Girls)", "Westmoore-Girls")).toBe(true)
+    expect(schoolsLikelySame("SOUTHMOORE", "Southmoore-Girls")).toBe(true)
   })
 })

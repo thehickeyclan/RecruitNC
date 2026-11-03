@@ -91,14 +91,29 @@ describe("stateChampionshipName", () => {
 
   it("names the state itself where we hold no association, rather than inventing one", () => {
     /*
-     * "Oklahoma State Champion" is unambiguous; a made-up acronym would not be. Oklahoma stands in
-     * for Texas here: TX used to be the example, and is now registered with four championships of
-     * its own (UIL, TAPPS, Texas Prep State, SPC), so it no longer tests this rule.
+     * "Wyoming State Champion" is unambiguous; a made-up acronym would not be.
+     *
+     * This assertion has already moved twice - Texas, then Oklahoma - because the example state
+     * keeps getting registered as the import chain reaches it, and each move was a red test on a
+     * branch that had changed nothing about this rule. So it no longer names one: it finds a state
+     * we genuinely hold no association for and asserts the rule there. It fails only when every
+     * candidate has been registered, which is a real signal to pick new ones rather than a stale
+     * fixture.
      */
-    expect(stateChampionshipName("OK", "6A")).toBe("Oklahoma")
+    const candidates = ["WY", "ND", "SD", "MT", "AK", "HI", "NV", "NM"]
+    const held = candidates.find((c) => stateChampionshipName(c, "6A") === stateName(c))
+    expect(held, `all of ${candidates.join(", ")} now carry an association - choose new candidates`).toBeDefined()
+    expect(stateChampionshipName(held!, "6A")).toBe(stateName(held!))
+    /* The point of the rule: a full state name, never an invented acronym. */
+    expect(stateChampionshipName(held!, "6A")).not.toMatch(/^[A-Z]{3,}$/)
+  })
+
+  it("still prefers a registered association, and the row's own one above it", () => {
     expect(stateChampionshipName("TX", "6A")).toBe("UIL")
     expect(stateChampionshipName("TX", "Open", "SPC")).toBe("SPC")
     expect(stateChampionshipName("TX", "Open", "TX Prep State")).toBe("TX Prep State")
+    expect(stateChampionshipName("OK", "6A")).toBe("OSSAA")
+    expect(stateChampionshipName("AR", "1A-4A")).toBe("AAA")
   })
 
   it("both states have a 4A, which is why the state must appear at all", () => {

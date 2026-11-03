@@ -148,6 +148,11 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
    * there is no independent championship to name.
    */
   AR: { public: "AAA" },
+  /*
+   * Oklahoma has one layer too. Bishop McGuinness, Casady and Cascia Hall are OSSAA members and
+   * wrestle its brackets, so there is no independent championship to name.
+   */
+  OK: { public: "OSSAA" },
 }
 
 /**

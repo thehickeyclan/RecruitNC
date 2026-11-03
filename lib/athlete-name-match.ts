@@ -406,19 +406,23 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
     if (!COMPASS.has(longSide[longSide.length - 1]!)) return false
     return shortSide.every((w, i) => w === longSide[i])
   }
+  if (trailingCompassApart(x, y)) return false
   /*
-   * The same thing written closed up, which is how Oklahoma prints it: Moore, Westmoore and
-   * Southmoore are three schools in one district, and "westmoore" simply contains "moore". The
-   * equality test above has already run, so "North East" against "Northeast" - one school spelled
-   * two ways - is folded before this can refuse it.
+   * Containment is matched on WHOLE WORDS, not raw substring.
+   *
+   * Oklahoma runs Perry and Sperry as separate 3A schools in the same brackets in all three years,
+   * and "perry" simply sits inside "sperry" - so a Perry wrestler and a different Sperry wrestler
+   * of the same name folded into one person. Muse's own grouping of the state kept the two apart;
+   * ours did not. The same accident is what joined Moore to Westmoore and Southmoore in that
+   * state's Moore district.
+   *
+   * Padding both sides with spaces is the whole fix, and it costs none of the shape this rule
+   * exists for: "Northside" still sits inside "Fort Smith Northside", "Heritage" inside "Rogers
+   * Heritage", "Central" inside "Little Rock Central" - every one of those is a word boundary.
+   * What it refuses is a match that starts or ends mid-word, which was never evidence of anything.
    */
-  const joinedCompassApart = (p: string, q: string) => {
-    const [shortSide, longSide] = p.length < q.length ? [p, q] : [q, p]
-    if (shortSide.includes(" ") || longSide.includes(" ")) return false
-    return [...COMPASS].some((c) => longSide === c + shortSide)
-  }
-  if (trailingCompassApart(x, y) || joinedCompassApart(x, y)) return false
-  if (x.includes(y) || y.includes(x)) return true
+  const containsWholeWords = (hay: string, needle: string) => ` ${hay} `.includes(` ${needle} `)
+  if (containsWholeWords(x, y) || containsWholeWords(y, x)) return true
   /*
    * An initialism the source printed instead of the name: Arkansas writes "CAC" in its 2026 field
    * for the Central Arkansas Christian it spells out in 2024 and 2025, and a state champion's two
