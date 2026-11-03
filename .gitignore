@@ -54,3 +54,7 @@ app/api/ai/chat/route.ts.bak2
 # Claude Code machine-local permissions (not shareable)
 .claude/settings.local.json
 rankings-ingest-token.txt
+
+# Row dumps written before a destructive import, for recovery. Local safety artifacts, not
+# source: scripts/import-state-qualifiers.ts now writes one per slice on every state import.
+ranking-snapshots/
