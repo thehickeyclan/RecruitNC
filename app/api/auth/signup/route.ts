@@ -7,6 +7,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { canonicalRole, shouldAutoApproveCoach } from "@/lib/coach-auto-approve"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
+/** The values user_profiles.profile_type accepts (check constraint; lib/profile-backfill.ts). */
+const PROFILE_TYPE_VALUES = new Set(["fan", "athlete", "parent", "hs-club-coach", "college-coach", "referee"])
+
 // Safe, additive: extends existing handler to accept first/last/cell/profileType
 export async function POST(request: NextRequest) {
   console.log("[v0] Signup API route called")
@@ -185,6 +188,8 @@ export async function POST(request: NextRequest) {
       // Canonical spelling: the picker says `college-coach`, the approval queue reads
       // `college_coach`, and for as long as those differed every coach was invisible to it.
       if (profileType) profilePayload.role = canonicalRole(profileType)
+      // profile_type too: left out, the column default stamped "fan" on 85 wrestler and parent accounts in October.
+      if (PROFILE_TYPE_VALUES.has(profileType)) profilePayload.profile_type = profileType
       // Stored as `institution`, the one field `collegeForCoach` reads to name a program.
       if (String(college ?? "").trim()) profilePayload.institution = String(college).trim()
 
