@@ -382,7 +382,7 @@ export default async function CommandCenterSalesPage() {
         {approvedTestimonials().length ? (
           <section className="pt-16">
             <h2 className={`text-center text-4xl leading-[0.95] sm:text-5xl ${tocDisplayClass()}`}>From wrestling families</h2>
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {approvedTestimonials().map((t) => (
                 <figure key={t.name} className={`${card} flex flex-col p-6`}>
                   <blockquote className="flex-1 text-base leading-7 text-white/85">&ldquo;{t.quote}&rdquo;</blockquote>
