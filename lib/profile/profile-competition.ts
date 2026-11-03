@@ -67,7 +67,7 @@ export function buildProfileRecord(athlete: PublicAthleteProfile): ProfileRecord
    */
   const summaryRows = [...profileTournamentRows, ...stateTournamentRows]
   const summaryFacts: ProfileSummaryFacts = {
-    accolades: accoladesFrom({ stateRows: stateTournamentRows, tournamentRows: profileTournamentRows }),
+    accolades: accoladesFrom({ stateRows: stateTournamentRows, tournamentRows: profileTournamentRows, state: (athlete as { state?: string | null }).state ?? null }),
     offSeasonEvents: offSeasonEvents(summaryRows),
     // Every national event-year on file, for the competition grade the scouting report also uses.
     offSeasonCareer: new Set(
