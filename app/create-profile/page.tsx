@@ -20,6 +20,11 @@ import { trackClaimStarted } from "@/lib/track-claim-started"
  * something they do not know is there, and skipping the search is how one boy became both Jacob
  * McCord and Jake McCord.
  */
+const sameName = (a?: string | null, b?: string | null) => {
+  const n = (x?: string | null) => String(x ?? "").toLowerCase().replace(/[^a-z]/g, "")
+  return Boolean(n(a)) && n(a) === n(b)
+}
+
 export default function CreateProfilePage() {
   const { user, profile, isLoading } = useAuth()
   const router = useRouter()
@@ -175,7 +180,12 @@ export default function CreateProfilePage() {
 
   return (
     <AuthGuard>
-      <CreateProfileForm accountEmail={user.email ?? ""} initialName={typedName} />
+      <CreateProfileForm
+        accountEmail={user.email ?? ""}
+        forParent={knownWho === "parent"}
+        // A parent who searched their own name (Gladys Palomino Azurza, 2 Nov 2026) is not the wrestler.
+        initialName={knownWho === "parent" && sameName(typedName, profile?.full_name) ? "" : typedName}
+      />
     </AuthGuard>
   )
 }
