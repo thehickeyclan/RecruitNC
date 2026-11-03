@@ -527,7 +527,7 @@ export function CreateProfileForm({
               icon={<Phone className="h-3.5 w-3.5" />}
               note={
                 forParent
-                  ? "Yours or your wrestler's: it is how college coaches reach the family. Never shown publicly — only verified coaches and staff can see it. Optional now."
+                  ? "Your number: it is how college coaches reach the family and how we reach you about the profile. Never shown publicly — only verified coaches and staff can see it."
                   : "Your number is how college coaches reach you. It is never shown publicly — only verified coaches and RecruitWrestlers staff can see it."
               }
             >
@@ -541,7 +541,7 @@ export function CreateProfileForm({
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-white/80">
-                    {forParent ? "Cell number" : "Cell number *"}
+                    {forParent ? "Your cell number *" : "Cell number *"}
                   </Label>
                   <Input
                     id="phone"
@@ -550,7 +550,7 @@ export function CreateProfileForm({
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
                     placeholder="(555) 123-4567"
-                    required={!forParent}
+                    required
                   />
                 </div>
               </div>

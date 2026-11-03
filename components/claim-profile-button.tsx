@@ -55,7 +55,14 @@ export function ClaimProfileButton({
   const box = useRef<HTMLDivElement>(null)
   const [asked] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("claim") === "1")
   // Said on the search already (?as=parent or ?as=self): the sign-up opens on that role, and a parent goes straight to signing.
-  const [as] = useState(() => (typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("as")))
+  const [urlAs] = useState(() => (typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("as")))
+  // Once signed in, the account's role wins over the link (lib/account-claim-role.ts): a parent account is never offered "this is me".
+  const [accountAs, setAccountAs] = useState<"self" | "parent" | null>(null)
+  const as = accountAs ?? urlAs
+  // Cell asked here when sign-up didn't collect it: it is how coaches reach the family.
+  const [needsCell, setNeedsCell] = useState(false)
+  const [cellPhone, setCellPhone] = useState("")
+  const cellOk = !needsCell || cellPhone.replace(/\D/g, "").length >= 10
   const signupRole = as === "parent" ? "&type=parent" : as === "self" ? "&type=athlete" : ""
   const [doneAs, setDoneAs] = useState<"self" | "parent" | null>(null)
   const { toast } = useToast()
@@ -78,6 +85,12 @@ export function ClaimProfileButton({
         // an empty page is not.
         if (data === "signed-out") return setState("signed-out")
         if (!data) return setState("hidden")
+        if (data.claimAs === "parent" || data.claimAs === "self") {
+          setAccountAs(data.claimAs)
+          if (data.claimAs === "parent") setSigning(true)
+        }
+        if (data.needsCell) setNeedsCell(true)
+        if (data.fullName) setSignedName((v) => v || String(data.fullName))
         const alreadyLinked =
           (data.athletes ?? []).some((a: { id?: unknown }) => String(a?.id) === String(athleteId)) ||
           String(data.profileAthleteId ?? "") === String(athleteId)
@@ -119,7 +132,7 @@ export function ClaimProfileButton({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ athleteId, relationship, signedName: signedName.trim() || undefined }),
+        body: JSON.stringify({ athleteId, relationship, signedName: signedName.trim() || undefined, cellPhone: cellPhone.trim() || undefined }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Could not claim this profile")
@@ -220,10 +233,28 @@ export function ClaimProfileButton({
           ? `Claim ${firstName}'s profile to see which programs are looking, and add the film, GPA and contact details they'll want next.`
           : `Nobody has claimed ${firstName} yet. Claiming lets you add film, a GPA and everything college coaches ask for.`}
       </p>
+      {needsCell ? (
+        <div className="mt-3 space-y-1">
+          <label htmlFor="claim-cell" className="block text-xs font-semibold uppercase tracking-wide text-white/50">
+            Your cell number
+          </label>
+          <input
+            id="claim-cell"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            value={cellPhone}
+            onChange={(e) => setCellPhone(e.target.value)}
+            placeholder="(555) 123-4567"
+            className="w-full rounded-sm border border-white/20 bg-transparent px-3 py-2 text-white outline-none focus:border-[#D3B574]"
+          />
+          <p className="text-xs text-white/40">How college coaches reach you. Never shown publicly.</p>
+        </div>
+      ) : null}
       <div className={`mt-3 flex flex-wrap gap-2 ${as === "parent" && signing ? "hidden" : ""}`}>
         <Button
           onClick={() => void claim("self")}
-          disabled={state === "claiming"}
+          disabled={state === "claiming" || !cellOk}
           className="min-h-[44px] bg-[#B31B1B] text-white hover:bg-[#8f1616]"
           size="sm"
         >
@@ -277,7 +308,7 @@ export function ClaimProfileButton({
           <div className="flex flex-wrap gap-3">
             <Button
               onClick={() => void claim("parent")}
-              disabled={state === "claiming" || signedName.trim().length < 3}
+              disabled={state === "claiming" || signedName.trim().length < 3 || !cellOk}
               size="sm"
               className="min-h-[44px] bg-[#B31B1B] text-white hover:bg-[#8f1616]"
             >
