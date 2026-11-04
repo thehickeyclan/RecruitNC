@@ -138,8 +138,10 @@ async function main() {
   const states = RECRUITING_BRAND.states.filter((s) => !ONLY || s.code === ONLY)
   const out: string[] = []
   const flags: string[] = []
-  console.log(`\n${"state".padEnd(6)}${"live".padEnd(6)}${"placers".padEnd(9)}${"yr%".padEnd(6)}${"profiles".padEnd(10)}${"sides".padEnd(8)}mirrored`)
-  console.log("-".repeat(64))
+  console.log(
+    `\n${"state".padEnd(6)}${"live".padEnd(6)}${"placers".padEnd(9)}${"yr%".padEnd(6)}${"qual%".padEnd(7)}${"profiles".padEnd(10)}${"ceiling".padEnd(9)}${"sides".padEnd(8)}mirrored`,
+  )
+  console.log("-".repeat(82))
   for (const s of states) {
     /*
      * North Carolina's placements live in `wrestling_nchsaa_results`, not the placers table, and
@@ -155,7 +157,10 @@ async function main() {
           association: r.classification === "NCISA" ? "NCISA" : "NCHSAA",
         }))
       : await pageById<any>((q) =>
-          q.from("state_tournament_placers").select("id,place,grad_year,season,association").eq("state", s.code),
+          q
+            .from("state_tournament_placers")
+            .select("id,place,grad_year,season,association,wrestler_name,gender")
+            .eq("state", s.code),
         )
     const associations = new Set(placers.map((r) => String(r.association ?? "")).filter(Boolean))
     const placed = placers.filter((r) => r.place)
@@ -169,6 +174,28 @@ async function main() {
      */
     const withYear = placed.filter((r) => r.grad_year != null).length
     const yearPct = isHome ? null : placed.length ? Math.round((withYear / placed.length) * 100) : 0
+
+    /*
+     * yr% answers "are this state's PLACERS resolved". It does not answer "how many profiles will
+     * this state have", and those turned out to be different questions. Profiles are minted from
+     * the whole state field, qualifiers included, so the volume is set by the class-year coverage
+     * of the UNPLACED rows - and that is where the states diverge. Tennessee passes every gate with
+     * 195 profiles against South Carolina's 784 on a similar number of placed rows, because 76% of
+     * SC's qualifier rows carry a year and 14% of TN's do. 647 of SC's profiles never placed.
+     *
+     *   ceiling - distinct wrestlers in a current class, which is every profile this state can mint
+     *   qual%   - of the unplaced rows, how many carry a class year
+     */
+    const who = (r: any) => `${norm(r.wrestler_name)}|${String(r.gender ?? "").toLowerCase().startsWith("f") || /girl/i.test(String(r.gender)) ? "g" : "b"}`
+    const unplaced = placers.filter((r) => !r.place)
+    const qualPct = isHome ? null : unplaced.length ? Math.round((unplaced.filter((r) => r.grad_year != null).length / unplaced.length) * 100) : null
+    const currentClass = placers.filter((r) => Number(r.grad_year) >= 2027 && Number(r.grad_year) <= 2030)
+    const ceiling = isHome ? null : new Set(currentClass.map(who)).size
+    /* Wrestlers with no year at all, and how many of them wrestled in the latest season held. */
+    const latestSeason = Math.max(0, ...placers.map((r) => Number(r.season) || 0))
+    const noYear = placers.filter((r) => r.grad_year == null)
+    const unknownWrestlers = new Set(noYear.map(who))
+    const unknownLatest = new Set(noYear.filter((r) => Number(r.season) === latestSeason).map(who))
     const { count: profiles } = await inState(
       sb.from("athletes").select("*", { count: "exact", head: true }),
       s.code,
@@ -183,7 +210,7 @@ async function main() {
       ? `${worst}%${loaded.length > 1 ? ` (worst of ${loaded.length})` : ""}`
       : "no ledger"
     console.log(
-      `${s.code.padEnd(6)}${String(s.live).padEnd(6)}${String(placers.length).padEnd(9)}${String(yearPct == null ? "n/a" : `${yearPct}%`).padEnd(6)}${String(profiles ?? 0).padEnd(10)}${String(sides).padEnd(8)}${mirrorLabel}`,
+      `${s.code.padEnd(6)}${String(s.live).padEnd(6)}${String(placers.length).padEnd(9)}${String(yearPct == null ? "n/a" : `${yearPct}%`).padEnd(6)}${String(qualPct == null ? "n/a" : `${qualPct}%`).padEnd(7)}${String(profiles ?? 0).padEnd(10)}${String(ceiling == null ? "n/a" : ceiling).padEnd(9)}${String(sides).padEnd(8)}${mirrorLabel}`,
     )
     // A folkstyle ledger below 90% mirrored was loaded one-sided: re-import the complete set.
     for (const k of keys) {
@@ -192,6 +219,19 @@ async function main() {
     }
     if (yearPct != null && placed.length && yearPct < 90) flags.push(`  ${s.code}: only ${yearPct}% of ${placed.length} PLACED rows carry a class year (${placed.length - withYear} short) - the profile ceiling, needs a grad-year pass`)
     if (placed.length && !sides) flags.push(`  ${s.code}: ${placed.length} placed rows and NO bout ledger - results with no matches behind them`)
+    /*
+     * The profile-volume flag. 60% is South Carolina's shape rounded down - it reached 76% and 784
+     * profiles, so a state well under that is not short of data, it is short of class years on the
+     * qualifiers it already holds.
+     */
+    if (qualPct != null && unplaced.length >= 200 && qualPct < 60) {
+      flags.push(
+        `  ${s.code}: only ${qualPct}% of ${unplaced.length} QUALIFIER rows carry a class year - caps profiles at ${ceiling}; ${unknownWrestlers.size} wrestlers have no year, ${unknownLatest.size} of them wrestled in ${latestSeason}`,
+      )
+    }
+    if (ceiling != null && profiles != null && ceiling - profiles > 25) {
+      flags.push(`  ${s.code}: ${ceiling} wrestlers in a current class but only ${profiles} profiles - ${ceiling - profiles} mintable and not minted`)
+    }
     if (FULL) for (const k of keys) out.push(`  ${s.code} ${k.key.padEnd(28)} ${String(k.rows).padStart(6)} rows · ${k.mirrored}% mirrored${k.soloRows ? ` · ${k.soloRows} with no opponent named` : ""}`)
   }
   if (FULL && out.length) console.log(`\nevery key:\n${out.join("\n")}`)
