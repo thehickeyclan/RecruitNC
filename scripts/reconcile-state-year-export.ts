@@ -59,8 +59,21 @@ function parseCsv(text: string): Record<string, string>[] {
 const norm = (s: unknown) => String(s ?? "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]/g, " ").replace(/\b(jr|sr|ii|iii|iv)\b/g, " ").replace(/\s+/g, " ").trim()
 const nameKey = (s: unknown) => norm(s).replace(/ /g, "")
 const g = (s: unknown) => (/^f|girl|women/i.test(String(s ?? "")) ? "girls" : "boys")
-/** School words that carry no identifying signal, so they never make two schools "agree". */
-const STOP = new Set(["high", "school", "hs", "the", "of", "academy", "senior", "sr", "jr", "county", "co", "saint", "st"])
+/**
+ * School words that carry no identifying signal, so they never make two schools "agree". Geography
+ * and qualifiers belong here: without "city", Ponca City and Oklahoma City corroborate on it, and
+ * a false corroboration is how a namesake pair gets one wrestler's class year. A school whose every
+ * word is on this list corroborates nothing and its rows are reported rather than applied, which is
+ * the safe direction. Perry/Sperry and Moore/Westmoore are already safe - whole words, not
+ * substrings - and that is deliberate (see the sibling-school rule).
+ */
+const STOP = new Set([
+  "high", "school", "hs", "the", "of", "academy", "senior", "sr", "jr", "county", "co", "saint", "st",
+  "city", "north", "south", "east", "west", "northeast", "northwest", "southeast", "southwest",
+  "central", "christian", "catholic", "prep", "preparatory", "area", "regional", "consolidated",
+  "community", "public", "charter", "middle", "junior", "varsity", "girls", "boys", "new", "old",
+  "mount", "mt", "fort", "ft", "lake", "valley", "heights", "park", "hill", "hills", "grove", "ridge",
+])
 const schoolWords = (s: unknown) => new Set(norm(s).split(" ").filter((w) => w.length > 2 && !STOP.has(w)))
 function schoolAgrees(a: unknown, b: unknown): boolean {
   const x = schoolWords(a), y = schoolWords(b)
@@ -86,38 +99,46 @@ async function main() {
     byName.set(k, [...(byName.get(k) ?? []), r])
   }
 
-  // A name+gender the export carries under two different years is a namesake pair, never applied.
-  const exportYears = new Map<string, Set<string>>()
+  /*
+   * Walk OUR rows, not the export's, so the school decides which exported person a row belongs to.
+   *
+   * A name+gender the export carries under two different years is a namesake pair, and the first
+   * version of this skipped the pair outright. But the school already tells them apart: Missouri's
+   * Landon Smith is Savannah class of 2027 and Moberly class of 2026, and his two unplaced rows
+   * name their school. So a row is resolved by the exported rows whose school corroborates IT, and
+   * held only when those still disagree among themselves - which is the real ambiguity.
+   */
+  const exportByName = new Map<string, Record<string, string>[]>()
   for (const e of exported) {
     const k = `${nameKey(e.wrestler_name)}|${g(e.gender)}`
-    exportYears.set(k, (exportYears.get(k) ?? new Set()).add(e.class_year_final))
+    exportByName.set(k, [...(exportByName.get(k) ?? []), e])
   }
-
   const agree: any[] = [], disagree: any[] = [], fill: any[] = [], noSchool: any[] = [], missing: any[] = [], ambiguous: any[] = []
-  for (const e of exported) {
-    const year = Number(e.class_year_final)
-    const k = `${nameKey(e.wrestler_name)}|${g(e.gender)}`
-    const hits = byName.get(k) ?? []
-    if (!hits.length) { missing.push(e); continue }
-    if (!year) continue // the export ships a named conflict with no year; nothing to compare
-    const multi = (exportYears.get(k)?.size ?? 0) > 1
-    for (const r of hits) {
-      const corroborated = schoolAgrees(e.school, r.school_clean) || schoolAgrees(e.school, r.school_raw)
-      if (!corroborated) { noSchool.push({ e, r }); continue }
-      if (r.grad_year == null) {
-        if (multi) ambiguous.push({ e, r })
-        else fill.push({ e, r, year })
-      } else if (Number(r.grad_year) === year) agree.push({ e, r })
-      else disagree.push({ e, r, year })
-    }
+  const seenKeys = new Set<string>()
+  for (const r of placers) {
+    const k = `${nameKey(r.wrestler_name)}|${g(r.gender)}`
+    const cands = exportByName.get(k) ?? []
+    if (!cands.length) continue
+    seenKeys.add(k)
+    const sameSchool = cands.filter((e) => schoolAgrees(e.school, r.school_clean) || schoolAgrees(e.school, r.school_raw))
+    if (!sameSchool.length) { noSchool.push({ e: cands[0]!, r }); continue }
+    const years = [...new Set(sameSchool.map((e) => Number(e.class_year_final)).filter(Boolean))]
+    if (!years.length) continue // the export ships a named conflict with no year; nothing to compare
+    const e = sameSchool.find((x) => Number(x.class_year_final) === years[0])!
+    if (years.length > 1) { ambiguous.push({ e, r, years }); continue }
+    const year = years[0]!
+    if (r.grad_year == null) fill.push({ e, r, year })
+    else if (Number(r.grad_year) === year) agree.push({ e, r })
+    else disagree.push({ e, r, year })
   }
+  for (const e of exported) if (!byName.has(`${nameKey(e.wrestler_name)}|${g(e.gender)}`)) missing.push(e)
 
   const placed = (x: any) => x.r?.place != null
   console.log(`\n${STATE} vs ${path.basename(FILE!)}: ${exported.length} exported keys, ${placers.length} placer rows\n`)
   console.log(`  agree                                  ${agree.length} rows (${agree.filter(placed).length} placed)`)
   console.log(`  DISAGREE - our year is not the print's  ${disagree.length} rows (${disagree.filter(placed).length} placed)`)
   console.log(`  fillable - ours blank, print has it     ${fill.length} rows (${fill.filter(placed).length} placed)`)
-  console.log(`  blank, but the name is a namesake pair  ${ambiguous.length} rows`)
+  console.log(`  held - corroborating rows disagree       ${ambiguous.length} rows`)
   console.log(`  name and gender match, no school does   ${noSchool.length} rows`)
   console.log(`  exported key with no row of ours        ${missing.length} keys`)
 
@@ -131,7 +152,7 @@ async function main() {
   }
   if (ambiguous.length) {
     console.log(`\nNOT applied - the export carries this name under more than one year:`)
-    for (const a of ambiguous) console.log(`  ${a.e.wrestler_name} (${a.e.school}, ${a.e.gender}) season ${a.r.season}`)
+    for (const a of ambiguous) console.log(`  ${a.e.wrestler_name} (${a.r.school_clean ?? a.r.school_raw}, ${a.e.gender}) season ${a.r.season}: the corroborating exported rows say ${a.years.join(" and ")}`)
   }
   if (missing.length) {
     console.log(`\nExported keys with no placer row of ours (first 15):`)
@@ -139,6 +160,11 @@ async function main() {
     if (missing.length > 15) console.log(`  ... and ${missing.length - 15} more`)
   }
 
+  if (fill.length) {
+    console.log(`\nBlank rows this would fill:`)
+    for (const f of fill.slice(0, 25)) console.log(`  ${f.r.wrestler_name} (${f.r.school_clean ?? f.r.school_raw}) season ${f.r.season} place ${f.r.place ?? "-"} -> ${f.year}`)
+    if (fill.length > 25) console.log(`  ... and ${fill.length - 25} more`)
+  }
   if (!APPLY) return console.log(`\nDry run. --apply fills the ${fill.length} blank row(s); it never changes a year.`)
   let n = 0
   for (const f of fill) {
