@@ -103,6 +103,8 @@ export type MetricEvent = {
   site?: SiteKey | null
   /** The college program behind a view or a star. A program, never a coach's name. */
   by?: string | null
+  /** The coach account behind a view or a star, for counting distinct coaches. Never displayed. */
+  byUser?: string | null
 }
 
 export type Filters = {
@@ -155,6 +157,31 @@ export function weekOf(at: string | Date): string {
   return monday.toISOString().slice(0, 10)
 }
 
+/** The Eastern calendar day an instant falls on, as YYYY-MM-DD. */
+export function dayOf(at: string | Date): string {
+  const d = at instanceof Date ? at : new Date(at)
+  if (Number.isNaN(d.getTime())) return ""
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d)
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? ""
+  return `${get("year")}-${get("month")}-${get("day")}`
+}
+
+/**
+ * How wide a bar is. A seven-day window bucketed by week is one bar, which is not a chart, so a
+ * short window counts by day and a long one by week.
+ */
+export type Bucket = "day" | "week"
+
+export const bucketOf = (at: string | Date, bucket: Bucket) => (bucket === "day" ? dayOf(at) : weekOf(at))
+
+export function bucketsBetween(from: string, to: string, bucket: Bucket): string[] {
+  if (bucket === "week") return weeksBetween(from, to)
+  const out: string[] = []
+  const end = new Date(`${to}T00:00:00Z`)
+  for (const d = new Date(`${from}T00:00:00Z`); d <= end; d.setUTCDate(d.getUTCDate() + 1)) out.push(d.toISOString().slice(0, 10))
+  return out
+}
+
 /** Every Monday from `from` to `to`, so a quiet week draws as a zero and not as a gap. */
 export function weeksBetween(from: string, to: string): string[] {
   const out: string[] = []
@@ -185,10 +212,11 @@ export function series(
   events: MetricEvent[],
   dims: Map<string, AthleteDim>,
   filters: Filters,
-  window: { from: string; to: string },
+  window: { from: string; to: string; bucket?: Bucket },
 ): Series {
   const label = METRIC_LABEL[metric]
-  const weeks = weeksBetween(window.from, window.to)
+  const bucket: Bucket = window.bucket ?? "week"
+  const weeks = bucketsBetween(window.from, window.to, bucket)
   const empty = weeks.map((week) => ({ week, count: 0 }))
 
   if (filters.site !== "all" && !METRIC_HAS_SITE[metric]) {
@@ -216,14 +244,14 @@ export function series(
       // Only counted as unassigned when the filters would otherwise have admitted it.
       if (filters.state === "all" && filters.gender === "all") {
         unassigned++
-        const w = weekOf(e.at)
+        const w = bucketOf(e.at, bucket)
         if (counts.has(w)) counts.set(w, (counts.get(w) ?? 0) + 1)
         total++
       }
       continue
     }
     if (!passesDims(dim, filters)) continue
-    const w = weekOf(e.at)
+    const w = bucketOf(e.at, bucket)
     if (!counts.has(w)) continue
     counts.set(w, (counts.get(w) ?? 0) + 1)
     total++
@@ -340,4 +368,101 @@ export function stateSummary(
     views,
     byClass: [...byClass.entries()].sort((a, b) => a[0] - b[0]).map(([classYear, v]) => ({ classYear, ...v })),
   }
+}
+
+
+/**
+ * How many DIFFERENT things did something in each week: programs that looked, coaches who looked.
+ *
+ * A count of events answers "how much"; this answers "how many of them", which is the question
+ * coach adoption actually turns on. Ten views from one program is not ten programs.
+ *
+ * `total` is the distinct count across the whole window, not the sum of the weeks - the same
+ * program looking in March and in October is one program, and adding the weekly numbers would say
+ * two. The series' own weeks and its total are different questions, and both are right.
+ */
+export function distinctSeries(
+  metric: Metric,
+  label: string,
+  events: MetricEvent[],
+  dims: Map<string, AthleteDim>,
+  filters: Filters,
+  window: { from: string; to: string; bucket?: Bucket },
+  pick: (e: MetricEvent) => string | null | undefined,
+): Series {
+  const bucket: Bucket = window.bucket ?? "week"
+  const weeks = bucketsBetween(window.from, window.to, bucket)
+  const seen = new Map(weeks.map((w) => [w, new Set<string>()]))
+  const ever = new Set<string>()
+
+  if (filters.site !== "all" && !METRIC_HAS_SITE[metric]) {
+    return {
+      metric,
+      label,
+      points: weeks.map((week) => ({ week, count: 0 })),
+      total: 0,
+      unassigned: 0,
+      unavailable: "No site stamp on this source, so it cannot be split by brand",
+      startsAt: METRIC_STARTS[metric] > window.from ? METRIC_STARTS[metric] : null,
+    }
+  }
+
+  for (const e of events) {
+    const day = String(e.at).slice(0, 10)
+    if (!day || day < window.from || day > window.to) continue
+    if (filters.site !== "all" && (e.site ?? "untagged") !== filters.site) continue
+    const who = pick(e)
+    if (!who) continue
+    if (filters.state !== "all" || filters.gender !== "all") {
+      const dim = e.athleteId ? dims.get(e.athleteId) : undefined
+      if (!dim) continue
+      if (filters.state !== "all" && dim.state !== filters.state) continue
+      if (filters.gender !== "all" && dim.gender !== filters.gender) continue
+    }
+    const w = bucketOf(e.at, bucket)
+    if (!seen.has(w)) continue
+    seen.get(w)!.add(who)
+    ever.add(who)
+  }
+
+  const start = METRIC_STARTS[metric]
+  return {
+    metric,
+    label,
+    points: weeks.map((week) => ({ week, count: seen.get(week)!.size })),
+    total: ever.size,
+    unassigned: 0,
+    unavailable: null,
+    startsAt: start > window.from ? start : null,
+  }
+}
+
+/** Wrestlers a college coach has opened, most-opened first. Names are the product; coaches are not. */
+export function mostViewed(
+  events: MetricEvent[],
+  dims: Map<string, AthleteDim>,
+  filters: Filters & { classYear?: number | "all" },
+  window: { from: string; to: string },
+  limit = 25,
+): Array<{ athleteId: string; views: number; programs: number }> {
+  const views = new Map<string, { views: number; programs: Set<string> }>()
+  for (const e of events) {
+    const day = String(e.at).slice(0, 10)
+    if (!day || day < window.from || day > window.to) continue
+    if (filters.site !== "all" && (e.site ?? "untagged") !== filters.site) continue
+    if (!e.athleteId) continue
+    const dim = dims.get(e.athleteId)
+    if (!dim) continue
+    if (filters.state !== "all" && dim.state !== filters.state) continue
+    if (filters.gender !== "all" && dim.gender !== filters.gender) continue
+    if (filters.classYear && filters.classYear !== "all" && dim.classYear !== filters.classYear) continue
+    if (!views.has(e.athleteId)) views.set(e.athleteId, { views: 0, programs: new Set() })
+    const row = views.get(e.athleteId)!
+    row.views++
+    if (e.by) row.programs.add(e.by)
+  }
+  return [...views.entries()]
+    .map(([athleteId, v]) => ({ athleteId, views: v.views, programs: v.programs.size }))
+    .sort((a, b) => b.views - a.views || b.programs - a.programs)
+    .slice(0, limit)
 }

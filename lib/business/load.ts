@@ -164,7 +164,13 @@ export async function loadBusinessData(admin: SupabaseClient): Promise<BusinessD
     if (e.event_type === "profile_view") {
       if (!e.user_id || !coaches.has(String(e.user_id))) continue
       const athleteId = e.event_data?.athlete_id ? String(e.event_data.athlete_id) : null
-      views.push({ at: e.created_at, athleteId, site: siteOf(e.event_data), by: programOf.get(String(e.user_id)) ?? null })
+      views.push({
+        at: e.created_at,
+        athleteId,
+        site: siteOf(e.event_data),
+        by: programOf.get(String(e.user_id)) ?? null,
+        byUser: String(e.user_id),
+      })
     } else if (e.event_type === "signin_completed") {
       // A sign-in belongs to an account. Its state and gender are the wrestler that account has
       // claimed; an account that has claimed nobody has neither, and is counted as unassigned.
@@ -181,7 +187,14 @@ export async function loadBusinessData(admin: SupabaseClient): Promise<BusinessD
       profiles_claimed: claimed,
       profile_edits: edits.filter((r) => r.athlete_id).map((r) => ({ at: r.created_at, athleteId: String(r.athlete_id) })),
       coach_views: views,
-      coach_stars: stars.filter((s) => s.starred_at).map((s) => ({ at: String(s.starred_at), athleteId: String(s.athlete_id) })),
+      coach_stars: stars
+        .filter((s) => s.starred_at)
+        .map((s) => ({
+          at: String(s.starred_at),
+          athleteId: String(s.athlete_id),
+          by: programOf.get(String(s.coach_user_id)) ?? null,
+          byUser: String(s.coach_user_id),
+        })),
       sign_ins: signIns,
     },
   }

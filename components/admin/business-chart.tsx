@@ -12,6 +12,16 @@ import type { Series } from "@/lib/business/metrics"
  * Wednesday as a collapse.
  */
 
+/**
+ * What an event with no wrestler behind it actually is, which differs by metric. A sign-in belongs
+ * to an account; a profile view that carries no athlete id is a view we could not attribute.
+ */
+function unassignedNote(metric: Series["metric"]): string {
+  return metric === "sign_ins"
+    ? "belong to an account that has not claimed a wrestler, so they have no state or gender."
+    : "could not be tied to a wrestler, so they have no state or gender."
+}
+
 const W = 560
 const H = 150
 const PAD = { top: 12, right: 8, bottom: 22, left: 34 }
@@ -37,6 +47,7 @@ export function BusinessChart({
   series,
   windowLabel,
   allTime,
+  bucket = "week",
   accent = "#A3E635",
 }: {
   series: Series
@@ -44,6 +55,8 @@ export function BusinessChart({
   windowLabel?: string
   /** The same metric over all of time, when the window is not all of time. */
   allTime?: number
+  /** How wide one bar is. The footnote has to say the truth: a short window counts by day. */
+  bucket?: "day" | "week"
   accent?: string
 }) {
   const { points, label, unavailable, startsAt, unassigned, total } = series
@@ -134,9 +147,9 @@ export function BusinessChart({
       </svg>
 
       <p className="mt-1 text-xs leading-relaxed text-white/40">
-        By week, Monday to Sunday, Eastern. The last bar is this week so far.
+        {bucket === "day" ? "One bar a day, Eastern. The last bar is today so far." : "By week, Monday to Sunday, Eastern. The last bar is this week so far."}
         {startsAt ? ` Nothing was recorded before ${dateWithYear(startsAt)}.` : ""}
-        {unassigned ? ` ${unassigned.toLocaleString()} of these belong to an account that has not claimed a wrestler, so they have no state or gender.` : ""}
+        {unassigned ? ` ${unassigned.toLocaleString()} ${unassignedNote(series.metric)}` : ""}
       </p>
     </div>
   )

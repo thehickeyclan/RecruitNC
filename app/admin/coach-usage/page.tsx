@@ -1,161 +1,218 @@
 /**
- * College coach usage, week by week (2 Nov 2026): coach adoption is the primary success metric.
- * Active coaches, profiles they reviewed, wrestlers they starred, and recruiting needs posted and
- * live - split RecruitWrestlers vs NC United by event_data.site (stamped from 1 Nov 2026; older
- * events show as Not tagged). Rules for who counts as a coach: lib/admin/coach-usage.ts.
- * Admins, and the business grant (lib/business/access.ts).
+ * College coach usage (rebuilt 4 November 2026 to Matt's spec).
+ *
+ * Programs and coaches at the top, with how many of each were active in the last 30 days. Then
+ * the four lines that say whether adoption is growing - programs, coaches, profile views and
+ * wrestlers starred - over a window you pick, boys or girls. Then the wrestlers college coaches
+ * are actually opening, by class and gender.
+ *
+ * Recruiting needs came off this page the same day: it is about whether coaches are here and
+ * using it, and the needs counts were answering a different question.
+ *
+ * Programs are named; a coach never is. Admins, and the business grant.
  */
+import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { hasBusinessGrant } from "@/lib/business/access"
-
-import { USAGE_SITES, collegeCoachIds, weeklyUsage, type AuthRow, type NeedRow, type ProfileRow, type SiteKey, type StarRow, type UsageEvent, type WeekCounts } from "@/lib/admin/coach-usage"
-import { isLiveNeed } from "@/lib/recruiting/needs"
+import { BusinessChart } from "@/components/admin/business-chart"
+import { businessData } from "@/lib/business/cache"
+import { requireBusinessViewer } from "@/lib/business/require-business-viewer"
+import { type Bucket, type Filters, type Gender, distinctSeries, mostViewed, series } from "@/lib/business/metrics"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 export const metadata = { title: "Coach usage | Admin" }
 
-const WEEKS = 4
-const SITE_LABEL: Record<SiteKey, string> = { rw: "RecruitWrestlers", ncu: "NC United", app: "iPhone app", untagged: "Not tagged" }
-const ROWS: Array<{ key: keyof WeekCounts; label: string; siteless?: boolean }> = [
-  { key: "activeCoaches", label: "Active college coaches" },
-  { key: "profilesReviewed", label: "Wrestlers' profiles reviewed" },
-  { key: "profileViews", label: "Profile views" },
-  { key: "starred", label: "Prospects starred", siteless: true },
-  { key: "starringCoaches", label: "Coaches who starred", siteless: true },
-  { key: "needsPosted", label: "Recruiting needs posted" },
+const PAGE = "/admin/coach-usage"
+const card = "rounded-xl border border-white/10 bg-[#0d1d36] p-5"
+const th = "py-2 pr-4 text-left text-xs font-semibold uppercase tracking-wide text-white/50"
+const td = "border-t border-white/10 py-2 pr-4 tabular-nums"
+
+/** The windows Matt asked for. Short ones count by day, or a week would be a single bar. */
+const WINDOWS: Array<{ key: string; label: string; days: number | null; bucket: Bucket; under: string }> = [
+  { key: "7", label: "Week", days: 7, bucket: "day", under: "last 7 days" },
+  { key: "30", label: "30 days", days: 30, bucket: "day", under: "last 30 days" },
+  { key: "90", label: "90 days", days: 90, bucket: "day", under: "last 90 days" },
+  { key: "182", label: "6 months", days: 182, bucket: "week", under: "last 6 months" },
+  { key: "365", label: "Year", days: 365, bucket: "week", under: "last year" },
+  { key: "all", label: "All time", days: null, bucket: "week", under: "all time" },
 ]
 
-type Admin = ReturnType<typeof createAdminClient>
+const DEFAULTS: Record<string, string> = { window: "90", gender: "all", year: "all" }
+const EVER = { from: "2015-01-01", to: "2100-01-01" }
+/** Where an all-time chart starts drawing: the first coach view we ever recorded. */
+const EARLIEST = "2026-02-03"
 
-async function paged<T>(fetchPage: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>): Promise<T[]> {
-  const out: T[] = []
-  for (let from = 0; from < 200_000; from += 1000) {
-    const { data, error } = await fetchPage(from, from + 999)
-    if (error) throw new Error(error.message)
-    out.push(...((data ?? []) as T[]))
-    if (!data || data.length < 1000) break
+const dayStr = (daysAgo: number) => new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10)
+
+export default async function CoachUsagePage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const auth = await requireBusinessViewer(PAGE)
+  if (!auth.ok) redirect(auth.status === 401 ? `/auth/signin?returnTo=${encodeURIComponent(PAGE)}` : "/")
+
+  const sp = await searchParams
+  const data = await businessData()
+
+  const win = WINDOWS.find((w) => w.key === sp.window) ?? WINDOWS.find((w) => w.key === DEFAULTS.window)!
+  const gender: Gender | "all" = sp.gender === "Male" || sp.gender === "Female" ? sp.gender : "all"
+  const classYear = sp.year && /^\d{4}$/.test(sp.year) ? Number(sp.year) : "all"
+  const filters: Filters = { state: "all", gender, site: "all" }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const window = { from: win.days ? dayStr(win.days) : EARLIEST, to: today, bucket: win.bucket }
+  const views = data.events.coach_views
+  const stars = data.events.coach_stars
+
+  // The four lines.
+  const lines = [
+    distinctSeries("coach_views", "College programs", views, data.dims, filters, window, (e) => e.by),
+    distinctSeries("coach_views", "College coaches", views, data.dims, filters, window, (e) => e.byUser),
+    series("coach_views", views, data.dims, filters, window),
+    distinctSeries("coach_stars", "Wrestlers starred", stars, data.dims, filters, window, (e) => e.athleteId),
+  ]
+  const ever = [
+    distinctSeries("coach_views", "College programs", views, data.dims, filters, EVER, (e) => e.by),
+    distinctSeries("coach_views", "College coaches", views, data.dims, filters, EVER, (e) => e.byUser),
+    series("coach_views", views, data.dims, filters, EVER),
+    distinctSeries("coach_stars", "Wrestlers starred", stars, data.dims, filters, EVER, (e) => e.athleteId),
+  ]
+
+  // The tiles: everything we have ever seen, and what moved in the last 30 days.
+  const last30 = { from: dayStr(30), to: today, bucket: "day" as Bucket }
+  const recentActivity = [...views, ...stars]
+  // The tiles follow the gender chip too, so they have to say which wrestlers they mean.
+  const whom = gender === "Female" ? "a girl" : gender === "Male" ? "a boy" : "a wrestler"
+  const tiles = [
+    { n: ever[0].total, l: "College programs", note: `have opened ${whom}` },
+    { n: ever[1].total, l: "College coaches", note: `have opened ${whom}` },
+    { n: distinctSeries("coach_views", "p", recentActivity, data.dims, filters, last30, (e) => e.by).total, l: "Programs active", note: "in the last 30 days" },
+    { n: distinctSeries("coach_views", "c", recentActivity, data.dims, filters, last30, (e) => e.byUser).total, l: "Coaches active", note: "in the last 30 days" },
+  ]
+
+  // The wrestlers being opened, with names fetched only for the ones we are about to show.
+  const top = mostViewed(views, data.dims, { ...filters, classYear }, window, 25)
+  const names = new Map<string, { name: string; school: string | null }>()
+  if (top.length) {
+    const admin = createAdminClient()
+    const { data: rows } = await admin.from("athletes").select('id, name, "firstName", "lastName", highschool').in("id", top.map((t) => t.athleteId))
+    for (const r of rows ?? []) {
+      const full = String(r.name ?? "").trim() || [r.firstName, r.lastName].filter(Boolean).join(" ")
+      names.set(String(r.id), { name: full || "Unnamed", school: (r.highschool as string | null) ?? null })
+    }
   }
-  return out
-}
 
-async function loadCoaches(admin: Admin): Promise<Set<string>> {
-  const profiles = await paged<ProfileRow>((f, t) =>
-    admin.from("user_profiles").select("user_id, email, role, profile_type, verified_coach, institution, is_admin").order("user_id").range(f, t),
-  )
-  const users: AuthRow[] = []
-  for (let page = 1; page < 50; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
-    if (error) throw new Error(error.message)
-    users.push(...data.users.map((u) => ({ id: u.id, email: u.email ?? null, user_metadata: u.user_metadata ?? null })))
-    if (data.users.length < 1000) break
+  const years = [...new Set([...data.dims.values()].map((d) => d.classYear).filter((y): y is number => Boolean(y)))].sort()
+  const href = (patch: Partial<Record<"window" | "gender" | "year", string>>) => {
+    const next = { window: sp.window, gender: sp.gender, year: sp.year, ...patch }
+    const q = new URLSearchParams()
+    for (const [k, v] of Object.entries(next)) if (v && v !== DEFAULTS[k]) q.set(k, v)
+    return `${PAGE}${q.size ? `?${q}` : ""}`
   }
-  return collegeCoachIds(profiles, users)
-}
-
-export default async function CoachUsagePage() {
-  const { data: auth } = await (await createClient()).auth.getUser()
-  if (!auth.user) redirect("/auth/signin?returnTo=%2Fadmin%2Fcoach-usage")
-  const admin = createAdminClient()
-  const { data: me } = await admin.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
-  // Full admins, and the business grant (lib/business/access.ts), which is all Rhett holds.
-  if (!(me?.is_admin === true || me?.role === "admin") && !hasBusinessGrant(auth.user.app_metadata)) redirect("/")
-
-  const now = new Date()
-  const since = new Date(now.getTime() - WEEKS * 7 * 86_400_000).toISOString()
-  const coaches = await loadCoaches(admin)
-  const ids = [...coaches]
-  const events: UsageEvent[] = []
-  for (let i = 0; i < ids.length; i += 100) {
-    const part = ids.slice(i, i + 100)
-    events.push(
-      ...(await paged<UsageEvent>((f, t) =>
-        admin.from("user_analytics").select("id, user_id, event_type, created_at, event_data").in("user_id", part).gte("created_at", since).order("id").range(f, t),
-      )),
-    )
-  }
-  const stars = await paged<StarRow>((f, t) => admin.from("college_coach_stars").select("id, coach_user_id, athlete_id, starred_at").gte("starred_at", since).order("id").range(f, t))
-  const needsRead = await admin.from("college_recruiting_needs").select("posted_by, site, created_at, confirmed_at, cleared_at").limit(5000)
-  const needs = (needsRead.error ? [] : needsRead.data ?? []) as NeedRow[]
-  const live = needs.filter((n) => isLiveNeed({ confirmedAt: n.confirmed_at, clearedAt: n.cleared_at }))
-  const liveBySite = (k: SiteKey) => live.filter((n) => (n.site === k ? true : k === "untagged" && !["rw", "ncu", "app"].includes(String(n.site)))).length
-  const weeks = weeklyUsage({ coaches, events, stars, needs, now, weeks: WEEKS })
-  const card = "rounded-xl border border-white/10 bg-[#0d1d36] p-5"
-  const shown = USAGE_SITES.filter((k) => k === "rw" || k === "ncu" || weeks.some((w) => Object.values(w.bySite[k]).some((v) => v > 0)) || liveBySite(k) > 0)
+  const chip = (on: boolean) =>
+    `rounded-full px-3 py-1 text-xs font-semibold ${on ? "bg-[#A3E635] text-[#060f1f]" : "bg-white/10 text-white/75 hover:bg-white/15"}`
 
   return (
     <div className="admin-dark-page min-h-screen bg-[#060f1f] px-4 py-8 text-white">
       <div className="mx-auto max-w-5xl">
-        <h1 className="text-3xl font-black">College coach usage</h1>
+        <Link href="/admin/business" className="text-sm font-bold text-[#A3E635] hover:underline">
+          ← Business
+        </Link>
+        <h1 className="mt-3 text-3xl font-black">College coach usage</h1>
         <p className="mt-1 text-sm text-white/55">
-          Coach adoption, week by week, RecruitWrestlers vs NC United. Sites are tagged from 1 Nov 2026; older events show as Not tagged. Stars carry no site.
+          Whether college coaches are here and using it. Programs are named; a coach never is. Coach views have been
+          recorded since 3 February 2026.
         </p>
 
         <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { n: coaches.size, l: "College coach accounts" },
-            { n: weeks[0]!.all.activeCoaches, l: "Active last 7 days" },
-            { n: live.length, l: "Recruiting needs live" },
-            { n: new Set(live.map((x) => x.posted_by)).size, l: "Coaches with live needs" },
-          ].map((s) => (
-            <li key={s.l} className={card}>
-              <p className="text-3xl font-black tabular-nums">{s.n}</p>
-              <p className="text-sm text-white/60">{s.l}</p>
+          {tiles.map((t) => (
+            <li key={t.l} className={card}>
+              <p className="text-3xl font-black tabular-nums">{t.n.toLocaleString()}</p>
+              <p className="text-sm font-semibold text-white/70">{t.l}</p>
+              <p className="mt-0.5 text-xs text-white/40">{t.note}</p>
             </li>
           ))}
         </ul>
-        {needsRead.error ? <p className="mt-3 text-sm text-amber-300">Recruiting needs table not found yet: scripts/sql/college-recruiting-needs.sql has not been run.</p> : null}
 
-        {weeks.map((w) => (
-          <section key={w.since} className={`mt-8 ${card}`}>
-            <h2 className="text-lg font-bold">
-              {w.label} <span className="text-sm font-normal text-white/45">{w.since.slice(0, 10)} to {w.until.slice(0, 10)}</span>
-            </h2>
-            <div className="mt-3 overflow-x-auto">
-              <table className="w-full min-w-[480px] text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-white/50">
-                    <th className="py-2 pr-4 font-semibold"> </th>
-                    {shown.map((k) => (
-                      <th key={k} className={`py-2 pr-4 text-right font-semibold ${k === "rw" ? "text-[#A3E635]" : k === "ncu" ? "text-[#D3B574]" : ""}`}>
-                        {SITE_LABEL[k]}
-                      </th>
-                    ))}
-                    <th className="py-2 pr-4 text-right font-semibold">All</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ROWS.map((r) => (
-                    <tr key={r.key} className="border-t border-white/10">
-                      <td className="py-2 pr-4 text-white/75">{r.label}</td>
-                      {shown.map((k) => (
-                        <td key={k} className="py-2 pr-4 text-right text-lg font-black tabular-nums">
-                          {r.siteless ? <span className="text-white/30">–</span> : w.bySite[k][r.key]}
-                        </td>
-                      ))}
-                      <td className="py-2 pr-4 text-right text-lg font-black tabular-nums">{w.all[r.key]}</td>
+        <div className="mt-8 flex flex-wrap items-center gap-2">
+          {WINDOWS.map((w) => (
+            <Link key={w.key} href={href({ window: w.key })} className={chip(win.key === w.key)}>
+              {w.label}
+            </Link>
+          ))}
+          <span className="mx-1 text-white/25">|</span>
+          {([
+            ["all", "Boys and girls"],
+            ["Male", "Boys"],
+            ["Female", "Girls"],
+          ] as const).map(([k, label]) => (
+            <Link key={k} href={href({ gender: k })} className={chip(gender === k)}>
+              {label}
+            </Link>
+          ))}
+        </div>
+        {gender !== "all" ? (
+          <p className="mt-2 text-xs text-white/40">
+            Narrowed by the wrestler who was looked at, so &ldquo;college programs&rdquo; here means programs that have
+            opened {gender === "Female" ? "a girl" : "a boy"}.
+          </p>
+        ) : null}
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          {lines.map((s, i) => (
+            <BusinessChart key={s.label} series={s} windowLabel={win.under} bucket={win.bucket} allTime={win.days ? ever[i].total : undefined} />
+          ))}
+        </div>
+
+        <h2 className="mt-10 text-xl font-black">Wrestlers college coaches are opening</h2>
+        <p className="mt-1 text-sm text-white/55">{win.under}, most opened first.</p>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Link href={href({ year: "all" })} className={chip(classYear === "all")}>
+            All classes
+          </Link>
+          {years.map((y) => (
+            <Link key={y} href={href({ year: String(y) })} className={chip(classYear === y)}>
+              {y}
+            </Link>
+          ))}
+        </div>
+
+        <div className={`${card} mt-3`}>
+          {top.length === 0 ? (
+            <p className="text-sm text-white/55">No coach opened a wrestler matching these filters in this window.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr>
+                  <th className={th}>Wrestler</th>
+                  <th className={th}>School</th>
+                  <th className={th}>Class</th>
+                  <th className={th}>Views</th>
+                  <th className={th}>Programs</th>
+                </tr>
+              </thead>
+              <tbody>
+                {top.map((r) => {
+                  const who = names.get(r.athleteId)
+                  const dim = data.dims.get(r.athleteId)
+                  return (
+                    <tr key={r.athleteId}>
+                      <td className={`${td} font-semibold`}>
+                        <Link href={`/athletes/${r.athleteId}`} className="hover:text-[#A3E635]">
+                          {who?.name ?? r.athleteId}
+                        </Link>
+                      </td>
+                      <td className={`${td} text-white/60`}>{who?.school ?? "–"}</td>
+                      <td className={`${td} text-white/60`}>{dim?.classYear ?? "–"}</td>
+                      <td className={td}>{r.views}</td>
+                      <td className={td}>{r.programs}</td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-2 text-xs text-white/40">Active: any tracked page, profile, star or need in the week. A coach on both sites counts once under All.</p>
-          </section>
-        ))}
-
-        <section className={`mt-8 ${card}`}>
-          <h2 className="text-lg font-bold">Recruiting needs live now</h2>
-          <div className="mt-3 flex flex-wrap gap-6">
-            {shown.map((k) => (
-              <p key={k}>
-                <span className="text-2xl font-black tabular-nums">{liveBySite(k)}</span> <span className="text-sm text-white/60">{SITE_LABEL[k]}</span>
-              </p>
-            ))}
-          </div>
-        </section>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   )
