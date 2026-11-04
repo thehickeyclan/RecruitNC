@@ -3,6 +3,7 @@ import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { collegeCoachIds, type AuthRow, type ProfileRow, type StarRow } from "@/lib/admin/coach-usage"
+import { collegeForCoach } from "@/lib/college-domain-schools"
 import type { AthleteDim, Gender, Metric, MetricEvent, SiteKey } from "@/lib/business/metrics"
 import { athleteStateCode } from "@/lib/recruiting/states"
 
@@ -45,6 +46,7 @@ type AthleteRow = {
   state: string | null
   is_nc_athlete: boolean | null
   gender: string | null
+  graduationyear: number | string | null
   created_at: string | null
   claimed_at: string | null
   claimed_by_user_id: string | null
@@ -69,7 +71,13 @@ function siteOf(event_data: { site?: string | null } | null): SiteKey {
 }
 
 export async function loadBusinessData(admin: SupabaseClient): Promise<BusinessData> {
-  const athletes = await page<AthleteRow>(admin, "athletes", "id, state, is_nc_athlete, gender, created_at, claimed_at, claimed_by_user_id")
+  // graduationyear is lower case while firstName is camel case: the column names are not
+  // consistent, and the wrong case fails silently in PostgREST.
+  const athletes = await page<AthleteRow>(
+    admin,
+    "athletes",
+    "id, state, is_nc_athlete, gender, graduationyear, created_at, claimed_at, claimed_by_user_id",
+  )
 
   const dims = new Map<string, AthleteDim>()
   const athleteOfUser = new Map<string, string>()
@@ -77,7 +85,12 @@ export async function loadBusinessData(admin: SupabaseClient): Promise<BusinessD
   const claimed: MetricEvent[] = []
   for (const a of athletes) {
     const id = String(a.id)
-    dims.set(id, { state: athleteStateCode(a), gender: genderOf(a.gender) })
+    const year = Number(a.graduationyear)
+    dims.set(id, {
+      state: athleteStateCode(a),
+      gender: genderOf(a.gender),
+      classYear: Number.isInteger(year) && year > 2000 && year < 2100 ? year : null,
+    })
     if (a.claimed_by_user_id) athleteOfUser.set(String(a.claimed_by_user_id), id)
     if (a.created_at) created.push({ at: a.created_at, athleteId: id })
     if (a.claimed_at) claimed.push({ at: a.claimed_at, athleteId: id })
@@ -105,6 +118,13 @@ export async function loadBusinessData(admin: SupabaseClient): Promise<BusinessD
     "user_profiles",
     "id, user_id, email, role, profile_type, verified_coach, institution, is_admin",
   )
+  // The program a coach recruits for, by the same rule the college-interest report uses. A
+  // program is named on these pages; the coach never is.
+  const programOf = new Map<string, string>()
+  for (const p of profiles) {
+    const school = collegeForCoach({ institution: p.institution as string, email: p.email as string })
+    if (school) programOf.set(String(p.user_id), school)
+  }
   const users: AuthRow[] = []
   for (let p = 1; p < 50; p++) {
     const { data, error } = await admin.auth.admin.listUsers({ page: p, perPage: PAGE })
@@ -120,7 +140,7 @@ export async function loadBusinessData(admin: SupabaseClient): Promise<BusinessD
     if (e.event_type === "profile_view") {
       if (!e.user_id || !coaches.has(String(e.user_id))) continue
       const athleteId = e.event_data?.athlete_id ? String(e.event_data.athlete_id) : null
-      views.push({ at: e.created_at, athleteId, site: siteOf(e.event_data) })
+      views.push({ at: e.created_at, athleteId, site: siteOf(e.event_data), by: programOf.get(String(e.user_id)) ?? null })
     } else if (e.event_type === "signin_completed") {
       // A sign-in belongs to an account. Its state and gender are the wrestler that account has
       // claimed; an account that has claimed nobody has neither, and is counted as unassigned.

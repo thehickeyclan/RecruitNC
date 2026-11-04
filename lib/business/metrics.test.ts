@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest"
 import { type AthleteDim, type MetricEvent, series, statesPresent, weekOf, weeksBetween } from "@/lib/business/metrics"
 
 const dims = new Map<string, AthleteDim>([
-  ["nc-boy", { state: "NC", gender: "Male" }],
-  ["nc-girl", { state: "NC", gender: "Female" }],
-  ["sc-boy", { state: "SC", gender: "Male" }],
-  ["no-state", { state: null, gender: "Male" }],
+  ["nc-boy", { state: "NC", gender: "Male", classYear: 2027 }],
+  ["nc-girl", { state: "NC", gender: "Female", classYear: 2028 }],
+  ["sc-boy", { state: "SC", gender: "Male", classYear: 2027 }],
+  ["no-state", { state: null, gender: "Male", classYear: null }],
 ])
 
 const WINDOW = { from: "2026-10-05", to: "2026-11-01" }

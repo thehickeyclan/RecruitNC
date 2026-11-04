@@ -77,8 +77,8 @@ export const METRIC_STARTS: Record<Metric, string> = {
 export type Gender = "Male" | "Female"
 export type SiteKey = "rw" | "ncu" | "app" | "untagged"
 
-/** One wrestler's dimensions: the state they count for and their gender. */
-export type AthleteDim = { state: string | null; gender: Gender | null }
+/** One wrestler's dimensions: the state they count for, their gender and their class. */
+export type AthleteDim = { state: string | null; gender: Gender | null; classYear: number | null }
 
 /** One dated thing that happened, already attributed to a wrestler where it can be. */
 export type MetricEvent = {
@@ -87,6 +87,8 @@ export type MetricEvent = {
   athleteId: string | null
   /** The site stamp, for the series that carry one. */
   site?: SiteKey | null
+  /** The college program behind a view or a star. A program, never a coach's name. */
+  by?: string | null
 }
 
 export type Filters = {
@@ -230,4 +232,92 @@ export function statesPresent(dims: Map<string, AthleteDim>): string[] {
   const seen = new Set<string>()
   for (const d of dims.values()) if (d.state) seen.add(d.state)
   return [...seen].sort()
+}
+
+/**
+ * One state, at a glance: what the state page shows and what the presenting slide reads from.
+ *
+ * Every figure is a count of wrestlers or of programs. `programs` is distinct college programs
+ * that have opened a profile in this state - the number that carries a room, because it is the
+ * one a family cannot get anywhere else.
+ */
+export type StateSummary = {
+  state: string
+  gender: Gender | "all"
+  profiles: number
+  claimed: number
+  /** Profiles with a current class year, which is what a college coach can still recruit. */
+  current: number
+  starred: number
+  /** Wrestlers a college coach has opened at least once. */
+  viewed: number
+  /** Distinct college programs that have opened a wrestler here. */
+  programs: number
+  views: number
+  byClass: Array<{ classYear: number; profiles: number; claimed: number }>
+}
+
+/** The four classes a college coach can still recruit, for a season that runs July to June. */
+export function currentClasses(now = new Date()): number[] {
+  const seniors = now.getUTCMonth() >= 6 ? now.getUTCFullYear() + 1 : now.getUTCFullYear()
+  return [seniors, seniors + 1, seniors + 2, seniors + 3]
+}
+
+export function stateSummary(
+  state: string,
+  gender: Gender | "all",
+  dims: Map<string, AthleteDim>,
+  events: Record<Metric, MetricEvent[]>,
+  now = new Date(),
+): StateSummary {
+  const mine = new Set<string>()
+  const classes = currentClasses(now)
+  const byClass = new Map<number, { profiles: number; claimed: number }>(classes.map((y) => [y, { profiles: 0, claimed: 0 }]))
+  let profiles = 0
+  let current = 0
+
+  for (const [id, d] of dims) {
+    if (d.state !== state) continue
+    if (gender !== "all" && d.gender !== gender) continue
+    mine.add(id)
+    profiles++
+    if (d.classYear && classes.includes(d.classYear)) {
+      current++
+      byClass.get(d.classYear)!.profiles++
+    }
+  }
+
+  let claimed = 0
+  for (const e of events.profiles_claimed) {
+    if (!e.athleteId || !mine.has(e.athleteId)) continue
+    claimed++
+    const y = dims.get(e.athleteId)?.classYear
+    if (y && byClass.has(y)) byClass.get(y)!.claimed++
+  }
+
+  const starred = new Set<string>()
+  for (const e of events.coach_stars) if (e.athleteId && mine.has(e.athleteId)) starred.add(e.athleteId)
+
+  const viewed = new Set<string>()
+  const programs = new Set<string>()
+  let views = 0
+  for (const e of events.coach_views) {
+    if (!e.athleteId || !mine.has(e.athleteId)) continue
+    views++
+    viewed.add(e.athleteId)
+    if (e.by) programs.add(e.by)
+  }
+
+  return {
+    state,
+    gender,
+    profiles,
+    claimed,
+    current,
+    starred: starred.size,
+    viewed: viewed.size,
+    programs: programs.size,
+    views,
+    byClass: classes.map((y) => ({ classYear: y, ...byClass.get(y)! })),
+  }
 }
