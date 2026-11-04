@@ -112,7 +112,19 @@ export function isHomeState(state: string | null | undefined): boolean {
  */
 const ASSOCIATIONS: Record<
   string,
-  { public: string; girls?: string; independent?: string[]; middleSchoolVarsity?: true }
+  {
+    public: string
+    girls?: string
+    independent?: string[]
+    middleSchoolVarsity?: true
+    /**
+     * Independent schools that wrestle INSIDE the state association, as its own classification
+     * rather than a separate championship. Tennessee's TSSAA Division II is McCallie, Baylor, MBA,
+     * Brentwood Academy and Knoxville Catholic - private schools whose rows carry association
+     * "TSSAA" and classification "DII", so an association-keyed check cannot see them.
+     */
+    independentClassifications?: string[]
+  }
 > = {
   NC: { public: "NCHSAA", independent: ["NCISA"] },
   SC: { public: "SCHSL", independent: ["SCISA"] },
@@ -184,6 +196,12 @@ const ASSOCIATIONS: Record<
    * would be false in every other reader.
    */
   MN: { public: "MSHSL", middleSchoolVarsity: true },
+  /*
+   * Tennessee runs one association over three boys classifications plus girls: A, AA and DII, where
+   * DII is the private-school division. It shows in the data - 13 of the 504 DII placements sit
+   * before the wrestler's freshman year, against 0 of AA's 672 and 0 of the 440 girls rows.
+   */
+  TN: { public: "TSSAA", independentClassifications: ["DII"] },
 }
 
 /**
@@ -243,6 +261,20 @@ export function isIndependentChampionship(
 }
 
 /**
+ * Whether this classification is the state association's own independent-school division - private
+ * schools that roster middle-schoolers, inside the public body rather than beside it.
+ */
+export function isIndependentClassification(
+  state: string | null | undefined,
+  classification: string | null | undefined,
+): boolean {
+  const code = String(state ?? "").trim().toUpperCase()
+  const name = String(classification ?? "").trim().toLowerCase()
+  if (!name) return false
+  return (ASSOCIATIONS[code]?.independentClassifications ?? []).some((x) => x.toLowerCase() === name)
+}
+
+/**
  * Whether a 7th or 8th grade varsity placement is legitimate in this championship, rather than
  * evidence of a namesake or a wrong class year. Two different reasons it can be: an independent
  * association whose schools roster middle-schoolers (NCISA, SCISA, VISAA), or a state association
@@ -251,8 +283,10 @@ export function isIndependentChampionship(
 export function allowsMiddleSchoolVarsity(
   state: string | null | undefined,
   association: string | null | undefined,
+  classification?: string | null,
 ): boolean {
   if (isIndependentChampionship(state, association)) return true
+  if (isIndependentClassification(state, classification)) return true
   const code = String(state ?? "").trim().toUpperCase()
   const entry = ASSOCIATIONS[code]
   if (!entry?.middleSchoolVarsity) return false

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { allowsMiddleSchoolVarsity, isIndependentChampionship } from "./athlete-state"
+import { allowsMiddleSchoolVarsity, isIndependentChampionship, isIndependentClassification } from "./athlete-state"
 
 /*
  * A 7th or 8th grade state placement is either ordinary or evidence of a namesake, and which one
@@ -32,6 +32,29 @@ describe("allowsMiddleSchoolVarsity", () => {
   it("does not leak the permission to another state's association filed under it", () => {
     expect(allowsMiddleSchoolVarsity("MN", "NCHSAA")).toBe(false)
     expect(allowsMiddleSchoolVarsity("MN", "")).toBe(false)
+  })
+
+  it("allows it in a state association's own independent-school division", () => {
+    /*
+     * Tennessee's TSSAA Division II is McCallie, Baylor, MBA, Brentwood Academy and Knoxville
+     * Catholic. Those rows carry association "TSSAA" - the same string as the public divisions -
+     * so only the classification tells them apart, and 13 of 504 DII placements sit before the
+     * wrestler's freshman year against 0 of AA's 672.
+     */
+    expect(allowsMiddleSchoolVarsity("TN", "TSSAA", "DII")).toBe(true)
+    expect(isIndependentClassification("TN", "DII")).toBe(true)
+  })
+
+  it("refuses the public divisions of that same association", () => {
+    expect(allowsMiddleSchoolVarsity("TN", "TSSAA", "AA")).toBe(false)
+    expect(allowsMiddleSchoolVarsity("TN", "TSSAA", "A")).toBe(false)
+    expect(allowsMiddleSchoolVarsity("TN", "TSSAA", "Girls")).toBe(false)
+    expect(allowsMiddleSchoolVarsity("TN", "TSSAA")).toBe(false)
+  })
+
+  it("does not let one state's independent classification travel", () => {
+    expect(allowsMiddleSchoolVarsity("NC", "NCHSAA", "DII")).toBe(false)
+    expect(isIndependentClassification("NC", "DII")).toBe(false)
   })
 
   it("refuses an unregistered state and a blank association", () => {

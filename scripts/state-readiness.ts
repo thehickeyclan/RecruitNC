@@ -118,11 +118,11 @@ async function linkedPlacements(ids: string[]): Promise<Link[]> {
     const chunk = ids.slice(i, i + 200)
     const [nc, other] = await Promise.all([
       sb.from("wrestling_nchsaa_results").select("athlete_id,year,school,classification,place").in("athlete_id", chunk),
-      sb.from("state_tournament_placers").select("athlete_id,season,state,association,school_clean,school_raw,place").in("athlete_id", chunk),
+      sb.from("state_tournament_placers").select("athlete_id,season,state,association,classification,school_clean,school_raw,place").in("athlete_id", chunk),
     ])
     for (const r of nc.data ?? []) out.push({ athlete_id: r.athlete_id, season: Number(r.year), source: "NC", middleSchoolVarsity: r.classification === "NCISA", label: `NC ${r.year} ${r.classification ?? ""} #${r.place ?? "?"} ${r.school ?? ""}`.trim() })
     for (const r of other.data ?? [])
-      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, middleSchoolVarsity: allowsMiddleSchoolVarsity(r.state, r.association), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
+      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, middleSchoolVarsity: allowsMiddleSchoolVarsity(r.state, r.association, r.classification as string | null), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
   }
   // The same placement can sit in a table twice; report it once.
   return [...new Map(out.map((l) => [`${l.athlete_id}|${l.label}`, l])).values()]
