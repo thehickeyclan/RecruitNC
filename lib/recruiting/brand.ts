@@ -124,6 +124,18 @@ export const RECRUITING_BRAND = {
      * so unlike Texas it mints without --canonical.
      */
     { code: "MI", name: "Michigan", live: false },
+    /*
+     * Minnesota is the cleanest package the pipeline has produced: 672 of 672 placer keys resolved,
+     * all 114 champion keys among them, and all 156 champions verified against the winner of their
+     * own final. Every one of its 936 placed rows carries a class year.
+     *
+     * It is also the first to ship `canonical_athlete_id` natively rather than by retrofit, and the
+     * first where that grouping and our matcher agree exactly - 213 athletes either way - so it
+     * needs no --canonical at all. Its championships never entered FloArena: the build runs on
+     * Trackwrestling for 2024/2025 and USA Bracketing for 2026, against The Guillotine's official
+     * results. One association, MSHSL. Top 6, three classes plus girls.
+     */
+    { code: "MN", name: "Minnesota", live: false },
   ],
 } as const
 
