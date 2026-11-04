@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import { type AthleteDim, type MetricEvent, series, statesPresent, weekOf, weeksBetween } from "@/lib/business/metrics"
+import { type AthleteDim, type MetricEvent, series, stateSummary, statesPresent, weekOf, weeksBetween } from "@/lib/business/metrics"
 
 const dims = new Map<string, AthleteDim>([
-  ["nc-boy", { state: "NC", gender: "Male", classYear: 2027 }],
-  ["nc-girl", { state: "NC", gender: "Female", classYear: 2028 }],
-  ["sc-boy", { state: "SC", gender: "Male", classYear: 2027 }],
-  ["no-state", { state: null, gender: "Male", classYear: null }],
+  ["nc-boy", { state: "NC", gender: "Male", classYear: 2027, claimed: true }],
+  ["nc-girl", { state: "NC", gender: "Female", classYear: 2028, claimed: true }],
+  ["sc-boy", { state: "SC", gender: "Male", classYear: 2027, claimed: false }],
+  ["no-state", { state: null, gender: "Male", classYear: null, claimed: false }],
 ])
 
 const WINDOW = { from: "2026-10-05", to: "2026-11-01" }
@@ -120,5 +120,36 @@ describe("series", () => {
 describe("statesPresent", () => {
   it("lists the states in the data, sorted, with no blanks", () => {
     expect(statesPresent(dims)).toEqual(["NC", "SC"])
+  })
+})
+
+describe("stateSummary claims", () => {
+  it("counts a profile a parent holds, not only one the wrestler claimed", () => {
+    const dimsWithParent = new Map(dims)
+    // Held by a parent alone: no dated claim event for it at all.
+    dimsWithParent.set("nc-parent-held", { state: "NC", gender: "Male", classYear: 2027, claimed: true })
+    const events = {
+      profiles_created: [],
+      profiles_claimed: [{ at: "2026-10-06T12:00:00Z", athleteId: "nc-boy" }],
+      profile_edits: [],
+      coach_views: [],
+      coach_stars: [],
+      sign_ins: [],
+    }
+    const s = stateSummary("NC", "all", dimsWithParent, events, new Date("2026-11-04T12:00:00Z"))
+    expect(s.claimed).toBe(3)
+    expect(s.byClass.find((c) => c.classYear === 2027)?.claimed).toBe(2)
+  })
+
+  it("leaves out a state's unclaimed wrestlers", () => {
+    const events = {
+      profiles_created: [],
+      profiles_claimed: [],
+      profile_edits: [],
+      coach_views: [],
+      coach_stars: [],
+      sign_ins: [],
+    }
+    expect(stateSummary("SC", "all", dims, events, new Date("2026-11-04T12:00:00Z")).claimed).toBe(0)
   })
 })

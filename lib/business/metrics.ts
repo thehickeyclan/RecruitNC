@@ -6,7 +6,7 @@
  * so these are trend lines, not snapshots:
  *
  *   profiles_created   athletes.created_at                          from 30 Apr 2025
- *   profiles_claimed   athletes.claimed_at                          from 29 Jul 2025
+ *   profiles_claimed   a family holds it: the wrestler's own account or a parent link, from 29 Jul 2025
  *   profile_edits      athlete_audit_log, change_type=athlete_edit  from 12 Jan 2026
  *   coach_views        user_analytics profile_view, verified college coaches only, from  3 Feb 2026
  *   coach_stars        college_coach_stars.starred_at               from  4 Nov 2025
@@ -77,8 +77,22 @@ export const METRIC_STARTS: Record<Metric, string> = {
 export type Gender = "Male" | "Female"
 export type SiteKey = "rw" | "ncu" | "app" | "untagged"
 
-/** One wrestler's dimensions: the state they count for, their gender and their class. */
-export type AthleteDim = { state: string | null; gender: Gender | null; classYear: number | null }
+/**
+ * One wrestler's dimensions: the state they count for, their gender, their class, and whether a
+ * family holds the profile.
+ *
+ * `claimed` is a wrestler's own account OR a parent link, which is what "claimed" means to the
+ * product and to Matt. Counting `athletes.claimed_at` alone read 210 for North Carolina on
+ * 4 November 2026 when the real figure was 291: 207 held by the wrestler, 134 through a parent,
+ * 50 of them both. The 84 profiles a parent alone holds are claimed in every way that matters -
+ * the family is in, and they are the ones getting the weekly email.
+ */
+export type AthleteDim = {
+  state: string | null
+  gender: Gender | null
+  classYear: number | null
+  claimed: boolean
+}
 
 /** One dated thing that happened, already attributed to a wrestler where it can be. */
 export type MetricEvent = {
@@ -254,6 +268,7 @@ export type StateSummary = {
   /** Distinct college programs that have opened a wrestler here. */
   programs: number
   views: number
+  /** Every class with a profile in this state, oldest first - not only the recruitable four. */
   byClass: Array<{ classYear: number; profiles: number; claimed: number }>
 }
 
@@ -272,7 +287,9 @@ export function stateSummary(
 ): StateSummary {
   const mine = new Set<string>()
   const classes = currentClasses(now)
-  const byClass = new Map<number, { profiles: number; claimed: number }>(classes.map((y) => [y, { profiles: 0, claimed: 0 }]))
+  // Every class that has a profile here, not only the recruitable four: a business view that
+  // silently drops this year's seniors reads as missing numbers to anybody checking it by hand.
+  const byClass = new Map<number, { profiles: number; claimed: number }>()
   let profiles = 0
   let current = 0
 
@@ -281,18 +298,21 @@ export function stateSummary(
     if (gender !== "all" && d.gender !== gender) continue
     mine.add(id)
     profiles++
-    if (d.classYear && classes.includes(d.classYear)) {
-      current++
+    if (d.classYear) {
+      if (!byClass.has(d.classYear)) byClass.set(d.classYear, { profiles: 0, claimed: 0 })
       byClass.get(d.classYear)!.profiles++
+      if (classes.includes(d.classYear)) current++
     }
   }
 
+  // Counted from the wrestlers themselves, not from the dated events: a profile a parent holds
+  // is claimed whether or not we can say which day it happened.
   let claimed = 0
-  for (const e of events.profiles_claimed) {
-    if (!e.athleteId || !mine.has(e.athleteId)) continue
+  for (const id of mine) {
+    const d = dims.get(id)!
+    if (!d.claimed) continue
     claimed++
-    const y = dims.get(e.athleteId)?.classYear
-    if (y && byClass.has(y)) byClass.get(y)!.claimed++
+    if (d.classYear) byClass.get(d.classYear)!.claimed++
   }
 
   const starred = new Set<string>()
@@ -318,6 +338,6 @@ export function stateSummary(
     viewed: viewed.size,
     programs: programs.size,
     views,
-    byClass: classes.map((y) => ({ classYear: y, ...byClass.get(y)! })),
+    byClass: [...byClass.entries()].sort((a, b) => a[0] - b[0]).map(([classYear, v]) => ({ classYear, ...v })),
   }
 }

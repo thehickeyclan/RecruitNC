@@ -79,6 +79,25 @@ export async function loadBusinessData(admin: SupabaseClient): Promise<BusinessD
     "id, state, is_nc_athlete, gender, graduationyear, created_at, claimed_at, claimed_by_user_id",
   )
 
+  /*
+   * A profile is claimed when a FAMILY holds it: the wrestler's own account, or a parent link.
+   * Parent links live in their own table, so `athletes.claimed_at` alone misses every profile a
+   * parent claimed and the wrestler never did - 84 of North Carolina's 291 on 4 November 2026.
+   * A parent-held profile is as claimed as any: it gets the weekly email and shows the names.
+   */
+  const links = await page<{ athlete_id: string | null; created_at: string | null }>(
+    admin,
+    "parent_athlete_links",
+    "id, athlete_id, created_at",
+  )
+  const parentHeldSince = new Map<string, string>()
+  for (const l of links) {
+    if (!l.athlete_id || !l.created_at) continue
+    const id = String(l.athlete_id)
+    const at = parentHeldSince.get(id)
+    if (!at || l.created_at < at) parentHeldSince.set(id, l.created_at)
+  }
+
   const dims = new Map<string, AthleteDim>()
   const athleteOfUser = new Map<string, string>()
   const created: MetricEvent[] = []
@@ -86,14 +105,19 @@ export async function loadBusinessData(admin: SupabaseClient): Promise<BusinessD
   for (const a of athletes) {
     const id = String(a.id)
     const year = Number(a.graduationyear)
+    const heldByWrestler = Boolean(a.claimed_by_user_id)
+    const heldByParentSince = parentHeldSince.get(id)
     dims.set(id, {
       state: athleteStateCode(a),
       gender: genderOf(a.gender),
       classYear: Number.isInteger(year) && year > 2000 && year < 2100 ? year : null,
+      claimed: heldByWrestler || Boolean(heldByParentSince),
     })
     if (a.claimed_by_user_id) athleteOfUser.set(String(a.claimed_by_user_id), id)
     if (a.created_at) created.push({ at: a.created_at, athleteId: id })
-    if (a.claimed_at) claimed.push({ at: a.claimed_at, athleteId: id })
+    // The day the family got it: the earlier of the wrestler's claim and the first parent link.
+    const dates = [heldByWrestler ? a.claimed_at : null, heldByParentSince ?? null].filter((d): d is string => Boolean(d)).sort()
+    if (dates.length) claimed.push({ at: dates[0], athleteId: id })
   }
 
   const edits = await page<{ athlete_id: string | null; created_at: string }>(
