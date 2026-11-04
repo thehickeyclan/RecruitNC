@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest"
 import { isVisibleState, liveStates, recruitingCoverage } from "@/lib/recruiting/brand"
 
 describe("states per address", () => {
-  it("RecruitWrestlers carries North and South Carolina", () => {
-    expect(liveStates(true).map((s) => s.code)).toEqual(["NC", "SC"])
-    expect(recruitingCoverage(true)).toBe("North Carolina and South Carolina")
+  it("RecruitWrestlers carries North Carolina, South Carolina and Virginia", () => {
+    expect(liveStates(true).map((s) => s.code)).toEqual(["NC", "SC", "VA"])
+    expect(recruitingCoverage(true)).toBe("North Carolina, South Carolina, and Virginia")
     expect(isVisibleState("SC", false, true)).toBe(true)
   })
   it("NC United reports North Carolina only, and that is the default", () => {
@@ -14,7 +14,7 @@ describe("states per address", () => {
     expect(isVisibleState("SC", true)).toBe(true) // admins still check other states
   })
   it("states not yet live stay closed everywhere except to admins", () => {
-    expect(isVisibleState("VA", false, true)).toBe(false)
-    expect(isVisibleState("VA", true, true)).toBe(true)
+    expect(isVisibleState("MD", false, true)).toBe(false)
+    expect(isVisibleState("MD", true, true)).toBe(true)
   })
 })

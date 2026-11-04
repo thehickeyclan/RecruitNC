@@ -1,4 +1,5 @@
 import { addDays, easternAt, easternDay, type Reminder } from "@/lib/recruiting/reminders"
+import type { Offer } from "@/lib/recruiting/offers"
 import type { Visit } from "@/lib/recruiting/visits"
 
 /**
@@ -23,5 +24,16 @@ export function demoReminders(athleteId: string, schools: Array<{ id: string; na
   const out: Reminder[] = []
   if (a) out.push({ id: "demo-rem-1", athleteId, schoolId: a.id, visitId: "demo-visit-1", topic: "visit", remindAt: easternAt(addDays(today, 8), 18).toISOString(), note: `${a.name} official visit tomorrow. Pack the visit checklist.`, sentAt: null })
   if (b) out.push({ id: "demo-rem-2", athleteId, schoolId: b.id, visitId: null, topic: "school", remindAt: easternAt(addDays(today, 7), 9).toISOString(), note: `Follow up with the ${b.name} coach.`, sentAt: null })
+  return out
+}
+
+/** Sample offers for three colleges on the list (scripts/add-college-offers.sql), so the comparison can be seen. */
+export function demoOffers(athleteId: string, schoolIds: string[]): Offer[] {
+  const [a, b, c] = schoolIds
+  const base = { athleteId, cost: null, revenueShare: 0, otherAid: 0, updatedAt: null }
+  const out: Offer[] = []
+  if (a) out.push({ ...base, schoolId: a, grants: 0, merit: 8000, athletic: 15000, loans: 5500, years: 4, renews: "unknown" })
+  if (b) out.push({ ...base, schoolId: b, grants: 2000, merit: 20000, athletic: 0, loans: 5500, years: 4, renews: "yes" })
+  if (c) out.push({ ...base, schoolId: c, grants: 0, merit: 5000, athletic: 6000, loans: 0, years: 1, renews: "no" })
   return out
 }

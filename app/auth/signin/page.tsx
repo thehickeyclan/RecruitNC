@@ -46,17 +46,17 @@ function getSafeReturnTo(value: string | null): string | null {
 }
 
 /**
- * Where to go when nothing asked for a specific page: the rankings for anyone who can read them,
- * the rankings sales page for everyone else (see lib/post-sign-in-destination.ts).
+ * Where to land after signing in: the page asked for, or the usual landing when none was - and a
+ * college coach always on My Recruits unless it was a link to a wrestler or report (lib/post-sign-in-destination.ts).
  */
-async function defaultDestination(): Promise<string> {
+async function landing(returnTo: string | null): Promise<string> {
   try {
-    const res = await fetch("/api/auth/landing", { credentials: "include", cache: "no-store" })
+    const res = await fetch(`/api/auth/landing${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`, { credentials: "include", cache: "no-store" })
     const data = (await res.json().catch(() => ({}))) as { destination?: unknown }
     const dest = typeof data.destination === "string" ? data.destination : ""
-    return dest.startsWith("/") && !dest.startsWith("//") ? dest : "/rankings"
+    return dest.startsWith("/") && !dest.startsWith("//") ? dest : returnTo || "/rankings"
   } catch {
-    return "/rankings"
+    return returnTo || "/rankings"
   }
 }
 
@@ -179,7 +179,7 @@ export default function SignInPage() {
     fetch("/api/profile", { credentials: "include" })
       .then(async (r) => {
         if (cancelled) return
-        if (r.ok) window.location.href = returnTo || (await defaultDestination())
+        if (r.ok) window.location.href = await landing(returnTo)
         // 401 = server doesn't see session (e.g. Chrome dropped cookie); don't redirect so user can sign in again
         // Silently ignore 401 - it's expected when not logged in
       })
@@ -270,8 +270,8 @@ export default function SignInPage() {
         }),
       }).catch(() => {})
       setRedirectingAfterSignIn(true)
-      // Where they asked to go, or the rankings (members) / rankings sales page (everyone else).
-      window.location.replace(returnTo || (await defaultDestination()))
+      // Where they asked to go (a college coach: My Recruits), or their usual landing.
+      window.location.replace(await landing(returnTo))
       return
     }
     const errorMsg = typeof data === "object" && data !== null && "error" in data && typeof data.error === "string" ? data.error : null

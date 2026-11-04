@@ -1,5 +1,6 @@
 "use client"
 
+import { metaPixelTrack } from "@/lib/meta-pixel"
 import { BrandText } from "@/components/recruiting/brand-name"
 import { CoachProgramField } from "@/components/recruiting/coach-program-field"
 import type { CoachProgram } from "@/lib/recruiting/coach-program"
@@ -101,13 +102,14 @@ type Role = "athlete" | "parent" | "college-coach" | "hs-club-coach" | "referee"
  * Step one. Every role is a card and one must be picked: the old form made this an optional
  * dropdown halfway down the page, so coaches signed up as nobody and never got access.
  */
+// Referee stays a valid role for the two accounts that have it, but is no card: Fan covers officials (3 Nov 2026).
 const ROLES: Array<{ value: Role; title: string; blurb: string; icon: typeof Trophy }> = [
-  { value: "athlete", title: "Athlete", blurb: "Claim and manage your wrestling profile", icon: Trophy },
+  { value: "athlete", title: "Wrestler", blurb: "Claim and manage your wrestling profile", icon: Trophy },
   { value: "parent", title: "Parent", blurb: "Manage your wrestler's profile and recruiting", icon: Users },
   { value: "college-coach", title: "College coach", blurb: "Free rankings and athlete profiles, instantly", icon: GraduationCap },
   { value: "hs-club-coach", title: "High school or club coach", blurb: "Follow your wrestlers and events", icon: Shield },
   { value: "referee", title: "Referee", blurb: "Officials and event staff", icon: Flag },
-  { value: "fan", title: "Fan", blurb: "Follow commitments, rankings and results", icon: Heart },
+  { value: "fan", title: "Fan", blurb: "Follow rankings, results, commitments and news", icon: Heart },
 ]
 
 const isRole = (value: string | null): value is Role => ROLES.some((r) => r.value === value)
@@ -273,6 +275,8 @@ function SignUpWizard() {
         throw new Error((data as { error?: string; message?: string })?.error || (data as { message?: string })?.message || `An error occurred during sign up (${res.status})`)
       }
       track("signup_completed", returnTo, { role: profileType })
+      // A family account made: the Meta Pixel's Lead (RecruitWrestlers only; a no-op elsewhere).
+      metaPixelTrack("Lead", { content_name: profileType ?? "family" })
       track("verification_email_sent", returnTo)
       setSuccess(true)
     } catch (err) {
@@ -365,7 +369,7 @@ function SignUpWizard() {
                 <CardDescription>We&apos;ll only ask for what you need.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                {ROLES.map(({ value, title, blurb, icon: Icon }) => (
+                {ROLES.filter((r) => r.value !== "referee").map(({ value, title, blurb, icon: Icon }) => (
                   <button
                     key={value}
                     type="button"

@@ -5,6 +5,7 @@
  * says, and a rule added there is searchable the same day.
  */
 import { LEARN_PAGES, MENS_AND_WOMENS, sectionId } from "./content"
+import { MONEY_WORDS } from "./money-words"
 import { GRADE_NAME, TIMELINE } from "./timeline"
 import { TOURNAMENT_LISTS } from "./tournaments"
 import { FAMILY_CHECKLIST, JUCO_QUESTIONS, TRANSFER_RULES, TRANSFER_SUMMARY } from "./transfer-portal"
@@ -67,6 +68,7 @@ export function buildSearchIndex(): SearchEntry[] {
   entries.push({ title: "Women's wrestling: the college pathway", where: "Women's wrestling", href: "/recruiting/learn/womens-wrestling", text: [...WOMENS_PLAYBOOK, ...NEW_PROGRAM_QUESTIONS].join(" ") + " women girls female wrestling college programs scholarships freestyle" })
   entries.push({ title: "NIL in wrestling", where: "NIL in wrestling", href: "/recruiting/learn/nil", text: [...NIL_SUMMARY, ...ASK_A_COLLEGE].join(" ") + " NIL name image likeness revenue sharing collective House settlement" })
   entries.push({ title: "The transfer portal", where: "The transfer portal", href: "/recruiting/learn/transfer-portal", text: [...TRANSFER_SUMMARY, ...FAMILY_CHECKLIST, ...JUCO_QUESTIONS].join(" ") + " transfer portal junior college eligibility roster weight" })
+  for (const w of MONEY_WORDS) entries.push({ title: w.term, where: "Money words", href: `/recruiting/learn/what-will-we-owe#word-${w.id}`, text: `${w.means} ${w.paidBack} money financial aid paying for college` })
   entries.push({ title: "Questions to ask a college coach", where: "Working the process", href: `${WORKING_PAGE}#${QUESTIONS_ID}`, text: COACH_QUESTIONS.join(" ") })
   return entries
 }

@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { athleteStateCode, inState, normalizeStateCode } from "./states"
+import { athleteStateCode, inState, inStates, normalizeStateCode } from "./states"
 
 function recorder() {
   const calls: Array<[string, unknown]> = []
-  const q = { eq: (c: string, v: unknown) => (calls.push([c, v]), q) }
+  const q = {
+    eq: (c: string, v: unknown) => (calls.push([c, v]), q),
+    or: (f: string) => (calls.push(["or", f]), q),
+  }
   return { q, calls }
 }
 
@@ -33,6 +36,35 @@ describe("inState", () => {
   })
 })
 
+describe("inStates", () => {
+  it("is inState for one state, or none", () => {
+    const { q, calls } = recorder()
+    inStates(q, ["NC"])
+    expect(calls).toEqual([["is_nc_athlete", true]])
+    const none = recorder()
+    inStates(none.q, [])
+    expect(none.calls).toEqual([["is_nc_athlete", true]])
+    const sc = recorder()
+    inStates(sc.q, ["sc", "SC"])
+    expect(sc.calls).toEqual([
+      ["state", "SC"],
+      ["is_nc_athlete", false],
+    ])
+  })
+
+  it("keeps North Carolina on its flag and every other state on its code, in one filter", () => {
+    const { q, calls } = recorder()
+    inStates(q, ["NC", "SC", "VA"])
+    expect(calls).toEqual([["or", "is_nc_athlete.eq.true,and(state.in.(SC,VA),is_nc_athlete.eq.false)"]])
+  })
+
+  it("leaves North Carolina out when it is not asked for", () => {
+    const { q, calls } = recorder()
+    inStates(q, ["SC", "VA"])
+    expect(calls).toEqual([["or", "and(state.in.(SC,VA),is_nc_athlete.eq.false)"]])
+  })
+})
+
 describe("athleteStateCode", () => {
   it("is NC for a flagged wrestler whatever the state column says", () => {
     expect(athleteStateCode({ is_nc_athlete: true, state: null })).toBe("NC")
@@ -42,5 +74,13 @@ describe("athleteStateCode", () => {
     expect(athleteStateCode({ is_nc_athlete: false, state: " sc " })).toBe("SC")
     expect(athleteStateCode({ is_nc_athlete: false, state: null })).toBeNull()
     expect(normalizeStateCode("Virginia")).toBeNull()
+  })
+})
+
+describe("inStates with another condition", () => {
+  it("admits rows the extra condition matches, alongside the states", () => {
+    let filter = ""
+    inStates({ or: (f: string) => ((filter = f), null) }, ["NC", "SC"], ["and(is_nc_athlete.eq.false,claimed_at.not.is.null)"])
+    expect(filter).toBe("is_nc_athlete.eq.true,and(state.in.(SC),is_nc_athlete.eq.false),and(is_nc_athlete.eq.false,claimed_at.not.is.null)")
   })
 })

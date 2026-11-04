@@ -162,6 +162,9 @@ describe("looksLikeTournament", () => {
     expect(looksLikeTournament("Navy vs. Gold")).toBe(true) // an intra-squad scrimmage, not Navy
     expect(looksLikeTournament("Missouri Valley Invite")).toBe(true) // "Invite", not "Invitational"
     expect(looksLikeTournament("Battle in the Bluegrass")).toBe(true)
+    // NC State's intra-squad night, spaced rather than hyphenated: a dual with a score here would
+    // push "Final: NC State 20, Wrestle Offs 15" to every follower.
+    expect(looksLikeTournament("Wrestle Offs")).toBe(true)
   })
 
   it("still lets a real opponent through", () => {

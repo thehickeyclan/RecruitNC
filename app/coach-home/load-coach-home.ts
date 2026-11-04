@@ -1,4 +1,6 @@
 import { loadStaffActivity } from "@/lib/recruiting/staff-activity"
+import { loadProgramNeeds } from "@/lib/recruiting/needs-server"
+import { needStatus } from "@/lib/recruiting/needs"
 import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -210,6 +212,14 @@ export async function loadCoachHome(
     interested,
     suggested,
     activity: await loadStaffActivity(admin, userId, 6).catch(() => []),
+    // Coach-confirmed needs, counted for the card that leads to them. Never fails the page.
+    needs: await loadProgramNeeds(admin, { schoolId: (profile?.school_id as string | null) ?? null, userId }).then(
+      ({ available, needs }) => {
+        const statuses = needs.map((n) => needStatus(n))
+        return { available, live: statuses.filter((s) => s === "active" || s === "confirm").length, toConfirm: statuses.filter((s) => s === "confirm" || s === "expired").length }
+      },
+      () => null,
+    ),
     rankingYears: [...releasedClassYears(viewGender)],
     viewGender,
     coachProgram,

@@ -25,8 +25,8 @@ export const RECRUITING_BRAND = {
   states: [
     { code: "NC", name: "North Carolina", live: true },
     { code: "SC", name: "South Carolina", live: true }, // Live 26 Oct 2026 (Matt); scripts/state-readiness.ts --state SC: all data gates pass
-    // Being built (Matt, 21 Oct 2026): profiles first, not open to coaches until he says go.
-    { code: "VA", name: "Virginia", live: false },
+    // Live 3 Nov 2026 (Matt: "virginia should be up.. we won't have rankings for a bit"). Open, not ranked yet.
+    { code: "VA", name: "Virginia", live: true, ranked: false },
     /*
      * Maryland's data went in on 22 Oct and passes every readiness gate, but the state was
      * missing from this list entirely - and a state that is not here does not exist to the
@@ -208,6 +208,48 @@ export function isVisibleState(
   preview: readonly string[] = [],
 ): boolean {
   return visibleStates(isAdmin, onRecruitWrestlers, preview).some((s) => s.code === String(code ?? "").toUpperCase())
+}
+
+/**
+ * States the athlete directory lists. RecruitWrestlers lists every state we hold profiles for,
+ * ranked or not (Matt, 3 Nov 2026: "why not have it there too?"): the profiles are public by link
+ * already, and a family who cannot find their wrestler makes a second one. Rankings and state
+ * pages stay on the live states. NC United lists what it always did.
+ */
+export function directoryStates(
+  isAdmin: boolean,
+  onRecruitWrestlers = false,
+  preview: readonly string[] = [],
+): RecruitingState[] {
+  return onRecruitWrestlers ? RECRUITING_BRAND.states : visibleStates(isAdmin, false, preview)
+}
+
+export function isDirectoryState(
+  code: string | null | undefined,
+  isAdmin: boolean,
+  onRecruitWrestlers = false,
+  preview: readonly string[] = [],
+): boolean {
+  return directoryStates(isAdmin, onRecruitWrestlers, preview).some((s) => s.code === String(code ?? "").toUpperCase())
+}
+
+/**
+ * Live states that have rankings. A state can open before its board exists (Virginia, 3 Nov 2026):
+ * its profiles, directory and claims are live, but Insider is not sold there and the rankings pages
+ * do not offer it until `ranked: false` comes off.
+ */
+export function isRankedState(state: RecruitingState): boolean {
+  return !("ranked" in state) || (state as { ranked?: boolean }).ranked !== false
+}
+
+export function rankedStates(onRecruitWrestlers = false): RecruitingState[] {
+  return liveStates(onRecruitWrestlers).filter(isRankedState)
+}
+
+/** "North Carolina and South Carolina": the live states with rankings. */
+export function rankingsCoverage(onRecruitWrestlers = false): string {
+  const names = rankedStates(onRecruitWrestlers).map((s) => s.name)
+  return new Intl.ListFormat("en-US", { style: "long", type: "conjunction" }).format(names)
 }
 
 /** "North Carolina", "North Carolina and South Carolina", "North Carolina, South Carolina, and Virginia". */

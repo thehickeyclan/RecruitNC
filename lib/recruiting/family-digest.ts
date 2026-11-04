@@ -38,6 +38,9 @@ export type FamilyDigest = {
   programs: string[]
   /** Programs viewing for the first time ever, inside the window; names only for a paid plan. */
   firstTime: string[]
+  /** All time: programs that have ever viewed, and every coach view. Counts are free for everyone. */
+  totalPrograms: number
+  totalViews: number
   unreadMessages: number
 }
 
@@ -109,6 +112,8 @@ export async function buildFamilyDigests(admin: SupabaseClient, options: { days?
         programCount: programs.length || 1,
         programs: paid ? programs : [],
         firstTime: paid ? firstTime : [],
+        totalPrograms: Math.max(summary.schools.length, programs.length),
+        totalViews: Math.max(summary.totalViews, recent.length),
         unreadMessages: await unreadCount(admin, userId).catch(() => 0),
       })
     }
@@ -129,10 +134,12 @@ export function renderFamilyDigest(d: FamilyDigest): { subject: string; html: st
       : d.tier === "rankings"
         ? { label: "See who's viewing", href: `${SITE}/my-recruiting/activity` }
         : { label: "Open your Command Center", href: `${SITE}/my-recruiting/activity` }
+  const totalLine = `All time: ${d.totalPrograms} college program${d.totalPrograms === 1 ? "" : "s"}, ${d.totalViews} coach view${d.totalViews === 1 ? "" : "s"}.`
+  const total = `<p style="margin:0 0 14px;font-size:15px;color:#374151">${esc(totalLine)}</p>`
   const first = d.firstTime.length ? `<p style="margin:0 0 12px;padding:10px 12px;background:#fef9e7;border-radius:6px;font-size:14px"><b>New:</b> ${esc(d.firstTime.join(", "))} looked for the first time.</p>` : ""
   const names = d.programs.length
     ? `<ul style="margin:0 0 16px;padding-left:18px;font-size:15px">${d.programs.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`
-    : `<p style="margin:0 0 16px;font-size:15px;color:#374151">The program names come with Insider, from $9.99 a month.</p>`
+    : `<p style="margin:0 0 16px;font-size:15px;color:#374151">The program names, rankings and premium content come with Insider, from $9.99 a month.</p>`
   const messages = d.unreadMessages
     ? `<p style="margin:0 0 16px;font-size:15px"><b>${d.unreadMessages}</b> coach message${d.unreadMessages === 1 ? "" : "s"} waiting. <a href="${SITE}/inbox" style="color:#003366">Read ${d.unreadMessages === 1 ? "it" : "them"}</a>.</p>`
     : ""
@@ -140,20 +147,22 @@ export function renderFamilyDigest(d: FamilyDigest): { subject: string; html: st
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.5;color:#111827;max-width:560px;margin:0 auto;padding:20px">
 <div style="background:#0B1D3A;padding:22px 24px;border-radius:10px 10px 0 0">
+<img src="${SITE}/images/nc-united-logo-official.png" alt="NC United" width="60" style="display:block;border:0;margin:0 0 14px;max-width:60px;height:auto">
 <p style="margin:0;color:#D3B574;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Your week in recruiting</p>
 <h1 style="margin:6px 0 0;color:#fff;font-size:24px;line-height:1.2">${esc(who)} viewed ${esc(d.wrestlerFirstName)}&rsquo;s profile</h1>
 </div>
 <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;padding:22px 24px">
-${first}${names}${messages}
+${total}${first}${names}${messages}
 <p style="margin:20px 0"><a href="${cta.href}" style="display:inline-block;background:#D3B574;color:#0A1628;padding:13px 26px;border-radius:8px;font-weight:800;text-decoration:none">${esc(cta.label)}</a></p>
-<p style="margin:0;font-size:13px;color:#6b7280">College coaches look at NC wrestler profiles on RecruitWrestlers every day. A complete profile, current results and a highlight reel help them decide to reach out.</p>
+<p style="margin:0;font-size:13px;color:#6b7280">College coaches look at NC wrestler profiles every day. A complete profile, current results and a highlight reel help them decide to reach out.</p>
 </div>
-<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:16px">NC United Wrestling · <a href="${esc(unsub)}" style="color:#9ca3af">Unsubscribe</a></p>
+<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:16px">NC United · <a href="${esc(unsub)}" style="color:#9ca3af">Unsubscribe</a></p>
 </body></html>`
   const text = [
     `${who} viewed ${d.wrestlerFirstName}'s profile this week.`,
+    totalLine,
     d.firstTime.length ? `New: ${d.firstTime.join(", ")} looked for the first time.` : "",
-    d.programs.length ? d.programs.map((p) => `- ${p}`).join("\n") : "The program names come with Insider, from $9.99 a month.",
+    d.programs.length ? d.programs.map((p) => `- ${p}`).join("\n") : "The program names, rankings and premium content come with Insider, from $9.99 a month.",
     d.unreadMessages ? `${d.unreadMessages} coach message(s) waiting: ${SITE}/inbox` : "",
     `${cta.label}: ${cta.href}`,
     `Unsubscribe: ${unsub}`,
@@ -178,7 +187,7 @@ export async function sendFamilyDigests(admin: SupabaseClient, options: { dryRun
   for (const d of toSend) {
     const { subject, html, text } = renderFamilyDigest(d)
     const result = await resend.emails
-      .send({ from: "RecruitWrestlers <info@ncwrestlingunited.com>", to: [d.email], subject, html, text, headers: { "List-Unsubscribe": `<${unsubscribeUrl(SITE, d.email)}>` } })
+      .send({ from: "NC United <info@ncwrestlingunited.com>", to: [d.email], subject, html, text, headers: { "List-Unsubscribe": `<${unsubscribeUrl(SITE, d.email)}>` } })
       .catch((e: unknown) => ({ error: { message: e instanceof Error ? e.message : String(e) } }))
     if ((result as { error?: unknown }).error) failed++
     else sent++

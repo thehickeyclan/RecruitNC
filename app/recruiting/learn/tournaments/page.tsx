@@ -15,6 +15,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { BrandName } from "@/components/recruiting/brand-name"
 import { productName } from "@/lib/recruiting/product-name"
+import { FamilyPortalFrame } from "@/components/portal/portal-shell"
 
 export const dynamic = "force-dynamic"
 
@@ -58,7 +59,7 @@ function EventCard({ event }: { event: Tournament }) {
   )
 }
 
-export default async function TournamentsPage() {
+async function TournamentsPageBody() {
   const admin = createAdminClient()
   const { userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
   const focus = await familyFocus(admin, userId)
@@ -108,5 +109,15 @@ export default async function TournamentsPage() {
           </a>
         </p>
     </LearnFrame>
+  )
+}
+
+
+/** Inside the Command Center menu for a family (components/portal/portal-shell.tsx). */
+export default async function TournamentsPage() {
+  return (
+    <FamilyPortalFrame active="learn">
+      <TournamentsPageBody />
+    </FamilyPortalFrame>
   )
 }

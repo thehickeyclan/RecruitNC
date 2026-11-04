@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { currentClassYears, mostRecentGraduatedClassYear } from "@/lib/class-years"
-import { HOME_STATE, inState, normalizeStateCode } from "@/lib/recruiting/states"
+import { HOME_STATE, inStates, normalizeStateCode } from "@/lib/recruiting/states"
 
 /**
  * Directory list columns only — omit bio and other large fields.
@@ -61,6 +61,17 @@ export type ProspectDirectoryFilters = {
    * 2026: "should show all kids 2027-2030"). Overrides `state`.
    */
   withStates?: string[] | null
+  /**
+   * With `withStates`: also every claimed profile from a state not open yet. A family that claims
+   * a profile has put him on the platform; NY's first claim was invisible to every coach because
+   * New York had not launched (Kade Mustin, 3 November 2026). RecruitWrestlers only.
+   */
+  withClaimedElsewhere?: boolean
+  /**
+   * A name search across every state, ignoring `state` and `withStates`: RecruitWrestlers' search
+   * box finds a wrestler in any state, not just the ones loaded (Matt, 3 Nov 2026).
+   */
+  nameAnyState?: string | null
   graduationYear?: string | null
   minYear?: number | null
   maxYear?: number | null
@@ -140,65 +151,27 @@ export function normalizeProspectDirectoryRow(p: Record<string, unknown>): Prosp
   }
 }
 
-const KNOWN_NON_NC_STATES = new Set([
-  "sc",
-  "south carolina",
-  "ga",
-  "georgia",
-  "va",
-  "virginia",
-  "tn",
-  "tennessee",
-  "fl",
-  "florida",
-  "oh",
-  "ohio",
-  "pa",
-  "pennsylvania",
-  "ny",
-  "new york",
-  "tx",
-  "texas",
-  "ca",
-  "california",
-  "al",
-  "alabama",
-])
+/** PostgREST: a claimed profile outside North Carolina (the live states are already in the list). */
+const CLAIMED_ELSEWHERE_FILTER = "and(is_nc_athlete.eq.false,claimed_at.not.is.null)"
 
-const NON_NC_LOCATION_SUBSTRINGS = [
-  "south carolina",
-  "georgia",
-  "virginia",
-  "tennessee",
-  "florida",
-  "ohio",
-  "pennsylvania",
-  "new york",
-  "texas",
-  "california",
-  "alabama",
-] as const
+/**
+ * The cache slice for claimed profiles in states not open yet: `claimedElsewhereSlice(["NC","SC"])`
+ * is "CLAIMED:NC,SC", the live states it leaves out.
+ */
+export const claimedElsewhereSlice = (liveCodes: readonly string[]) => `CLAIMED:${[...liveCodes].sort().join(",")}`
 
-/** Same rules as /prospects/all client filter. */
-export function isNorthCarolinaProspect(prospect: { state?: unknown; location?: unknown }): boolean {
-  const state = String(prospect.state ?? "").trim().toLowerCase()
-  if (state) {
-    if (state === "nc" || state === "north carolina") return true
-    if (KNOWN_NON_NC_STATES.has(state)) return false
-    return true
+function claimedElsewhereStates(state: string | null | undefined): string[] | null {
+  const m = String(state ?? "").match(/^CLAIMED:([A-Z,]*)$/)
+  return m ? m[1]!.split(",").filter(Boolean) : null
+}
+
+function claimedElsewhere<Q>(query: Q, liveCodes: string[]): Q {
+  const q = (query as unknown as { eq: (c: string, v: unknown) => unknown }).eq("is_nc_athlete", false) as {
+    not: (c: string, op: string, v: unknown) => unknown
   }
-
-  const location = String(prospect.location ?? "").trim().toLowerCase()
-  if (location) {
-    if (/\bnorth carolina\b/.test(location) || /\bnc\b/.test(location.replace(/[.,]/g, " "))) {
-      return true
-    }
-    if (NON_NC_LOCATION_SUBSTRINGS.some((token) => location.includes(token))) {
-      return false
-    }
-  }
-
-  return true
+  const claimed = q.not("claimed_at", "is", null) as { not: (c: string, op: string, v: unknown) => unknown }
+  const others = liveCodes.filter((c) => c !== HOME_STATE)
+  return (others.length ? claimed.not("state", "in", `(${others.join(",")})`) : claimed) as Q
 }
 
 export async function fetchProspectDirectoryPage(
@@ -232,22 +205,28 @@ export async function fetchProspectDirectoryPage(
     )
   }
 
-  // Another state's wrestlers by the one state rule (lib/recruiting/states.ts). North Carolina keeps
-  // this directory's own rule below, so its list is what it always was.
+  /*
+   * Every state, North Carolina included, by the one state rule (lib/recruiting/states.ts), in the
+   * query itself. North Carolina used to read every athlete and keep anyone whose state was not on a
+   * short list of neighbours, so once placer profiles were minted in other states the NC list
+   * carried 2,154 wrestlers from Louisiana, Maryland, Mississippi... (2 Nov 2026).
+   */
   const others = (filters.withStates ?? []).map((c) => normalizeStateCode(c)).filter((c): c is string => Boolean(c) && c !== HOME_STATE)
-  const state = others.length ? HOME_STATE : (normalizeStateCode(filters.state) ?? HOME_STATE)
-  if (!others.length && state !== HOME_STATE) query = inState(query, state)
+  const claimedOutside = claimedElsewhereStates(filters.state)
+  const nameTerm = String(filters.nameAnyState ?? "").replace(/[%_,()*\\]/g, " ").trim()
+  if (nameTerm) {
+    query = query.ilike("name", `%${nameTerm}%`)
+  } else if (claimedOutside) {
+    query = claimedElsewhere(query, claimedOutside)
+  } else {
+    const states = others.length ? [HOME_STATE, ...others] : [normalizeStateCode(filters.state) ?? HOME_STATE]
+    query = inStates(query, states, filters.withClaimedElsewhere && others.length ? [CLAIMED_ELSEWHERE_FILTER] : [])
+  }
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
 
-  const normalized = (data ?? []).map((row) => normalizeProspectDirectoryRow(row as Record<string, unknown>))
-  const where = (p: unknown) => p as { state?: string | null; location?: unknown }
-  const inList = others.length
-    ? normalized.filter((p) => isNorthCarolinaProspect(where(p)) || others.includes(normalizeStateCode(where(p).state) ?? ""))
-    : state === HOME_STATE
-      ? normalized.filter((p) => isNorthCarolinaProspect(where(p)))
-      : normalized
+  const inList = (data ?? []).map((row) => normalizeProspectDirectoryRow(row as Record<string, unknown>))
 
   return {
     prospects: inList,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isHighSchoolEvent } from "@/lib/high-school-window"
+import { isHighSchoolEvent, isVarsitySeason, isVarsityStateYear } from "@/lib/high-school-window"
 
 describe("isHighSchoolEvent", () => {
   const c2027 = { graduationYear: 2027 }
@@ -49,5 +49,24 @@ describe("bouts", () => {
   it("drops middle school bouts and keeps undated ones", () => {
     const b = [{ date: "2025-01-10" }, { date: "2026-01-10" }, { date: "" }]
     expect(highSchoolBouts(b, 2029)).toHaveLength(2)
+  })
+})
+
+describe("isVarsitySeason", () => {
+  it("counts varsity seasons from seventh grade (Kade Mustin, NY, class of 2028)", () => {
+    expect(isVarsitySeason("2022-23", 2028)).toBe(true)
+    expect(isVarsitySeason("2023-24", 2028, "8th Grade")).toBe(true)
+    expect(isVarsitySeason("2021-22", 2028)).toBe(false)
+    expect(isVarsitySeason("2021-22", 2028, "6th Grade")).toBe(false)
+  })
+  it("keeps the ranking rule unchanged", () => {
+    expect(isHighSchoolSeason("2023-24", 2028, "8th Grade")).toBe(false)
+  })
+})
+
+describe("isVarsityStateYear", () => {
+  it("admits a state championship from seventh grade", () => {
+    expect(isVarsityStateYear(2023, 2028)).toBe(true)
+    expect(isVarsityStateYear(2022, 2028)).toBe(false)
   })
 })

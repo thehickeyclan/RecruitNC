@@ -123,7 +123,9 @@ function normalizeGradeLabel(input?: string | number): string | undefined {
   if (input === undefined || input === null) return undefined
   const s = String(input).toLowerCase().trim()
 
-  // Handle numeric grades
+  // Handle numeric grades. Seventh and eighth graders wrestle varsity in NY and PA (lib/high-school-window.ts).
+  if (/^7(th)?( grade)?$/.test(s)) return "7th Grade"
+  if (/^8(th)?( grade)?$/.test(s)) return "8th Grade"
   if (/^9$|^9th$/.test(s)) return "Freshman"
   if (/^10$|^10th$/.test(s)) return "Sophomore"
   if (/^11$|^11th$/.test(s)) return "Junior"
@@ -184,7 +186,7 @@ function normalizeSeasons(rows: SeasonData[]): SeasonData[] {
     }
   }
 
-  const gradeOrder: Record<string, number> = { senior: 1, junior: 2, sophomore: 3, freshman: 4 }
+  const gradeOrder: Record<string, number> = { senior: 1, junior: 2, sophomore: 3, freshman: 4, "8th grade": 5, "7th grade": 6 }
   return Array.from(byKey.values()).sort((a, b) => {
     const aSeason = seasonSortValue(a.season)
     const bSeason = seasonSortValue(b.season)
@@ -221,6 +223,10 @@ function gradeFromGradYear(seasonStart?: number, gradYear?: number): string | un
       return "Sophomore" // Graduates in 3 springs
     case 4:
       return "Freshman" // Graduates in 4 springs
+    case 5:
+      return "8th Grade"
+    case 6:
+      return "7th Grade"
     default:
       console.log("[v0] No grade match for years until graduation:", yearsUntilGraduation)
       return undefined
@@ -449,6 +455,12 @@ export function MatchDataSectionImproved({
         break
       case "Freshman":
         yearsToAdd = 4
+        break
+      case "8th Grade":
+        yearsToAdd = 5
+        break
+      case "7th Grade":
+        yearsToAdd = 6
         break
     }
 

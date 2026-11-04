@@ -78,11 +78,17 @@ export function ClaimExplainer() {
   )
 }
 
-/** Below the search: what claiming gets you, the three steps, and who sees the private details. */
-export function ClaimDetails() {
+/**
+ * Below the search: what claiming gets you, the three steps, and who sees the private details.
+ *
+ * The example panel sells claiming to someone who has not found themselves yet. Once the search
+ * shows their own name it is noise: "6 programs viewed Jordan" under Gavin Hickey's result read as
+ * if it were about him (Matt, 4 Nov 2026). So it goes when there are results.
+ */
+export function ClaimDetails({ showExample = true }: { showExample?: boolean }) {
   return (
     <section className="mx-auto mt-6 w-full max-w-xl text-white">
-      <ExampleViews />
+      {showExample ? <ExampleViews /> : null}
 
       <ol className="mt-5 grid gap-2 sm:grid-cols-3">
         {STEPS.map(([title, body], i) => (

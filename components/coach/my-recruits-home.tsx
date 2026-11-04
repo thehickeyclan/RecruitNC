@@ -7,7 +7,7 @@
  * link cards are left out, the coach menu has them.
  */
 import Link from "next/link"
-import { ArrowRight, MessageSquare } from "lucide-react"
+import { ArrowRight, ClipboardList, MessageSquare } from "lucide-react"
 import { MyRecruitsBoard } from "@/components/my-recruits-board"
 import { AlertsPanel, CompetingNextPanel, Super32Notice, TopUncommitted, type CoachHomeData } from "@/app/coach-home/coach-home-client"
 
@@ -40,11 +40,33 @@ function MessagesToAnswer({ data }: { data: CoachHomeData }) {
   )
 }
 
+/** Recruiting needs on the coach's home: post one, or confirm the ones going stale. */
+function NeedsCard({ data, asUserId }: { data: CoachHomeData; asUserId: string | null }) {
+  const n = data.needs
+  if (!n?.available) return null
+  const href = asUserId ? `/my-recruits/needs?as=${encodeURIComponent(asUserId)}` : "/my-recruits/needs"
+  return (
+    <Link href={href} className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#0f1c2e] p-4 hover:border-[#D3B574]/40">
+      <span className="flex min-w-0 items-center gap-3">
+        <ClipboardList className="h-5 w-5 shrink-0 text-[#D3B574]" />
+        <span className="min-w-0">
+          <span className="block text-sm font-black text-white">Recruiting needs</span>
+          <span className="block text-xs text-white/55">
+            {n.live === 0 ? "Post the weights and classes you are recruiting. Get a matching list." : `${n.live} live${n.toConfirm ? ` · ${n.toConfirm} to confirm` : ""}`}
+          </span>
+        </span>
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 text-[#D3B574]" />
+    </Link>
+  )
+}
+
 export function MyRecruitsHome({ data, viewingAs = null }: { data: CoachHomeData | null; viewingAs?: { userId: string; label: string } | null }) {
   const womens = data?.viewGender === "Female"
   const needsYou = data ? (
     <div className="mt-2">
       <Super32Notice womens={womens} />
+      <NeedsCard data={data} asUserId={viewingAs?.userId ?? null} />
       <AlertsPanel data={data} />
       <MessagesToAnswer data={data} />
     </div>

@@ -17,6 +17,7 @@ import { loadScoutingEntitlement } from "@/lib/scouting-report-entitlement-db"
 import { classifyViewer } from "@/lib/viewer-role"
 import { canSeeProspectRanking, hasPortalAccess } from "@/lib/ranking-visibility"
 import { resolveRankingViewer } from "@/lib/ranking-access"
+import { familyStateForUser, plansForState } from "@/lib/recruiting/plans-for-state"
 
 /**
  * Start checkout for a scouting report — one report, or the unlimited subscription.
@@ -78,6 +79,16 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient()
+  // Insider is the rankings; outside the ranked states the plan is the Command Center (lib/recruiting/plans-for-state.ts).
+  if (kind === "subscription" || kind === "subscription_annual") {
+    const familyState = await familyStateForUser(admin, user.id).catch(() => null)
+    if (!plansForState(familyState).insider) {
+      return NextResponse.json(
+        { error: "Rankings do not cover your state yet. The Recruiting Command Center is the plan for you.", reason: "insider_not_offered" },
+        { status: 400 },
+      )
+    }
+  }
   const { data: profile } = await admin
     .from("user_profiles")
     .select("role, profile_type, verified_coach, is_admin, email")

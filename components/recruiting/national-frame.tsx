@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import type { FamilyNextStep } from "@/lib/recruiting/family-next-step"
 import { usePathname } from "next/navigation"
-import { LogOut, Menu, X } from "lucide-react"
+import { LogOut, Menu, Users, X } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { RwLogo } from "@/components/recruiting/rw-mark"
 import { useCoachMessageBadge, useNavNew } from "@/hooks/use-nav-badges"
@@ -53,7 +53,7 @@ export function NationalLockup({ className = "" }: { className?: string }) {
 }
 
 export function NationalHeader() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, isAdmin } = useAuth()
   const [open, setOpen] = useState(false)
   const pathname = usePathname() ?? ""
   const messages = useCoachMessageBadge(!!user, pathname)
@@ -83,6 +83,8 @@ export function NationalHeader() {
   const cta = user ? (next?.href && next.label ? { href: next.href, label: next.label } : null) : { href: "/create-profile", label: "Claim free profile" }
   const mine = next?.athleteId ? [{ href: `/view-profile?id=${encodeURIComponent(next.athleteId)}`, label: "My profile" }] : []
   const links: { href: string; label: string }[] = user ? [...mine, { href: "/my-recruiting", label: "Command Center" }, ...FREE, { href: "/inbox", label: "Messages" }] : LINKS
+  // Admins reach the coaches' portal from here, as NC United's account menu does (Matt, 2 Nov 2026).
+  const coachView = user && isAdmin ? { href: "/coach-home?view=coach", label: "MyRecruits" } : null
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B1426]/95 text-white backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -105,6 +107,11 @@ export function NationalHeader() {
           ) : null}
           {user ? (
             <>
+              {coachView ? (
+                <a href={coachView.href} title="The coaches' portal, as a coach sees it" className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white sm:inline-flex">
+                  <Users className="h-4 w-4" aria-hidden /> {coachView.label}
+                </a>
+              ) : null}
               <NotificationBell signedIn />
               <a href="/profile" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
                 My account
@@ -139,7 +146,7 @@ export function NationalHeader() {
               {cta.label}
             </a>
           ) : null}
-          {[...links, ...(user ? [{ href: "/profile", label: "My account" }] : [{ href: "/auth/signin", label: "Sign in" }])].map((l) => (
+          {[...links, ...(coachView ? [coachView] : []), ...(user ? [{ href: "/profile", label: "My account" }] : [{ href: "/auth/signin", label: "Sign in" }])].map((l) => (
             <a key={l.label} href={l.href} className="flex items-center rounded-lg px-2 py-2.5 text-base font-semibold text-white/85 hover:bg-white/5">
               {l.label}
               {user ? <NavMark {...marks[l.href]} /> : null}
@@ -162,7 +169,7 @@ export function NationalFooter() {
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
           <NationalLockup />
-          <p className="mt-2 text-sm text-white/45">College wrestling recruiting, built on verified results.</p>
+          <p className="mt-2 text-sm text-white/45">One platform for families and coaches.</p>
         </div>
         <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/60">
           {FOOTER.map((l) => (

@@ -6,6 +6,7 @@ import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 import { isValidProfileId } from "@/lib/profile-id"
+import { ShowMore, useShowMore } from "@/components/show-more"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 
 interface NHSCAResult {
@@ -61,6 +62,8 @@ interface RankingsTableViewProps {
   defaultSortField?: SortField
   defaultSortDirection?: SortDirection
   theme?: "light" | "dark"
+  /** Draw this many rows, then more as the reader scrolls (components/show-more.tsx). All of them when absent. */
+  pageSize?: number
 }
 
 type SortField = "rank" | "name" | "school" | "weight" | "year"
@@ -76,6 +79,7 @@ export function RankingsTableView({
   defaultSortField,
   defaultSortDirection,
   theme = "light",
+  pageSize,
 }: RankingsTableViewProps) {
   const isDark = theme === "dark"
   const [sortField, setSortField] = useState<SortField>(defaultSortField ?? "rank")
@@ -138,76 +142,40 @@ export function RankingsTableView({
     checkCoachStatus()
   }, [user, profile, isAdmin, isCoach])
 
+  /*
+   * Logos for the colleges committed wrestlers chose - each college once, all at once. It used to
+   * ask one at a time, once per wrestler, and print every row of the list to the console first.
+   */
+  const committedColleges = [
+    ...new Set(
+      athletes
+        .filter((a) => a.recruiting_status === "Committed" && a.college && a.college.trim() !== "" && a.college !== "Not specified" && a.college !== "Undecided")
+        .map((a) => a.college as string),
+    ),
+  ].sort()
+  const collegeKey = committedColleges.join("|")
   useEffect(() => {
-    const fetchCollegeLogos = async () => {
-      console.log("[v0] Starting to fetch college logos")
-      console.log("[v0] Total athletes:", athletes.length)
-
-      console.log(
-        "[v0] All athletes data:",
-        athletes.map((a) => ({
-          name: a.name,
-          recruiting_status: a.recruiting_status,
-          college: a.college,
-          has_both: !!(a.recruiting_status === "Committed" && a.college),
-        })),
-      )
-
-      const committedAthletes = athletes.filter(
-        (a) =>
-          a.recruiting_status === "Committed" &&
-          a.college &&
-          a.college.trim() !== "" &&
-          a.college !== "Not specified" &&
-          a.college !== "Undecided",
-      )
-
-      console.log("[v0] Committed athletes found:", committedAthletes.length)
-      console.log(
-        "[v0] Committed athletes details:",
-        committedAthletes.map((a) => ({
-          name: a.name,
-          college: a.college,
-          recruiting_status: a.recruiting_status,
-        })),
-      )
-
-      const logos: Record<string, string> = {}
-
-      for (const athlete of committedAthletes) {
-        if (athlete.college) {
-          try {
-            const url = `/api/logo-mappings/by-entity/college/${encodeURIComponent(athlete.college)}`
-            console.log(`[v0] Fetching logo for ${athlete.college} from:`, url)
-            const response = await fetch(url)
-            console.log(`[v0] Response status for ${athlete.college}:`, response.status)
-
-            if (response.ok) {
-              const data = await response.json()
-              console.log(`[v0] Logo data for ${athlete.college}:`, data)
-              if (data.success && data.logo_url) {
-                logos[athlete.college] = data.logo_url
-                console.log(`[v0] Successfully added logo for ${athlete.college}:`, data.logo_url)
-              } else {
-                console.log(`[v0] No logo URL found for ${athlete.college}`)
-              }
-            } else {
-              console.log(`[v0] Failed to fetch logo for ${athlete.college}`)
-            }
-          } catch (error) {
-            console.error(`[v0] Error fetching logo for ${athlete.college}:`, error)
-          }
+    if (!committedColleges.length) return
+    let cancelled = false
+    void Promise.all(
+      committedColleges.map(async (college) => {
+        try {
+          const response = await fetch(`/api/logo-mappings/by-entity/college/${encodeURIComponent(college)}`)
+          if (!response.ok) return null
+          const data = await response.json()
+          return data.success && data.logo_url ? ([college, String(data.logo_url)] as const) : null
+        } catch {
+          return null
         }
-      }
-
-      console.log("[v0] Final collegeLogos object:", logos)
-      setCollegeLogos(logos)
+      }),
+    ).then((pairs) => {
+      if (!cancelled) setCollegeLogos(Object.fromEntries(pairs.filter((p): p is readonly [string, string] => p !== null)))
+    })
+    return () => {
+      cancelled = true
     }
-
-    if (athletes.length > 0) {
-      fetchCollegeLogos()
-    }
-  }, [athletes, user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collegeKey])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -291,6 +259,7 @@ export function RankingsTableView({
       return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
     }
   })
+  const page = useShowMore(sortedAthletes.length, pageSize, athletes)
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null
@@ -399,7 +368,7 @@ export function RankingsTableView({
             </TableRow>
           </TableHeader>
           <TableBody className={isDark ? "bg-[#0f1c2e]" : "bg-white"}>
-            {sortedAthletes.map((athlete, index) => {
+            {sortedAthletes.slice(0, page.limit).map((athlete, index) => {
               const rankDisplayG = athlete.rank_display === "G"
               const rankValue =
                 rankDisplayG
@@ -648,6 +617,8 @@ export function RankingsTableView({
           </TableBody>
         </Table>
       </div>
+
+      {pageSize ? <ShowMore remaining={page.remaining} pageSize={pageSize} onMore={page.more} dark={isDark} /> : null}
 
       {sortedAthletes.length === 0 && (
         <div className={`text-center py-12 ${isDark ? "text-white/50" : "text-gray-500"}`}>

@@ -69,12 +69,15 @@ export function ProfileViewsBlock({
   athleteId,
   athleteFirstName,
   stateCode = null,
+  complete = false,
   className,
 }: {
   athleteId: string
   athleteFirstName: string
   /** The wrestler's state, for which rankings Insider opens. */
   stateCode?: string | null
+  /** Profile 100% complete: no "add a highlight reel" advice to a profile that has one. */
+  complete?: boolean
   className?: string
 }) {
   const [views, setViews] = useState<Views | null>(null)
@@ -198,8 +201,9 @@ export function ProfileViewsBlock({
         </div>
       ) : (
         <p className="mt-4 text-sm text-[#A8BBD1]">
-          No college program has viewed this profile yet. Coaches open complete profiles first: add a highlight reel, GPA and test scores, and keep
-          results current.
+          {complete
+            ? "No college program has viewed this profile yet. Keep results and the highlight reel current: coaches see every update."
+            : "No college program has viewed this profile yet. Coaches open complete profiles first: add a highlight reel, GPA and test scores, and keep results current."}
         </p>
       )}
 

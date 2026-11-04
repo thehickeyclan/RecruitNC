@@ -25,7 +25,7 @@ describe("visibleStates", () => {
   it("shows a named state to the account it was named for, and nothing more", () => {
     const seen = visibleStates(false, true, ["MD"]).map((s) => s.code)
     expect(seen).toContain("MD")
-    expect(seen).not.toContain("VA")
+    expect(seen).not.toContain("WV")
   })
 
   it("is not case or whitespace sensitive, because the column is typed by hand", () => {
@@ -41,7 +41,7 @@ describe("visibleStates", () => {
     expect(isVisibleState("MD", false)).toBe(false)
     expect(isVisibleState("MD", false, true)).toBe(false)
     expect(isVisibleState("MD", false, true, ["MD"])).toBe(true)
-    expect(isVisibleState("VA", false, true, ["MD"])).toBe(false)
+    expect(isVisibleState("WV", false, true, ["MD"])).toBe(false)
   })
 })
 

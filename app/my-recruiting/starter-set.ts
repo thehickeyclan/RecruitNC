@@ -16,7 +16,8 @@ const PER_LEVEL = 2
 
 /**
  * Step 1's starter set: two colleges at each level that fit the wrestler best on what we hold -
- * academic, cost and the family's own goals (lib/recruiting/college-fit.ts), in-state ahead, and
+ * academic, cost, the family's own goals (lib/recruiting/college-fit.ts) and roster room at the
+ * weight last competed (inferred, labelled "(roster)"), in-state ahead, and
  * nearer home first when scores tie. A starting point to look at, never a verdict; only for a family with almost
  * nothing saved.
  */
@@ -34,8 +35,10 @@ export async function starterSet(admin: SupabaseClient, userId: string, team: "m
       const fit = collegeFitFor(ctx, s, null)
       const miles = centre ? milesBetween(centre, [s.latitude, s.longitude]) : null
       const lines = [fit.lines.academic, fit.lines.cost, fit.lines.goals]
-      const why = fit.lines.academic.status === "fit" ? "Academic fit" : s.state === homeState ? "In your state" : fit.lines.cost.status === "fit" ? "Fits the budget" : "Worth a look"
-      return { s, score: fitScore(lines) + (s.state === homeState ? 1 : 0), miles, why }
+      // Room at the weight last wrestled in the arrival fall: nobody there still on the roster (the "what changed" rule). Inferred, and said so.
+      const room = fit.room?.rows.find((r) => r.staying === 0) ?? null
+      const why = room ? `Room at ${room.weight} (roster)` : fit.lines.academic.status === "fit" ? "Academic fit" : s.state === homeState ? "In your state" : fit.lines.cost.status === "fit" ? "Fits the budget" : "Worth a look"
+      return { s, score: fitScore(lines) + (s.state === homeState ? 1 : 0) + (room ? 1 : 0), miles, why }
     })
     scored.sort((a, b) => b.score - a.score || (a.miles ?? 9e9) - (b.miles ?? 9e9) || a.s.name.localeCompare(b.s.name))
     for (const x of scored.slice(0, PER_LEVEL)) picks.push({ s: x.s, level: DIVISION_SHORT[division], why: x.why })

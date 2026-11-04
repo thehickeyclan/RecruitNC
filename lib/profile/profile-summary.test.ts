@@ -130,6 +130,26 @@ describe("a or an before an association", () => {
   })
 })
 
+describe("state association by the wrestler's state", () => {
+  const champ = (event: string) => ({ event, year: 2026, placement: "Champion", bouts: [] }) as unknown as SummaryRow
+
+  it("names Virginia's association, not North Carolina's", () => {
+    const a = accoladesFrom({ stateRows: [champ("2026 VA State Championships 3")], tournamentRows: [], state: "VA" })
+    expect(accoladePhrases(a)).toContain("VHSL state champion")
+    expect(accoladePhrases(a).join(" ")).not.toMatch(/NCHSAA/)
+  })
+
+  it("names an independent-schools title by its own association", () => {
+    const a = accoladesFrom({ stateRows: [champ("2026 VISAA State Championships")], tournamentRows: [], state: "VA" })
+    expect(accoladePhrases(a)).toContain("VISAA state champion")
+  })
+
+  it("keeps NCHSAA for North Carolina", () => {
+    const a = accoladesFrom({ stateRows: [champ("2026 NCHSAA 3A State Championships")], tournamentRows: [], state: "NC" })
+    expect(accoladePhrases(a)).toContain("NCHSAA 3A state champion")
+  })
+})
+
 describe("a wrestler's state names his own championship", () => {
   const titleRow = (event: string): SummaryRow => row(event, 2026, "1st")
   it("does not call a Virginia champion an NCHSAA one", () => {
@@ -175,6 +195,5 @@ describe("a wrestler's state names his own championship", () => {
   it("still says NCHSAA for North Carolina", () => {
     const a = accoladesFrom({ stateRows: [titleRow("NCHSAA 4A State Championships")], tournamentRows: [] })
     expect(accoladePhrases(a, "NC")[0]).toBe("NCHSAA 4A state champion")
-    expect(accoladePhrases(a)[0]).toBe("NCHSAA 4A state champion")
-  })
+    expect(accoladePhrases(a)[0]).toBe("NCHSAA 4A state champion")  })
 })

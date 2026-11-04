@@ -9,6 +9,8 @@ import type { Admissions } from "@/lib/college-programs/list"
 import { ArrowRight, BarChart3, ExternalLink, MoreVertical } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
+import { CostCell, CostComparison, OfferDialog, type CostSchool, type SchoolMoney } from "@/components/portal/offer-calculator"
+import type { Offer } from "@/lib/recruiting/offers"
 import { ReachOutChecklist, type ReachState } from "@/components/portal/reach-out-checklist"
 import { StageSelect } from "@/components/portal/stage-select"
 import { BOARD_STAGES, COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, boardStage, type BoardStage, type CollegeListStatus } from "@/lib/college-programs/list"
@@ -47,6 +49,8 @@ export type ListRow = {
   reach?: ReachState | null
   /** The next planned visit to this college. */
   visit?: { label: string; official: boolean } | null
+  /** Published cost, average after aid and the Net Price Calculator, for "What will it cost us?". */
+  money?: SchoolMoney
 }
 
 /** A list row as the shared pipeline pieces read it (chips, signals, panel, next step). */
@@ -87,13 +91,29 @@ const TABS: Array<{ key: "all" | BoardStage; label: string }> = [
   ...BOARD_STAGES.map((s) => ({ key: s, label: COLLEGE_LIST_STATUS_LABEL[s] })),
 ]
 const MAX_COMPARE = 4
+const costSchool = (r: ListRow): CostSchool => ({ id: r.id, name: r.name, logo: r.logo, money: r.money! })
 
 /**
  * The family's recruiting pipeline as one table (Matt, 15 Oct 2026, from ChatGPT's mock): every
  * college, where they stand, what it costs, how it fits, what coaches have actually done, and the
  * next step. The status is the family's own; viewed and messaged are verified.
  */
-export function CollegeListTable({ rows, readOnly, wrestlerId, wrestlerName }: { rows: ListRow[]; readOnly: boolean; wrestlerId: string | null; wrestlerName?: string | null }) {
+export function CollegeListTable({
+  rows,
+  readOnly,
+  wrestlerId,
+  wrestlerName,
+  offers: initialOffers = [],
+  offersAvailable = true,
+}: {
+  rows: ListRow[]
+  readOnly: boolean
+  wrestlerId: string | null
+  wrestlerName?: string | null
+  /** The first wrestler's offers, as the family typed them. */
+  offers?: Offer[]
+  offersAvailable?: boolean
+}) {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all")
   const [level, setLevel] = useState("all")
   const [picked, setPicked] = useState<string[]>([])
@@ -101,6 +121,9 @@ export function CollegeListTable({ rows, readOnly, wrestlerId, wrestlerName }: {
   const [removed, setRemoved] = useState<Set<string>>(new Set())
   const [menu, setMenu] = useState<string | null>(null)
   const [panel, setPanel] = useState<string | null>(null)
+  // "What will it cost us?": offers by college, and the one being typed in.
+  const [offers, setOffers] = useState<Record<string, Offer>>(() => Object.fromEntries(initialOffers.map((o) => [o.schoolId, o])))
+  const [offering, setOffering] = useState<string | null>(null)
   // Stage moves made here, so the row's chips and next step follow without a reload.
   const [stages, setStages] = useState<Record<string, CollegeListStatus>>({})
   const today = easternToday()
@@ -184,8 +207,8 @@ export function CollegeListTable({ rows, readOnly, wrestlerId, wrestlerName }: {
                 <span className="block font-normal text-white/35">academic · athletic</span>
               </th>
               <th className="p-3">
-                Published cost
-                <span className="block font-normal text-white/35">per year, before aid</span>
+                Cost a year
+                <span className="block font-normal text-white/35">published · after aid · yours</span>
               </th>
               <th className="p-3">Last activity</th>
               <th className="p-3">
@@ -266,7 +289,9 @@ export function CollegeListTable({ rows, readOnly, wrestlerId, wrestlerName }: {
                     </span>
                   </td>
                   <td className="p-3">
-                    {r.cost ? (
+                    {r.money ? (
+                      <CostCell s={costSchool(r)} offer={offers[r.id] ?? null} onOffer={() => setOffering(r.id)} readOnly={readOnly || !wrestlerId} />
+                    ) : r.cost ? (
                       <>
                         <span className="font-semibold text-white">${r.cost.amount.toLocaleString("en-US")}</span>
                         <span className="block text-[11px] text-white/40">
@@ -354,6 +379,33 @@ export function CollegeListTable({ rows, readOnly, wrestlerId, wrestlerName }: {
           Compare selected ({picked.length})
         </a>
       </div>
+
+      {wrestlerId && live.some((r) => r.money) ? (
+        <CostComparison schools={live.filter((r) => r.money).map(costSchool)} offers={offers} onOffer={setOffering} readOnly={readOnly} available={offersAvailable} />
+      ) : null}
+
+      {(() => {
+        const r = offering && wrestlerId ? live.find((x) => x.id === offering && x.money) : null
+        if (!r || !wrestlerId) return null
+        return (
+          <OfferDialog
+            school={costSchool(r)}
+            offer={offers[r.id] ?? null}
+            athleteId={wrestlerId}
+            readOnly={readOnly}
+            onClose={() => setOffering(null)}
+            onSaved={(o) => {
+              setOffers((m) => {
+                const next = { ...m }
+                if (o) next[r.id] = o
+                else delete next[r.id]
+                return next
+              })
+              setOffering(null)
+            }}
+          />
+        )
+      })()}
 
       {(() => {
         const r = panel ? live.find((x) => x.id === panel) : null

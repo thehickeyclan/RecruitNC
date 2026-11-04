@@ -393,16 +393,19 @@ export function buildTournamentRows(input: {
     ucdBouts.set(b.eventKey, [...(ucdBouts.get(b.eventKey) ?? []), b])
   }
   const ucdRows: TournamentRow[] = [...ucdBouts.entries()].map(([key, bouts]): TournamentRow => {
-    const [, year, ...team] = key.split("-")
+    const [, year, ...rest] = key.split("-")
+    // The spring freestyle duals (May) and the fall duals (September) are separate events.
+    const spring = rest[rest.length - 1] === "spring"
+    const team = spring ? rest.slice(0, -1) : rest
     const wins = bouts.filter((b) => b.win).length
     return {
       id: key,
-      event: "Ultimate Club Duals",
+      event: spring ? "Ultimate Club Spring Duals" : "Ultimate Club Duals",
       // "ucd-2026-nc-gold" -> "NC Gold"; the team is what tells two entries of ours apart.
       team: team.map((w) => (w === "nc" ? "NC" : w.charAt(0).toUpperCase() + w.slice(1))).join(" ") || null,
       isDuals: true,
       year: Number(year),
-      sortKey: `${year}-09-19`,
+      sortKey: bouts.find((b) => b.eventDate)?.eventDate?.slice(0, 10) ?? `${year}-09-19`,
       weight: bouts[0]?.weight || null,
       placement: null,
       record: `${wins}-${bouts.length - wins}`,
@@ -416,10 +419,17 @@ export function buildTournamentRows(input: {
    * whose file lists placers only. Participation is the evidence; the record is counted from the
    * bouts (Matt, 17 October 2026).
    */
+  /*
+   * An event a result block already prints. Outside NC the block is itself built from these bouts
+   * (lib/national-results-from-bouts.ts), so the same Journeymen printed twice (Kade Mustin, NY,
+   * 3 November 2026).
+   */
+  const blockKeys = new Set((input.otherTournamentBlocks ?? []).map((b) => `${b.result.eventKey}|${b.result.year}`))
   const orphanEvents = new Map<string, AttachedEventBout[]>()
   for (const b of input.attachedEventBouts ?? []) {
     const k = b.eventKey
     if (k.startsWith("fargo-") || k.startsWith("ucd-") || k === NC_UNITED_DUALS_EVENT_KEY || k === NC_UNITED_AAU_DUALS_EVENT_KEY) continue
+    if (blockKeys.has(`${k}|${b.year}`)) continue
     orphanEvents.set(k, [...(orphanEvents.get(k) ?? []), b])
   }
   const orphanEventRows: TournamentRow[] = [...orphanEvents.entries()].map(([key, bouts]): TournamentRow => {
@@ -518,7 +528,48 @@ export function buildTournamentRows(input: {
       }),
   ]
   // Most recent first: the result a coach is asking about is almost always the last one.
-  return rows.sort((a, b) => b.sortKey.localeCompare(a.sortKey) || b.year - a.year)
+  return withoutSubmittedRepeats(rows).sort((a, b) => b.sortKey.localeCompare(a.sortKey) || b.year - a.year)
+}
+
+/** Which event a row is, by name: "16u Fargo Nationals Greco" and "Fargo · Greco-Roman" are one. */
+function eventFamily(row: TournamentRow): string | null {
+  const e = row.event.toLowerCase()
+  const greco = /greco/.test(e)
+  if (/fargo/.test(e)) return greco ? "fargo-greco" : "fargo-freestyle"
+  if (/journeymen/.test(e)) return `journeymen-${/fall/.test(e) ? "fall" : e.replace(/[^a-z]+/g, "")}`
+  if (/super\s*32/.test(e)) return "super32"
+  if (/nhsca/.test(e) && !/duals/.test(e)) return "nhsca"
+  return null
+}
+
+const weightNumber = (w: string | null) => Number(String(w ?? "").match(/\d+/)?.[0] ?? NaN)
+
+/**
+ * A family-entered result for an event we also hold from the bracket prints once, as the bracket's
+ * row, keeping the family's placement where the bracket has none. Kade Mustin entered his 2026
+ * Fargo finishes before his brackets were linked, and both printed (3 November 2026).
+ */
+function withoutSubmittedRepeats(rows: TournamentRow[]): TournamentRow[] {
+  const submitted = rows.filter((r) => r.id.startsWith("submitted-"))
+  if (!submitted.length) return rows
+  const drop = new Set<TournamentRow>()
+  const placementFor = new Map<TournamentRow, string>()
+  for (const sub of submitted) {
+    const family = eventFamily(sub)
+    if (!family) continue
+    const twin = rows.find(
+      (r) =>
+        r !== sub &&
+        !r.id.startsWith("submitted-") &&
+        r.year === sub.year &&
+        eventFamily(r) === family &&
+        (!sub.weight || !r.weight || Math.abs(weightNumber(sub.weight) - weightNumber(r.weight)) <= 6),
+    )
+    if (!twin) continue
+    drop.add(sub)
+    if (!twin.placement && sub.placement) placementFor.set(twin, sub.placement)
+  }
+  return rows.filter((r) => !drop.has(r)).map((r) => (placementFor.has(r) ? { ...r, placement: placementFor.get(r)! } : r))
 }
 
 /** TOC sits with the state title, not with the national events: both are North Carolina finishes. */

@@ -91,3 +91,20 @@ export function trackPurchase(
 
   trackMetaEvent("Purchase", params)
 }
+
+/**
+ * RecruitWrestlers' pixel (Matt, 2 Nov 2026): dataset "RecruitWrestlers website" in the
+ * RecruitWrestlers business portfolio, for measuring and aiming the Instagram/Facebook ads. Only the
+ * RecruitWrestlers deployment loads it (components/analytics/meta-pixel.tsx), so on NC United every
+ * helper here stays a no-op. Lead = an account made; CompleteRegistration = a profile claimed, the
+ * conversion the ads are bought for.
+ */
+export const META_PIXEL_ID = "1662197915271024"
+
+export function metaPixelTrack(event: "Lead" | "CompleteRegistration", params?: Record<string, unknown>): void {
+  try {
+    trackMetaEvent(event, params)
+  } catch {
+    // Analytics must never break the page.
+  }
+}

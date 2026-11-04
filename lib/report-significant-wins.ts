@@ -17,7 +17,7 @@ import {
   type OpponentIndex,
   type SignificantWin, rankedOnBoard } from "@/lib/significant-wins"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
-import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
+import { highSchoolBouts, isVarsitySeason } from "@/lib/high-school-window"
 
 export type MatchSeasonRow = { season?: unknown; matches?: unknown }
 
@@ -48,7 +48,7 @@ export function reportSignificantBouts(input: {
   latestSeasonRows: MatchSeasonRow[]
 } {
   const grad = input.graduationYear ?? null
-  const matchRows = input.matchRows.filter((r) => isHighSchoolSeason(String(r.season ?? ""), grad, (r as { grade?: unknown }).grade))
+  const matchRows = input.matchRows.filter((r) => isVarsitySeason(String(r.season ?? ""), grad, (r as { grade?: unknown }).grade))
   const latestSeasonRows = latestSeasonMatchRows(matchRows as never) as MatchSeasonRow[]
   const latestSeasonBouts = highSchoolBouts(boutsOf(latestSeasonRows) as never[], grad) as Bout[]
   // Event CSVs carry the exact score and are authoritative. RankWrestler also includes some of

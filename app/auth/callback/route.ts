@@ -5,7 +5,7 @@ import type { User } from "@supabase/supabase-js"
 import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { alreadyAnswered } from "@/lib/complete-profile"
-import { postSignInDestination } from "@/lib/post-sign-in-destination"
+import { COACH_HOME, coachLanding, postSignInDestination } from "@/lib/post-sign-in-destination"
 import { signupLanding } from "@/lib/auth/signup-landing"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { siteFromRequest } from "@/lib/analytics-site"
@@ -211,6 +211,12 @@ export async function GET(req: NextRequest) {
         })
         if (landing) redirectPath = landing
       }
+    }
+
+    // A college coach lands on My Recruits whatever page the sign-in began from, unless it was a link
+    // to a wrestler or a report (Matt, 3 Nov 2026; lib/post-sign-in-destination.ts coachLanding).
+    if (hasExplicitNext && type !== "recovery" && !redirectPath.startsWith("/auth/")) {
+      if ((await postSignInDestination(createAdminClient(), session.user.id)) === COACH_HOME) redirectPath = coachLanding(redirectPath)
     }
 
     /*

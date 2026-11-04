@@ -1,7 +1,7 @@
 "use client"
 
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
-import { recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
+import { directoryStates, isRankedState, recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
 import { HOME_STATE } from "@/lib/recruiting/states"
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
@@ -147,8 +147,11 @@ function stateOfProspect(prospect: Prospect): string {
 
 export default function ProspectsAllClient({
   initialProspects = [],
+  initialScope = null,
 }: {
   initialProspects?: Prospect[]
+  /** The state choice the server's rows are for ("ALL" on RecruitWrestlers), or null when it sent none. */
+  initialScope?: string | null
 }) {
   const onRw = useOnRecruitWrestlers()
   /*
@@ -192,7 +195,12 @@ export default function ProspectsAllClient({
 
   const [prospects, setProspects] = useState<Prospect[]>(initialProspects)
   const [isLoading, setIsLoading] = useState(initialProspects.length === 0)
-  const skipInitialActiveFetch = useRef(initialProspects.length > 0)
+  /*
+   * Which list `prospects` holds: class filter, state choice, preview states. The server sends the
+   * opening list, so the browser fetches only when a choice asks for a different one - it used to
+   * throw the server's rows away on RecruitWrestlers and fetch every state again, 500 at a time.
+   */
+  const loadedList = useRef(initialScope ? `active|${initialScope}|0` : "")
   const [error, setError] = useState<string | null>(null)
 
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
@@ -245,7 +253,7 @@ export default function ProspectsAllClient({
    * One state's wrestlers at a time, North Carolina first: each state is its own list (and its
    * own brand to families). Choosing another state loads it from the server.
    */
-  const [stateFilter, setStateFilter] = useState<string>(HOME_STATE)
+  const [stateFilter, setStateFilter] = useState<string>(initialScope ?? HOME_STATE)
   // On a brand address (Guild Recruiting) the picker names states plainly; RecruitNC is NC United's name.
   const [brandHost, setBrandHost] = useState(false)
   useEffect(() => setBrandHost(document.documentElement.hasAttribute("data-host")), [])
@@ -271,7 +279,8 @@ export default function ProspectsAllClient({
       cancelled = true
     }
   }, [viewerId])
-  const stateChoices = visibleStates(
+  // RecruitWrestlers lists every state, ranked or not; "All states" is still the live ones (lib/recruiting/brand.ts).
+  const stateChoices = (onRw ? directoryStates : visibleStates)(
     viewerProfile?.is_admin === true || viewerProfile?.role === "admin",
     onRw,
     previewStates,
@@ -301,11 +310,11 @@ export default function ProspectsAllClient({
     }
   }, [stateChoices])
 
+  // A preview state widens "All states", so an admin's list is fetched again once those arrive.
+  const previewCount = stateFilter === ALL_STATES ? previewStates.length : 0
   useEffect(() => {
-    if (skipInitialActiveFetch.current && yearFilter === "active") {
-      skipInitialActiveFetch.current = false
-      return
-    }
+    const listKey = `${yearFilter}|${stateFilter}|${previewCount}`
+    if (listKey === loadedList.current) return
 
     const run = async () => {
       setIsLoading(true)
@@ -350,22 +359,32 @@ export default function ProspectsAllClient({
           throw new Error(lastText || "Athlete profiles API failed after retries")
         }
 
+        // Four pages at a time rather than one after another: thirteen pages took thirteen seconds.
+        const WAVE = 4
         for (;;) {
-          const prospectsResponse = await fetchChunk(offset)
-          const prospectsPayload = await prospectsResponse.json()
-          const batch = Array.isArray(prospectsPayload?.prospects)
-            ? prospectsPayload.prospects
-            : Array.isArray(prospectsPayload)
-              ? prospectsPayload
-              : []
-
-          rawProspects.push(...batch)
-          const hasMore = prospectsPayload?.pagination?.hasMore ?? batch.length >= PAGE
-          if (!hasMore) break
-          offset += PAGE
+          const pages = await Promise.all(
+            Array.from({ length: WAVE }, (_, i) => fetchChunk(offset + i * PAGE).then((r) => r.json())),
+          )
+          let done = false
+          for (const prospectsPayload of pages) {
+            const batch = Array.isArray(prospectsPayload?.prospects)
+              ? prospectsPayload.prospects
+              : Array.isArray(prospectsPayload)
+                ? prospectsPayload
+                : []
+            rawProspects.push(...batch)
+            const hasMore = prospectsPayload?.pagination?.hasMore ?? batch.length >= PAGE
+            if (!hasMore) {
+              done = true
+              break
+            }
+          }
+          if (done) break
+          offset += WAVE * PAGE
           if (offset > 20000) break
         }
 
+        loadedList.current = listKey
         setProspects(rawProspects)
       } catch (fetchError: any) {
         console.error("[prospects/all] Error loading athlete profiles:", fetchError)
@@ -377,7 +396,7 @@ export default function ProspectsAllClient({
 
     run()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [yearFilter, stateFilter])
+  }, [yearFilter, stateFilter, previewCount])
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
@@ -483,10 +502,42 @@ export default function ProspectsAllClient({
     return typeof rank === "number" && Number.isFinite(rank) ? rank : NaN
   }
 
+  /*
+   * "All states" loads the live states only (2.5 MB already); a name typed there is also looked up
+   * in every other state, so a family in Virginia finds their wrestler (Matt, 3 Nov 2026).
+   */
+  const [elsewhere, setElsewhere] = useState<Prospect[]>([])
+  useEffect(() => {
+    const term = searchTerm.trim()
+    if (!onRw || stateFilter !== ALL_STATES || term.length < 3) {
+      setElsewhere([])
+      return
+    }
+    let cancelled = false
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams({ state: ALL_STATES, q: term, limit: "50" })
+      const years = yearFilterToApiParams(yearFilter)
+      if (years.graduationYear) params.set("graduationYear", years.graduationYear)
+      if (years.minYear != null) params.set("minYear", String(years.minYear))
+      if (years.maxYear != null) params.set("maxYear", String(years.maxYear))
+      void fetch(`/api/prospects?${params.toString()}`, { headers: { Accept: "application/json" } })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => !cancelled && setElsewhere(Array.isArray(d?.prospects) ? (d.prospects as Prospect[]) : []))
+        .catch(() => {})
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, stateFilter, yearFilter])
+
   const filteredProspects = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
+    const loaded = new Set(prospects.map((p) => String(p.id)))
+    const pool = elsewhere.length ? [...prospects, ...elsewhere.filter((p) => !loaded.has(String(p.id)))] : prospects
 
-    return prospects.filter((prospect) => {
+    return pool.filter((prospect) => {
       if (term) {
         const name = prospect.name ?? ""
         const highschool = (prospect as any).highschool ?? (prospect as any).highSchool ?? ""
@@ -602,7 +653,7 @@ export default function ProspectsAllClient({
 
       return true
     })
-  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, honorFilters, stateFilter, ranks])
+  }, [prospects, elsewhere, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, honorFilters, stateFilter, ranks])
 
   const sortedProspects = useMemo(() => {
     return [...filteredProspects].sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
@@ -957,7 +1008,7 @@ export default function ProspectsAllClient({
                   {stateChoices.map((st) => (
                     <option key={st.code} value={st.code}>
                       {brandHost ? st.name : `Recruit${st.code} · ${st.name}`}
-                      {st.live ? "" : " (staff only)"}
+                      {st.live && isRankedState(st) ? "" : st.live || onRw ? " · not ranked yet" : " (staff only)"}
                     </option>
                   ))}
                 </select>
@@ -1126,6 +1177,7 @@ export default function ProspectsAllClient({
                   defaultSortDirection="asc"
                   additionalDividerLabel=""
                   dividerAfterRank={0}
+                  pageSize={100}
                 />
               </div>
             ) : (
@@ -1136,6 +1188,7 @@ export default function ProspectsAllClient({
                   loading={false}
                   showRankBadges={false}
                   showAdditionalDivider={false}
+                  pageSize={60}
                 />
               </div>
             )}
@@ -1143,81 +1196,6 @@ export default function ProspectsAllClient({
         </section>
       </main>
   )
-}
-
-/** State field values we treat as clearly not NC (exact match after trim + lowerCase). */
-const KNOWN_NON_NC_STATES = new Set([
-  "sc",
-  "south carolina",
-  "ga",
-  "georgia",
-  "va",
-  "virginia",
-  "tn",
-  "tennessee",
-  "fl",
-  "florida",
-  "oh",
-  "ohio",
-  "pa",
-  "pennsylvania",
-  "ny",
-  "new york",
-  "tx",
-  "texas",
-  "ca",
-  "california",
-  "al",
-  "alabama",
-])
-
-const NON_NC_LOCATION_SUBSTRINGS = [
-  "south carolina",
-  "georgia",
-  "virginia",
-  "tennessee",
-  "florida",
-  "ohio",
-  "pennsylvania",
-  "new york",
-  "texas",
-  "california",
-  "alabama",
-  "sc",
-  "ga",
-  "va",
-  "tn",
-  "fl",
-  "oh",
-  "pa",
-  "ny",
-  "tx",
-  "ca",
-  "al",
-] as const
-
-function isNorthCarolinaProspect(prospect: Prospect) {
-  const state = (prospect.state || "").trim().toLowerCase()
-  if (state) {
-    if (state === "nc" || state === "north carolina") return true
-    if (KNOWN_NON_NC_STATES.has(state)) return false
-    // Unknown state text (typo, "USA", bad import): do not hide the whole directory.
-    return true
-  }
-
-  const location = (prospect.location || "").trim().toLowerCase()
-  if (location) {
-    if (/\bnorth carolina\b/.test(location) || /\bnc\b/.test(location.replace(/[.,]/g, " "))) {
-      return true
-    }
-
-    if (NON_NC_LOCATION_SUBSTRINGS.some((stateToken) => location.includes(stateToken))) {
-      return false
-    }
-  }
-
-  // Default to including when we can't determine
-  return true
 }
 
 function parsePlacement(value: unknown): number | null {

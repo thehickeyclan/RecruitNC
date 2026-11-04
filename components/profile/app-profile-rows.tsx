@@ -71,6 +71,8 @@ export type AppWin = {
   boutVerified?: boolean
   /** The opponent's state podium finish, whatever the headline reason (the endpoint sets it). */
   stateFinish?: "champion" | "placer" | null
+  /** For a "ranked" win: whose state board ranks the opponent ("NC", "SC"). */
+  rankState?: string | null
 }
 
 const accoladeOf = (w: AppWin) => w.credential ?? w.nationalRankLabel ?? w.stateLabel ?? null
@@ -91,19 +93,34 @@ const dayMs = (raw: string | null | undefined): number | null => {
 }
 
 /**
- * Wins over ranked opponents in the last twelve months, national and North Carolina apart.
+ * Wins over ranked opponents in the last twelve months, national and state apart.
  * Never one "ranked" number: the two lists are different things and a coach means the first.
+ * `states` holds the boards the state-ranked opponents are on, for the label.
  */
-export function rankedWinsLast12Months(wins: AppWin[], now: Date = new Date()): { national: number; nc: number } {
+export function rankedWinsLast12Months(wins: AppWin[], now: Date = new Date()): { national: number; state: number; states: string[] } {
   let national = 0
-  let nc = 0
+  let state = 0
+  const states = new Set<string>()
   for (const w of wins) {
     const ms = dayMs(w.date)
     if (ms == null || now.getTime() - ms > 365 * 86_400_000) continue
     if (w.reason === "national-ranked") national += 1
-    else if (w.reason === "ranked") nc += 1
+    else if (w.reason === "ranked") {
+      state += 1
+      if (w.rankState) states.add(w.rankState.toUpperCase())
+    }
   }
-  return { national, nc }
+  return { national, state, states: [...states].sort() }
+}
+
+/**
+ * "3 NC-ranked": the board the opponents are ranked on, never assumed from the product. A New York
+ * wrestler read "0 NC-ranked" (Kade Mustin, 3 November 2026). With no ranked wins, an NC wrestler
+ * keeps "NC-ranked" (his own board); anyone else reads "state-ranked". Mixed boards read "state-ranked".
+ */
+export function stateRankedLabel(r: { state: number; states: string[] }, athleteState?: string | null): string {
+  const board = r.states.length === 1 ? r.states[0] : r.state === 0 && String(athleteState ?? "").toUpperCase() === "NC" ? "NC" : null
+  return `${r.state} ${board ? `${board}-ranked` : "state-ranked"}`
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
@@ -318,8 +335,16 @@ const scopeOf = (g: EventGroup): "in-state" | "national" =>
 function groupByEvent(rows: AppTournamentRow[], style: EventGroup["style"]): EventGroup[] {
   const groups = new Map<string, AppTournamentRow[]>()
   const stateHs = new Set<string>()
+  /*
+   * Duals are headed by their event, like every other group (Matt, 2 Nov 2026: a "Duals" heading
+   * over "2026 · Capital City" put the team where the tournament belongs). They still sort last.
+   */
+  const duals = new Set<string>()
   for (const row of rows) {
-    let named = isStateHs(row.event) ? STATE_HS : EVENT_ORDER.find(([re]) => re.test(row.event))?.[1] ?? (row.isDuals ? "Duals" : row.event.replace(/^\d{4}\s+/, ""))
+    let named = isStateHs(row.event) ? STATE_HS : EVENT_ORDER.find(([re]) => re.test(row.event))?.[1] ?? row.event.replace(/^\d{4}\s+/, "")
+    // NC United's Select team wrestles the same event as the National team.
+    if (row.isDuals) named = named.replace(/\s*\(select\)$/i, "")
+    if (row.isDuals) duals.add(named)
     if (named === STATE_HS) {
       named = stateHsGroupName(row.event)
       stateHs.add(named)
@@ -328,7 +353,7 @@ function groupByEvent(rows: AppTournamentRow[], style: EventGroup["style"]): Eve
   }
   const rank = (name: string) => {
     const i = EVENT_ORDER.findIndex(([, n]) => n === (stateHs.has(name) ? STATE_HS : name))
-    return i < 0 ? (name === "Duals" ? 99 : 50) : i
+    return i < 0 ? (duals.has(name) ? 99 : 50) : i
   }
   return [...groups.entries()]
     .map(([name, list]) => ({ name, style, stateHs: stateHs.has(name), rows: [...list].sort((a, b) => b.year - a.year) }))

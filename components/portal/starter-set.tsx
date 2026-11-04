@@ -4,11 +4,25 @@ import { useState } from "react"
 import { Check, Plus } from "lucide-react"
 
 import type { StarterSchool } from "@/app/my-recruiting/starter-set"
+import { FIRST_LIST_GOAL, FirstListProgress } from "@/components/portal/first-list-progress"
 
 const LEVEL_COLOR: Record<string, string> = { D1: "#60a5fa", D2: "#34d399", D3: "#fbbf24", NAIA: "#f472b6", NJCAA: "#a78bfa" }
 
 /** Step 1's starter set: a few colleges at every level to start from, each one tap to save. */
-export function StarterSet({ schools, firstName, levelColors, readOnly }: { schools: StarterSchool[]; firstName: string; levelColors?: Record<string, string>; readOnly?: boolean }) {
+export function StarterSet({
+  schools,
+  firstName,
+  levelColors,
+  readOnly,
+  savedCount = 0,
+}: {
+  schools: StarterSchool[]
+  firstName: string
+  levelColors?: Record<string, string>
+  readOnly?: boolean
+  /** Colleges already on My List, so the first-five progress counts them too. */
+  savedCount?: number
+}) {
   const [saved, setSaved] = useState<Set<string>>(new Set())
   const colors = levelColors ?? LEVEL_COLOR
   const save = async (id: string) => {
@@ -22,7 +36,8 @@ export function StarterSet({ schools, firstName, levelColors, readOnly }: { scho
       <h2 id="cc-starter" className="text-base font-black">
         A starter set for {firstName}
       </h2>
-      <p className="text-xs text-white/50">Two at every level, from academic fit, cost and your state. Save the ones worth a closer look.</p>
+      <p className="text-xs text-white/50">Two at every level, from roster room at the weight last wrestled, class, academic fit, cost and your state. Save the ones worth a closer look.</p>
+      {savedCount < FIRST_LIST_GOAL ? <FirstListProgress count={savedCount + saved.size} firstName={firstName} className="mt-3" /> : null}
       <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {schools.map((s) => (
           <li key={s.id} className="flex flex-col rounded-lg border border-white/10 bg-white/[0.03] p-2.5">

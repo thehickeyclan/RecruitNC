@@ -16,6 +16,8 @@ import { BulletproofInternalLinks } from "@/components/bulletproof-internal-link
 import { Analytics } from "@vercel/analytics/next"
 import { UserActivityTracker } from "@/components/user-activity-tracker"
 import { ContactTapTracker } from "@/components/contact-tap-tracker"
+import { MetaPixel } from "@/components/analytics/meta-pixel"
+import { FirstTouch } from "@/components/analytics/first-touch"
 
 const defaultTitle = "NC United"
 const defaultDescription =
@@ -29,7 +31,8 @@ const NC_UNITED_PROJECT = /ncwrestlingunited/i.test(process.env.VERCEL_PROJECT_P
 /** True on RecruitWrestlers' own Vercel project (Guild Ventures), which serves recruitwrestlers.com only. */
 const RW_PROJECT = /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
 
-const rwDescription = "College wrestling recruiting built on verified results: athlete profiles, rankings, recaps and the Recruiting Command Center."
+const rwDescription =
+  "One platform for families and coaches. High school wrestlers get a recruiting plan, a college list and see which programs are watching; college coaches find, evaluate and reach recruits, free."
 
 /** RecruitWrestlers' defaults: its tab titles, link previews and icons, never NC United's (Matt's product review, 26 Oct 2026). */
 const rwMetadata: Metadata = {
@@ -203,6 +206,9 @@ export default function RootLayout({
             <WelcomeModal />
             <Toaster />
             <Analytics />
+            {/* RecruitWrestlers' Meta Pixel, for the Instagram/Facebook ads; NC United never loads it. */}
+            {RW_PROJECT ? <MetaPixel /> : null}
+            <FirstTouch />
           </AuthProvider>
         </ThemeProvider>
         {/* Disabled: was likely canceling nav to /store. Re-enable if app is embedded in iframe and needs it. */}

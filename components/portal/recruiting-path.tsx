@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowRight, Check, ChevronRight, Info, Sparkles } from "lucide-react"
+import { ArrowRight, Check, ChevronRight, Circle, Info, Sparkles } from "lucide-react"
 
 import { scoutHref, type JourneyStep } from "@/lib/recruiting/journey"
 
@@ -64,6 +64,22 @@ export function RecruitingPath({ steps, firstName }: { steps: JourneyStep[]; fir
                 </div>
               ) : null}
               {open === s.key ? <p className="mt-2 text-xs leading-5 text-white/60">{s.detail}</p> : null}
+              {s.items?.map((it) => (
+                <div key={it.key} className={`mt-3 rounded-lg border border-white/10 bg-white/[0.03] p-2.5 ${now ? "" : "hidden sm:block"}`}>
+                  <p className="flex items-center gap-1.5 text-xs font-black text-white">
+                    {it.done ? <Check className="h-3.5 w-3.5 text-emerald-400" aria-label="Done" /> : <Circle className="h-3.5 w-3.5 text-white/40" aria-hidden />}
+                    {it.title}
+                  </p>
+                  <p className="mt-0.5 pl-5 text-xs text-white/60">{it.label}</p>
+                  <p className="mt-1 flex flex-wrap gap-x-3 pl-5">
+                    {it.links.map((l) => (
+                      <a key={l.href} href={l.href} className="text-xs font-semibold text-[#D3B574] hover:underline">
+                        {l.label}
+                      </a>
+                    ))}
+                  </p>
+                </div>
+              ))}
               <div className={`mt-auto pt-3 ${now ? "" : "hidden sm:block"}`}>
                 <a
                   href={s.cta.href}

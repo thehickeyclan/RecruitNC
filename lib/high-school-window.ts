@@ -72,6 +72,40 @@ export function isHighSchoolSeason(
   return Number(m[1]) + 1 >= grad - 3
 }
 
+/**
+ * Whether a season of varsity in-season matches counts: seventh grade on (Matt, 3 November 2026).
+ *
+ * New York and Pennsylvania let seventh and eighth graders wrestle high school varsity, and NCISA
+ * schools wrestle eighth graders. Kade Mustin (NY, class of 2028) wrestled Section IV
+ * championships in seventh grade against senior high schools; the ninth-grade line hid two
+ * varsity seasons. "No middle school results" means middle school competition, not a varsity
+ * season wrestled young. For the match-record seasons (RankWrestlers tracks varsity only); the
+ * ranking engine keeps `isHighSchoolSeason`.
+ */
+export function isVarsitySeason(
+  season: string | null | undefined,
+  graduationYear: number | null | undefined,
+  grade?: unknown,
+): boolean {
+  const g = Number(String(grade ?? "").match(/\d+/)?.[0])
+  if (Number.isFinite(g) && g >= 1 && g <= 6) return false
+  if (Number.isFinite(g) && (g === 7 || g === 8)) return true
+  const grad = Number(graduationYear)
+  if (!Number.isFinite(grad) || grad < 1990) return true
+  const m = String(season ?? "").match(/(\d{4})\s*[-/]\s*(\d{2,4})/)
+  if (!m) return true
+  // The season's spring: 2022-23 is the class of 2028's seventh grade.
+  return Number(m[1]) + 1 >= grad - 5
+}
+
+/** A state championship wrestled on varsity from seventh grade on, by year (held in late winter). */
+export function isVarsityStateYear(year: unknown, graduationYear: number | null | undefined): boolean {
+  const grad = Number(graduationYear)
+  if (!Number.isFinite(grad) || grad < 1990) return true
+  const y = Number(year)
+  return !Number.isFinite(y) || y >= grad - 5
+}
+
 /** A bout's date as YYYY-MM-DD, from "2026-02-19", "12/20/2025" or "12/27 - 12/28/2024". */
 export function boutDate(raw: unknown): string | null {
   const s = String(raw ?? "").trim()

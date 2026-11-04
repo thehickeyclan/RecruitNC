@@ -22,8 +22,10 @@ import {
 } from "@/components/profile/profile-banner-parts"
 import { ProfileRow } from "@/components/profile/profile-row"
 import { CompetingNextBlock } from "@/components/profile/competing-next-block"
+import { RecruitingNeedsBlock } from "@/components/profile/recruiting-needs-block"
 import { ParentContactBlock } from "@/components/profile/parent-contact-block"
-import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, useAppProfile } from "@/components/profile/app-profile-rows"
+import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, stateRankedLabel,
+  useAppProfile } from "@/components/profile/app-profile-rows"
 import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
 import { SearchVisibilityToggle } from "@/components/profile/search-visibility-toggle"
 import { summarySentences, type Accolades } from "@/lib/profile/profile-summary"
@@ -335,6 +337,39 @@ export function AthleteDetail({
   const appData = useAppProfile(String(athlete.id))
   /** The owner's editor buttons, behind "Edit Profile" on the completeness card. */
   const [showEditors, setShowEditors] = useState(false)
+  /*
+   * "Request an edit", in the owner's own words (Matt, 2 Nov 2026): the editor buttons cover the
+   * fields a family can change; results, a bout that isn't theirs, a name or class year are ours
+   * to fix, and they had no way to tell us short of the non-owner form. Queued, never applied.
+   */
+  const [ownerRequest, setOwnerRequest] = useState("")
+  const [ownerRequestSending, setOwnerRequestSending] = useState(false)
+  const [ownerRequestSent, setOwnerRequestSent] = useState(false)
+  const sendOwnerRequest = async () => {
+    const text = ownerRequest.trim()
+    if (!text || ownerRequestSending) return
+    setOwnerRequestSending(true)
+    try {
+      const res = await fetch("/api/edit-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: athlete.id,
+          editType: "profile_update",
+          description: `Request: ${text}`,
+          currentData: { other: text },
+          reporterEmail: currentUserEmail || null,
+        }),
+      })
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not send your request")
+      setOwnerRequest("")
+      setOwnerRequestSent(true)
+    } catch (e) {
+      toast({ title: "Not sent", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" })
+    } finally {
+      setOwnerRequestSending(false)
+    }
+  }
   /*
    * The college-views email, the claim flow and the checkout all land on the views panel
    * (components/profile/college-views-landing.tsx); open its row so the panel is there.
@@ -1565,7 +1600,7 @@ export function AthleteDetail({
               "…"
             )}
           </dd>
-          <dd className="mt-0.5 text-[11px] text-[#A8BBD1]">{appData.winsLoaded ? `${ranked12.nc} NC-ranked · last 12 months` : "Loading"}</dd>
+          <dd className="mt-0.5 text-[11px] text-[#A8BBD1]">{appData.winsLoaded ? `${stateRankedLabel(ranked12, athlete?.state)} · last 12 months` : "Loading"}</dd>
         </div>
         <div className={cn(FACT, "border-l")}>
           <dt className={FACT_LABEL}>GPA</dt>
@@ -1896,11 +1931,7 @@ export function AthleteDetail({
         <CollegeViewsLanding athleteName={athleteName} signedIn={Boolean(currentUserId)} canSeePanel={canViewProfileStats} />
       </div>
       {canViewProfileStats && athlete.id ? (
-        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} stateCode={typeof athlete.state === "string" ? athlete.state : null} className={ROW_ORDER.views} />
-      ) : null}
-      {/* The family's switch for search engines (lib/profile-search.ts). */}
-      {canEdit && athlete.id ? (
-        <SearchVisibilityToggle athleteId={String(athlete.id)} firstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.views} />
+        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} stateCode={typeof athlete.state === "string" ? athlete.state : null} complete={completeness.percent === 100} className={ROW_ORDER.views} />
       ) : null}
       <div className={cn("empty:hidden", ROW_ORDER.messages)}>
         <FamilyMessagesPanel athleteId={String(athlete.id)} />
@@ -1936,7 +1967,7 @@ export function AthleteDetail({
               <p className="text-xs text-[#A8BBD1]">
                 <span className="block text-[13px] font-bold text-white">{f.label}</span>
                 {f.key === "rankedWins"
-                  ? `Last 12 months: ${ranked12.national} nationally ranked, ${ranked12.nc} NC-ranked · ${appData.wins.length} significant wins in all`
+                  ? `Last 12 months: ${ranked12.national} nationally ranked, ${stateRankedLabel(ranked12, athlete?.state)} · ${appData.wins.length} significant wins in all`
                   : f.key === "yearRound"
                     ? `${f.detail}, career`
                     : f.detail}
@@ -1975,6 +2006,8 @@ export function AthleteDetail({
       {/* Where he wrestles next: the family enters it in the Command Center; approved coaches and the
           family see it here, nobody else (the block asks its own private route and hides itself). */}
       <CompetingNextBlock athleteId={String(athlete.id)} firstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.contact} />
+      {/* Coach-confirmed needs that fit him: his family only, free (its own private route). */}
+      <RecruitingNeedsBlock athleteId={String(athlete.id)} className="order-[4]" />
       {/* Contact is for college coaches, and for the family to keep current. Nobody else sees the
           row at all - not the phone, not the Instagram link (Matt, 11 October 2026). */}
       {recruiterOrFamily && (contactButtons || mayCompare || canEdit) ? (
@@ -2135,8 +2168,10 @@ export function AthleteDetail({
               one button to the editors. Each open item is a tap to its own form. */}
           {/* Stacked at every width: the card sits in the narrow side column on desktop, and a row
               layout there squeezed the text to one word per line (Matt, 31 Oct 2026). */}
-          <div className="flex flex-col gap-4">
-            <div className="min-w-0">
+          {/* Complete: one slim row, the editors and the commitment link only - a full card announcing
+              100% is noise on a finished profile (Matt, 3 Nov 2026). */}
+          <div className={cn("flex flex-col gap-4", completeness.percent === 100 && "gap-0")}>
+            <div className={cn("min-w-0", completeness.percent === 100 && "hidden")}>
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-base font-bold text-white">Profile Completeness</p>
                 <p className="text-base font-black text-white">{completeness.percent}%</p>
@@ -2144,22 +2179,29 @@ export function AthleteDetail({
               <div className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/15 bg-[#0A1628]">
                 <div className="h-full rounded-full bg-[#D3B574]" style={{ width: `${completeness.percent}%` }} />
               </div>
-              <p className="mt-2 text-sm text-white/70">
-                {completeness.percent === 100
-                  ? "Your profile is complete. Keep it current: college coaches read this page."
-                  : "Complete your profile to get more views from college coaches."}
-              </p>
-              {/* The family hears the news first: one tap to report it, starting from this profile. */}
-              {!String(athlete.college ?? "").trim() ? (
+              <p className="mt-2 text-sm text-white/70">Complete your profile to get more views from college coaches.</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* The family hears the news first: one tap to report it, starting from this profile. */}
+            {completeness.percent === 100 ? (
+              !String(athlete.college ?? "").trim() ? (
                 <a
                   href={`/submit-commitment?athlete=${encodeURIComponent(String(athlete.id))}&role=${isViewingOwnProfile ? "athlete" : "parent"}`}
-                  className="mt-2 inline-block text-sm font-bold text-[#D3B574] hover:underline"
+                  className="text-sm font-bold text-[#D3B574] hover:underline"
                 >
                   Committed to a college? Tell us →
                 </a>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-4">
+              ) : <span />
+            ) : (
+            <div className="min-w-0">
+            {!String(athlete.college ?? "").trim() ? (
+              <a
+                href={`/submit-commitment?athlete=${encodeURIComponent(String(athlete.id))}&role=${isViewingOwnProfile ? "athlete" : "parent"}`}
+                className="mb-2 inline-block text-sm font-bold text-[#D3B574] hover:underline"
+              >
+                Committed to a college? Tell us →
+              </a>
+            ) : null}
             <ul className="min-w-0 space-y-1.5">
               {completeness.items.map((item) => (
                 <li key={item.label}>
@@ -2186,6 +2228,8 @@ export function AthleteDetail({
                 </li>
               ))}
             </ul>
+            </div>
+            )}
             <button
               type="button"
               onClick={() => setShowEditors((v) => !v)}
@@ -2206,6 +2250,7 @@ export function AthleteDetail({
                 { key: "highlight-video", label: "Video", icon: Video, target: "highlights" },
                 { key: "school-club", label: "School & club", icon: School, target: "programs" },
                 { key: "academics", label: "Academics", icon: GraduationCap, target: "[data-section=academics]" },
+                { key: "request", label: "Request an edit", icon: MessageSquare, target: null },
               ] as const
             ).map(({ key, label, icon: Icon, target }) => (
               <button
@@ -2213,6 +2258,7 @@ export function AthleteDetail({
                 type="button"
                 onClick={() => {
                   if (key === "bio") setBioExpanded(true)
+                  if (key === "request") setOwnerRequestSent(false)
                   setEditingSection(key)
                   // Forms for photo, weight and contact open just below this bar; the rest open in
                   // their own section, so take the owner there.
@@ -2227,7 +2273,9 @@ export function AthleteDetail({
                   "inline-flex min-h-[40px] items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-semibold transition-colors",
                   editingSection === key
                     ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]"
-                    : "border-white/20 bg-white/10 text-white hover:bg-white/20",
+                    : key === "request"
+                      ? "border-dashed border-[#D3B574] bg-transparent text-[#D3B574] hover:bg-[#D3B574]/10"
+                      : "border-white/20 bg-white/10 text-white hover:bg-white/20",
                 )}
               >
                 <Icon className="h-4 w-4" aria-hidden />
@@ -2269,6 +2317,49 @@ export function AthleteDetail({
       )}
 
       {/* Weight / contact edit forms (opened from hero) */}
+      {canEdit && editingSection === "request" && (
+        <Card
+          data-owner-editor
+          className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.weightEdit)}
+        >
+          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-2xl font-bold text-white">Request an edit</h2>
+              <Button size="sm" variant="ghost" className="text-white hover:bg-white/20" onClick={() => setEditingSection(null)}>
+                Done
+              </Button>
+            </div>
+          </div>
+          <div className="profile-card-body space-y-3 p-6">
+            {ownerRequestSent ? (
+              <p className="text-sm font-semibold text-foreground">Sent. We&apos;ll make the change and it will show on the profile.</p>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  For anything you can&apos;t change with the buttons above: a wrong or missing result, a match that
+                  isn&apos;t you, your name or class year. Tell us in your own words.
+                </p>
+                <textarea
+                  value={ownerRequest}
+                  onChange={(e) => setOwnerRequest(e.target.value)}
+                  rows={5}
+                  maxLength={3000}
+                  placeholder="e.g. I placed 3rd at the Southeast Open at 157, and the loss to John Smith on Jan 10 isn't me."
+                  className="w-full rounded-lg border border-border bg-background p-3 text-sm text-foreground"
+                />
+                <Button
+                  onClick={sendOwnerRequest}
+                  disabled={!ownerRequest.trim() || ownerRequestSending}
+                  className="bg-[#D3B574] font-bold text-[#0A1628] hover:bg-[#c4a665]"
+                >
+                  {ownerRequestSending ? "Sending..." : "Send request"}
+                </Button>
+              </>
+            )}
+          </div>
+        </Card>
+      )}
+
       {canEdit && editingSection === "weight" && (
         <Card
           data-owner-editor
@@ -3016,6 +3107,14 @@ export function AthleteDetail({
           </Card>
         </div>
       )}
+
+      {/* The family's switch for search engines (lib/profile-search.ts): small print at the foot of
+          the page (Matt, 2 Nov 2026), not a card among the profile's sections. */}
+      {canEdit && athlete.id ? (
+        <div className={cn("container mx-auto px-4 pb-8", mobileRecruiterLayout && PROFILE_SECTION_ORDER.footer)}>
+          <SearchVisibilityToggle athleteId={String(athlete.id)} firstName={firstNames.split(" ")[0] || athleteName} />
+        </div>
+      ) : null}
 
       {/* Request Profile Edit Modal */}
       <RequestProfileEditModal

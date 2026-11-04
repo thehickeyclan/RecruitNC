@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { getAthleteNameSearchVariants } from "@/lib/athlete-name-match"
+import { firstNamesLikelySame, getAthleteNameSearchVariants } from "@/lib/athlete-name-match"
 import { getWrestlerRecords } from "@/lib/nhsca-duals-command-center"
 import { fetchNhscaDualsSnapshot } from "@/lib/nhsca-duals-live-results/db"
 import type { NhscaDualsResultsSnapshot, NhscaDualsWrestlerRecord } from "@/lib/nhsca-duals-live-results/types"
@@ -34,6 +34,23 @@ function isRealRecord(r: ProfileNationalTeamResult): boolean {
 }
 
 /** Match athlete name variants to a live duals wrestler record (national or select roster). */
+/**
+ * Whether a roster name is this profile's wrestler.
+ *
+ * `namesMatchRoster` is built for scorecards, where "A. Gore" must find a roster row, so it
+ * accepts any first name sharing an initial. Read against a profile that put Aidan Gore's 6-2 at
+ * 152 on his sister Addison's page (her dad reported it, 2 Nov 2026). A profile needs the same
+ * first name, a known nickname of it (Sammy for Samuel, Dom for Dominic), or a bare initial on the roster.
+ */
+function rosterNameIsProfile(profileName: string, rosterName: string): boolean {
+  if (!namesMatchRoster(profileName, rosterName)) return false
+  const first = (n: string) => n.toLowerCase().replace(/[^a-z\s]/g, " ").trim().split(/\s+/)[0] ?? ""
+  const a = first(profileName)
+  const b = first(rosterName)
+  if (!a || !b) return false
+  return b.length === 1 || firstNamesLikelySame(a, b)
+}
+
 export function matchWrestlerRecordForProfile(
   nameBases: string[],
   records: NhscaDualsWrestlerRecord[]
@@ -41,7 +58,7 @@ export function matchWrestlerRecordForProfile(
   for (const base of nameBases) {
     const trimmed = base.trim()
     if (!trimmed) continue
-    const matches = records.filter((r) => namesMatchRoster(trimmed, r.name))
+    const matches = records.filter((r) => rosterNameIsProfile(trimmed, r.name))
     if (matches.length === 1) return matches[0]!
     if (matches.length > 1) {
       const withBouts = matches.filter((r) => r.wins + r.losses > 0)

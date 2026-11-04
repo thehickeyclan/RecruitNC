@@ -16,6 +16,9 @@ import { stateChampionshipName } from "@/lib/athlete-state"
  * each with its count, then the state finish. "Year-round" is two or more
  * events outside the North Carolina season (November to February) in the last twelve months.
  */
+
+import { associationForEvent } from "@/lib/athlete-state"
+
 export type SummaryRow = {
   event: string
   year: number
@@ -74,7 +77,13 @@ const placeNumber = (placement: string | null): number | null => {
 
 const isAllAmericanEvent = (event: string) => /fargo|nhsca(?!.*duals)|super 32(?!.*early)/i.test(event)
 
-export function accoladesFrom(input: { stateRows: readonly SummaryRow[]; tournamentRows: readonly SummaryRow[] }): Accolades {
+export function accoladesFrom(input: {
+  stateRows: readonly SummaryRow[]
+  tournamentRows: readonly SummaryRow[]
+  /** The wrestler's state: names the association when the event doesn't (VHSL, not NCHSAA). */
+  state?: string | null
+}): Accolades {
+  const homeState = String(input.state ?? "").trim().toUpperCase()
   const out: Accolades = { allAmericans: 0, nationalTitles: 0, bestStatePlace: null, bestStateClass: null, statePlacings: 0, stateTitles: 0, titleClasses: [], stateQualifier: false, byEvent: { nhsca: { aa: 0, titles: 0 }, super32: { aa: 0, titles: 0 }, fargo: { aa: 0, titles: 0 } } }
   for (const row of input.tournamentRows) {
     if (row.isDuals || /\(OF\)|overflow/i.test(row.event) || !isAllAmericanEvent(row.event)) continue
@@ -106,7 +115,9 @@ export function accoladesFrom(input: { stateRows: readonly SummaryRow[]; tournam
     if (out.bestStatePlace == null || place < out.bestStatePlace) {
       out.bestStatePlace = place
       out.bestStateClass = row.event.match(/\b(\d+A)\b/i)?.[1]?.toUpperCase() ?? null
-      out.bestStateAssociation = row.event.match(/\b(SCHSL|SCISA|NCISAA?|NCHSAA)\b/i)?.[1]?.toUpperCase().replace("NCISAA", "NCISA") ?? null
+      out.bestStateAssociation =
+        row.event.match(/\b(SCHSL|SCISA|NCISAA?|NCHSAA)\b/i)?.[1]?.toUpperCase().replace("NCISAA", "NCISA") ??
+        (homeState && homeState !== "NC" ? associationForEvent(homeState, row.event) : null)
     }
   }
   return out

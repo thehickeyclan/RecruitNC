@@ -136,11 +136,10 @@ function CompleteProfileForm() {
                 </SelectTrigger>
                 <SelectContent>
                   {eduEmail ? <SelectItem value="college-coach">College Coach</SelectItem> : null}
-                  <SelectItem value="athlete">Athlete</SelectItem>
-                  <SelectItem value="parent">Parent</SelectItem>
+                  <SelectItem value="athlete">Wrestler</SelectItem>
+                  <SelectItem value="parent">Parent of a wrestler</SelectItem>
                   {eduEmail ? null : <SelectItem value="college-coach">College Coach</SelectItem>}
                   <SelectItem value="hs-club-coach">High School/Club Coach</SelectItem>
-                  <SelectItem value="referee">Referee</SelectItem>
                   <SelectItem value="fan">Fan</SelectItem>
                 </SelectContent>
               </Select>

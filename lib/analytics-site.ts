@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { onRecruitWrestlersProject } from "@/lib/recruiting/product-name"
+import type { FirstTouch } from "@/lib/traffic-source"
 
 /**
  * Which site an event happened on, stamped into user_analytics.event_data.site (Matt, 1 Nov 2026:
@@ -26,13 +27,13 @@ export function siteFromRequest(request: Pick<Request, "headers">): "rw" | "ncu"
  */
 export async function recordProfileClaimed(
   admin: SupabaseClient,
-  input: { athleteId: string; userId: string; site: AnalyticsSite; route: string },
+  input: { athleteId: string; userId: string; site: AnalyticsSite; route: string; firstTouch?: FirstTouch | null },
 ): Promise<void> {
   const { error } = await admin.from("user_analytics").insert({
     user_id: input.userId,
     event_type: "profile_claimed",
     page_url: input.route,
-    event_data: { athlete_id: input.athleteId, site: input.site, route: input.route, timestamp: new Date().toISOString() },
+    event_data: { athlete_id: input.athleteId, site: input.site, route: input.route, first_touch: input.firstTouch ?? null, timestamp: new Date().toISOString() },
     created_at: new Date().toISOString(),
   })
   if (error) console.warn("[analytics-site] profile_claimed:", error.message)
