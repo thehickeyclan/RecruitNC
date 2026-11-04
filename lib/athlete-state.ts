@@ -168,6 +168,8 @@ const ASSOCIATIONS: Record<string, { public: string; girls?: string; independent
    * inside both associations, so there is no independent layer to name.
    */
   IA: { public: "IHSAA", girls: "IGHSAU" },
+  /* Missouri's private schools compete inside MSHSAA, and its girls wrestle it too - one layer. */
+  MO: { public: "MSHSAA" },
 }
 
 /**

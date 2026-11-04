@@ -102,6 +102,17 @@ export const RECRUITING_BRAND = {
      * brackets, and every figure lands exactly on the scoping ceiling in all three years.
      */
     { code: "IA", name: "Iowa", live: false },
+    /*
+     * Missouri is the first state in the lineage to resolve every placer key from the payloads'
+     * own grade prints: 1,054 of 1,054, no conflicts and nothing not found. All 192 champion keys
+     * resolved, and all 252 champions verified against the winner of their own final.
+     *
+     * Top 6, and the one thing that makes it importable at all is Arkansas's work: the 2025 Class 2
+     * bracket at 132 has a VACANT 5th and two wrestlers TIED at 6th, because the placement match
+     * was a double forfeit (MSHSAA prints it verbatim). Under the old unique podium index that
+     * slice would have been refused outright. One association for both genders.
+     */
+    { code: "MO", name: "Missouri", live: false },
   ],
 } as const
 
