@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 
-import { businessCanOpen, hasBusinessGrant } from "@/lib/business/access"
+import { businessDecision } from "@/lib/business/access"
 
 export type BusinessViewerAuth =
   | { ok: true; isAdmin: boolean; userId: string }
@@ -22,11 +22,7 @@ export async function requireBusinessViewer(page: string): Promise<BusinessViewe
   if (authError || !user) return { ok: false, status: 401, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).maybeSingle()
-  const isAdmin = profile?.is_admin === true
-  if (isAdmin) return { ok: true, isAdmin: true, userId: user.id }
-
-  if (hasBusinessGrant(user.app_metadata) && businessCanOpen(page)) {
-    return { ok: true, isAdmin: false, userId: user.id }
-  }
-  return { ok: false, status: 403, error: "Business access required" }
+  const decision = businessDecision(profile?.is_admin === true, user.app_metadata, page)
+  if (!decision.allow) return { ok: false, status: 403, error: decision.reason }
+  return { ok: true, isAdmin: decision.isAdmin, userId: user.id }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { BUSINESS_PAGES, businessCanOpen, hasBusinessGrant } from "@/lib/business/access"
+import { BUSINESS_PAGES, businessCanOpen, businessDecision, hasBusinessGrant } from "@/lib/business/access"
 
 describe("businessCanOpen", () => {
   it("opens every page on the list", () => {
@@ -53,5 +53,32 @@ describe("hasBusinessGrant", () => {
     expect(hasBusinessGrant(null)).toBe(false)
     expect(hasBusinessGrant(undefined)).toBe(false)
     expect(hasBusinessGrant("business_access")).toBe(false)
+  })
+})
+
+describe("businessDecision", () => {
+  const grant = { business_access: true }
+
+  it("lets a full admin anywhere, grant or no grant", () => {
+    expect(businessDecision(true, {}, "/admin/contacts")).toEqual({ allow: true, isAdmin: true })
+    expect(businessDecision(true, grant, "/admin/business")).toEqual({ allow: true, isAdmin: true })
+  })
+
+  it("lets a grant open a business page, and says it is not an admin", () => {
+    expect(businessDecision(false, grant, "/admin/business")).toEqual({ allow: true, isAdmin: false })
+    expect(businessDecision(false, grant, "/admin/business/state/NC")).toEqual({ allow: true, isAdmin: false })
+  })
+
+  it("refuses a grant anywhere else in admin", () => {
+    for (const page of ["/admin", "/admin/contacts", "/admin/athletes/edit/1", "/admin/command-center-activation"]) {
+      const d = businessDecision(false, grant, page)
+      expect(d.allow, page).toBe(false)
+    }
+  })
+
+  it("refuses a signed-in account with no grant, even on a business page", () => {
+    expect(businessDecision(false, {}, "/admin/business")).toEqual({ allow: false, reason: "Business access required" })
+    expect(businessDecision(false, null, "/admin/business").allow).toBe(false)
+    expect(businessDecision(false, { business_access: "true" }, "/admin/business").allow).toBe(false)
   })
 })

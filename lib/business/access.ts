@@ -54,3 +54,19 @@ export function hasBusinessGrant(appMetadata: unknown): boolean {
   if (!appMetadata || typeof appMetadata !== "object") return false
   return (appMetadata as Record<string, unknown>)[BUSINESS_GRANT] === true
 }
+
+export type BusinessDecision = { allow: true; isAdmin: boolean } | { allow: false; reason: string }
+
+/**
+ * The whole access decision, with nothing to mock: given whether the viewer is a full admin, what
+ * their `app_metadata` says, and the page they asked for, may they see it?
+ *
+ * Pulled out of requireBusinessViewer so the rule itself is tested rather than trusted. The rule
+ * is: admins see everything, a grant sees a page on the list, and nobody else sees anything.
+ */
+export function businessDecision(isAdmin: boolean, appMetadata: unknown, page: string): BusinessDecision {
+  if (isAdmin) return { allow: true, isAdmin: true }
+  if (!hasBusinessGrant(appMetadata)) return { allow: false, reason: "Business access required" }
+  if (!businessCanOpen(page)) return { allow: false, reason: "That page is not part of the Business admin" }
+  return { allow: true, isAdmin: false }
+}

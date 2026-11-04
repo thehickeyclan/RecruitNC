@@ -705,6 +705,17 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
+            {/* The Business home: where the RW business is run (Matt, 4 Nov 2026). */}
+            <Link href="/admin/business">
+              <Card className="border-t-4 border-t-[#A3E635] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Eye className="h-10 w-10 text-[#A3E635] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Business</h3>
+                  <p className="text-xs text-gray-600">Charts by state and gender, every dashboard, the family deck</p>
+                </CardContent>
+              </Card>
+            </Link>
+
             {/* RecruitWrestlers vs NC United */}
             <Link href="/admin/sites">
               <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
