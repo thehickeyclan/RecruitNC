@@ -83,6 +83,7 @@ const KNOWN_FLAGS = new Set([
   "--state",
   "--season",
   "--max-place",
+  "--canonical",
 ])
 for (let i = 0; i < process.argv.length; i += 1) {
   const a = process.argv[i]!
@@ -123,6 +124,22 @@ const LINK_ONLY = process.argv.includes("--link-only")
 /* Kept as an explicit no-op flag: it names the default, and recorded commands still pass it. */
 const ONLY_KNOWN = !INCLUDE_NO_CLASS_YEAR
 const STATE = normalizeState(arg("state"))
+/**
+ * The build's own grouping of keys into real athletes, when it ships one.
+ *
+ * Our matcher has twice been the last thing standing between a package and a duplicate profile, and
+ * twice it lost: Iowa's Koy Davidson and Missouri's Charles/Charlie Robinson were both found after
+ * the mint had run. Muse's mint lists now carry `canonical_athlete_id`, which is that grouping
+ * stated rather than inferred - so where it is supplied it decides, and the matcher is the fallback
+ * for the rows it does not cover.
+ *
+ * It only ever JOINS keys. A canonical id cannot split a group our matcher folded, because folding
+ * two different wrestlers is the error that matters and nothing here should be able to cause it
+ * silently.
+ *
+ *   --canonical docs/state-launch/canonical/TX-mint-list-canonical-v2.csv
+ */
+const CANONICAL = arg("canonical")
 const SEASON = Number(arg("season", "2026"))
 const MAX_PLACE = Number(arg("max-place", "8"))
 const nn = (raw: unknown) => nameWords(String(raw ?? "")).join(" ")
@@ -204,6 +221,51 @@ async function main() {
       byName.set(a, [...byName.get(a)!, ...rowsB])
       byName.delete(b)
     }
+  }
+  /*
+   * Then the build's own grouping, which outranks ours where it exists. Keyed on name and school as
+   * the mint list prints them, matched through the same school fold the rest of this script uses,
+   * so a key filed under "St. John`s School Houston" still finds "St. John`s School (TX)".
+   */
+  if (CANONICAL) {
+    const text = fs.readFileSync(CANONICAL, "utf8").replace(/\r/g, "").trim().split("\n")
+    const cols = text.shift()!.split(",")
+    const idx = (n: string) => cols.indexOf(n)
+    const rowsOf = text.filter((l) => l.trim()).map((l) => {
+      const v: string[] = []
+      let cur = ""
+      let q = false
+      for (let i = 0; i < l.length; i += 1) {
+        const ch = l[i]
+        if (q) { if (ch === '"' && l[i + 1] === '"') { cur += '"'; i += 1 } else if (ch === '"') q = false; else cur += ch }
+        else if (ch === '"') q = true
+        else if (ch === ",") { v.push(cur); cur = "" }
+        else cur += ch
+      }
+      v.push(cur)
+      return { name: (v[idx("name")] ?? "").trim(), school: (v[idx("school")] ?? "").trim(), id: (v[idx("canonical_athlete_id")] ?? "").trim() }
+    }).filter((r) => r.id)
+    const canonOf = (r: Placer) => {
+      const n = nn(r.wrestler_name)
+      const hit = rowsOf.find((x) => nn(x.name) === n && schoolsLikelySame(x.school, schoolOf(r)))
+      return hit?.id ?? null
+    }
+    const joined: string[] = []
+    for (const [a, rowsA] of [...byName]) {
+      if (!byName.has(a)) continue
+      const idA = rowsA.map(canonOf).find(Boolean)
+      if (!idA) continue
+      for (const [b, rowsB] of [...byName]) {
+        if (b === a || !byName.has(b) || !byName.has(a)) continue
+        if (rowsB.map(canonOf).find(Boolean) !== idA) continue
+        joined.push(`${rowsA[0]!.wrestler_name} + ${rowsB[0]!.wrestler_name} (${idA})`)
+        byName.set(a, [...byName.get(a)!, ...rowsB])
+        byName.delete(b)
+      }
+    }
+    const covered = unlinked.filter((r) => canonOf(r)).length
+    console.log(`   canonical ids: ${rowsOf.length} supplied, covering ${covered}/${unlinked.length} rows; joined ${joined.length} group(s)`)
+    for (const j of joined) console.log(`      ${j}`)
   }
   const groups = new Map<string, Placer[]>()
   for (const [name, rows] of byName) {
