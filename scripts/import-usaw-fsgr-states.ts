@@ -95,6 +95,8 @@ const DATES: Record<string, string> = {
   // and the run says so out loud rather than letting a guess pass as a date. Nothing downstream
   // turns on it at this distance: the 12-month head-to-head window closed on spring 2025 long ago.
   "KY|2025": "2025-05-01",
+  // Both styles the same day and venue, Walker HS (FloArena 13956434 freestyle, 14143294 Greco).
+  "LA|2025": "2025-05-03",
 }
 /** Dates whose day is not established by the delivery note. Printed on every run. */
 const APPROX_DATES = new Set(["KY|2025"])
