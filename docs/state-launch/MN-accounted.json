@@ -1,0 +1,58 @@
+{
+  "_source": "Muse (from the MN build files: final-qualifiers/, MN-grad-years.csv, MN-mint-list.csv); merged into the gate's schema (placers[].reason/note) by Claude, 2026-11-04. Muse's original entries[] file is kept verbatim in the notes below.",
+  "_notes": [
+    "All other MN placer keys (672) resolved to a class year in the build; graduated classes (2024-2026) mint no profiles by design and are not listed individually.",
+    "MSHSL permits 7th/8th-grade varsity participation: 69 pre-freshman placer rows are legitimate data, proven by the package's own grade prints (e.g., Cayden Neisen grade 7 in 2024; Grayson Eggum grade 8 in 2024). A pre-freshman gate that fails MN on those rows is miscalibrated for this association."
+  ],
+  "placers": [
+    {
+      "name": "Dayna Kielty",
+      "school": "Glencoe-Lester Prairie",
+      "season": 2026,
+      "reason": "approved",
+      "note": "2026 Girls 112, 4th (grade print 7 -> 2031, USA Bracketing d41bc427). Placement stored and linked; profile deferred by the mint rule (no profile outside classes 2027-2030). Canonical MN-0203."
+    },
+    {
+      "name": "Emily Pulk",
+      "school": "Badger-GB-MR",
+      "season": 2026,
+      "reason": "approved",
+      "note": "2026 Girls 136, 4th (grade print 7 -> 2031). Placement stored; profile deferred per the 2027-2030 mint window. Canonical MN-0249. (Distinct from Sarah Pulk 2027 and Madilyn Pulk 2029, same school, both profiled.)"
+    },
+    {
+      "name": "Hailey Goth",
+      "school": "St. Michael-Albertville",
+      "season": 2026,
+      "reason": "approved",
+      "note": "2026 Girls, 4th (grade print 7 -> 2031). Placement stored; profile deferred per the mint window. Canonical MN-0292."
+    },
+    {
+      "name": "Phoebe Morris",
+      "school": "Monticello",
+      "season": 2026,
+      "reason": "approved",
+      "note": "2026 Girls, 4th (grade print 7 -> 2031). Placement stored; profile deferred per the mint window. Canonical MN-0543."
+    },
+    {
+      "name": "Raegin Larsen",
+      "school": "Redwood Valley",
+      "season": 2026,
+      "reason": "approved",
+      "note": "2026 Girls 130, 6th (grade print 7 -> 2031). Placement stored; profile deferred per the mint window. Canonical MN-0548."
+    },
+    {
+      "name": "Caley Graber",
+      "school": "Northfield",
+      "season": 2026,
+      "reason": "source-conflict",
+      "note": "TWO placer keys, same name/school, both deriving class of 2026 from grade prints: boys AAA 107, 5th, 2024 (grade 10; canonical MN-0129) and girls 118 champion 2025 (grade 11) + girls 130 champion 2026 (grade 12) (canonical MN-0130). Shipped unmerged in the import note for platform adjudication: possibly one athlete whose 2024 row sits in the boys bracket, possibly two same-named athletes. Class of 2026 is outside the 2027-2030 mint window either way, so no profile mints from these keys at this time; placements stored under both keys pending the platform's call."
+    },
+    {
+      "name": "Monroe Eggum",
+      "school": "Stillwater",
+      "season": 2026,
+      "reason": "approved",
+      "note": "2026 Girls 106 qualifier (0-2, did not place). No grade print resolved a class year; qualifier-depth row only, no profile expected. Not Grayson Eggum (Stillwater boys, 2028, profiled)."
+    }
+  ]
+}

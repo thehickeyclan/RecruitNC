@@ -18,7 +18,7 @@ import { execSync } from "child_process"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { HOME_STATE, inState, normalizeStateCode } from "../lib/recruiting/states"
-import { isIndependentChampionship } from "../lib/athlete-state"
+import { allowsMiddleSchoolVarsity } from "../lib/athlete-state"
 import { namesReferToSamePerson } from "../lib/athlete-name-match"
 
 for (const f of [".env.local", ".env"]) {
@@ -109,7 +109,7 @@ async function placementsOf(state: string): Promise<Placement[]> {
   }))
 }
 
-type Link = { athlete_id: string; season: number; source: string; independent: boolean; label: string }
+type Link = { athlete_id: string; season: number; source: string; middleSchoolVarsity: boolean; label: string }
 
 /** Every placement linked to these profiles, from both championship tables. */
 async function linkedPlacements(ids: string[]): Promise<Link[]> {
@@ -120,9 +120,9 @@ async function linkedPlacements(ids: string[]): Promise<Link[]> {
       sb.from("wrestling_nchsaa_results").select("athlete_id,year,school,classification,place").in("athlete_id", chunk),
       sb.from("state_tournament_placers").select("athlete_id,season,state,association,school_clean,school_raw,place").in("athlete_id", chunk),
     ])
-    for (const r of nc.data ?? []) out.push({ athlete_id: r.athlete_id, season: Number(r.year), source: "NC", independent: r.classification === "NCISA", label: `NC ${r.year} ${r.classification ?? ""} #${r.place ?? "?"} ${r.school ?? ""}`.trim() })
+    for (const r of nc.data ?? []) out.push({ athlete_id: r.athlete_id, season: Number(r.year), source: "NC", middleSchoolVarsity: r.classification === "NCISA", label: `NC ${r.year} ${r.classification ?? ""} #${r.place ?? "?"} ${r.school ?? ""}`.trim() })
     for (const r of other.data ?? [])
-      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, independent: isIndependentChampionship(r.state, r.association), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
+      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, middleSchoolVarsity: allowsMiddleSchoolVarsity(r.state, r.association), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
   }
   // The same placement can sit in a table twice; report it once.
   return [...new Map(out.map((l) => [`${l.athlete_id}|${l.label}`, l])).values()]
@@ -228,14 +228,15 @@ async function measure(state: string) {
   }
 
   // A result before the wrestler's freshman season belongs to someone else, or carries a wrong class
-  // year. Independent schools (NCISA, SCISA) let 7th and 8th graders wrestle varsity, so those two
-  // seasons are a review list there, not a failure; anything earlier fails everywhere.
+  // year. Where 7th and 8th grade varsity is allowed - independent schools (NCISA, SCISA, VISAA) and
+  // whole state associations that permit it (the MSHSL) - those two seasons are a review list, not a
+  // failure; anything earlier fails everywhere.
   const links = await linkedPlacements(current.map((a) => a.id))
   const line = (l: Link) => `${byId.get(l.athlete_id)?.name} (class ${byId.get(l.athlete_id)?.graduationyear}) carries ${l.label} · ${l.athlete_id}`
   const yearsEarly = (l: Link) => Number(byId.get(l.athlete_id)?.graduationyear) - 3 - l.season
   const verifiedEarly = new Set((acct.preFreshmanVerified ?? []).map((v) => v.athleteId))
-  const namesakes = links.filter((l) => yearsEarly(l) > (l.independent ? 2 : 0) && !verifiedEarly.has(l.athlete_id)).map(line)
-  const middleSchool = links.filter((l) => l.independent && yearsEarly(l) > 0 && yearsEarly(l) <= 2).map(line)
+  const namesakes = links.filter((l) => yearsEarly(l) > (l.middleSchoolVarsity ? 2 : 0) && !verifiedEarly.has(l.athlete_id)).map(line)
+  const middleSchool = links.filter((l) => l.middleSchoolVarsity && yearsEarly(l) > 0 && yearsEarly(l) <= 2).map(line)
   // Out of state NC results on a non-NC profile: possible (a move), never assumed.
   const verifiedHomeResults = new Set((acct.homeStateResultsVerified ?? []).map((v) => v.athleteId))
   const crossState =
@@ -400,7 +401,7 @@ async function measure(state: string) {
       { check: `${latest} champions and finalists with no profile`, kind: "INFO", value: String(topOfLatest.length), pass: true, detail: topOfLatest },
       { check: "Championship-linked profiles with no state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
       { check: "Unexplained results before freshman year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
-      { check: "Independent-school results from 7th/8th grade (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
+      { check: "7th/8th grade results where varsity allows it (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
       {
         check: "Placements reaching no profile though the wrestler has one (transfer or namesake)",
         kind: "INFO",

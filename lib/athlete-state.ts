@@ -110,7 +110,10 @@ export function isHomeState(state: string | null | undefined): boolean {
  * middle-schoolers and public ones do not - so calling the IGHSAU independent would have switched
  * off that namesake check for every girl in the state.
  */
-const ASSOCIATIONS: Record<string, { public: string; girls?: string; independent?: string[] }> = {
+const ASSOCIATIONS: Record<
+  string,
+  { public: string; girls?: string; independent?: string[]; middleSchoolVarsity?: true }
+> = {
   NC: { public: "NCHSAA", independent: ["NCISA"] },
   SC: { public: "SCHSL", independent: ["SCISA"] },
   VA: { public: "VHSL", independent: ["VISAA"] },
@@ -172,8 +175,15 @@ const ASSOCIATIONS: Record<string, { public: string; girls?: string; independent
   MO: { public: "MSHSAA" },
   /* Michigan's private schools wrestle inside the MHSAA, and so do its girls - one layer. */
   MI: { public: "MHSAA" },
-  /* Minnesota's private schools wrestle inside the MSHSL, and so do its girls - one layer. */
-  MN: { public: "MSHSL" },
+  /*
+   * Minnesota's private schools wrestle inside the MSHSL, and so do its girls - one layer. Unlike
+   * every state above it, the MSHSL lets 7th and 8th graders wrestle varsity and place at state:
+   * the 2024 bracket prints carry grade 7 and grade 8 against class years of 2029 and 2028 (Cayden
+   * Neisen, Grayson Eggum). So a pre-freshman placement here is ordinary, not a namesake - which is
+   * `middleSchoolVarsity`, NOT `independent`: these are public schools and calling them independent
+   * would be false in every other reader.
+   */
+  MN: { public: "MSHSL", middleSchoolVarsity: true },
 }
 
 /**
@@ -230,6 +240,28 @@ export function isIndependentChampionship(
   const name = String(association ?? "").trim()
   if (!name) return false
   return (ASSOCIATIONS[code]?.independent ?? []).some((x) => x.toLowerCase() === name.toLowerCase())
+}
+
+/**
+ * Whether a 7th or 8th grade varsity placement is legitimate in this championship, rather than
+ * evidence of a namesake or a wrong class year. Two different reasons it can be: an independent
+ * association whose schools roster middle-schoolers (NCISA, SCISA, VISAA), or a state association
+ * that permits it outright (the MSHSL). Anything earlier than 7th grade is wrong everywhere.
+ */
+export function allowsMiddleSchoolVarsity(
+  state: string | null | undefined,
+  association: string | null | undefined,
+): boolean {
+  if (isIndependentChampionship(state, association)) return true
+  const code = String(state ?? "").trim().toUpperCase()
+  const entry = ASSOCIATIONS[code]
+  if (!entry?.middleSchoolVarsity) return false
+  const name = String(association ?? "").trim().toLowerCase()
+  if (!name) return false
+  // Only that state's own championships - never a visiting association's rows filed under it.
+  return [entry.public, entry.girls, ...(entry.independent ?? [])]
+    .filter(Boolean)
+    .some((x) => String(x).toLowerCase() === name)
 }
 
 /** "WV Girls State Invitational" — the event's own name, where it is not a championship. */
