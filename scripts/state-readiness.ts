@@ -342,13 +342,28 @@ async function measure(state: string) {
    * gate - the right answer is sometimes "two different wrestlers", and that must not block a
    * state. An omitted fact becomes an invented one.
    */
+  /*
+   * Cases adjudication has already settled do not count as open work. A "namesake" never links; a
+   * "hold" waits on evidence nobody here can produce. Both still print, tagged, so nothing is
+   * hidden - but the headline number is the work actually waiting on someone.
+   */
+  type Settled = { state: string; name: string; verdict: string }
+  let settledCases: Settled[] = []
+  try {
+    const f = "docs/state-launch/TRANSFER-ADJUDICATED.json"
+    if (fs.existsSync(f)) settledCases = (JSON.parse(fs.readFileSync(f, "utf8")).cases ?? []) as Settled[]
+  } catch { settledCases = [] }
+  const settledFor = (name: string) =>
+    settledCases.find((c) => c.state.toUpperCase() === state.toUpperCase() && c.name.trim().toLowerCase() === name.trim().toLowerCase())
   const profilesByName = current.map((a) => ({ id: a.id, name: String(a.name ?? ""), school: a.highschool ?? null }))
   const transferQueue = placements
     .filter((p) => !p.athlete_id && p.place != null && p.grad_year != null && CURRENT.includes(Number(p.grad_year)))
     .flatMap((p) => {
       const hit = profilesByName.find((a) => namesReferToSamePerson(a.name, p.name))
       if (!hit) return []
-      return [`${p.name}, ${p.school ?? "?"} ${p.season} #${p.place} (class of ${p.grad_year}) - profile is at ${hit.school ?? "no school"} · ${hit.id}`]
+      const v = settledFor(hit.name)
+      const tag = v ? (v.verdict === "namesake" ? " [SETTLED: namesake, never link]" : " [HELD: awaiting non-RW evidence]") : ""
+      return [`${p.name}, ${p.school ?? "?"} ${p.season} #${p.place} (class of ${p.grad_year}) - profile is at ${hit.school ?? "no school"}${tag} · ${hit.id}`]
     })
 
   const reasons = new Map<string, number>()
@@ -386,7 +401,15 @@ async function measure(state: string) {
       { check: "Championship-linked profiles with no state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
       { check: "Unexplained results before freshman year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
       { check: "Independent-school results from 7th/8th grade (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
-      { check: "Placements reaching no profile though the wrestler has one (transfer or namesake)", kind: "INFO", value: String(transferQueue.length), pass: true, detail: transferQueue, alwaysList: true },
+      {
+        check: "Placements reaching no profile though the wrestler has one (transfer or namesake)",
+        kind: "INFO",
+        value: `${transferQueue.filter((d) => !d.includes("[SETTLED") && !d.includes("[HELD")).length} open` +
+          (transferQueue.length ? ` of ${transferQueue.length} (${transferQueue.filter((d) => d.includes("[HELD")).length} held, ${transferQueue.filter((d) => d.includes("[SETTLED")).length} settled)` : ""),
+        pass: true,
+        detail: transferQueue,
+        alwaysList: true,
+      },
       { check: "NC results on this state's profiles (unnamed)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
       { check: "Duplicate profiles (same name and class)", kind: "GATE", value: String(dups.length), pass: dups.length === 0, detail: dups },
       {
