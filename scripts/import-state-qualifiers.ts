@@ -37,6 +37,8 @@ const sb = createClient(
   { auth: { persistSession: false } },
 )
 const WRITE = process.argv.includes("--write")
+/** Proceed although a slice would lose rows — for the real case where a source withdrew entrants. */
+const ALLOW_SHRINK = process.argv.includes("--allow-shrink")
 const FILES = process.argv.slice(2).filter((a) => a.endsWith(".csv")).map((a) => a.replace(/^~/, process.env.HOME ?? "~"))
 
 function csv(file: string): Array<Record<string, string>> {
@@ -387,6 +389,20 @@ async function main() {
         if (!data || data.length < 1000) break
       }
     }
+    /*
+     * The same measurement the bout importer makes, for the same reason: a slice is deleted whole,
+     * so a file holding part of one deletes the rest. Virginia's 185 addendum was ten qualifier
+     * rows against a 182-row girls slice, and run through here it would have left ten. That one was
+     * inserted directly instead - which is what an addendum needs - but nothing in the code said so.
+     */
+    const fewer = doomed.length && entries.length < doomed.length
+    if (fewer && !ALLOW_SHRINK) {
+      console.log(`   PARTIAL SLICE — nothing deleted, nothing written: holds ${doomed.length} rows, this run writes ${entries.length}`)
+      console.log(`      A slice is replaced whole. Import the COMPLETE (state, season, gender) set, insert an`)
+      console.log(`      addendum's rows directly, or pass --allow-shrink if the source withdrew entrants.`)
+      continue
+    }
+    if (fewer) console.log(`   --allow-shrink: replacing ${doomed.length} rows with ${entries.length}`)
     if (doomed.length) {
       fs.mkdirSync("ranking-snapshots", { recursive: true })
       const snap = `ranking-snapshots/state-qualifiers-${state}-${season}-${gender}-${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}.json`

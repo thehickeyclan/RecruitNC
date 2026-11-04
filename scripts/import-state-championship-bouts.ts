@@ -46,6 +46,8 @@ const STATE = String(val("--state") ?? "").toUpperCase()
 const DIR = val("--dir")
 const SOURCE = val("--source") ?? "muse-delivery"
 const WRITE = args.includes("--write")
+/** Proceed although a key would lose rows — for the real case where a source withdrew results. */
+const ALLOW_SHRINK = args.includes("--allow-shrink")
 /*
  * Regional mode: a championship above the states, whose field is drawn from several of them.
  *
@@ -298,6 +300,51 @@ async function main() {
   if (REGIONAL) console.log(`    by Flo wrestler id: ${viaFlo} · by name and school: ${viaName} · refused, wrong state: ${refusedByState}`)
   for (const k of keys) console.log(`  ${k}: ${rows.filter((r) => r.event_key === k).length} rows`)
   if (QUALIFIERS && rows.some((r) => !r.event_date)) throw new Error("--layer qualifiers needs --dates covering every tournament")
+
+  /*
+   * The unit of completeness is the EVENT KEY, and the event key is never the source tournament.
+   *
+   * This import replaces each `<association>-states-<season>` wholesale, so a file holding part of
+   * one deletes the rest. That cost nothing only because it was caught by hand three times in one
+   * day: VISAA 2026's 150 and 285 brackets, with 331 rows at risk, and Virginia's 2025 Class 1A and
+   * 4A, delivered as "complete sets for two new event keys" - true of their Trackwrestling
+   * tournament ids, not of this column, where both are vhsl-states-2025 along with everything
+   * already held.
+   *
+   * So it is measured here rather than trusted: for every key about to be replaced, how many rows
+   * and which weight classes exist now, against what this run would write. Fewer rows, or a weight
+   * set that is a strict subset of what is held, means a partial file, and the run stops before
+   * anything is deleted. --allow-shrink proceeds and names what shrinks.
+   */
+  const shrinking: string[] = []
+  for (const k of keys) {
+    const existing: Array<{ weight_class: string | null }> = []
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb
+        .from("other_tournament_bouts")
+        .select("weight_class")
+        .eq("event_key", k)
+        .order("id")
+        .range(from, from + 999)
+      if (error) throw error
+      existing.push(...((data ?? []) as Array<{ weight_class: string | null }>))
+      if (!data || data.length < 1000) break
+    }
+    if (!existing.length) continue
+    const mine = rows.filter((r) => r.event_key === k)
+    const myWeights = new Set(mine.map((r) => String((r as { weight_class?: unknown }).weight_class ?? "")))
+    const missing = [...new Set(existing.map((r) => String(r.weight_class ?? "")))].filter((w) => !myWeights.has(w))
+    if (mine.length < existing.length) shrinking.push(`${k}: holds ${existing.length} rows, this run writes ${mine.length}`)
+    else if (missing.length) shrinking.push(`${k}: holds ${missing.length} weight class(es) this run does not cover (${missing.slice(0, 8).join(", ")})`)
+  }
+  if (shrinking.length) {
+    console.log(`\n  PARTIAL EVENT — nothing deleted, nothing written:`)
+    for (const m of shrinking) console.log(`     ${m}`)
+    console.log(`     An event key is replaced whole. Import the COMPLETE set for every key above in`)
+    console.log(`     ONE run, or pass --allow-shrink if the source really did withdraw results.`)
+    if (!ALLOW_SHRINK) return
+    console.log(`     --allow-shrink given: proceeding.`)
+  }
   if (!WRITE) return console.log("\nDry run. --write to apply.")
   for (const k of keys) {
     const { error } = await sb.from("other_tournament_bouts").delete().eq("event_key", k)
