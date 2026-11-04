@@ -159,8 +159,16 @@ async function main() {
         )
     const associations = new Set(placers.map((r) => String(r.association ?? "")).filter(Boolean))
     const placed = placers.filter((r) => r.place)
-    const withYear = placers.filter((r) => r.grad_year != null).length
-    const yearPct = isHome ? null : placers.length ? Math.round((withYear / placers.length) * 100) : 0
+    /*
+     * Class-year coverage is measured over PLACED rows, not every row. The placer table holds the
+     * whole field - every qualifier, place null - and several packages apply a class year only to
+     * the rows that placed, by design. Measuring over all rows mixed the two: Texas landed 1,465 of
+     * its 1,471 placed rows with a year, 99.6%, and read 40% because 2,192 qualifiers who never
+     * placed carry none. A placed row with no year is the real ceiling, because that is the row
+     * that would have become a profile.
+     */
+    const withYear = placed.filter((r) => r.grad_year != null).length
+    const yearPct = isHome ? null : placed.length ? Math.round((withYear / placed.length) * 100) : 0
     const { count: profiles } = await inState(
       sb.from("athletes").select("*", { count: "exact", head: true }),
       s.code,
@@ -182,7 +190,7 @@ async function main() {
       if (!k.rows) continue
       if (k.mirrored < 90) flags.push(`  ${s.code} ${k.key}: ${k.rows} rows, only ${k.mirrored}% mirrored - one-sided load, re-import the complete set`)
     }
-    if (yearPct != null && placers.length && yearPct < 60) flags.push(`  ${s.code}: only ${yearPct}% of ${placers.length} placer rows carry a class year - the profile ceiling, needs a grad-year pass`)
+    if (yearPct != null && placed.length && yearPct < 90) flags.push(`  ${s.code}: only ${yearPct}% of ${placed.length} PLACED rows carry a class year (${placed.length - withYear} short) - the profile ceiling, needs a grad-year pass`)
     if (placed.length && !sides) flags.push(`  ${s.code}: ${placed.length} placed rows and NO bout ledger - results with no matches behind them`)
     if (FULL) for (const k of keys) out.push(`  ${s.code} ${k.key.padEnd(28)} ${String(k.rows).padStart(6)} rows · ${k.mirrored}% mirrored${k.soloRows ? ` · ${k.soloRows} with no opponent named` : ""}`)
   }
