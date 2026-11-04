@@ -167,6 +167,13 @@
       "season": 2026,
       "reason": "approved",
       "note": "VISAA 113 #5. No class year found (RankWrestlers has none). Not researched further: profiles are for current wrestlers, not history (Matt, 22 Oct 2026). Gets a profile if a family claims or a 2027-2030 year turns up."
+    },
+    {
+      "name": "Teresa Fugal",
+      "school": "Albemarle",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year, HELD on a conflict, not for want of a source. Her three Albemarle placements disagree: the 2024 (165, 5th) and 2025 (185, 3rd) rows carry class of 2028 from October's build, while her 2026 185 payload record prints 'HS Senior', which implies 2026. Both cannot be true - a class-of-2028 wrestler would have placed at 165 in her 7th grade year. The 2026 print is the likelier of the two and was briefly written to her profile on 4 Nov; that was reverted the same minute, because one print does not overrule two rows and the standing rule for conflicting prints is to hold them (Alyssa Beasley in Arkansas, Koy Davidson in Iowa). Needs the same dated-record adjudication they got. She keeps a profile because she already had one before the current-classes default; it carries no class year, so she cannot be ranked or surfaced until this resolves (4 Nov 2026)."
     }
   ],
   "classYearUnresolved": [

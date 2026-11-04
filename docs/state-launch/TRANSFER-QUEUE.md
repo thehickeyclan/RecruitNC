@@ -15,7 +15,7 @@ dated records. Adjudication batch #2 found exactly that three times (Garrett Sho
 Nathan Taylor), all three of which this file had called benign. Only dated per-season records
 settle a case; what follows is the worklist and the evidence to start from, never the verdict.
 
-19 unlinked placement(s) across AR, OK, IA, MO, VA, SC: **4 awaiting adjudication**, 11 held
+18 unlinked placement(s) across AR, OK, IA, MO, VA, SC: **3 awaiting adjudication**, 11 held
 for want of non-RW evidence, 4 settled as namesakes that must never be linked
 (docs/state-launch/TRANSFER-ADJUDICATED.json). Nothing here has been linked or merged.
 
@@ -94,12 +94,7 @@ for want of non-RW evidence, 4 settled as namesakes that must never be linked
   verdict inputs: concurrent seasons none · class years agree (2027) · weights 140, 145 (spread 5 lb)
 
 
-## VA — 5 wrestler(s), 5 unlinked placement(s)
-
-### Rowan Klanderman — profile Bishop O`Connell, class of 2027 · 833db6ae-bc74-4186-9dc0-cff6606f0025
-  - 2025 Bishop OConnell · VISAA 285 #6 · class 2027 · UNLINKED
-  - 2026 Bishop O`Connell High School · VISAA 285 #6 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 285
+## VA — 4 wrestler(s), 4 unlinked placement(s)
 
 ### Manny Evans — profile L.C. Bird, class of 2027 · 7d0be6d4-5fa9-4635-b2f8-0bbc10c697d8 · HELD: awaiting non-RW evidence
   - 2025 L.C. Bird · 5A 144 #4 · class 2027 · LINKED
