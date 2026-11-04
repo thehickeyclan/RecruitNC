@@ -44,6 +44,8 @@ const DATES: Record<string, string> = {
   "SC|2026": "2026-06-06",
   // 54th Annual, 3-4 May 2025, Mooresville HS; the start date, matching 2026's single-date rows.
   "NC|2025": "2025-05-03",
+  // VAWA FS/GR states, 3-4 May 2025, Heritage HS, Lynchburg (FloArena event 13994316).
+  "VA|2025": "2025-05-03",
 }
 const dateFor = (year: string) => {
   const d = DATES[`${STATE}|${year}`]
