@@ -24,7 +24,7 @@ import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { namesReferToSamePerson, nameWords, schoolsLikelySame } from "@/lib/athlete-name-match"
 import { currentClassYears } from "@/lib/class-years"
-import { normalizeState } from "@/lib/athlete-state"
+import { isIndependentChampionship, normalizeState } from "@/lib/athlete-state"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -50,7 +50,7 @@ const WRITE = process.argv.includes("--write")
 const CURRENT = currentClassYears()
 const nn = (v: unknown) => nameWords(String(v ?? "")).join(" ").toLowerCase()
 
-type Row = { id: string; season: number; wrestler_name: string; school_clean: string | null; school_raw: string | null; grad_year: number | null; place: number | null }
+type Row = { id: string; season: number; wrestler_name: string; school_clean: string | null; school_raw: string | null; grad_year: number | null; place: number | null; association: string | null }
 
 async function main() {
   if (!STATE) throw new Error("--state is required")
@@ -58,7 +58,7 @@ async function main() {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb
       .from("state_tournament_placers")
-      .select("id,season,wrestler_name,school_clean,school_raw,grad_year,place")
+      .select("id,season,wrestler_name,school_clean,school_raw,grad_year,place,association")
       .eq("state", STATE)
       .order("id")
       .range(from, from + 999)
@@ -105,7 +105,27 @@ async function main() {
     }
     const year = years[0]
     if (!year || !CURRENT.includes(year)) continue
-    for (const r of g) if (!r.grad_year) fills.push({ id: r.id, year, who: `${r.season} ${r.wrestler_name} (${schoolOf(r)}) ${r.place == null ? "qualifier" : `#${r.place}`}` })
+    for (const r of g) {
+      if (r.grad_year) continue
+      /*
+       * Never into a season the year cannot reach. A class of Y wrestler is a freshman in season
+       * Y-3, so Y-S greater than 3 puts the row in 8th grade or earlier - and the states we hold
+       * bar 8th graders from varsity - EXCEPT the independent championships, which roster
+       * middle-schoolers and where such a row is real. Seven Virginia rows at Benedictine, Cape
+       * Henry, Greenbrier Christian, Grace Christian and Episcopal were cleared by a first,
+       * blanket version of this rule and had to be put back.
+       *
+       * The first run of this script did exactly that: it gave Talen Hall of Grundy the class of
+       * 2029 carried on another of his rows, which made him a state CHAMPION in 7th and 8th grade.
+       * The readiness gate's pre-freshman check caught all four. A year that produces an impossible
+       * season is evidence the year is wrong, not a blank to fill.
+       */
+      if (year - Number(r.season) > 3 && !isIndependentChampionship(STATE, r.association)) {
+        conflicts.push(`${r.wrestler_name} (${schoolOf(r)}): class of ${year} would put his ${r.season} row in grade ${12 - (year - Number(r.season))} — not filled`)
+        continue
+      }
+      fills.push({ id: r.id, year, who: `${r.season} ${r.wrestler_name} (${schoolOf(r)}) ${r.place == null ? "qualifier" : `#${r.place}`}` })
+    }
   }
 
   console.log(`${STATE}: ${rows.length} rows in ${groups.length} wrestler group(s)`)
