@@ -170,6 +170,8 @@ const ASSOCIATIONS: Record<string, { public: string; girls?: string; independent
   IA: { public: "IHSAA", girls: "IGHSAU" },
   /* Missouri's private schools compete inside MSHSAA, and its girls wrestle it too - one layer. */
   MO: { public: "MSHSAA" },
+  /* Michigan's private schools wrestle inside the MHSAA, and so do its girls - one layer. */
+  MI: { public: "MHSAA" },
 }
 
 /**

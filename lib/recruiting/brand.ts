@@ -113,6 +113,17 @@ export const RECRUITING_BRAND = {
      * slice would have been refused outright. One association for both genders.
      */
     { code: "MO", name: "Missouri", live: false },
+    /*
+     * Michigan: 1,504 of 1,504 placer keys resolved, all 191 champion keys among them, and all 210
+     * champions verified against the winner of their own final. Top 8, 14 weights, 16-wrestler
+     * brackets throughout, and boys and girls share one event each year at Ford Field. One
+     * association, MHSAA, which the private schools wrestle inside.
+     *
+     * Its canonical retrofit came back needing nothing: 426 mint keys fold to 357 athletes on
+     * literal names alone, the same 357 the build states, with no differing-name folds anywhere -
+     * so unlike Texas it mints without --canonical.
+     */
+    { code: "MI", name: "Michigan", live: false },
   ],
 } as const
 
