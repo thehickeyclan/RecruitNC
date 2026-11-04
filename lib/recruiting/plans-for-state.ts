@@ -12,7 +12,7 @@
  * state). Unknown - signed out, or nothing claimed yet - shows every plan.
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { liveStates } from "@/lib/recruiting/brand"
+import { rankedStates } from "@/lib/recruiting/brand"
 import { athleteStateCode, normalizeStateCode } from "@/lib/recruiting/states"
 
 export type StatePlans = {
@@ -24,7 +24,7 @@ export type StatePlans = {
 
 /** States with rankings: the live ones on RecruitWrestlers, which carries every live state. */
 export function rankedStateCodes(): string[] {
-  return liveStates(true).map((s) => s.code)
+  return rankedStates(true).map((s) => s.code)
 }
 
 export function plansForState(state: string | null | undefined): StatePlans {

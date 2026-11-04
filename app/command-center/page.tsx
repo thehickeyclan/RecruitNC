@@ -24,7 +24,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { BrandName } from "@/components/recruiting/brand-name"
 import { headers } from "next/headers"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
-import { recruitingCoverage } from "@/lib/recruiting/brand"
+import { rankingsCoverage, recruitingCoverage } from "@/lib/recruiting/brand"
 import { shareCardUrl } from "@/lib/share-metadata"
 
 export const dynamic = "force-dynamic"
@@ -443,7 +443,7 @@ export default async function CommandCenterSalesPage() {
           <div className="mt-6 divide-y divide-white/10 rounded-2xl border border-white/10 bg-[#0b1a33]">
             {[
               onRw
-                ? ["Which states are covered?", `Rankings and results are live for ${recruitingCoverage(true)}, with more states opening one at a time. The college map, Compare, Learn, Scout and coach messages work for every family, in every state.`]
+                ? ["Which states are covered?", `Profiles and results are live for ${recruitingCoverage(true)}; rankings for ${rankingsCoverage(true)}, with more states opening one at a time. The college map, Compare, Learn, Scout and coach messages work for every family, in every state.`]
                 : ["Is it only for North Carolina?", "The rankings and results are North Carolina's. The college map, Compare, Learn and coach messages work for every family."],
               ["Does the Command Center support women's wrestling?", "Yes. Women's wrestling has its own colleges, rules and rankings, and the Command Center follows your wrestler: a daughter's map, colleges and rules are the women's ones."],
               ["Does it guarantee a scholarship or an offer?", "No. Nothing can. It helps you find the colleges that fit, know what to do next and see real coach activity, so your wrestler's opportunities aren't left to chance."],

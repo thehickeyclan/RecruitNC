@@ -1,7 +1,7 @@
 "use client"
 
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
-import { directoryStates, recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
+import { directoryStates, isRankedState, recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
 import { HOME_STATE } from "@/lib/recruiting/states"
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
@@ -1008,7 +1008,7 @@ export default function ProspectsAllClient({
                   {stateChoices.map((st) => (
                     <option key={st.code} value={st.code}>
                       {brandHost ? st.name : `Recruit${st.code} · ${st.name}`}
-                      {st.live ? "" : onRw ? " · not ranked yet" : " (staff only)"}
+                      {st.live && isRankedState(st) ? "" : st.live || onRw ? " · not ranked yet" : " (staff only)"}
                     </option>
                   ))}
                 </select>
