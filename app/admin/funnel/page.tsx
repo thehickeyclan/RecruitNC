@@ -1,10 +1,13 @@
 /**
  * The family funnel (Matt, 2 Nov 2026): profile → claimed → recruiting-ready → Insider → Command
  * Center → five colleges saved, for North Carolina and South Carolina's current classes, by
- * state, class and traffic source. Read before deciding what to build or market next. Admins only.
+ * state, class and traffic source. Read before deciding what to build or market next.
+ * Admins, and the business grant (lib/business/access.ts).
  */
 import Link from "next/link"
 import { redirect } from "next/navigation"
+
+import { hasBusinessGrant } from "@/lib/business/access"
 
 import { applyFilters, awareness, coachActivity, completion, launchClock, stages, sources, transitions, type Filters } from "@/lib/funnel/compute"
 import { CHECKPOINT_DAYS, STATE_LAUNCHES } from "@/lib/funnel/launches"
@@ -26,7 +29,8 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
   if (!auth.user) redirect("/auth/signin?returnTo=%2Fadmin%2Ffunnel")
   const admin = createAdminClient()
   const { data: me } = await admin.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
-  if (!(me?.is_admin === true || me?.role === "admin")) redirect("/")
+  // Full admins, and the business grant (lib/business/access.ts), which is all Rhett holds.
+  if (!(me?.is_admin === true || me?.role === "admin") && !hasBusinessGrant(auth.user.app_metadata)) redirect("/")
 
   const sp = await searchParams
   const now = new Date()

@@ -203,6 +203,18 @@ export function AppChrome({ children, hideNcUnited = false }: { children: React.
       </div>
     )
   }
+  /*
+   * The family deck is shown to a room, often full screen. Nothing of ours belongs on top of it -
+   * no menu, no footer, no assistant launcher - so it gets the bare frame. Access is decided by
+   * the page itself (lib/business/require-business-viewer.ts), not here.
+   */
+  if (path === "/admin/business/deck") {
+    return (
+      <div id="app-content" className="relative min-h-screen bg-[#060f1f]">
+        {children}
+      </div>
+    )
+  }
   if (isSpartanCampaign) {
     return (
       <div id="app-content" className="relative flex min-h-screen flex-col bg-[#0A0A0A]">
