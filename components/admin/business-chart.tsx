@@ -33,7 +33,19 @@ const shortDate = (iso: string) =>
 const dateWithYear = (iso: string) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
 
-export function BusinessChart({ series, accent = "#A3E635" }: { series: Series; accent?: string }) {
+export function BusinessChart({
+  series,
+  windowLabel,
+  allTime,
+  accent = "#A3E635",
+}: {
+  series: Series
+  /** The window the big number covers, e.g. "last 6 months". Shown under it. */
+  windowLabel?: string
+  /** The same metric over all of time, when the window is not all of time. */
+  allTime?: number
+  accent?: string
+}) {
   const { points, label, unavailable, startsAt, unassigned, total } = series
 
   if (unavailable) {
@@ -62,9 +74,21 @@ export function BusinessChart({ series, accent = "#A3E635" }: { series: Series; 
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#0d1d36] p-5">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-white/60">{label}</h3>
-        <span className="text-2xl font-black tabular-nums">{total.toLocaleString()}</span>
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="pt-1 text-sm font-semibold uppercase tracking-wide text-white/60">{label}</h3>
+        {/*
+          The big number is the WINDOW, not the total, and it has to say so. Matt read "188" under
+          PROFILES CLAIMED with North Carolina and 6 months selected, against the 291 he had counted
+          himself, and reasonably asked whether the data was off (4 Nov 2026). Both numbers were
+          right; only the card was silent about which one it was showing.
+        */}
+        <div className="text-right">
+          <span className="text-2xl font-black tabular-nums">{total.toLocaleString()}</span>
+          {windowLabel ? <p className="text-xs text-white/45">{windowLabel}</p> : null}
+          {allTime != null && allTime !== total ? (
+            <p className="text-xs text-white/35">{allTime.toLocaleString()} all time</p>
+          ) : null}
+        </div>
       </div>
 
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-3 w-full" role="img" aria-label={`${label}, ${total} in this window, by week`}>

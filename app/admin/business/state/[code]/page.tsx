@@ -63,7 +63,9 @@ export default async function BusinessStatePage({
 
   const today = new Date().toISOString().slice(0, 10)
   const from = new Date(Date.now() - 26 * 7 * 86_400_000).toISOString().slice(0, 10)
-  const lines = METRICS.map((m) => series(m, data.events[m], data.dims, { state, gender, site: "all" }, { from, to: today }))
+  const filters = { state, gender, site: "all" as const }
+  const lines = METRICS.map((m) => series(m, data.events[m], data.dims, filters, { from, to: today }))
+  const ever = METRICS.map((m) => series(m, data.events[m], data.dims, filters, { from: "2015-01-01", to: "2100-01-01" }))
 
   const brand = RECRUITING_BRAND.states.find((x) => x.code === state)
   const name = brand?.name ?? state
@@ -156,8 +158,8 @@ export default async function BusinessStatePage({
 
         <h2 className="mt-10 text-xl font-black">Last six months</h2>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          {lines.map((line) => (
-            <BusinessChart key={line.metric} series={line} />
+          {lines.map((line, i) => (
+            <BusinessChart key={line.metric} series={line} windowLabel="last 6 months" allTime={ever[i].total} />
           ))}
         </div>
       </div>

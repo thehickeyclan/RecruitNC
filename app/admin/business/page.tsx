@@ -17,6 +17,7 @@ import { businessData } from "@/lib/business/cache"
 import { requireBusinessViewer } from "@/lib/business/require-business-viewer"
 import {
   METRICS,
+  METRIC_STARTS,
   type Filters,
   type Gender,
   type SiteKey,
@@ -40,12 +41,34 @@ const SITES: Array<{ key: SiteKey | "all"; label: string }> = [
   { key: "untagged", label: "Not tagged" },
 ]
 
-const WINDOWS: Array<{ key: string; label: string; weeks: number | null }> = [
-  { key: "12", label: "12 weeks", weeks: 12 },
-  { key: "26", label: "6 months", weeks: 26 },
-  { key: "52", label: "12 months", weeks: 52 },
-  { key: "all", label: "All time", weeks: null },
+const WINDOWS: Array<{ key: string; label: string; weeks: number | null; under: string }> = [
+  { key: "12", label: "12 weeks", weeks: 12, under: "last 12 weeks" },
+  { key: "26", label: "6 months", weeks: 26, under: "last 6 months" },
+  { key: "52", label: "12 months", weeks: 52, under: "last 12 months" },
+  { key: "all", label: "All time", weeks: null, under: "all time" },
 ]
+
+/** Wide enough to hold everything, for the all-time TOTAL a windowed number is a slice of. */
+const EVER = { from: "2015-01-01", to: "2100-01-01" }
+
+/**
+ * Where an "All time" chart starts DRAWING: the first day any source recorded anything.
+ *
+ * Not EVER.from. Drawing from 2015 crushes every bar into the right-hand edge and labels the axis
+ * with eleven years of empty Decembers - the chart stops being readable at the moment it is asked
+ * to show the most.
+ */
+const EARLIEST = Object.values(METRIC_STARTS).sort()[0]
+
+/**
+ * What each filter is when it is not in the URL, so a link can leave it out and still mean it.
+ *
+ * The window's default is NOT "all". Dropping every value that happened to equal "all" is what
+ * broke the All time chip on 4 November 2026: it set no parameter, the page fell back to six
+ * months, and the chip looked dead. A filter is left out when it equals ITS OWN default, never
+ * because of what the value is called.
+ */
+const DEFAULTS: Record<string, string> = { site: "all", state: "all", gender: "all", window: "26" }
 
 const LINKS: Array<{ href: string; title: string; what: string }> = [
   { href: "/admin/sites", title: "RecruitWrestlers vs NC United", what: "Accounts, claims, sign-ins and checkouts by brand" },
@@ -72,21 +95,23 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
   const site = (SITES.find((s) => s.key === sp.site)?.key ?? "all") as SiteKey | "all"
   const state = sp.state && states.includes(sp.state.toUpperCase()) ? sp.state.toUpperCase() : "all"
   const gender: Gender | "all" = sp.gender === "Male" || sp.gender === "Female" ? sp.gender : "all"
-  const win = WINDOWS.find((w) => w.key === sp.window) ?? WINDOWS[1]
+  const win = WINDOWS.find((w) => w.key === sp.window) ?? WINDOWS.find((w) => w.key === DEFAULTS.window)!
   const filters: Filters = { state, gender, site }
 
   const today = new Date().toISOString().slice(0, 10)
-  const from = win.weeks
-    ? new Date(Date.now() - win.weeks * 7 * 86_400_000).toISOString().slice(0, 10)
-    : "2025-04-01"
+  // All time means all of it, not a date somebody guessed. METRIC_STARTS says where each source
+  // begins and the charts label it, so there is nothing to protect against by starting later.
+  const from = win.weeks ? new Date(Date.now() - win.weeks * 7 * 86_400_000).toISOString().slice(0, 10) : EARLIEST
   const window = { from, to: today }
 
   const lines = METRICS.map((m) => series(m, data.events[m], data.dims, filters, window))
+  // The same six over all of time, so each card can say what its window is a slice of.
+  const everLines = win.weeks ? METRICS.map((m) => series(m, data.events[m], data.dims, filters, EVER)) : null
 
   const href = (patch: Partial<Record<"site" | "state" | "gender" | "window", string>>) => {
     const next = { site: sp.site, state: sp.state, gender: sp.gender, window: sp.window, ...patch }
     const q = new URLSearchParams()
-    for (const [k, v] of Object.entries(next)) if (v && v !== "all") q.set(k, v)
+    for (const [k, v] of Object.entries(next)) if (v && v !== DEFAULTS[k]) q.set(k, v)
     return `${PAGE}${q.size ? `?${q}` : ""}`
   }
   const chip = (on: boolean) =>
@@ -151,8 +176,8 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
         ) : null}
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {lines.map((s) => (
-            <BusinessChart key={s.metric} series={s} />
+          {lines.map((s, i) => (
+            <BusinessChart key={s.metric} series={s} windowLabel={win.under} allTime={everLines?.[i].total} />
           ))}
         </div>
 
