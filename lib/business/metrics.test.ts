@@ -106,7 +106,8 @@ describe("series", () => {
   it("says where a young source actually starts", () => {
     const long = { from: "2025-01-01", to: "2026-11-01" }
     expect(series("profile_edits", [], dims, all, long).startsAt).toBe("2026-01-12")
-    expect(series("profile_edits", [], dims, { from: "2026-06-01", to: "2026-11-01" }, long).startsAt).toBe("2026-01-12")
+    // A window that opens after the source did has nothing to warn about.
+    expect(series("profile_edits", [], dims, all, { from: "2026-06-01", to: "2026-11-01" }).startsAt).toBeNull()
     expect(series("profiles_claimed", [], dims, all, { from: "2026-10-05", to: "2026-11-01" }).startsAt).toBeNull()
   })
 
