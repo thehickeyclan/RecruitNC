@@ -56,6 +56,56 @@ function parseCsv(text: string): Record<string, string>[] {
   return body.filter((r) => r.length > 1).map((r) => Object.fromEntries(head.map((h, i) => [h, (r[i] ?? "").trim()])))
 }
 
+/**
+ * An export row carries the evidence that derived its year, and that evidence states its own
+ * arithmetic: "'106 - Luke Houchins (Benedictine College Preparatory), Jr.' in 2024 -> class of
+ * 2026". A wrestler printed a given grade in the season ENDING in that year graduates on a fixed
+ * offset - a senior that year, a junior the next, and so on - so the claim can simply be checked.
+ *
+ * It is checked because it failed. Virginia's first discovery pass derived 17 of its 45 champions
+ * from USA Wrestling's 2023-24 champions list and read that list as the 2024-25 season, so every
+ * one of those years was a year late. Five of them contradicted years we already held, correctly,
+ * and twelve more would have been written into blank rows with nothing to catch them. A row whose
+ * own evidence does not derive the year it claims is never applied, whatever it agrees with.
+ */
+const GRADE_OFFSET: Record<string, number> = {
+  sr: 0, senior: 0,
+  jr: 1, junior: 1,
+  so: 2, sophomore: 2,
+  fr: 3, freshman: 3,
+}
+/**
+ * The two shapes the evidence strings use. Both must be read, or the check reports silence as
+ * cleanliness: the reconciliation exports write "2024: HS Junior -> 2025 (IHSAA 11731425)" and the
+ * discovery passes write "'106 - Luke Houchins (Benedictine), Jr.' in 2024 -> class of 2026".
+ * Checking only the second read five states as having no contradictions when it had not looked.
+ */
+const DERIVATIONS: RegExp[] = [
+  /(Sr|Jr|So|Fr)\.'\s*in\s*(\d{4})\s*->\s*class of\s*(\d{4})/g,
+  /(?:^|[^\d])(\d{4}):\s*(?:HS\s+)?(Freshman|Sophomore|Junior|Senior|Fr|So|Jr|Sr)\b[^>]*?->\s*(\d{4})/gi,
+]
+export function evidenceContradictsItself(evidence: string, claimed: number): string | null {
+  const text = String(evidence ?? "")
+  for (const [i, re] of DERIVATIONS.entries()) {
+    for (const m of text.matchAll(re)) {
+      // The first shape prints grade then season; the second prints season then grade.
+      const grade = i === 0 ? m[1]! : m[2]!
+      const season = i === 0 ? m[2]! : m[1]!
+      const stated = m[3]!
+      const off = GRADE_OFFSET[grade.toLowerCase()]
+      if (off === undefined) continue
+      const expected = Number(season) + off
+      if (Number(stated) !== expected) {
+        return `${grade} in the season ending ${season} graduates ${expected}, but the evidence says ${stated}`
+      }
+      if (Number(stated) !== claimed) {
+        return `the evidence derives ${stated} but the row claims ${claimed}`
+      }
+    }
+  }
+  return null
+}
+
 const norm = (s: unknown) => String(s ?? "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]/g, " ").replace(/\b(jr|sr|ii|iii|iv)\b/g, " ").replace(/\s+/g, " ").trim()
 const nameKey = (s: unknown) => norm(s).replace(/ /g, "")
 const g = (s: unknown) => (/^f|girl|women/i.test(String(s ?? "")) ? "girls" : "boys")
@@ -156,6 +206,11 @@ async function main() {
     exportByName.set(k, [...(exportByName.get(k) ?? []), e])
   }
   const agree: any[] = [], disagree: any[] = [], fill: any[] = [], noSchool: any[] = [], missing: any[] = [], ambiguous: any[] = []
+  const selfContradicting = new Map<string, string>()
+  for (const e of exported) {
+    const why = evidenceContradictsItself(e.evidence_tier_or_source ?? "", Number(e.class_year_final))
+    if (why) selfContradicting.set(`${nameKey(e.wrestler_name)}|${g(e.gender)}|${norm(e.school)}`, `${e.wrestler_name} (${e.school}): ${why}`)
+  }
   const seenKeys = new Set<string>()
   for (const r of placers) {
     const k = `${nameKey(r.wrestler_name)}|${g(r.gender)}`
@@ -164,9 +219,11 @@ async function main() {
     seenKeys.add(k)
     const sameSchool = cands.filter((e) => schoolAgrees(e.school, r.school_clean) || schoolAgrees(e.school, r.school_raw))
     if (!sameSchool.length) { noSchool.push({ e: cands[0]!, r }); continue }
-    const years = [...new Set(sameSchool.map((e) => Number(e.class_year_final)).filter(Boolean))]
+    const usable = sameSchool.filter((e) => !selfContradicting.has(`${nameKey(e.wrestler_name)}|${g(e.gender)}|${norm(e.school)}`))
+    if (!usable.length) continue
+    const years = [...new Set(usable.map((e) => Number(e.class_year_final)).filter(Boolean))]
     if (!years.length) continue // the export ships a named conflict with no year; nothing to compare
-    const e = sameSchool.find((x) => Number(x.class_year_final) === years[0])!
+    const e = usable.find((x) => Number(x.class_year_final) === years[0])!
     if (years.length > 1) {
       /*
        * The corroborating exported rows disagree - a cross-key print conflict, where the same
@@ -194,6 +251,13 @@ async function main() {
   console.log(`  held - corroborating rows disagree       ${ambiguous.length} rows`)
   console.log(`  name and gender match, no school does   ${noSchool.length} rows`)
   console.log(`  exported key with no row of ours        ${missing.length} keys`)
+  if (selfContradicting.size) {
+    console.log(`\nREFUSED - ${selfContradicting.size} exported key(s) whose own evidence does not derive the year they claim.`)
+    console.log(`Nothing from these is applied or compared. A grade printed for a season ending in YYYY means:`)
+    console.log(`Sr = YYYY, Jr = YYYY+1, So = YYYY+2, Fr = YYYY+3.`)
+    for (const why of [...selfContradicting.values()].slice(0, 30)) console.log(`  ${why}`)
+    if (selfContradicting.size > 30) console.log(`  ... and ${selfContradicting.size - 30} more`)
+  }
 
   if (disagree.length) {
     console.log(`\nDISAGREEMENTS - not changed by this script, each one is a question for the evidence:`)
