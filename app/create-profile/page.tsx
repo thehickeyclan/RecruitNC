@@ -48,6 +48,7 @@ export default function CreateProfilePage() {
   const knownWho: Who | null = who ?? (role === "parent" ? "parent" : role === "athlete" ? "self" : null)
   const [typedName, setTypedName] = useState("")
   const [matchedId, setMatchedId] = useState<string | null>(null)
+  const [found, setFound] = useState<number | null>(null)
 
   /*
    * Just verified with no wrestler yet (?find=): the search opens already looking for that name.
@@ -106,6 +107,7 @@ export default function CreateProfilePage() {
         <FindExistingStep
           who={knownWho ?? "self"}
           initialName={findName}
+          onResults={setFound}
           onClaim={(match: ExistingMatch) => {
             setMatchedId(match.id)
             setStep("reveal")
@@ -115,7 +117,7 @@ export default function CreateProfilePage() {
             setStep("create")
           }}
         />
-        <ClaimDetails />
+        <ClaimDetails showExample={!found} />
       </div>
     )
   }
