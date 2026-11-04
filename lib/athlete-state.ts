@@ -196,6 +196,30 @@ const NOT_A_CHAMPIONSHIP: Record<string, RegExp> = {
  * namesake or a wrong class unless the tournament is an independent one, where 7th and 8th
  * graders wrestle varsity legitimately, so five PAISWT middle-schoolers read as five errors.
  */
+/**
+ * The slug a state championship's bouts are keyed under, which must not collide between states.
+ *
+ * Two pairs of states share an association acronym: Indiana and Iowa are both the IHSAA, and
+ * Mississippi and Michigan are both the MHSAA. Bout event keys were `<association>-states-<season>`
+ * with no state in them, so Michigan's import was aimed straight at Mississippi's 767 rows for
+ * 2026 - caught only because the importer had learned that morning to measure what it replaces.
+ *
+ * The state code goes in front ONLY where the acronym is shared, so the 113 keys that are already
+ * unambiguous keep the names they have and nothing else needs migrating. A new state that collides
+ * with an existing one is disambiguated automatically, without anyone having to notice.
+ */
+export function championshipKeySlug(state: string | null | undefined, association: string | null | undefined): string {
+  const slug = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+  const assoc = slug(String(association ?? ""))
+  if (!assoc) return assoc
+  const code = String(state ?? "").trim().toUpperCase()
+  const sharers = Object.entries(ASSOCIATIONS).filter(([, v]) =>
+    [v.public, v.girls, ...(v.independent ?? [])].filter(Boolean).some((n) => slug(String(n)) === assoc),
+  )
+  if (sharers.length < 2) return assoc
+  return code ? `${code.toLowerCase()}-${assoc}` : assoc
+}
+
 export function isIndependentChampionship(
   state: string | null | undefined,
   association: string | null | undefined,

@@ -227,6 +227,7 @@ async function main() {
    * the mint list prints them, matched through the same school fold the rest of this script uses,
    * so a key filed under "St. John`s School Houston" still finds "St. John`s School (TX)".
    */
+  const toLink: Array<{ ids: string[]; athleteId: string; label: string }> = []
   if (CANONICAL) {
     const text = fs.readFileSync(CANONICAL, "utf8").replace(/\r/g, "").trim().split("\n")
     const cols = text.shift()!.split(",")
@@ -263,9 +264,45 @@ async function main() {
         byName.delete(b)
       }
     }
+    /*
+     * And the commoner half: an unlinked key whose canonical twin is ALREADY a profile.
+     *
+     * Michigan has four, all of them one school printed two ways that no string rule should fold -
+     * "Cass Technical HS" against "Detroit Cass Tech" and "Meridian Early College HS" against
+     * "Sanford Meridian" share exactly one distinctive word, and folding on one shared word would
+     * merge genuinely different schools. Wyatt Burns is a real transfer, Dundee to Springport, which
+     * no school rule should fold either. Each is one athlete because the build says so, and this is
+     * where saying so pays: the linked row carries the profile, the unlinked row inherits it.
+     */
+    /*
+     * Built from EVERY season's rows, not this one's: the twin that already carries the profile is
+     * usually in another season, which is the whole shape of the problem. Scoping this to the
+     * season under import found nothing at all.
+     */
+    const profileOfCanonical = new Map<string, string>()
+    for (const r of all) {
+      if (!r.athlete_id) continue
+      const id = canonOf(r)
+      if (id && !profileOfCanonical.has(id)) profileOfCanonical.set(id, r.athlete_id)
+    }
+    const inherited: string[] = []
+    for (const [k, rowsK] of [...byName]) {
+      const id = rowsK.map(canonOf).find(Boolean)
+      if (!id) continue
+      const athleteId = profileOfCanonical.get(id)
+      if (!athleteId) continue
+      toLink.push({
+        ids: rowsK.map((x) => x.id),
+        athleteId,
+        label: `${rowsK[0]!.wrestler_name} (${schoolOf(rowsK[0]!)}) -> existing profile [canonical ${id}]`,
+      })
+      inherited.push(`${rowsK[0]!.wrestler_name} (${schoolOf(rowsK[0]!)}) [${id}]`)
+      byName.delete(k)
+    }
     const covered = unlinked.filter((r) => canonOf(r)).length
-    console.log(`   canonical ids: ${rowsOf.length} supplied, covering ${covered}/${unlinked.length} rows; joined ${joined.length} group(s)`)
+    console.log(`   canonical ids: ${rowsOf.length} supplied, covering ${covered}/${unlinked.length} rows; joined ${joined.length} group(s), ${inherited.length} to an existing profile`)
     for (const j of joined) console.log(`      ${j}`)
+    for (const i of inherited) console.log(`      ${i} -> existing profile`)
   }
   const groups = new Map<string, Placer[]>()
   for (const [name, rows] of byName) {
@@ -298,7 +335,6 @@ async function main() {
     return !s || s === STATE
   })
 
-  const toLink: Array<{ ids: string[]; athleteId: string; label: string }> = []
   const toCreate: Array<{ row: Record<string, unknown>; label: string; ids: string[] }> = []
   const graduated: string[] = []
   const heldNoYear: string[] = []

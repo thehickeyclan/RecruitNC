@@ -30,6 +30,7 @@ import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { isSanctioned, loadStateSanctioning } from "@/lib/recruiting/state-events"
+import { championshipKeySlug } from "@/lib/athlete-state"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -200,8 +201,12 @@ async function main() {
      * A slug, not the association verbatim: Delaware's girls championship is run by the "Girls
      * Wrestling Committee", which made the key "girls wrestling committee-states-2026" - spaces
      * and all - in a column every other key is dash-separated in.
+     *
+     * And the state goes in front where two states share the acronym (championshipKeySlug): both
+     * Indiana and Iowa are the IHSAA, both Mississippi and Michigan the MHSAA, so without it
+     * Michigan's import aimed at Mississippi's rows.
      */
-    const assocSlug = assoc.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    const assocSlug = championshipKeySlug(STATE, assoc)
     const eventKey = REGIONAL
       ? `${assocSlug}-${SLUG}-${season}`
       : QUALIFIERS

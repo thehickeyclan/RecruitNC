@@ -9,6 +9,7 @@ import {
   isIndependentChampionship,
   stateChampionshipName,
   stateName,
+  championshipKeySlug,
 } from "@/lib/athlete-state"
 
 describe("normalizeState", () => {
@@ -187,5 +188,37 @@ describe("a state with a separate girls championship body", () => {
     expect(isIndependentChampionship("IA", "IGHSAU")).toBe(false)
     expect(isIndependentChampionship("IA", "IHSAA")).toBe(false)
     expect(isIndependentChampionship("PA", "PAISWT")).toBe(true)
+  })
+})
+
+describe("two states can share an association acronym", () => {
+  it("puts the state in front only where the acronym is shared", () => {
+    /*
+     * Indiana and Iowa are both the IHSAA; Mississippi and Michigan are both the MHSAA. Bout event
+     * keys carried no state, so Michigan's import was aimed at Mississippi's 767 rows for 2026.
+     */
+    expect(championshipKeySlug("MI", "MHSAA")).toBe("mi-mhsaa")
+    expect(championshipKeySlug("MS", "MHSAA")).toBe("ms-mhsaa")
+    expect(championshipKeySlug("IA", "IHSAA")).toBe("ia-ihsaa")
+    expect(championshipKeySlug("IN", "IHSAA")).toBe("in-ihsaa")
+  })
+
+  it("leaves an unambiguous acronym exactly as it was", () => {
+    /* 113 of the 115 existing keys are unambiguous and must not need migrating. */
+    for (const [state, assoc, slug] of [
+      ["NC", "NCHSAA", "nchsaa"],
+      ["SC", "SCISA", "scisa"],
+      ["PA", "PAISWT", "paiswt"],
+      ["IA", "IGHSAU", "ighsau"],
+      ["MO", "MSHSAA", "mshsaa"],
+      ["AR", "AAA", "aaa"],
+    ] as Array<[string, string, string]>) {
+      expect(championshipKeySlug(state, assoc)).toBe(slug)
+    }
+  })
+
+  it("still dashes an association that is a phrase", () => {
+    /* Delaware's girls championship is run by the "Girls Wrestling Committee". */
+    expect(championshipKeySlug("DE", "Girls Wrestling Committee")).toBe("girls-wrestling-committee")
   })
 })
