@@ -100,7 +100,8 @@ export function BusinessChart({ series, accent = "#A3E635" }: { series: Series; 
         })}
 
         {points.map((p, i) =>
-          i % every === 0 || i === lastIndex ? (
+          // The last week always gets a label; a regular one too close to it would collide.
+          i === lastIndex || (i % every === 0 && lastIndex - i >= Math.max(2, every / 2)) ? (
             <text key={`l-${p.week}`} x={x(i) + barW / 2} y={H - 7} textAnchor="middle" fontSize={9} fill="#ffffff" fillOpacity={0.4}>
               {shortDate(p.week)}
             </text>

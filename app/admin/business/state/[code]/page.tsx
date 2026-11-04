@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ code: str
   return { title: `${code.toUpperCase()} | Business` }
 }
 
-const pct = (n: number, of: number) => (of ? `${Math.round((n / of) * 1000) / 10}%` : "–")
+const pct = (n: number, of: number) => (of ? `${((n / of) * 100).toFixed(1)}%` : "–")
 
 function Tile({ value, label, note }: { value: string | number; label: string; note?: string }) {
   return (
