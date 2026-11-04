@@ -74,8 +74,50 @@ const STOP = new Set([
   "community", "public", "charter", "middle", "junior", "varsity", "girls", "boys", "new", "old",
   "mount", "mt", "fort", "ft", "lake", "valley", "heights", "park", "hill", "hills", "grove", "ridge",
 ])
-const schoolWords = (s: unknown) => new Set(norm(s).split(" ").filter((w) => w.length > 2 && !STOP.has(w)))
+/**
+ * The state's own name is a stopword too, derived from the state being reconciled. Arkansas holds
+ * both "Arkansas High School" and "Central Arkansas Christian School" - two different schools whose
+ * only shared word is the state - and Iowa, Michigan and Oklahoma all have the same shape. Without
+ * this a wrestler at one could inherit the class year of a namesake at the other.
+ */
+const STATE_WORDS = new Set(
+  (
+    {
+      AL: "alabama", AR: "arkansas", CT: "connecticut", DE: "delaware", FL: "florida", GA: "georgia",
+      IA: "iowa", IN: "indiana", KY: "kentucky", LA: "louisiana", MA: "massachusetts", MD: "maryland",
+      ME: "maine", MI: "michigan", MN: "minnesota", MO: "missouri", MS: "mississippi", NC: "carolina",
+      NH: "hampshire", NJ: "jersey", NY: "york", OK: "oklahoma", PA: "pennsylvania", RI: "rhode island",
+      SC: "carolina", TN: "tennessee", TX: "texas", VA: "virginia", VT: "vermont", WV: "virginia",
+    } as Record<string, string>
+  )[STATE]?.split(" ") ?? [],
+)
+const schoolWords = (s: unknown) =>
+  new Set(norm(s).split(" ").filter((w) => w.length > 2 && !STOP.has(w) && !STATE_WORDS.has(w)))
+/**
+ * One school's words appearing as a run inside the other's, whole words only. This is what settles
+ * the spelling variants - "Arkansas High" inside "Arkansas High School", "Central Arkansas
+ * Christian" inside "Central Arkansas Christian School" - and it will not join "Arkansas High
+ * School" to "Central Arkansas Christian School", which is the pair that matters. It is also the
+ * rule that keeps Perry out of Sperry and Moore out of Westmoore.
+ */
+function wordRunInside(a: unknown, b: unknown): boolean {
+  const x = norm(a).split(" ").filter(Boolean)
+  const y = norm(b).split(" ").filter(Boolean)
+  if (!x.length || !y.length) return false
+  const [short, long] = x.length <= y.length ? [x, y] : [y, x]
+  for (let i = 0; i + short.length <= long.length; i++) {
+    if (short.every((w, j) => long[i + j] === w)) return true
+  }
+  return false
+}
+/**
+ * Corroboration is containment first, then a shared distinctive word. The second is needed because
+ * the two sides abbreviate differently - "Ft. Worth Country Day School" against "Fort Worth Country
+ * Day" is no containment at all, since "ft" is not "fort" - and it is safe because the words that
+ * carry no signal, the state's name among them, have been removed.
+ */
 function schoolAgrees(a: unknown, b: unknown): boolean {
+  if (wordRunInside(a, b)) return true
   const x = schoolWords(a), y = schoolWords(b)
   if (!x.size || !y.size) return false
   for (const w of x) if (y.has(w)) return true
@@ -125,7 +167,18 @@ async function main() {
     const years = [...new Set(sameSchool.map((e) => Number(e.class_year_final)).filter(Boolean))]
     if (!years.length) continue // the export ships a named conflict with no year; nothing to compare
     const e = sameSchool.find((x) => Number(x.class_year_final) === years[0])!
-    if (years.length > 1) { ambiguous.push({ e, r, years }); continue }
+    if (years.length > 1) {
+      /*
+       * The corroborating exported rows disagree - a cross-key print conflict, where the same
+       * wrestler's two school-form keys print different grades (Arkansas's Langley and Huerta). A
+       * BLANK row is held: nothing here can choose. A row that already carries one of those years
+       * is counted as agreeing, because it matches a key the export itself ships resolved; calling
+       * it "held" would hide that it was checked.
+       */
+      if (r.grad_year != null && years.includes(Number(r.grad_year))) agree.push({ e, r })
+      else ambiguous.push({ e, r, years })
+      continue
+    }
     const year = years[0]!
     if (r.grad_year == null) fill.push({ e, r, year })
     else if (Number(r.grad_year) === year) agree.push({ e, r })
