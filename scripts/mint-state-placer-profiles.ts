@@ -32,7 +32,13 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
-import { nameReadings, nameWords, namesReferToSamePerson, schoolsLikelySame } from "@/lib/athlete-name-match"
+import {
+  ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS,
+  nameReadings,
+  nameWords,
+  namesReferToSamePerson,
+  schoolsLikelySame,
+} from "@/lib/athlete-name-match"
 import { currentClassYears } from "@/lib/class-years"
 import { normalizeState } from "@/lib/athlete-state"
 
@@ -261,7 +267,52 @@ async function main() {
       const theirs = Number((a as { graduationyear?: unknown }).graduationyear)
       return !(placerYear && theirs > 0 && theirs !== placerYear)
     })
-    const sameSchool = sameName.filter((a) => schoolsLikelySame(a.highschool, school))
+    let sameSchool = sameName.filter((a) => schoolsLikelySame(a.highschool, school))
+    /*
+     * A wrestler who changes which form of his own first name the bracket prints.
+     *
+     * Missouri's Centralia has one Charles Robinson, class of 2027: the brackets print "Charlie" in
+     * 2024 and 2025 and "Charles" in 2026, one school and one class all three years, 126 to 132 to
+     * 138 and never concurrent. `namesReferToSamePerson` is deliberately strict and does not fold
+     * nicknames - Charlie and Charles at two DIFFERENT schools may well be two people, and that
+     * function also decides namesakes - so he minted twice.
+     *
+     * Folded here instead, where the two guards that make it safe are already in force: the school
+     * must agree and the class year must not contradict. Same surname, and first names in one
+     * equivalence group (the list that widens search variants). Out of that context a nickname
+     * proves nothing, so nothing outside it changes.
+     */
+    if (!sameSchool.length) {
+      const first = (v: string) => (nameWords(v)[0] ?? "").toLowerCase()
+      const last = (v: string) => {
+        const w = nameWords(v)
+        return (w[w.length - 1] ?? "").toLowerCase()
+      }
+      const equivalent = (a: string, b: string) => {
+        const [fa, fb] = [first(a), first(b)]
+        if (!fa || !fb || fa === fb) return fa === fb
+        return ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS.some((g) => {
+          const lower = g.map((x) => x.toLowerCase())
+          return lower.includes(fa) && lower.includes(fb)
+        })
+      }
+      const byNickname = athletes.filter((a) => {
+        if (last(a.name) !== last(r.wrestler_name)) return false
+        if (!equivalent(a.name, r.wrestler_name)) return false
+        const theirs = Number((a as { graduationyear?: unknown }).graduationyear)
+        if (placerYear && theirs > 0 && theirs !== placerYear) return false
+        return schoolsLikelySame(a.highschool, school)
+      })
+      if (byNickname.length === 1) {
+        toLink.push({
+          ids: rows.map((x) => x.id),
+          athleteId: byNickname[0]!.id,
+          label: `${r.wrestler_name} -> ${byNickname[0]!.name} (${byNickname[0]!.highschool ?? "no school"}) [first-name form]`,
+        })
+        continue
+      }
+      sameSchool = byNickname
+    }
     if (sameSchool.length === 1) {
       toLink.push({ ids: rows.map((x) => x.id), athleteId: sameSchool[0]!.id, label: `${r.wrestler_name} -> ${sameSchool[0]!.name} (${sameSchool[0]!.highschool ?? "no school"})` })
       continue

@@ -9,6 +9,7 @@ import {
   pickBestAthleteCandidate,
   scoreAthleteRowMatch,
   schoolsLikelySame,
+  ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS,
 } from "@/lib/athlete-name-match"
 
 describe("athlete-name-match", () => {
@@ -476,5 +477,26 @@ describe('Iowa prints some schools as "School, City"', () => {
     /* Ben Walsh of Sergeant Bluff-Luton and Benjamin Walsh of Ankeny placed in the SAME
        tournaments in consecutive years - two wrestlers who both resolve to the class of 2026. */
     expect(schoolsLikelySame("Sergeant Bluff-Luton", "Ankeny")).toBe(false)
+  })
+})
+
+describe("a wrestler whose brackets print two forms of his own first name", () => {
+  it("is deliberately NOT folded by the strict same-person test", () => {
+    /*
+     * Charlie and Charles at two DIFFERENT schools may well be two people, and this function also
+     * decides namesakes - so it stays strict. The fold belongs where the school and class year
+     * are already known to agree, which is the mint (scripts/mint-state-placer-profiles.ts).
+     */
+    expect(namesReferToSamePerson("Charlie Robinson", "Charles Robinson")).toBe(false)
+    expect(namesReferToSamePerson("Jake Smith", "Jacob Smith")).toBe(false)
+  })
+
+  it("but the equivalence the mint folds on is in the list", () => {
+    const group = (n: string) =>
+      ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS.find((g) => g.map((x) => x.toLowerCase()).includes(n))
+    expect(group("charlie")).toEqual(group("charles"))
+    expect(group("jake")).toEqual(group("jacob"))
+    /* Two names that are not forms of one another must not share a group. */
+    expect(group("charlie")).not.toEqual(group("james"))
   })
 })
