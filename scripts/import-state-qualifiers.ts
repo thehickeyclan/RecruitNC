@@ -395,6 +395,33 @@ async function main() {
      * rows against a 182-row girls slice, and run through here it would have left ten. That one was
      * inserted directly instead - which is what an addendum needs - but nothing in the code said so.
      */
+    /*
+     * A file can be complete in ROWS and still be a regression.
+     *
+     * Virginia's 2025 boys arrived on 4 Nov as the complete VHSL slice - 1,224 rows against the
+     * 1,007 held, carrying the Class 1A and 4A entrants Flo never published. Importing it would
+     * have been a gain by every count the check below makes, and would have cleared 415 class
+     * years and unlinked 209 profiles, because a freshly built slice carries neither: those are
+     * added afterwards by addenda, adjudications and the minter. Only the 217 genuinely new rows
+     * were inserted instead.
+     *
+     * So the enrichment is measured too. A slice that has been minted, or had its years resolved,
+     * is not replaceable by a rebuild of its own source.
+     */
+    const doomedLinked = doomed.filter((r) => r.athlete_id).length
+    const doomedYears = doomed.filter((r) => r.grad_year).length
+    const incomingYears = entries.filter((e) => (e as { grad_year?: unknown }).grad_year).length
+    const regressions: string[] = []
+    if (doomedLinked) regressions.push(`${doomedLinked} row(s) are linked to a profile and this file carries no links`)
+    if (incomingYears < doomedYears) regressions.push(`${doomedYears} row(s) carry a class year, this file carries ${incomingYears}`)
+    if (regressions.length && !ALLOW_SHRINK) {
+      console.log(`   WOULD LOSE ENRICHMENT — nothing deleted, nothing written:`)
+      for (const r of regressions) console.log(`      ${r}`)
+      console.log(`      A rebuilt slice does not carry what was added after it. Insert the rows this slice is`)
+      console.log(`      missing directly, or pass --allow-shrink if the replacement really is better.`)
+      continue
+    }
+    if (regressions.length) for (const r of regressions) console.log(`   --allow-shrink: ${r}`)
     const fewer = doomed.length && entries.length < doomed.length
     if (fewer && !ALLOW_SHRINK) {
       console.log(`   PARTIAL SLICE — nothing deleted, nothing written: holds ${doomed.length} rows, this run writes ${entries.length}`)

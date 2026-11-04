@@ -15,95 +15,26 @@ dated records. Adjudication batch #2 found exactly that three times (Garrett Sho
 Nathan Taylor), all three of which this file had called benign. Only dated per-season records
 settle a case; what follows is the worklist and the evidence to start from, never the verdict.
 
-17 unlinked placement(s) across AR, OK, IA, MO, MI, VA, SC: **2 awaiting adjudication**, 11 held
-for want of non-RW evidence, 4 settled as namesakes that must never be linked
+1 unlinked placement(s) across AR, OK, IA, MO, MI, VA, SC: **0 awaiting adjudication**, 0 held
+for want of non-RW evidence, 1 settled as namesakes that must never be linked
 (docs/state-launch/TRANSFER-ADJUDICATED.json). Nothing here has been linked or merged.
 
-## AR — 1 wrestler(s), 1 unlinked placement(s)
-
-### Cameron Moats — profile CAC, class of 2028 · 04090f12-7baf-4b3c-b6a1-7b875fb4da10 · HELD: awaiting non-RW evidence
-  - 2025 Pottsville · 1A-4A 132 #1 · class 2028 · UNLINKED
-  - 2026 CAC · 1A-4A 157 #5 · class 2028 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2028) · weights 132, 157 (spread 25 lb)
-  adjudicated (batch 1, 2026-11-03): RW holds exactly one Cameron Moats, the CAC chain; no dated record at Pottsville in any probed year. CAC and Pottsville are the same school pair that produced the proven Tripp Price namesakes, so the 25-lb gap (132 title to 157) is not bridged by assumption.
+## AR — 0 wrestler(s), 0 unlinked placement(s)
 
 
-## OK — 6 wrestler(s), 7 unlinked placement(s)
-
-### Bradley Lazzerini — profile Owasso, class of 2027 · 1d5bb614-97a8-46a0-835a-6788253e72ce · HELD: awaiting non-RW evidence
-  - 2024 BROKEN ARROW · 6A 113 #4 · class 2027 · UNLINKED
-  - 2026 Owasso · 6A 157 #3 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 113, 157 (spread 44 lb)
-  adjudicated (batch 2, 2026-11-03): No RankWrestlers footprint on either side, across spelling variants and two independent passes. A 44-lb jump across a missing 2025 season with zero dated evidence is what the standard refuses to bridge. Reopen with a dated roster or news naming his 2025 school.
-
-### Riley Samarripa — profile MCLOUD (Girls), class of 2028 · 527f231d-c4a4-442f-bb34-8580aa10d21c · HELD: awaiting non-RW evidence
-  - 2025 Harrah-Girls · 5A 170 #4 · class 2028 · UNLINKED
-  - 2026 MCLOUD (Girls) · 5A 190 #3 · class 2028 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2028) · weights 170, 190 (spread 20 lb)
-  adjudicated (batch 2, 2026-11-03): Harrah 2025 to McLoud 2026 unverified in RW. Part of the McLoud girls cluster.
-
-### Remy Whitney — profile MCLOUD (Girls), class of 2028 · 0efffb85-02fc-4552-a7ea-12f9f0473d21 · HELD: awaiting non-RW evidence
-  - 2025 El Reno-Girls · 6A 100 #2 · class 2028 · UNLINKED
-  - 2026 MCLOUD (Girls) · 5A 100 #1 · class 2028 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2028) · weights 100
-  adjudicated (batch 2, 2026-11-03): El Reno 2025 to McLoud 2026 unverified in RW. Part of the McLoud girls cluster.
-
-### Garrett Short — profile Blackwell, class of 2027 · 3d97bb6d-0150-4b41-9262-d1ac204dbb2c · SETTLED: NAMESAKE, never link
-  - 2024 PONCA CITY · 6A 106 #4 · class 2027 · UNLINKED
-  - 2025 Blackwell · 3A 106 #1 · class 2027 · LINKED
-  - 2026 Blackwell · 3A 113 #1 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 106, 113 (spread 7 lb)
-  adjudicated (batch 2, 2026-11-03): Two concurrent chains, Ponca City (106 throughout, Fr-Sr) and Blackwell (106/113/120) — the Ponca City 2024 placement belongs to the other wrestler, not the Blackwell profile.
-
-### Jesse Justice — profile Bixby, class of 2027 · ed85736b-4c1a-427e-9375-50f5de13783f · SETTLED: NAMESAKE, never link
-  - 2024 SPERRY · 3A 132 #1 · class 2027 · UNLINKED
-  - 2025 Sperry · 3A 138 #1 · class 2027 · UNLINKED
-  - 2026 Bixby · 6A 150 #3 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 132, 138, 150 (spread 18 lb)
-  adjudicated (batch 2, 2026-11-03): Two complete, concurrent dated-record chains. The Sperry 2024 and 2025 titles do NOT belong to the Bixby profile's wrestler. Flagged further: a current-season record places a Jesse Justice at Bristow.
-
-### Paige Wainscott — profile UNION (Girls), class of 2028 · 9a7a4544-f713-4891-81fc-508541b02232 · HELD: awaiting non-RW evidence
-  - 2025 EDMOND NORTH-Girls · 6A 235 #2 · class 2028 · UNLINKED
-  - 2026 UNION (Girls) · 6A 235 #3 · class 2028 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2028) · weights 235
-  adjudicated (batch 2, 2026-11-03): Edmond North 2025 to Union 2026 unverified in RW.
+## OK — 0 wrestler(s), 0 unlinked placement(s)
 
 
-## IA — 1 wrestler(s), 1 unlinked placement(s)
-
-### Bella Miller — profile Dubuque Hempstead, class of 2027 · f289468c-e82a-44d2-bb74-b322ad79bdff · HELD: awaiting non-RW evidence
-  - 2024 Wahlert, Dubuque · Girls 135 #1 · class 2027 · UNLINKED
-  - 2025 Dubuque Hempstead · 2A 135 #3 · class 2027 · LINKED
-  - 2026 Dubuque Hempstead · 2A 135 #1 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 135
-  adjudicated (batch 2, 2026-11-03): Wahlert, Dubuque 2024 to Dubuque Hempstead — two genuinely different Dubuque schools, so a real transfer question rather than a spelling fold; unverified in RW.
+## IA — 0 wrestler(s), 0 unlinked placement(s)
 
 
-## MO — 2 wrestler(s), 2 unlinked placement(s)
-
-### Rowdy Narron — profile St. Michael the Archangel, class of 2027 · dd8f3089-0569-49f0-b476-930595a321e7
-  - 2024 Father Tolton Regional Catholic · Class 1 132 #6 · class 2027 · UNLINKED
-  - 2025 St. Michael the Archangel · Class 3 138 #4 · class 2027 · LINKED
-  - 2026 St. Michael the Archangel · Class 3 150 #3 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 132, 138, 150 (spread 18 lb)
-
-### Keely Fallert — profile Ste. Genevieve, class of 2027 · fb72c37f-a623-4068-a0b4-53c8b3e50b5a
-  - 2024 Oak Grove · Class 1 145 #2 · class 2027 · UNLINKED
-  - 2025 Ste. Genevieve · Class 1 140 #1 · class 2027 · LINKED
-  - 2026 Ste. Genevieve · Class 1 140 #1 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 140, 145 (spread 5 lb)
+## MO — 0 wrestler(s), 0 unlinked placement(s)
 
 
 ## MI — 0 wrestler(s), 0 unlinked placement(s)
 
 
-## VA — 3 wrestler(s), 3 unlinked placement(s)
-
-### Manny Evans — profile L.C. Bird, class of 2027 · 7d0be6d4-5fa9-4635-b2f8-0bbc10c697d8 · HELD: awaiting non-RW evidence
-  - 2025 L.C. Bird · 5A 144 #4 · class 2027 · LINKED
-  - 2026 Benedictine College Preparatory · VISAA 157 #2 · class 2027 · UNLINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 144, 157 (spread 13 lb)
-  adjudicated (batch 1, 2026-11-03): RW's only Manny Evans is the Benedictine chain; no dated record at L.C. Bird under either 'Manny' or 'Emmanuel'. Not namesakes (no second chain), not a verified transfer. His Benedictine row stays unlinked by design, which is why his profile shows no VISAA 2026 bouts.
+## VA — 1 wrestler(s), 1 unlinked placement(s)
 
 ### Nathan Taylor — profile Eastern View, class of 2029 · e00a8554-964a-40c5-b63f-9c36351b7a91 · SETTLED: NAMESAKE, never link
   - 2025 Hopewell · 3A 126 #6 · class 2029 · UNLINKED
@@ -111,32 +42,6 @@ for want of non-RW evidence, 4 settled as namesakes that must never be linked
   verdict inputs: concurrent seasons none · class years agree (2029) · weights 126, 175 (spread 49 lb)
   adjudicated (batch 2, 2026-11-03): Two different class-of-2029 wrestlers at two schools in the SAME seasons. Dated RankWrestlers records show two complete concurrent chains; the Hopewell 2025 placement does not belong to the Eastern View profile. The 49-lb spread (126 to 175) was the queue's largest and the reason this one was pushed to the front of scrutiny.
 
-### Samantha Stephens — profile New Kent, class of 2028 · bc87f191-4f2d-4f51-bc1d-2b45d8498d9e · HELD: awaiting non-RW evidence
-  - 2025 Prince George · Girls 152 #6 · class 2028 · UNLINKED
-  - 2026 New Kent · Girls 145 #4 · class — · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2028) · weights 145, 152 (spread 7 lb)
-  adjudicated (batch 2, 2026-11-03): Prince George 2025 to New Kent unverified; a 'Marion' record is flagged to watch.
 
-
-## SC — 3 wrestler(s), 3 unlinked placement(s)
-
-### Elijah Weston — profile West-Oak, class of 2028 · 8fc64f09-5045-4fa4-bd30-1ad1565646d6 · HELD: awaiting non-RW evidence
-  - 2025 Pendleton · 3A 215 #3 · class 2028 · UNLINKED
-  - 2026 West-Oak · 3A 215 #1 · class 2028 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2028) · weights 215
-  adjudicated (batch 2, 2026-11-03): Pendleton 2025 to West-Oak unverified in RW.
-
-### Jonah Coleman — profile Stratford, class of 2027 · ed1a79ab-8780-4a72-a1b9-242e7065b336 · HELD: awaiting non-RW evidence
-  - 2024 Northwood Academy · SCISA 126 #1 · class 2027 · UNLINKED
-  - 2025 Stratford · 5A 138 qualifier, no place · class 2027 · LINKED
-  - 2026 Stratford · 5A 150 qualifier, no place · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 126, 138, 150 (spread 24 lb)
-  adjudicated (batch 2, 2026-11-03): Northwood Academy 2024 (SCISA champion) to Stratford unverified. Highest-cost hold in the queue: both his LINKED rows are qualifier entries with no place, so his profile shows no podium finish at all while a state title sits unattached.
-  NOTE: every podium finish this wrestler has is in the unlinked row(s) - the profile shows none until this is settled.
-
-### Jack Turner — profile Cardinal Newman, class of 2027 · bd4751ab-9bb6-4a00-9fe9-b94aa15315bf · HELD: awaiting non-RW evidence
-  - 2025 Gilbert · 4A 113 #3 · class 2027 · UNLINKED
-  - 2026 Cardinal Newman · SCISA 120 #1 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 113, 120 (spread 7 lb)
-  adjudicated (batch 2, 2026-11-03): Gilbert 2025 to Cardinal Newman unverified in RW.
+## SC — 0 wrestler(s), 0 unlinked placement(s)
 
