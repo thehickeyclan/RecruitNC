@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { type AthleteDim, type MetricEvent, series, stateSummary, statesPresent, weekOf, weeksBetween } from "@/lib/business/metrics"
+import { type AthleteDim, type MetricEvent, bucketsBetween, dayOf, distinctSeries, mostViewed, series, stateSummary, statesPresent, weekOf, weeksBetween } from "@/lib/business/metrics"
 
 const dims = new Map<string, AthleteDim>([
   ["nc-boy", { state: "NC", gender: "Male", classYear: 2027, claimed: true }],
@@ -151,5 +151,65 @@ describe("stateSummary claims", () => {
       sign_ins: [],
     }
     expect(stateSummary("SC", "all", dims, events, new Date("2026-11-04T12:00:00Z")).claimed).toBe(0)
+  })
+})
+
+describe("day buckets", () => {
+  it("gives one bar a day, so a seven-day window is a chart and not a single bar", () => {
+    expect(bucketsBetween("2026-11-01", "2026-11-04", "day")).toEqual(["2026-11-01", "2026-11-02", "2026-11-03", "2026-11-04"])
+    expect(bucketsBetween("2026-11-01", "2026-11-04", "week")).toEqual(["2026-10-26", "2026-11-02"])
+  })
+
+  it("puts an instant on its Eastern day, not its UTC one", () => {
+    // 23:00 Sunday in Raleigh is 04:00 Monday UTC.
+    expect(dayOf("2026-11-02T04:00:00Z")).toBe("2026-11-01")
+  })
+})
+
+describe("distinctSeries", () => {
+  const WIN = { from: "2026-10-05", to: "2026-11-01" }
+  const views: MetricEvent[] = [
+    { at: "2026-10-06T12:00:00Z", athleteId: "nc-boy", by: "NC State", byUser: "c1" },
+    { at: "2026-10-07T12:00:00Z", athleteId: "nc-boy", by: "NC State", byUser: "c2" },
+    { at: "2026-10-08T12:00:00Z", athleteId: "nc-girl", by: "Campbell", byUser: "c3" },
+    { at: "2026-10-14T12:00:00Z", athleteId: "sc-boy", by: "NC State", byUser: "c1" },
+  ]
+
+  it("counts how many different ones, not how many times", () => {
+    const s = distinctSeries("coach_views", "Programs", views, dims, all, WIN, (e) => e.by)
+    expect(s.points.find((p) => p.week === "2026-10-05")?.count).toBe(2)
+    expect(s.points.find((p) => p.week === "2026-10-12")?.count).toBe(1)
+  })
+
+  it("totals distinct across the window, never the sum of the weeks", () => {
+    // NC State looked in both weeks. Adding the weeks would say three programs; there are two.
+    expect(distinctSeries("coach_views", "Programs", views, dims, all, WIN, (e) => e.by).total).toBe(2)
+    expect(distinctSeries("coach_views", "Coaches", views, dims, all, WIN, (e) => e.byUser).total).toBe(3)
+  })
+
+  it("narrows by the gender of the wrestler who was looked at", () => {
+    const girls = distinctSeries("coach_views", "Programs", views, dims, { ...all, gender: "Female" }, WIN, (e) => e.by)
+    expect(girls.total).toBe(1)
+  })
+})
+
+describe("mostViewed", () => {
+  const views: MetricEvent[] = [
+    { at: "2026-10-06T12:00:00Z", athleteId: "nc-boy", by: "NC State" },
+    { at: "2026-10-07T12:00:00Z", athleteId: "nc-boy", by: "Campbell" },
+    { at: "2026-10-07T13:00:00Z", athleteId: "nc-boy", by: "Campbell" },
+    { at: "2026-10-08T12:00:00Z", athleteId: "nc-girl", by: "Campbell" },
+  ]
+  const WIN = { from: "2026-10-05", to: "2026-11-01" }
+
+  it("ranks by views and counts the programs behind them", () => {
+    const rows = mostViewed(views, dims, all, WIN)
+    expect(rows[0]).toEqual({ athleteId: "nc-boy", views: 3, programs: 2 })
+    expect(rows[1]).toEqual({ athleteId: "nc-girl", views: 1, programs: 1 })
+  })
+
+  it("filters by class year and gender", () => {
+    expect(mostViewed(views, dims, { ...all, gender: "Female" }, WIN).map((r) => r.athleteId)).toEqual(["nc-girl"])
+    expect(mostViewed(views, dims, { ...all, classYear: 2028 }, WIN).map((r) => r.athleteId)).toEqual(["nc-girl"])
   })
 })
