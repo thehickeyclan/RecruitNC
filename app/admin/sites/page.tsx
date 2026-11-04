@@ -2,9 +2,11 @@
  * RecruitWrestlers vs NC United (Matt, 1 Nov 2026: "we need to keep track of RW vs NCU"). New
  * accounts by sign-up brand; claims, signed-in visitors, sign-ins and checkouts by the site the
  * event came from (event_data.site, stamped from 1 Nov 2026). Signed-out visitors are only in
- * Vercel Analytics, one project per site. Admins only.
+ * Vercel Analytics, one project per site. Admins, and the business grant (lib/business/access.ts).
  */
 import { redirect } from "next/navigation"
+
+import { hasBusinessGrant } from "@/lib/business/access"
 
 import { SITE_KEYS, splitBySite, startOfTodayEastern, type SiteAccount, type SiteEvent, type SiteKey } from "@/lib/site-split"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -61,7 +63,8 @@ export default async function SitesPage() {
   if (!auth.user) redirect("/auth/signin?returnTo=%2Fadmin%2Fsites")
   const admin = createAdminClient()
   const { data: me } = await admin.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
-  if (!(me?.is_admin === true || me?.role === "admin")) redirect("/")
+  // Full admins, and the business grant (lib/business/access.ts), which is all Rhett holds.
+  if (!(me?.is_admin === true || me?.role === "admin") && !hasBusinessGrant(auth.user.app_metadata)) redirect("/")
 
   const now = Date.now()
   const windows = [

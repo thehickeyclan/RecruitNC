@@ -22,9 +22,16 @@
 export const BUSINESS_GRANT = "business_access"
 
 /**
- * The pages a business grant opens. Each one reports numbers; none of them lists a family's name,
- * phone, email or address, and none reads the coach CRM's own columns on `college_coach_stars`.
- * Adding a path here is a decision about what a non-admin may see: read the page first.
+ * The pages a business grant opens. Each one reports numbers; none of them renders a family's
+ * name, phone, email or address, and none reads the coach CRM's own columns on
+ * `college_coach_stars`.
+ *
+ * Adding a path here is a decision about what a non-admin may see, so open the page and look at
+ * what it actually renders first. `/admin/command-center-activation` was on this list until that
+ * check: it prints one row per family headed by `full_name || email`, so it came off and stays
+ * admin-only. Wrestlers' names do appear - on the rankings board and on college interest, both of
+ * which Matt named on 4 November 2026 - because a wrestler's name and results are the product.
+ * A parent's details are not.
  */
 export const BUSINESS_PAGES: readonly string[] = [
   "/admin/business",
@@ -33,7 +40,6 @@ export const BUSINESS_PAGES: readonly string[] = [
   "/admin/coach-usage",
   "/admin/college-interest",
   "/admin/card-analytics",
-  "/admin/command-center-activation",
   "/admin/rankings/board",
 ]
 

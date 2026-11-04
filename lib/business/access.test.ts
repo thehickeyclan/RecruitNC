@@ -28,6 +28,8 @@ describe("businessCanOpen", () => {
       "/admin/orders",
       "/admin/users-dashboard",
       "/admin/messaging",
+      // Prints one row per family headed by the parent's name or email.
+      "/admin/command-center-activation",
       "/admin/toc/field",
       "/admin/rankings",
     ]) {

@@ -2,9 +2,12 @@
  * College coach usage, week by week (2 Nov 2026): coach adoption is the primary success metric.
  * Active coaches, profiles they reviewed, wrestlers they starred, and recruiting needs posted and
  * live - split RecruitWrestlers vs NC United by event_data.site (stamped from 1 Nov 2026; older
- * events show as Not tagged). Rules for who counts as a coach: lib/admin/coach-usage.ts. Admins only.
+ * events show as Not tagged). Rules for who counts as a coach: lib/admin/coach-usage.ts.
+ * Admins, and the business grant (lib/business/access.ts).
  */
 import { redirect } from "next/navigation"
+
+import { hasBusinessGrant } from "@/lib/business/access"
 
 import { USAGE_SITES, collegeCoachIds, weeklyUsage, type AuthRow, type NeedRow, type ProfileRow, type SiteKey, type StarRow, type UsageEvent, type WeekCounts } from "@/lib/admin/coach-usage"
 import { isLiveNeed } from "@/lib/recruiting/needs"
@@ -58,7 +61,8 @@ export default async function CoachUsagePage() {
   if (!auth.user) redirect("/auth/signin?returnTo=%2Fadmin%2Fcoach-usage")
   const admin = createAdminClient()
   const { data: me } = await admin.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
-  if (!(me?.is_admin === true || me?.role === "admin")) redirect("/")
+  // Full admins, and the business grant (lib/business/access.ts), which is all Rhett holds.
+  if (!(me?.is_admin === true || me?.role === "admin") && !hasBusinessGrant(auth.user.app_metadata)) redirect("/")
 
   const now = new Date()
   const since = new Date(now.getTime() - WEEKS * 7 * 86_400_000).toISOString()
