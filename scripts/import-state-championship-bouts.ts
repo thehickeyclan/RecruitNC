@@ -31,6 +31,7 @@ import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { isSanctioned, loadStateSanctioning } from "@/lib/recruiting/state-events"
 import { championshipKeySlug } from "@/lib/athlete-state"
+import { HOME_STATE } from "@/lib/recruiting/states"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -148,12 +149,44 @@ async function main() {
 
   // Linked placer rows of the state: by Flo id, and by season + name for the school check.
   const placers: Array<{ season: number; state: string | null; wrestler_name: string; school_clean: string | null; school_raw: string | null; athlete_id: string; source_athlete_id: string | null }> = []
-  for (let f = 0; ; f += 1000) {
-    const q = sb.from("state_tournament_placers").select("season, state, wrestler_name, school_clean, school_raw, athlete_id, source_athlete_id").not("athlete_id", "is", null).order("id").range(f, f + 999)
-    const { data, error } = await (REGIONAL ? q.in("state", POOL) : q.eq("state", STATE))
-    if (error) throw error
-    placers.push(...((data ?? []) as never[]))
-    if (!data || data.length < 1000) break
+  /*
+   * North Carolina's placements are not in `state_tournament_placers` - it holds nothing for NC at
+   * all. They live in `wrestling_nchsaa_results`, which 136 places in the code read, and which
+   * scripts/state-readiness.ts already special-cases the same way. Without this, an NC ledger
+   * imports with every side unlinked: the 2025 ledger dry-ran at 0 of 3,464 sides reaching a
+   * profile, in a state with 1,291 of them.
+   */
+  const NC_HOME = !REGIONAL && STATE === HOME_STATE
+  if (NC_HOME) {
+    for (let f = 0; ; f += 1000) {
+      const { data, error } = await sb
+        .from("wrestling_nchsaa_results")
+        .select("year, wrestler_name, school, athlete_id")
+        .not("athlete_id", "is", null)
+        .order("id")
+        .range(f, f + 999)
+      if (error) throw error
+      for (const r of (data ?? []) as Array<Record<string, unknown>>) {
+        placers.push({
+          season: Number(r.year),
+          state: HOME_STATE,
+          wrestler_name: String(r.wrestler_name ?? ""),
+          school_clean: (r.school as string) ?? null,
+          school_raw: (r.school as string) ?? null,
+          athlete_id: String(r.athlete_id),
+          source_athlete_id: null,
+        })
+      }
+      if (!data || data.length < 1000) break
+    }
+  } else {
+    for (let f = 0; ; f += 1000) {
+      const q = sb.from("state_tournament_placers").select("season, state, wrestler_name, school_clean, school_raw, athlete_id, source_athlete_id").not("athlete_id", "is", null).order("id").range(f, f + 999)
+      const { data, error } = await (REGIONAL ? q.in("state", POOL) : q.eq("state", STATE))
+      if (error) throw error
+      placers.push(...((data ?? []) as never[]))
+      if (!data || data.length < 1000) break
+    }
   }
   const byFlo = new Map<string, Set<string>>()
   for (const p of placers) if (p.source_athlete_id) byFlo.set(p.source_athlete_id, new Set([...(byFlo.get(p.source_athlete_id) ?? []), p.athlete_id]))
