@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { stateName } from "@/lib/athlete-state"
 import { accoladePhrases, accoladesFrom, offSeasonEvents, sentenceText, summarySentences, type SummaryRow } from "./profile-summary"
 
 const NOW = new Date("2026-10-11T12:00:00Z")
@@ -146,7 +147,22 @@ describe("a wrestler's state names his own championship", () => {
     const a = accoladesFrom({ stateRows: [titleRow("Pennsylvania AAA State Championships")], tournamentRows: [] })
     expect(accoladePhrases(a, "PA")[0]).toBe("PIAA state champion")
     expect(accoladePhrases(a, "TX")[0]).toBe("UIL state champion")
-    expect(accoladePhrases(a, "MI")[0]).toBe("Michigan state champion")
+    expect(accoladePhrases(a, "MI")[0]).toBe("MHSAA state champion")
+  })
+
+  it("names the state itself where we hold no association", () => {
+    /*
+     * This line has broken three times on branches that changed nothing about the rule - it named
+     * Texas, then Oklahoma, then Michigan, and each got registered as the import chain reached it.
+     * So it no longer names one: it finds a state we genuinely hold no association for, and fails
+     * only when every candidate has been registered, which is a real signal rather than a stale
+     * fixture.
+     */
+    const a = accoladesFrom({ stateRows: [titleRow("Pennsylvania AAA State Championships")], tournamentRows: [] })
+    const candidates = ["WY", "ND", "SD", "MT", "AK", "HI", "NV", "NM"]
+    const held = candidates.find((c) => accoladePhrases(a, c)[0] === `${stateName(c)} state champion`)
+    expect(held, `all of ${candidates.join(", ")} now carry an association - choose new candidates`).toBeDefined()
+    expect(accoladePhrases(a, held!)[0]).toBe(`${stateName(held!)} state champion`)
   })
 
   it("lets an association the event named beat the state code", () => {
