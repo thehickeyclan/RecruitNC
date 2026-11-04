@@ -266,8 +266,23 @@ async function main() {
     const w = link(season, b.Winner, b["Winner School"], b["Winner ID"])
     const l = link(season, b.Loser, b["Loser School"], b["Loser ID"])
     sides += 2
-    if (w) linked++, rows.push({ ...base, athlete_id: w, athlete_name: b.Winner, athlete_club: b["Winner School"], opponent_name: b.Loser, opponent_id: l, opponent_club: b["Loser School"], win: true })
-    if (l) linked++, rows.push({ ...base, athlete_id: l, athlete_name: b.Loser, athlete_club: b["Loser School"], opponent_name: b.Winner, opponent_id: w, opponent_club: b["Winner School"], win: false })
+    /*
+     * BOTH sides are written, whether or not either reaches a profile today (Matt, 4 Nov 2026).
+     *
+     * Until now a side that linked to nobody was dropped, and that quietly decided what a wrestler
+     * could ever see: a kid who made his own profile got no state matches at all, because his rows
+     * had never been stored. Nothing could recover them but a re-import, which only happens when
+     * somebody runs one. `getUnlinkedRowsByAthleteName` already surfaces an unlinked row on the
+     * profile whose name matches it, so storing the side is the whole fix - the day a family claims
+     * him, his matches are there.
+     *
+     * The cost is real and was accepted: these tables roughly double. `athlete_id` stays null until
+     * a mint or the result linker decides it, exactly as `state_tournament_placers` holds every
+     * entrant and links the ones it can.
+     */
+    linked += (w ? 1 : 0) + (l ? 1 : 0)
+    rows.push({ ...base, athlete_id: w ?? null, athlete_name: b.Winner, athlete_club: b["Winner School"], opponent_name: b.Loser, opponent_id: l, opponent_club: b["Loser School"], win: true })
+    rows.push({ ...base, athlete_id: l ?? null, athlete_name: b.Loser, athlete_club: b["Loser School"], opponent_name: b.Winner, opponent_id: w, opponent_club: b["Winner School"], win: false })
   }
   /*
    * A round-robin pool meets the same pair more than once under one round name.
@@ -294,14 +309,22 @@ async function main() {
   }
   if (numbered) console.log(`  ${numbered} sides in repeated pool meetings carry their bout number`)
 
-  // bout_order within each wrestler's event, in bracket order.
+  /*
+   * bout_order within each wrestler's event, in bracket order - keyed on the NAME where there is no
+   * profile yet. Keyed on athlete_id alone, every unlinked side of an event shared one null key and
+   * the whole field was numbered as if it were one wrestler's tournament.
+   */
   const groups = new Map<string, Row[]>()
-  for (const r of rows) groups.set(`${r.athlete_id}|${r.event_key}`, [...(groups.get(`${r.athlete_id}|${r.event_key}`) ?? []), r])
+  for (const r of rows) {
+    const who = r.athlete_id ?? `name:${String(r.athlete_name ?? "").trim().toLowerCase()}`
+    groups.set(`${who}|${r.event_key}`, [...(groups.get(`${who}|${r.event_key}`) ?? []), r])
+  }
   for (const g of groups.values()) g.sort((a, b) => a._rank - b._rank).forEach((r, i) => (r.bout_order = i))
   const keys = [...new Set(rows.map((r) => r.event_key))].sort()
-  const profiles = new Set(rows.map((r) => r.athlete_id))
+  const profiles = new Set(rows.map((r) => r.athlete_id).filter(Boolean))
   console.log(`${REGIONAL ?? STATE}: ${bouts.length} bout rows in ${files.length} files, ${unique.length} after Bout ID dedupe`)
-  console.log(`  sides linked to a profile: ${linked} of ${sides}, across ${profiles.size} profiles`)
+  console.log(`  sides written: ${rows.length} of ${sides} · linked to a profile now: ${linked}, across ${profiles.size} profiles`)
+  console.log(`    the rest are stored unlinked, and reach a profile the day one exists for them`)
   if (REGIONAL) console.log(`    by Flo wrestler id: ${viaFlo} · by name and school: ${viaName} · refused, wrong state: ${refusedByState}`)
   for (const k of keys) console.log(`  ${k}: ${rows.filter((r) => r.event_key === k).length} rows`)
   if (QUALIFIERS && rows.some((r) => !r.event_date)) throw new Error("--layer qualifiers needs --dates covering every tournament")
