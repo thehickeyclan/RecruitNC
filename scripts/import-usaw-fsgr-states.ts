@@ -19,6 +19,32 @@
  *   - `opponent_id` is filled when the other side also has a profile. Writing it null costs the
  *     head-to-head, which is what left 870 NC state bout sides unreachable in the 2026 folkstyle
  *     key (4 Nov 2026).
+ *
+ * Two further changes on 4 Nov 2026, when nine more states arrived at once and most of them hold
+ * no profiles yet:
+ *   - EVERY side of every bout is stored, with a null `athlete_id` where no profile exists yet, the
+ *     way the folkstyle importer banks them. Before this an FS/GR load could not heal: the sides of
+ *     wrestlers minted later were never written at all, so each mint batch meant re-importing every
+ *     package. A banked side is attached in place afterwards by
+ *     `scripts/relink-other-tournament-event.ts`. It also means a complete ledger is stored for a
+ *     state with no profiles at all, which is what Indiana, Florida and the rest are.
+ *   - `--reload` replaces a year this state already holds. The guard still refuses it by accident.
+ *     Bouts are deleted and rewritten; RESULTS ARE NOT - 703 of the 705 FS/GR result rows carry a
+ *     `result_athlete_links` row pointing at their id, and that link is how a profile reaches the
+ *     credential, so results are updated in place and only new ones inserted.
+ *
+ * Several packages ship one CSV pair per year rather than one pair covering both, so the two kinds
+ * are read as sets of files, not single files. Rows carry their own year.
+ *
+ * Two shapes in the wave-2 packages collide with the bouts table's unique key
+ * (event_key, weight_class, round, athlete_name, opponent_name), and they are opposites:
+ *   - Delaware prints five bouts TWICE, identical in every column. One bout scraped twice, not two
+ *     meetings. Dropped, and named in the output.
+ *   - West Virginia's package prints no round label, and a pair there can meet twice (different
+ *     bout numbers, different results - real rematches). Those are kept and told apart with the
+ *     ledger's own convention, the "· Bout N" suffix the folkstyle importer uses. The suffix goes
+ *     on the BOUT, so both of its sides carry the same label and the launch sweep still reads the
+ *     bout as mirrored; `source_round` keeps the label the package actually printed.
  */
 import { createClient } from "@supabase/supabase-js"
 import { readdirSync, readFileSync } from "fs"
@@ -32,6 +58,7 @@ function flag(name: string): string | undefined {
 const dir = flag("dir") ?? process.argv.find((a, i) => i >= 2 && !a.startsWith("--") && process.argv[i - 1] !== "--state")
 const STATE = normalizeStateCode(flag("state") ?? "SC") ?? "SC"
 const write = process.argv.includes("--write")
+const reload = process.argv.includes("--reload")
 if (!dir) throw new Error("Missing --dir <package-dir>")
 
 /**
@@ -46,18 +73,47 @@ const DATES: Record<string, string> = {
   "NC|2025": "2025-05-03",
   // VAWA FS/GR states, 3-4 May 2025, Heritage HS, Lynchburg (FloArena event 13994316).
   "VA|2025": "2025-05-03",
+  // VAWA FS/GR states, 2-3 May 2026, Heritage HS, Lynchburg (FloArena event 15848569).
+  "VA|2026": "2026-05-02",
+  // Parity wave 2, 4 Nov 2026. Each is the first day of the championship, from that package's
+  // delivery note; a two-day event is entered on its opening day, as NC and VA already are.
+  "AL|2025": "2025-05-03", // Alabama Freestyle and Greco State Championship, Homewood
+  "AL|2026": "2026-05-02", // Team Alabama State Tournament, Homewood Middle School
+  "DE|2025": "2025-05-18", // both styles one day, Smyrna HS
+  "DE|2026": "2026-05-16", // Greco Sat 16 May, Freestyle Sun 17 May, Smyrna HS
+  "FL|2025": "2025-05-30", // Spartan Nationals + FAWA states, 30 May - 1 Jun
+  "FL|2026": "2026-05-30", // FS Sat 30 May, FAWA Greco Sun 31 May
+  "GA|2025": "2025-05-10", // TGA FS/Greco State (FloArena 14186722)
+  "IN|2025": "2025-05-02", // ISWA state finals, 2-4 May
+  "IN|2026": "2026-05-01", // ISWA state finals, 1-3 May
+  "MD|2025": "2025-05-17", // Loyola-Blakefield, both styles one day
+  "MD|2026": "2026-05-16", // Mount Saint Joseph HS
+  "MS|2025": "2025-05-31", // MS USA State Tournament, Oak Grove HS
+  "WV|2025": "2025-05-10", // WV state FS + Greco, University HS, Morgantown
+  // Kentucky's delivery note fixes the YEAR by content but gives no day - USA Wrestling's mirror
+  // prints none, and the 2024 edition ran 20 April. The month is recorded, the day is not known,
+  // and the run says so out loud rather than letting a guess pass as a date. Nothing downstream
+  // turns on it at this distance: the 12-month head-to-head window closed on spring 2025 long ago.
+  "KY|2025": "2025-05-01",
 }
+/** Dates whose day is not established by the delivery note. Printed on every run. */
+const APPROX_DATES = new Set(["KY|2025"])
 const dateFor = (year: string) => {
   const d = DATES[`${STATE}|${year}`]
   if (!d) throw new Error(`No event date recorded for ${STATE} ${year} - add it to DATES`)
   return d
 }
 
-/** The package names its two files differently per state, so find them by shape, not by name. */
-function findCsv(kind: "bouts" | "placements"): string {
-  const hits = readdirSync(dir!).filter((f) => f.endsWith(".csv") && f.includes(kind))
-  if (hits.length !== 1) throw new Error(`Expected exactly one *${kind}*.csv in ${dir}, found ${hits.length}`)
-  return join(dir!, hits[0]!)
+/**
+ * The package names its files differently per state, so they are found by shape, not by name - and
+ * as a SET: Delaware, Florida, Georgia, Maryland and West Virginia ship one pair per year where
+ * Alabama, Indiana, Kentucky and Mississippi ship one pair covering both. Every row carries its
+ * own year, so the files simply concatenate.
+ */
+function findCsvs(kind: "bouts" | "placements"): string[] {
+  const hits = readdirSync(dir!).filter((f) => f.endsWith(".csv") && f.includes(kind)).sort()
+  if (!hits.length) throw new Error(`No *${kind}*.csv in ${dir}`)
+  return hits.map((f) => join(dir!, f))
 }
 
 function parseCsv(text: string): Record<string, string>[] {
@@ -97,11 +153,21 @@ function splitResult(result: string): { winType: string | null; score: string | 
 }
 
 async function main() {
-  const boutsPath = findCsv("bouts")
-  const placesPath = findCsv("placements")
-  const SOURCE = basename(boutsPath)
-  const bouts = parseCsv(readFileSync(boutsPath, "utf8"))
-  const places = parseCsv(readFileSync(placesPath, "utf8"))
+  const boutsPaths = findCsvs("bouts")
+  const placesPaths = findCsvs("placements")
+  const SOURCE = boutsPaths.map((f) => basename(f)).join(", ")
+  const rawBouts = boutsPaths.flatMap((f) => parseCsv(readFileSync(f, "utf8")))
+  const places = placesPaths.flatMap((f) => parseCsv(readFileSync(f, "utf8")))
+
+  // A row repeated in every column, bout number included, is one bout scraped twice.
+  const seenRow = new Set<string>()
+  const exactDupes: string[] = []
+  const bouts = rawBouts.filter((b) => {
+    const k = JSON.stringify(Object.values(b))
+    if (seenRow.has(k)) { exactDupes.push(`${b.year} ${b.age} ${b.gender} ${b.style} ${b.weight} ${b.round || "(no round)"}: ${b.winner} over ${b.loser}`); return false }
+    seenRow.add(k)
+    return true
+  })
   const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
   const roster: any[] = []
@@ -125,6 +191,31 @@ async function main() {
     return { id: hits.length === 1 ? hits[0].id : null, ambiguous: hits.length > 1 }
   }
 
+  /**
+   * One label per bout. A pair that meets more than once under the same printed round label is
+   * numbered in bout order, so the two meetings are distinguishable - both sides of one bout get
+   * the same label, which is what keeps the pair mirrored.
+   */
+  const meetings = new Map<string, Record<string, string>[]>()
+  /**
+   * NOT `norm()` here: it strips digits, so "Champ. Round 2" and "Champ. Round 3" fold together and
+   * a pair that met in two different rounds reads as a rematch. Case and spacing only.
+   */
+  const roundFold = (s: string) => String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ")
+  for (const b of bouts) {
+    const pair = [norm(b.winner ?? ""), norm(b.loser ?? "")].sort().join(" vs ")
+    const k = `${eventKey(b)}|${b.weight}|${roundFold(b.round ?? "")}|${pair}`
+    meetings.set(k, [...(meetings.get(k) ?? []), b])
+  }
+  const roundLabel = new Map<Record<string, string>, string>()
+  let rematches = 0
+  for (const list of meetings.values()) {
+    if (list.length === 1) continue
+    rematches += list.length
+    list.sort((a, b) => Number(a.bout_no || 0) - Number(b.bout_no || 0))
+    list.forEach((b, i) => roundLabel.set(b, b.round ? `${b.round} · Bout ${i + 1}` : `Bout ${i + 1}`))
+  }
+
   const boutRows: any[] = []
   const ambiguous = new Set<string>()
   const linkedNames = new Map<string, string>()
@@ -136,12 +227,13 @@ async function main() {
       const other = side === "winner" ? "loser" : "winner"
       const l = link(name, b.gender)
       if (l.ambiguous) ambiguous.add(`${name} (${b.gender})`)
-      if (!l.id) continue
-      linkedNames.set(l.id, name)
+      // A side with no profile is still stored, with a null athlete_id, so the ledger is complete
+      // and the row attaches when that wrestler is minted. See the note at the top of this file.
+      if (l.id) linkedNames.set(l.id, name)
       const opponent = b[other] ? link(b[other]!, b.gender) : { id: null as string | null, ambiguous: false }
       boutRows.push({
         event_key: eventKey(b), event_name: eventName(b), year: Number(b.year), weight_class: b.weight,
-        round: b.round, bout_order: i, athlete_name: name, athlete_id: l.id, athlete_club: b[`${side}_team`] || null,
+        round: roundLabel.get(b) ?? b.round, bout_order: i, athlete_name: name, athlete_id: l.id, athlete_club: b[`${side}_team`] || null,
         opponent_name: b[other] || null, opponent_id: opponent.id, opponent_club: b[`${other}_team`] || null,
         win: side === "winner", is_bye: false, win_type: winType, score, source_file: SOURCE,
         source_round: b.round, event_date: dateFor(b.year), gender: /girl/i.test(b.gender) ? "F" : "M",
@@ -180,27 +272,75 @@ async function main() {
   for (const r of resultRows.values()) r.record = `${r.wins}-${r.losses}`
 
   console.log(`${STATE}: bouts ${bouts.length} · placements ${places.length} · ${STATE} profiles ${roster.length}`)
-  console.log(`source files: ${basename(boutsPath)}, ${basename(placesPath)}`)
+  console.log(`source files: ${SOURCE} | ${placesPaths.map((f) => basename(f)).join(", ")}`)
   console.log(`linked wrestlers ${linkedNames.size} · bout rows ${boutRows.length} · result rows ${resultRows.size} · ambiguous names ${ambiguous.size}`)
+  if (exactDupes.length) console.log(`dropped ${exactDupes.length} row(s) printed twice in the package: ${exactDupes.join("; ")}`)
+  if (rematches) console.log(`${rematches} bout(s) are a pair meeting again under the same round label - numbered "· Bout N" in bout order`)
   if (ambiguous.size) console.log("ambiguous (left unlinked):", [...ambiguous].join("; "))
   console.log("sample:", [...resultRows.values()].filter((r) => r.placement === 1).slice(0, 8).map((r) => `${r.athlete_name} ${r.event_key} ${r.weight_class} ${r.record}`).join(" | "))
 
-  // Never twice - but scoped to the YEARS in this package, so a state that already holds another
-  // year is not refused. NC held 2026 when its 2025 package arrived.
+  const banked = boutRows.filter((r) => !r.athlete_id).length
+  console.log(`bout sides banked with no profile yet: ${banked} of ${boutRows.length} - they attach when the wrestler is minted`)
+
   const years = [...new Set(bouts.map((b) => b.year))].sort()
+  for (const y of years) if (APPROX_DATES.has(`${STATE}|${y}`)) {
+    console.log(`NOTE: ${STATE} ${y} event date ${dateFor(y)} is the month only - the day is not established by the delivery note`)
+  }
+
+  // Never twice by accident - scoped to the YEARS in this package, so a state that already holds
+  // another year is not refused (NC held 2026 when its 2025 package arrived). --reload is the
+  // deliberate replacement, for a package rebuilt or re-parsed after the first load.
+  const held: string[] = []
   for (const y of years) {
-    const { count } = await admin
+    const { count, error } = await admin
       .from("other_tournament_bouts")
       .select("id", { count: "exact", head: true })
       .like("event_key", `${STATE.toLowerCase()}-usaw-states-${y}-%`)
-    if (count) { console.log(`${STATE} ${y} already loaded (${count} bout rows) - nothing written`); return }
+    if (error) throw error
+    if (count) held.push(`${y} (${count} bout rows)`)
   }
-  console.log(`years in this package: ${years.join(", ")}`)
+  if (held.length && !reload) {
+    console.log(`${STATE} already loaded: ${held.join(", ")} - nothing written. Re-run with --reload to replace it.`)
+    return
+  }
+  console.log(`years in this package: ${years.join(", ")}${held.length ? ` | --reload replacing ${held.join(", ")}` : ""}`)
   if (!write) return console.log("dry run - nothing written")
+
+  if (held.length) {
+    for (const y of years) {
+      const { error } = await admin.from("other_tournament_bouts").delete().like("event_key", `${STATE.toLowerCase()}-usaw-states-${y}-%`)
+      if (error) throw error
+    }
+    console.log(`deleted the held bout rows for ${years.join(", ")}`)
+  }
   for (let i = 0; i < boutRows.length; i += 500) { const { error } = await admin.from("other_tournament_bouts").insert(boutRows.slice(i, i + 500)); if (error) throw error }
+
+  // Results are never deleted: a result_athlete_links row points at the id, and that link is how a
+  // profile reaches the credential. Existing rows are updated in place, keyed by what identifies a
+  // wrestler's division entry - event key, weight, profile - and only genuinely new ones inserted.
   const res = [...resultRows.values()]
-  for (let i = 0; i < res.length; i += 500) { const { error } = await admin.from("other_tournament_results").insert(res.slice(i, i + 500)); if (error) throw error }
-  console.log(`written: ${boutRows.length} bout rows, ${res.length} result rows`)
+  const existing = new Map<string, string>()
+  for (const y of years) {
+    for (let p = 0; ; p++) {
+      const { data, error } = await admin.from("other_tournament_results").select("id,event_key,weight_class,athlete_id")
+        .like("event_key", `${STATE.toLowerCase()}-usaw-states-${y}-%`).order("id").range(p * 1000, p * 1000 + 999)
+      if (error) throw error
+      for (const r of data!) existing.set(`${r.event_key}|${r.weight_class}|${r.athlete_id}`, r.id)
+      if (data!.length < 1000) break
+    }
+  }
+  const keyOf = (r: any) => `${r.event_key}|${r.weight_class}|${r.athlete_id}`
+  const fresh = res.filter((r) => !existing.has(keyOf(r)))
+  const updates = res.filter((r) => existing.has(keyOf(r)))
+  for (let i = 0; i < fresh.length; i += 500) { const { error } = await admin.from("other_tournament_results").insert(fresh.slice(i, i + 500)); if (error) throw error }
+  for (const r of updates) {
+    const { error } = await admin.from("other_tournament_results").update({
+      wins: r.wins, losses: r.losses, record: r.record, placement: r.placement, entrants: r.entrants,
+      club: r.club, athlete_name: r.athlete_name, event_date: r.event_date, source_file: r.source_file,
+    }).eq("id", existing.get(keyOf(r))!)
+    if (error) throw error
+  }
+  console.log(`written: ${boutRows.length} bout rows (${banked} banked) | results ${fresh.length} new, ${updates.length} updated in place`)
 }
 
 main().catch((e) => { console.error(e); process.exit(1) })

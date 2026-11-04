@@ -66,15 +66,17 @@ async function pageById<T>(build: (q: any) => any, limit = Infinity): Promise<T[
   return out
 }
 
-type KeyReport = { key: string; rows: number; mirrored: number; linked: number }
+type KeyReport = { key: string; rows: number; mirrored: number; linked: number; soloRows: number }
 
 /**
- * The freestyle/Greco layer stores ONLY sides that linked to a profile at import time - unlinked
- * sides are dropped, unlike the folkstyle importer which banks them. So a `*-usaw-states-*` key is
- * one-sided by design and its mirroring says nothing; what it needs instead is a re-import after
- * any mint, because it cannot pick up new profiles on its own.
+ * The freestyle/Greco layer USED to store only the sides that linked to a profile at import time,
+ * so a `*-usaw-states-*` key was one-sided by design and its mirroring said nothing. That is no
+ * longer true: since 4 Nov 2026 `import-usaw-fsgr-states.ts` banks every side, and every FS/GR key
+ * has been reloaded through it. So FS/GR keys are held to the same mirroring test as folkstyle, and
+ * a key that fails it is a stale load to re-import, not a design feature. The one key still carrying
+ * the old shape is `nc-usaw-states-2026`, loaded by an earlier importer from three CSVs that are no
+ * longer on disk - it is meant to appear in the worklist until they are re-delivered.
  */
-const isFsGrKey = (key: string) => /-usaw-states-/.test(key)
 
 /**
  * Championship bout keys for a state. Derived from the associations its own placer rows name, run
@@ -112,13 +114,21 @@ async function boutKeys(state: string, associations: Set<string>): Promise<KeyRe
       q.from("other_tournament_bouts").select("id,weight_class,round,athlete_name,athlete_id,opponent_name").eq("event_key", key),
     )
     const set = new Set(all.map((r) => `${r.weight_class}|${roundKey(r.round)}|${norm(r.athlete_name)}|${norm(r.opponent_name)}`))
+    /*
+     * A row whose opponent is not named has no other side to find - a bye, or a forfeit where the
+     * source prints only the wrestler who advanced. Counting it as unmirrored read Maryland's
+     * freshly loaded, fully two-sided 2026 key as 66%: 194 of that package's 640 bouts name one
+     * side only. So these rows leave the test rather than failing it, and are counted separately.
+     */
+    const pairs = all.filter((r) => norm(r.opponent_name))
     let mirrored = 0
-    for (const r of all) if (set.has(`${r.weight_class}|${roundKey(r.round)}|${norm(r.opponent_name)}|${norm(r.athlete_name)}`)) mirrored++
+    for (const r of pairs) if (set.has(`${r.weight_class}|${roundKey(r.round)}|${norm(r.opponent_name)}|${norm(r.athlete_name)}`)) mirrored++
     reports.push({
       key,
       rows: count ?? 0,
-      mirrored: all.length ? Math.round((mirrored / all.length) * 100) : 0,
+      mirrored: pairs.length ? Math.round((mirrored / pairs.length) * 100) : 100,
       linked: all.filter((r) => r.athlete_id).length,
+      soloRows: all.length - pairs.length,
     })
   }
   return reports
@@ -159,24 +169,22 @@ async function main() {
       .lte("graduationyear", 2030)
     const keys = await boutKeys(s.code, associations)
     const sides = keys.reduce((n, k) => n + k.rows, 0)
-    const folkstyle = keys.filter((k) => !isFsGrKey(k.key) && k.rows)
-    const worst = folkstyle.length ? Math.min(...folkstyle.map((k) => k.mirrored)) : 0
-    const mirrorLabel = folkstyle.length
-      ? `${worst}%${folkstyle.length > 1 ? ` (worst of ${folkstyle.length})` : ""}`
-      : keys.length
-        ? "FS/GR only"
-        : "no ledger"
+    const loaded = keys.filter((k) => k.rows)
+    const worst = loaded.length ? Math.min(...loaded.map((k) => k.mirrored)) : 0
+    const mirrorLabel = loaded.length
+      ? `${worst}%${loaded.length > 1 ? ` (worst of ${loaded.length})` : ""}`
+      : "no ledger"
     console.log(
       `${s.code.padEnd(6)}${String(s.live).padEnd(6)}${String(placers.length).padEnd(9)}${String(yearPct == null ? "n/a" : `${yearPct}%`).padEnd(6)}${String(profiles ?? 0).padEnd(10)}${String(sides).padEnd(8)}${mirrorLabel}`,
     )
     // A folkstyle ledger below 90% mirrored was loaded one-sided: re-import the complete set.
     for (const k of keys) {
-      if (!k.rows || isFsGrKey(k.key)) continue
+      if (!k.rows) continue
       if (k.mirrored < 90) flags.push(`  ${s.code} ${k.key}: ${k.rows} rows, only ${k.mirrored}% mirrored - one-sided load, re-import the complete set`)
     }
     if (yearPct != null && placers.length && yearPct < 60) flags.push(`  ${s.code}: only ${yearPct}% of ${placers.length} placer rows carry a class year - the profile ceiling, needs a grad-year pass`)
     if (placed.length && !sides) flags.push(`  ${s.code}: ${placed.length} placed rows and NO bout ledger - results with no matches behind them`)
-    if (FULL) for (const k of keys) out.push(`  ${s.code} ${k.key.padEnd(28)} ${String(k.rows).padStart(6)} rows · ${k.mirrored}% mirrored`)
+    if (FULL) for (const k of keys) out.push(`  ${s.code} ${k.key.padEnd(28)} ${String(k.rows).padStart(6)} rows · ${k.mirrored}% mirrored${k.soloRows ? ` · ${k.soloRows} with no opponent named` : ""}`)
   }
   if (FULL && out.length) console.log(`\nevery key:\n${out.join("\n")}`)
   console.log(`\n${flags.length} thing(s) to fix:`)
