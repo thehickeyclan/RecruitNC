@@ -15,7 +15,7 @@ dated records. Adjudication batch #2 found exactly that three times (Garrett Sho
 Nathan Taylor), all three of which this file had called benign. Only dated per-season records
 settle a case; what follows is the worklist and the evidence to start from, never the verdict.
 
-18 unlinked placement(s) across AR, OK, IA, MO, MI, VA, SC: **3 awaiting adjudication**, 11 held
+17 unlinked placement(s) across AR, OK, IA, MO, MI, VA, SC: **2 awaiting adjudication**, 11 held
 for want of non-RW evidence, 4 settled as namesakes that must never be linked
 (docs/state-launch/TRANSFER-ADJUDICATED.json). Nothing here has been linked or merged.
 
@@ -97,18 +97,13 @@ for want of non-RW evidence, 4 settled as namesakes that must never be linked
 ## MI — 0 wrestler(s), 0 unlinked placement(s)
 
 
-## VA — 4 wrestler(s), 4 unlinked placement(s)
+## VA — 3 wrestler(s), 3 unlinked placement(s)
 
 ### Manny Evans — profile L.C. Bird, class of 2027 · 7d0be6d4-5fa9-4635-b2f8-0bbc10c697d8 · HELD: awaiting non-RW evidence
   - 2025 L.C. Bird · 5A 144 #4 · class 2027 · LINKED
   - 2026 Benedictine College Preparatory · VISAA 157 #2 · class 2027 · UNLINKED
   verdict inputs: concurrent seasons none · class years agree (2027) · weights 144, 157 (spread 13 lb)
   adjudicated (batch 1, 2026-11-03): RW's only Manny Evans is the Benedictine chain; no dated record at L.C. Bird under either 'Manny' or 'Emmanuel'. Not namesakes (no second chain), not a verified transfer. His Benedictine row stays unlinked by design, which is why his profile shows no VISAA 2026 bouts.
-
-### Sarissa Tucker — profile Mountainview, class of 2027 · fba4375d-1094-44ae-81e7-98a3ebae373e
-  - 2024 Mountain View · Girls 107 #1 · class 2027 · UNLINKED
-  - 2025 Mountainview · Girls 107 #1 · class 2027 · LINKED
-  verdict inputs: concurrent seasons none · class years agree (2027) · weights 107
 
 ### Nathan Taylor — profile Eastern View, class of 2029 · e00a8554-964a-40c5-b63f-9c36351b7a91 · SETTLED: NAMESAKE, never link
   - 2025 Hopewell · 3A 126 #6 · class 2029 · UNLINKED
