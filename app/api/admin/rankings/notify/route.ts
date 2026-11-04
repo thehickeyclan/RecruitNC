@@ -23,7 +23,7 @@ async function currentUpdate() {
   const since = Date.now() - WINDOW_MS
   const [{ data: editions }, { data: top }] = await Promise.all([
     admin.from("ranking_editions").select("class_year, published_at").eq("state", HOME_STATE).eq("gender", "Male").not("published_at", "is", null),
-    admin.from("top_100_rankings").select("athlete_id, rank, published_at").eq("gender", "Male").order("rank", { ascending: true }).limit(1),
+    admin.from("top_100_rankings").select("athlete_id, rank, published_at").eq("gender", "Male").eq("state", HOME_STATE).order("rank", { ascending: true }).limit(1),
   ])
   const classes = (editions ?? [])
     .filter((e) => new Date(String(e.published_at)).getTime() >= since && isPublicRankingsYearPublished(Number(e.class_year), "Male"))

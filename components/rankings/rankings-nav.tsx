@@ -18,7 +18,10 @@ export function RankingsNav({
   gender = "Male",
   state,
   stateYears,
+  stateTop = false,
 }: {
+  /** Whether another state has published its own Top list (South Carolina's Top 50, 4 Nov 2026). */
+  stateTop?: boolean
   /**
    * Another state's published classes. North Carolina's other boards show greyed for that state,
    * never as links to North Carolina's (Matt, 29 Oct 2026: SC's Top 75 showed NC athletes).
@@ -46,7 +49,14 @@ export function RankingsNav({
     })),
     // Classes of 2027 and 2028, reaching past each class's published cut. A men's board.
     ...(!womens && (isAdmin || PUBLIC_TOP_75_COLLEGE_RELEASED)
-      ? [{ href: "/public-rankings/college-prospects", label: "Top 75 College Prospects", key: "top-100" as const, off: otherState }]
+      ? [
+          {
+            href: `/public-rankings/college-prospects${otherState ? `?state=${state}` : ""}`,
+            label: `Top ${state === "SC" ? 50 : 75} College Prospects`,
+            key: "top-100" as const,
+            off: otherState && !stateTop,
+          },
+        ]
       : []),
     // The other set of boards, as one door: never a women's tab among the men's classes.
     ...(otherYears.length

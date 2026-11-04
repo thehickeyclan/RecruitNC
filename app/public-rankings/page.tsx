@@ -206,6 +206,15 @@ export default async function PublicRankingsHomepage({
   const stateCode = picked.code
   const stateName = picked.name
   const stateQuery = stateCode === "NC" ? "" : `?state=${stateCode}`
+  // This state's own Top list and when it was published: NC's Top 75, SC's Top 50 (Matt, 4 Nov 2026).
+  const { data: top75Row } = await createAdminClient()
+    .from("top_100_rankings")
+    .select("published_at")
+    .eq("gender", "Male")
+    .eq("state", stateCode)
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
   const stateGroups =
     stateCode === "NC"
       ? groups
@@ -222,7 +231,9 @@ export default async function PublicRankingsHomepage({
                 description: picked.mens.includes(year) ? "The published class rankings." : "Coming soon",
                 icon: ListOrdered,
               })),
-              { href: "", eyebrow: "Classes", title: "Top 75 College Prospects", description: "Coming soon", icon: GraduationCap },
+              top75Row
+                ? { href: `/public-rankings/college-prospects${stateQuery}`, eyebrow: "Classes of 2027 & 2028", title: "Top 50 College Prospects", description: "The best college prospects across both classes.", icon: GraduationCap }
+                : { href: "", eyebrow: "Classes", title: "Top 50 College Prospects", description: "Coming soon", icon: GraduationCap },
             ],
             preview: false,
             note: null,
@@ -245,17 +256,10 @@ export default async function PublicRankingsHomepage({
    * Which boards a tile stands for, with when each was last published, so a republished class
    * lights its tile until the visitor opens it (Matt, 30 Oct 2026). Keys match MarkBoardSeen.
    */
-  // The Top 75 publishes on its own board, so its stamp is its own (top_100_rankings).
-  const { data: top75Row } = await createAdminClient()
-    .from("top_100_rankings")
-    .select("published_at")
-    .eq("gender", "Male")
-    .order("published_at", { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  // The Top 75 publishes on its own board, so its stamp is its own (top_100_rankings, read above).
   /** When the board behind a tile was last published (Matt, 30 Oct 2026: a stamp on every tile). */
   const tileUpdated = (href: string, groupKey: string): string | null => {
-    if (/college-prospects/.test(href)) return stateCode === "NC" ? ((top75Row?.published_at as string | undefined) ?? null) : null
+    if (/college-prospects/.test(href)) return (top75Row?.published_at as string | undefined) ?? null
     const gender = groupKey === "womens" ? "Female" : "Male"
     const year = Number(href.split("?")[0]!.split("/").at(-1))
     return ((editions ?? []).find((e) => e.state === stateCode && e.gender === gender && Number(e.class_year) === year)?.published_at as string | undefined) ?? null

@@ -43,22 +43,25 @@ const cachedBoard = unstable_cache(
   { revalidate: 600, tags: ["admin-ranking-board"] },
 )
 
-/** The Top 75 College Prospects: classes 2027 and 2028 together, in the class boards' own rows. */
+/**
+ * The Top 75 College Prospects: classes 2027 and 2028 together, in the class boards' own rows.
+ * Each state has its own: North Carolina's Top 75, South Carolina's Top 50 (Matt, 4 Nov 2026).
+ */
 const TOP75 = "top75"
 const TOP75_CLASSES = ["2027", "2028"]
 
-async function top75Board(fresh: boolean) {
+async function top75Board(fresh: boolean, state: string) {
   const gate = await requireAdmin()
   if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status })
   const admin = createAdminClient()
   const [boards, drafts, published] = await Promise.all([
     Promise.all(
       TOP75_CLASSES.map((y) =>
-        fresh ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year: y, gender: "Male", state: HOME_STATE }) : cachedBoard(y, "Male", HOME_STATE),
+        fresh ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year: y, gender: "Male", state }) : cachedBoard(y, "Male", state),
       ),
     ),
-    admin.from("top_100_drafts").select("athlete_id, rank").eq("gender", "Male"),
-    admin.from("top_100_rankings").select("published_at").eq("gender", "Male").limit(1),
+    admin.from("top_100_drafts").select("athlete_id, rank").eq("gender", "Male").eq("state", state),
+    admin.from("top_100_rankings").select("published_at").eq("gender", "Male").eq("state", state).limit(1),
   ])
   const draftRanks = new Map((drafts.data ?? []).map((row) => [String(row.athlete_id), Number(row.rank)]))
   // One formula order across both classes, by score, so the suggestion panel reads as one list.
@@ -75,7 +78,7 @@ async function top75Board(fresh: boolean) {
       excluded_no_gender: [],
       year: TOP75,
       gender: "Male",
-      state: HOME_STATE,
+      state,
       count: merged.length,
       scored_at: new Date().toISOString(),
       draft_saved_at: draftRanks.size ? new Date().toISOString() : null,
@@ -89,7 +92,9 @@ async function top75Board(fresh: boolean) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  if (searchParams.get("year") === TOP75) return top75Board(searchParams.get("refresh") === "1")
+  if (searchParams.get("year") === TOP75) {
+    return top75Board(searchParams.get("refresh") === "1", normalizeStateCode(searchParams.get("state")) ?? HOME_STATE)
+  }
   const year = searchParams.get("year") || "2027"
   const gender = searchParams.get("gender") || "Male"
   // Whose board. North Carolina unless asked; a ranker's grant names the states it covers.

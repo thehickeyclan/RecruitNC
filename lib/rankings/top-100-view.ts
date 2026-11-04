@@ -7,7 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { credentialsFrom, type PublicRankedAthlete } from "@/lib/rankings/public-rankings-view"
 
 /**
- * The Top 75 College Prospects, classes of 2027 and 2028.
+ * The Top 75 College Prospects, classes of 2027 and 2028 (South Carolina's is a Top 50).
  *
  * The Top 75 is drawn from the published class boards, so a wrestler outside his class cut
  * cannot appear on it however he compares - and 2027 is deep enough that five state champions
@@ -32,18 +32,30 @@ export type TopHundredBoard = {
 /** What publishes. */
 export const TOP_100_CAP = 75
 
-async function buildTopHundred(gender: string): Promise<TopHundredBoard> {
+/**
+ * How many each state's list publishes. South Carolina's is a Top 50 (Matt, 4 Nov 2026): our SC
+ * record runs about 17 results a wrestler against NC's 50, too thin to order 75 deep.
+ */
+const STATE_CAPS: Readonly<Record<string, number>> = { NC: TOP_100_CAP, SC: 50 }
+
+export function topCapFor(state: string): number {
+  return STATE_CAPS[state] ?? 50
+}
+
+async function buildTopHundred(gender: string, state = "NC"): Promise<TopHundredBoard> {
   const admin = createAdminClient()
+  const cap = topCapFor(state)
 
   const { data: published } = await admin
     .from("top_100_rankings")
     .select("athlete_id, rank, published_at")
     .eq("gender", gender)
+    .eq("state", state)
     .order("rank", { ascending: true })
 
   const rows = published ?? []
   if (!rows.length) {
-    return { published: false, cap: TOP_100_CAP, classes: [], publishedAt: null, athletes: [] }
+    return { published: false, cap, classes: [], publishedAt: null, athletes: [] }
   }
 
   const rankOf = new Map(rows.map((r) => [String(r.athlete_id), Number(r.rank)]))
@@ -94,7 +106,7 @@ async function buildTopHundred(gender: string): Promise<TopHundredBoard> {
 
   return {
     published: true,
-    cap: TOP_100_CAP,
+    cap,
     classes,
     publishedAt: String(rows[0]?.published_at ?? "") || null,
     athletes,
@@ -102,7 +114,7 @@ async function buildTopHundred(gender: string): Promise<TopHundredBoard> {
 }
 
 /** Bump the version whenever `TopHundredBoard` changes shape. */
-export const loadTopHundred = unstable_cache(buildTopHundred, ["public-college-75", "v2"], {
+export const loadTopHundred = unstable_cache(buildTopHundred, ["public-college-75", "v3"], {
   revalidate: 3600,
   tags: ["public-rankings"],
 })

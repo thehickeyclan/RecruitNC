@@ -3,7 +3,8 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildPoundForPoundBoard } from "@/lib/rankings/pound-for-pound-load"
-import { TOP_100_CAP } from "@/lib/rankings/top-100-view"
+import { TOP_100_CAP, topCapFor } from "@/lib/rankings/top-100-view"
+import { normalizeStateCode } from "@/lib/recruiting/states"
 
 /**
  * The Top 75 College Prospects board an admin works on.
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
      */
     let savedOrder = new Map<string, number>()
     try {
-      const { data } = await admin.from("top_100_drafts").select("athlete_id, rank").eq("gender", gender)
+      const { data } = await admin.from("top_100_drafts").select("athlete_id, rank").eq("gender", gender).eq("state", "NC")
       savedOrder = new Map((data ?? []).map((row) => [String(row.athlete_id), Number(row.rank)]))
     } catch {
       savedOrder = new Map()
@@ -58,7 +59,7 @@ export async function GET(request: Request) {
 
     // Nothing saved yet: fall back to what is already published, so the page opens on the live list.
     if (savedOrder.size === 0) {
-      const { data } = await admin.from("top_100_rankings").select("athlete_id, rank").eq("gender", gender)
+      const { data } = await admin.from("top_100_rankings").select("athlete_id, rank").eq("gender", gender).eq("state", "NC")
       savedOrder = new Map((data ?? []).map((row) => [String(row.athlete_id), Number(row.rank)]))
     }
 
@@ -112,6 +113,7 @@ export async function GET(request: Request) {
       .from("top_100_rankings")
       .select("published_at")
       .eq("gender", gender)
+      .eq("state", "NC")
       .limit(1)
 
     return NextResponse.json({
@@ -143,13 +145,16 @@ export async function POST(request: Request) {
     const gender = String(body?.gender ?? "Male")
     const order: string[] = Array.isArray(body?.order) ? body.order.map(String) : []
     const publish = body?.publish === true
+    // Each state keeps its own list; North Carolina's when none is named (South Carolina's Top 50, 4 Nov 2026).
+    const state = normalizeStateCode(body?.state) ?? "NC"
+    const cap = topCapFor(state)
     if (!order.length) return NextResponse.json({ error: "No order provided" }, { status: 400 })
 
     const db = createAdminClient()
     const now = new Date().toISOString()
-    const rows = order.map((athlete_id, i) => ({ athlete_id, gender, rank: i + 1 }))
+    const rows = order.map((athlete_id, i) => ({ athlete_id, gender, state, rank: i + 1 }))
 
-    await db.from("top_100_drafts").delete().eq("gender", gender)
+    await db.from("top_100_drafts").delete().eq("gender", gender).eq("state", state)
     const { error: saveError } = await db.from("top_100_drafts").insert(rows)
     if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 })
 
@@ -159,8 +164,8 @@ export async function POST(request: Request) {
      * Publishing writes only the wrestlers above the cut. The draft keeps everyone, because next time the
      * order is revisited the wrestlers just below the cut are the ones worth seeing.
      */
-    const cut = rows.slice(0, TOP_100_CAP).map((r) => ({ ...r, published_at: now }))
-    const { error: clearError } = await db.from("top_100_rankings").delete().eq("gender", gender)
+    const cut = rows.slice(0, cap).map((r) => ({ ...r, published_at: now }))
+    const { error: clearError } = await db.from("top_100_rankings").delete().eq("gender", gender).eq("state", state)
     if (clearError) return NextResponse.json({ error: clearError.message }, { status: 500 })
     const { error: publishError } = await db.from("top_100_rankings").insert(cut)
     if (publishError) return NextResponse.json({ error: publishError.message }, { status: 500 })

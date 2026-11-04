@@ -529,7 +529,10 @@ export default function RankingBoardPage() {
   const router = useRouter()
   const pathname = usePathname()
   const isTop75 = year === TOP75
-  const publicCap = isTop75 ? 75 : getPublicRankingsMax(Number(year), gender)
+  /** States with a Top list: North Carolina's Top 75, South Carolina's Top 50 (Matt, 4 Nov 2026). */
+  const top75Cap = state === "SC" ? 50 : 75
+  const hasTopList = gender === "Male" && (state === "NC" || state === "SC")
+  const publicCap = isTop75 ? top75Cap : getPublicRankingsMax(Number(year), gender)
   const canEdit = access === "edit"
   const showing = `${state}|${year}|${gender}`
   const boardIsCurrent = loadedFor === showing
@@ -561,10 +564,10 @@ export default function RankingBoardPage() {
     router.replace(`${pathname}?year=${year}&gender=${gender}${state !== "NC" ? `&state=${state}` : ""}`, { scroll: false })
   }, [year, gender, state, pathname, router, searchParams])
 
-  // The Top 75 is North Carolina's men only; switching away lands on a class board.
+  // The Top lists are North Carolina's and South Carolina's men; switching away lands on a class board.
   useEffect(() => {
-    if (isTop75 && (state !== "NC" || gender !== "Male")) setYear("2027")
-  }, [isTop75, state, gender])
+    if (isTop75 && !hasTopList) setYear("2027")
+  }, [isTop75, hasTopList])
 
   const loadBoard = async (forceRefresh = false) => {
     const loadId = ++latestLoad.current
@@ -686,7 +689,7 @@ export default function RankingBoardPage() {
         ? await fetch("/api/admin/rankings/top-100", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ gender: "Male", order: athletes.slice(0, 75).map((a) => a.id) }),
+            body: JSON.stringify({ gender: "Male", state, order: athletes.slice(0, publicCap).map((a) => a.id) }),
           })
         : await fetch("/api/admin/rankings/save", {
             method: "POST",
@@ -733,12 +736,12 @@ export default function RankingBoardPage() {
     setStatus("")
     if (isTop75) {
       try {
-        // Publish refuses unsaved moves (above), so the screen's top 75 is the saved order.
-        const order = athletes.slice(0, 75).map((a) => a.id)
+        // Publish refuses unsaved moves (above), so the screen's top list is the saved order.
+        const order = athletes.slice(0, publicCap).map((a) => a.id)
         const res = await fetch("/api/admin/rankings/top-100", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ gender: "Male", order, publish: true }),
+          body: JSON.stringify({ gender: "Male", state, order, publish: true }),
         })
         const data = await res.json().catch(() => ({}))
         if (!res.ok) throw new Error(data.error || "Could not publish.")
@@ -916,9 +919,9 @@ export default function RankingBoardPage() {
                 </button>
               ))}
               {/* The Top 75 is its own board (2027 + 2028); a tab here so it is found from the boards (Matt, 30 Oct 2026). */}
-              {state === "NC" && gender === "Male" ? (
+              {hasTopList ? (
                 <button className={pill(isTop75)} onClick={() => setYear(TOP75)}>
-                  Top 75
+                  Top {top75Cap}
                 </button>
               ) : null}
             </div>
@@ -983,10 +986,10 @@ export default function RankingBoardPage() {
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className="text-2xl font-black tracking-tight">
-                {isTop75 ? "North Carolina · Men · Top 75 College Prospects (2027 + 2028)" : <>{stateLabel} · {gender === "Male" ? "Men" : "Women"} · Class of {year}</>}
+                {isTop75 ? `${stateLabel} · Men · Top ${top75Cap} College Prospects (2027 + 2028)` : <>{stateLabel} · {gender === "Male" ? "Men" : "Women"} · Class of {year}</>}
               </h1>
               <p className="text-sm text-slate-400">
-                {athletes.length} wrestlers · top {publicCap} {state === "NC" ? "go public" : "would be the board"} · the formula agrees with{" "}
+                {athletes.length} wrestlers · top {publicCap} {state === "NC" || isTop75 ? "go public" : "would be the board"} · the formula agrees with{" "}
                 <b className="text-white">{agreeing}</b> of your top {publicCap}
               </p>
             </div>
@@ -1042,7 +1045,7 @@ export default function RankingBoardPage() {
                                 {filter === "all" && !query && (athlete.final_rank ?? 0) === publicCap + 1 ? (
                                   <div className="my-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#d6b75d]">
                                     <span className="h-px flex-1 bg-[#d6b75d]/40" />
-                                    {state === "NC" ? `Public cut · below #${publicCap} stays private` : `Cut · #${publicCap}`}
+                                    {state === "NC" || isTop75 ? `Public cut · below #${publicCap} stays private` : `Cut · #${publicCap}`}
                                     <span className="h-px flex-1 bg-[#d6b75d]/40" />
                                   </div>
                                 ) : null}

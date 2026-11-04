@@ -109,6 +109,11 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
           ),
           year,
         ]
+  // Another state's own Top list, once published (South Carolina's Top 50, 4 Nov 2026).
+  const stateTop =
+    state !== "NC" && gender === "Male"
+      ? Boolean((await createAdminClient().from("top_100_rankings").select("athlete_id").eq("state", state).eq("gender", "Male").limit(1)).data?.length)
+      : false
   const basePath = gender === "Female" ? `/public-rankings/women/${year}` : `/public-rankings/${year}`
   // Coaches and admins get the My Recruits star on every card (Matt, 14 October 2026).
   const canStar = (viewer.isAdmin === true || viewer.isVerifiedCoach === true) && Boolean(userId)
@@ -165,7 +170,7 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
 
           <RankingsSummary athletes={ranking.athletes} />
 
-          <RankingsNav current={year} isAdmin={preview} gender={gender} state={state === "NC" ? undefined : state} stateYears={stateYears} />
+          <RankingsNav current={year} isAdmin={preview} gender={gender} state={state === "NC" ? undefined : state} stateYears={stateYears} stateTop={stateTop} />
           {preview && (state === "NC" ? !isPublicRankingsYearPublished(year, gender) : !ranking.publishedAt) ? (
             <p className="mx-auto mt-6 max-w-xl rounded-sm border border-[#D7B95A]/50 bg-[#D7B95A]/10 px-4 py-2 text-center text-xs font-semibold text-[#D7B95A]">
               Staff preview. This board is not released: only admins and its ranker can see this page.
