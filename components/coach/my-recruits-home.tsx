@@ -9,7 +9,7 @@
 import Link from "next/link"
 import { ArrowRight, ClipboardList, MessageSquare } from "lucide-react"
 import { MyRecruitsBoard } from "@/components/my-recruits-board"
-import { AlertsPanel, CompetingNextPanel, Super32Notice, TopUncommitted, type CoachHomeData } from "@/app/coach-home/coach-home-client"
+import { AlertsPanel, CompetingNextPanel, JustClaimedPanel, Super32Notice, TopUncommitted, type CoachHomeData } from "@/app/coach-home/coach-home-client"
 
 function MessagesToAnswer({ data }: { data: CoachHomeData }) {
   const waiting = data.messages.latest.filter((t) => t.yourTurn || t.unread).slice(0, 3)
@@ -69,6 +69,7 @@ export function MyRecruitsHome({ data, viewingAs = null }: { data: CoachHomeData
       <NeedsCard data={data} asUserId={viewingAs?.userId ?? null} />
       <AlertsPanel data={data} />
       <MessagesToAnswer data={data} />
+      <JustClaimedPanel wrestlers={data.justClaimed ?? []} />
     </div>
   ) : null
   const below = data ? (

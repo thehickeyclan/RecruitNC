@@ -3,6 +3,7 @@
  *
  * /dev/coach-preview?coach=coachgarland@virginia.edu
  * /dev/coach-preview?coach=...&gender=Female   the same coach on the women's side, without touching the account
+ * /dev/coach-preview?coach=...&page=my-recruits   My Recruits instead (the board itself loads in the browser and needs a session)
  *
  * Built the morning Virginia's head coach was greeted with Ohio University's logo and nobody
  * could say what he had seen, because seeing it took his password. This runs the same load the
@@ -15,11 +16,12 @@
 import { notFound } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import CoachHomeClient from "@/app/coach-home/coach-home-client"
+import { MyRecruitsHome } from "@/components/coach/my-recruits-home"
 import { loadCoachHome } from "@/app/coach-home/load-coach-home"
 
 export const dynamic = "force-dynamic"
 
-export default async function CoachPreviewPage({ searchParams }: { searchParams: Promise<{ coach?: string; gender?: string }> }) {
+export default async function CoachPreviewPage({ searchParams }: { searchParams: Promise<{ coach?: string; gender?: string; page?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound()
 
   const params = await searchParams
@@ -35,5 +37,6 @@ export default async function CoachPreviewPage({ searchParams }: { searchParams:
   if (!profile) return <p style={{ padding: 24 }}>No account for {coach}</p>
 
   const loaded = await loadCoachHome(admin, String(profile.user_id), params.gender ?? null)
+  if (params.page === "my-recruits") return <MyRecruitsHome data={loaded.access === "ok" ? loaded.data : null} />
   return <CoachHomeClient access={loaded.access} data={loaded.data} />
 }

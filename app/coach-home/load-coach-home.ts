@@ -18,6 +18,7 @@ import { groupRecruitsByEvent } from "@/lib/college-programs/competing-next"
 import { listUpcomingEventsForAthletes } from "@/lib/college-programs/schedule"
 import { loadCompetingAlerts } from "@/lib/college-programs/competing-alerts"
 import { loadInterested } from "@/lib/college-programs/interested-for-coach"
+import { loadJustClaimed } from "@/lib/college-programs/just-claimed-for-coach"
 import { mapSchoolIdFor } from "@/lib/college-programs/load"
 import type { CoachHomeData } from "./coach-home-client"
 import { inState } from "@/lib/recruiting/states"
@@ -153,6 +154,8 @@ export async function loadCoachHome(
    */
   const mapSchoolId = school?.name ? mapSchoolIdFor(school.name) : null
   const interested = maySeeSchedules && mapSchoolId ? (await loadInterested(admin, mapSchoolId, viewGender, onBoard, fitViewer).catch(() => [])).slice(0, 12) : []
+  // Families who just claimed, any state, with the same two fit signals (Matt, 5 Nov 2026). Approved coaches only; never fails the page.
+  const justClaimed = maySeeSchedules ? await loadJustClaimed(admin, mapSchoolId, viewGender, onBoard, fitViewer).catch(() => []) : []
   const recruitMap = new Map(recruits.map((r) => [r.athleteId, { id: r.athleteId, name: r.name, classYear: r.classYear, weight: r.weight, highSchool: r.highSchool }]))
   // Alerts: events just added and this weekend's, for the same approved coaches (Matt, 20 Oct 2026).
   const alerts = maySeeSchedules ? await loadCompetingAlerts(admin, recruitMap).catch(() => ({ added: [], weekend: [] })) : { added: [], weekend: [] }
@@ -210,6 +213,7 @@ export async function loadCoachHome(
     competingNext,
     alerts,
     interested,
+    justClaimed,
     suggested,
     activity: await loadStaffActivity(admin, userId, 6).catch(() => []),
     // Coach-confirmed needs, counted for the card that leads to them. Never fails the page.
