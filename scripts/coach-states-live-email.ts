@@ -36,7 +36,6 @@ const flag = (k: string) => argv.includes(`--${k}`)
 const SITE = "https://www.recruitwrestlers.com"
 const BRAND = "RecruitWrestlers"
 const FOR_COACHES = `${SITE}/for-coaches`
-const SIGNUP = `${SITE}/auth/signup?type=college-coach`
 // Matt's line (5 Nov 2026), with "wrestling" so the coach knows what it is before opening it.
 const SUBJECT = "Revolutionizing High School Wrestling Recruiting"
 type Audience = "members" | "invite"
@@ -65,11 +64,9 @@ function renderLetter(audience: Audience, coach: string, counts: Counts, momentu
   const n = (v: number, one: string, many: string) => `${v.toLocaleString("en-US")} ${v === 1 ? one : many}`
   const items = STATES.map((s) => ({
     text: `${s.name}: ${[n(counts[s.code].aa, "All-American", "All-Americans"), n(counts[s.code].champs, "state champion", "state champions"), n(counts[s.code].placers, "state placer", "state placers")].join(", ")}${s.ranked ? ", plus state rankings" : ""}`,
-    // An invited coach has no account: the link signs him up and lands him on that state's wrestlers
-    // (the coach sign-up signs in at once and follows returnTo). A member goes straight there.
-    href: audience === "invite"
-      ? `${SIGNUP}&returnTo=${encodeURIComponent(`/prospects/all?state=${s.code}`)}`
-      : `${SITE}/prospects/all?state=${s.code}`,
+    // An invited coach goes to the sales page first (Matt, 5 Nov 2026: every link goes there), whose
+    // "Create your free account" lands him on that state's wrestlers. A member goes straight there.
+    href: audience === "invite" ? `${FOR_COACHES}?state=${s.code}` : `${SITE}/prospects/all?state=${s.code}`,
   }))
   // Matt, 5 Nov 2026: programs exact, coaches "more than" a round ten.
   const programs = `${momentum.programs} college programs and more than ${Math.floor(momentum.coaches / 10) * 10} coaches are already on ${BRAND}`
@@ -111,15 +108,13 @@ ${body}
     ["Messages", "write to any wrestler, even when there is no cell number on file. Parents are on every conversation, and if the family hasn't joined yet, your message waits on the profile and you're told when they claim it"],
     ["My Recruits", "one board for your whole staff, plus Compare and Recently Claimed"],
   ] as const
-  const signup = `Create your coach account here: ${SIGNUP.replace(/^https:\/\//, "")}. Access is instant.`
-  const tail = [`The full list is at ${FOR_COACHES.replace(/^https:\/\//, "")}.`]
+  const tail = [`See everything included and create your free coach account at ${FOR_COACHES.replace(/^https:\/\//, "")}. Access is instant.`]
   const html = page(`${paras.map(p).join("\n")}
 ${stateList}
 ${mid.map(p).join("\n")}
 ${ul(value.map(([k, v]) => `<strong>${esc(k)}:</strong> ${esc(v)}`))}
-<p style="margin:0 0 14px;">Create your coach account here: <a href="${SIGNUP}" style="color:#1d4ed8;">${esc(SIGNUP.replace(/^https:\/\//, ""))}</a>. Access is instant.</p>
-<p style="margin:0 0 14px;">The full list is at <a href="${FOR_COACHES}" style="color:#1d4ed8;">${esc(FOR_COACHES.replace(/^https:\/\//, ""))}</a>.</p>`)
-  const text = [...paras, stateText, ...mid, value.map(([k, v]) => `- ${k}: ${v}`).join("\n"), signup, ...tail, sig.join("\n"), `Unsubscribe: ${unsubscribeUrl}`].join("\n\n")
+<p style="margin:0 0 14px;">See everything included and create your free coach account at <a href="${FOR_COACHES}" style="color:#1d4ed8;">${esc(FOR_COACHES.replace(/^https:\/\//, ""))}</a>. Access is instant.</p>`)
+  const text = [...paras, stateText, ...mid, value.map(([k, v]) => `- ${k}: ${v}`).join("\n"), ...tail, sig.join("\n"), `Unsubscribe: ${unsubscribeUrl}`].join("\n\n")
   return { subject, html, text }
 }
 
