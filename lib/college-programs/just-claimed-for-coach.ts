@@ -40,15 +40,8 @@ async function claimedSince(admin: SupabaseClient, since: string): Promise<Map<s
   return at
 }
 
-/** The recently claimed wrestlers in this coach's view, fits first, then newest. */
-export async function loadJustClaimed(
-  admin: SupabaseClient,
-  schoolId: string | null,
-  gender: "Male" | "Female" | null,
-  onBoard: Set<string>,
-  fitViewer: Awaited<ReturnType<typeof resolveFitViewer>> | null,
-  limit = 12,
-) {
+/** The window's claims as rows, before fit and credentials: the menu count needs only these. */
+async function claimedRows(admin: SupabaseClient, gender: "Male" | "Female" | null) {
   const at = await claimedSince(admin, new Date(Date.now() - WINDOW_DAYS * 864e5).toISOString())
   if (!at.size) return []
   const { data } = await admin
@@ -71,6 +64,19 @@ export async function loadJustClaimed(
       state: /^[A-Z]{2}$/.test(String(a.state ?? "")) && a.state !== "XX" ? String(a.state) : null,
       at: at.get(String(a.id))!,
     }))
+  return rows
+}
+
+/** The recently claimed wrestlers in this coach's view, fits first, then newest. */
+export async function loadJustClaimed(
+  admin: SupabaseClient,
+  schoolId: string | null,
+  gender: "Male" | "Female" | null,
+  onBoard: Set<string>,
+  fitViewer: Awaited<ReturnType<typeof resolveFitViewer>> | null,
+  limit = 12,
+) {
+  const rows = await claimedRows(admin, gender)
   const [fitted, facts] = await Promise.all([
     withFitSignals(admin, rows, schoolId, gender, onBoard, fitViewer),
     // The tile's credential (Matt, 5 Nov 2026), from the same tables the directory's honour pills read, every state's included.
@@ -93,4 +99,21 @@ function honorOf(facts: Parameters<typeof highestAchievement>[0]): { honor: stri
   if (top.level === "all-american") return { honor: ["All-American", state].filter(Boolean).join(" · "), honorLevel: top.level }
   if (top.level === "dnq") return { honor: null, honorLevel: top.level }
   return { honor: top.level === "state-champion" ? "State Champ" : top.badge, honorLevel: top.level }
+}
+
+/** New since the coach last opened /recently-claimed: the menu's count. */
+export async function newClaimedCount(admin: SupabaseClient, gender: "Male" | "Female" | null, seenAt: string | null): Promise<number> {
+  const rows = await claimedRows(admin, gender)
+  return rows.filter((r) => !seenAt || r.at > seenAt).length
+}
+
+/** When the coach last opened the page, and marking it opened (clears the count). */
+export function claimedSeenAt(user: { user_metadata?: Record<string, unknown> | null } | null): string | null {
+  const v = user?.user_metadata?.claimed_seen_at
+  return typeof v === "string" ? v : null
+}
+
+export async function markClaimedSeen(admin: SupabaseClient, userId: string): Promise<void> {
+  const { data } = await admin.auth.admin.getUserById(userId)
+  await admin.auth.admin.updateUserById(userId, { user_metadata: { ...(data?.user?.user_metadata ?? {}), claimed_seen_at: new Date().toISOString() } })
 }

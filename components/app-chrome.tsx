@@ -31,7 +31,7 @@ const SHELL_HINT_KEY = "recruiting-shell"
  * everywhere; this is only the staff preview.
  */
 // "/rankings" too: on RecruitWrestlers /public-rankings 308s there, and the coach view lost its side menu.
-const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/college-commitments", "/view-profile", "/inbox", "/public-rankings", "/rankings", "/compare", "/perfect-recruit", "/interested", "/scouting-report", "/coach-reports"]
+const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/college-commitments", "/view-profile", "/inbox", "/public-rankings", "/rankings", "/compare", "/perfect-recruit", "/interested", "/recently-claimed", "/scouting-report", "/coach-reports"]
 /**
  * Pages with no Data Dawg launcher whoever is looking: the inbox (it covers the send button) and
  * the pages that exist only for coaches.
@@ -65,6 +65,7 @@ const NO_CHAT_PATHS = [
   "/my-recruits",
   "/perfect-recruit",
   "/interested",
+  "/recently-claimed",
   // Sign-up is where a college coach first meets the site, before we know he is one: the coach
   // step is a choice made on /auth/signup itself, so the whole page goes without (Matt, 13 Oct 2026).
   "/auth/signup",

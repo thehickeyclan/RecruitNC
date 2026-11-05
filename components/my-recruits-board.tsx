@@ -45,6 +45,7 @@ export function MyRecruitsBoard({
   initialData = null,
   needsYou = null,
   below = null,
+  banner = null,
   asUserId = null,
   identity = null,
 }: {
@@ -53,6 +54,8 @@ export function MyRecruitsBoard({
   initialData?: Payload | null
   needsYou?: React.ReactNode
   below?: React.ReactNode
+  /** What is new on the platform, above everything else on the board. */
+  banner?: React.ReactNode
   /** An admin viewing one coach's board (?as=): that coach's data, read-only. */
   asUserId?: string | null
 }) {
@@ -263,6 +266,7 @@ export function MyRecruitsBoard({
             </div>
           </div>
 
+          {banner}
           <CoachMessagingIntro className="mt-6" />
 
           {error ? (
