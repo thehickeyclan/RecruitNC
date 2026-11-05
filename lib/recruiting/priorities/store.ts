@@ -73,8 +73,21 @@ export async function loadFamilySets(admin: SupabaseClient, athleteId: string): 
   return { parent, athlete }
 }
 
+/** Postgres unique violation: another save made the same version first. */
+const DUPLICATE = "23505"
+
 /** The set to write to: the draft if there is one, else a new version copied from the completed one. */
 async function writableSet(admin: SupabaseClient, athleteId: string, respondent: Respondent, userId: string): Promise<string> {
+  try {
+    return await writableSetOnce(admin, athleteId, respondent, userId)
+  } catch (e) {
+    // Two saves at once (two tabs, say) both tried to start the same version: use the one that won.
+    if ((e as { code?: string } | null)?.code !== DUPLICATE) throw e
+    return writableSetOnce(admin, athleteId, respondent, userId)
+  }
+}
+
+async function writableSetOnce(admin: SupabaseClient, athleteId: string, respondent: Respondent, userId: string): Promise<string> {
   const latest = await latestSet(admin, athleteId, respondent)
   if (latest && !latest.completed_at) {
     await admin.from("priority_answer_sets").update({ edited_by: userId }).eq("id", latest.id)

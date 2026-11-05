@@ -17,7 +17,6 @@ const HONOR_TONE: Record<string, string> = {
   "state-placer": "bg-sky-400/15 text-sky-200 ring-sky-400/30",
   "state-qualifier": "bg-white/10 text-white/70 ring-white/20",
 }
-const ROOM_TONE = { likely: "bg-emerald-400/15 text-emerald-300 ring-emerald-400/30", some: "bg-sky-400/15 text-sky-200 ring-sky-400/30", crowded: "bg-amber-400/15 text-amber-200 ring-amber-400/30" } as const
 const chip = (on: boolean) => `rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${on ? "bg-[#D3B574] text-[#0A1628] ring-transparent" : "text-white/70 ring-white/15 hover:ring-white/35"}`
 
 // Calendar days in Eastern time: a claim at 3 pm yesterday is "yesterday", not "today" because 24 hours have not passed.
@@ -44,11 +43,7 @@ export function ClaimedTile({ w, fresh = false }: { w: JustClaimedCard; fresh?: 
         {w.honor ? <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-[11px] font-black ring-1 ${HONOR_TONE[w.honorLevel] ?? HONOR_TONE["state-qualifier"]}`}>{w.honor}</span> : null}
         <span className="mt-1 flex flex-wrap items-center gap-1.5">
           <span className="text-[11px] font-bold text-emerald-300">Claimed {ago(w.at)}</span>
-          {w.room ? (
-            <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ${ROOM_TONE[w.room.need]}`} title={`${w.room.staying} on your roster at ${w.room.weight} in fall ${w.room.fall}`}>
-              {w.room.weight}: {w.room.label}
-            </span>
-          ) : null}
+          {/* No roster-need chip on a just-claimed card (Matt, 5 Nov 2026). */}
         </span>
         {w.fit ? <FitBadge flag={w.fit} className="mt-1" /> : null}
       </span>

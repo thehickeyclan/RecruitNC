@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { budgetBand, cleanAnswer, distanceFromMiles, prefillFor } from "./answers"
+import { budgetBand, cleanAnswer, distanceFromMiles, prefillFor, withSiblingPrefill } from "./answers"
 import { QUESTIONS, defaultSharing, questionsFor, sharingLine, showA9, wantsBsnFollowUp } from "./questions"
 import { jointInputs, jointPlacement, ownPlacement, ownerOnlyInputs, reactionSeenBy, reactionSharing, viewFor, type Answer, type AnswerSet, type FamilySets } from "./sharing"
 
@@ -178,5 +178,19 @@ describe("reactions", () => {
   it("other reasons are Shared", () => {
     expect(reactionSharing("not_for_us", "too_far", "constraint")).toBe("shared")
     expect(reactionSharing("closer_look", null, "constraint")).toBe("shared")
+  })
+})
+
+describe("two children", () => {
+  it("money, ZIP and benefits carry over from the other child; distance and divisions do not", () => {
+    const p = withSiblingPrefill({}, { firstName: "Gavin", answers: [
+      { key: "budget", value: "20_35" }, { key: "budget_kind", value: "limit" }, { key: "home_zip", value: "27513" },
+      { key: "benefits", value: ["gi_bill"] }, { key: "distance", value: "5h" }, { key: "divisions", value: { D1: "not" } },
+    ] })
+    expect(Object.keys(p).sort()).toEqual(["benefits", "budget", "budget_kind", "home_zip"])
+    expect(p.budget.from).toBe("your answers for Gavin")
+  })
+  it("a 'not sure' is not carried over", () => {
+    expect(withSiblingPrefill({}, { firstName: "Gavin", answers: [{ key: "budget", value: null, notSure: true }] })).toEqual({})
   })
 })

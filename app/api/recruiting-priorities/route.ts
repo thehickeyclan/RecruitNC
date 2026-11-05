@@ -1,13 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { seniorClassYear } from "@/lib/class-years"
+import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { cleanProfile, EMPTY_PROFILE } from "@/lib/recruiting/family-fit"
 import { gradeForClass } from "@/lib/recruiting/learn/timeline"
-import { cleanAnswer, prefillFor } from "@/lib/recruiting/priorities/answers"
+import { cleanAnswer, prefillFor, withSiblingPrefill } from "@/lib/recruiting/priorities/answers"
 import { questionsFor, sharingLine, storableKeys, type SharingClass } from "@/lib/recruiting/priorities/questions"
 import { viewFor } from "@/lib/recruiting/priorities/sharing"
 import { completeSet, loadFamilySets, respondentFor, saveAnswer, setSharing, TABLE_MISSING } from "@/lib/recruiting/priorities/store"
@@ -26,11 +26,17 @@ async function caller(athleteIdRaw: unknown) {
   const admin = createAdminClient()
   const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
   if (!userId || !hasPortalAccess(viewer)) return null
-  const family = await familyAthleteIds(admin, userId)
-  const athleteId = typeof athleteIdRaw === "string" && athleteIdRaw ? athleteIdRaw : family[0]
-  if (!athleteId || !family.includes(athleteId)) return null
+  // The same wrestlers, in the same order, as the Command Center home: still in school, oldest first.
+  const ids = await familyAthleteIds(admin, userId)
+  const { data: rows } = ids.length ? await admin.from("athletes").select('id, "firstName", name, graduationyear').in("id", ids).order("graduationyear", { ascending: true }) : { data: [] }
+  const graduated = mostRecentGraduatedClassYear()
+  const wrestlers = (rows ?? [])
+    .filter((a) => !a.graduationyear || Number(a.graduationyear) > graduated)
+    .map((a) => ({ id: String(a.id), firstName: String(a.firstName ?? "").trim() || String(a.name ?? "").split(" ")[0] || "Your wrestler" }))
+  const athleteId = typeof athleteIdRaw === "string" && athleteIdRaw ? athleteIdRaw : wrestlers[0]?.id
+  if (!athleteId || !wrestlers.some((w) => w.id === athleteId)) return null
   const respondent = await respondentFor(admin, userId, athleteId)
-  return respondent ? { admin, userId, athleteId, respondent } : null
+  return respondent ? { admin, userId, athleteId, respondent, wrestlers } : null
 }
 
 const missing = (e: unknown) => (e as { code?: string } | null)?.code === TABLE_MISSING
@@ -52,18 +58,31 @@ export async function GET(req: NextRequest) {
     const weight = Number(String(last?.weight ?? "").replace(/[^0-9]/g, "")) || null
     const firstName = String(athlete?.firstName ?? "").trim() || String(athlete?.name ?? "").split(" ")[0] || null
     const grade = gradeForClass(Number(athlete?.graduationyear) || null, seniorClassYear())
+    // A parent of two answers money, ZIP and benefits once: the other child's set prefills them.
+    let sibling: { firstName: string; answers: Array<{ key: string; value: unknown; notSure?: boolean }> } | null = null
+    if (c.respondent === "parent") {
+      for (const w of c.wrestlers.filter((x) => x.id !== c.athleteId)) {
+        if ((await respondentFor(c.admin, c.userId, w.id)) !== "parent") continue
+        const theirs = (await loadFamilySets(c.admin, w.id)).parent
+        if (theirs?.answers.length) {
+          sibling = { firstName: w.firstName, answers: theirs.answers }
+          break
+        }
+      }
+    }
     const fit = account?.user?.user_metadata?.family_fit ? cleanProfile(account.user.user_metadata.family_fit) : EMPTY_PROFILE
     return NextResponse.json({
       available: true,
       respondent: c.respondent,
       athleteId: c.athleteId,
+      wrestlers: c.wrestlers,
       firstName,
       weight,
       questions: questionsFor(c.respondent, { grade, answers }).map((q) => ({ ...q, sharingLine: sharingLine(q.sharing, c.respondent, firstName) })),
       own: { version: own?.version ?? 0, completedAt: own?.completedAt ?? null, answers: view.own },
       // Whether the other side has finished is not an answer; what they answered privately never shows.
       other: { completed: Boolean((c.respondent === "parent" ? sets.athlete : sets.parent)?.completedAt), answers: view.other },
-      prefill: prefillFor(c.respondent, fit, { academicInterest: (athlete?.academic_interest as string | null) ?? null }),
+      prefill: withSiblingPrefill(prefillFor(c.respondent, fit, { academicInterest: (athlete?.academic_interest as string | null) ?? null }), sibling),
     })
   } catch (e) {
     if (missing(e)) return NextResponse.json({ available: false })
