@@ -3,14 +3,14 @@
  * page is one "Start here" card with three moves, always in this order, each ticked once done.
  *
  *   1. Finish the profile: coaches read it first, and it was 20% for Mandi Nelsen's son.
- *   2. Save five colleges from the shortlist.
+ *   2. Save five colleges, from the shortlist and then the map (the shortlist is often fewer than five).
  *   3. Add the next event, so coaches who follow the wrestler can come watch.
  */
 import { FIRST_LIST_GOAL } from "@/lib/recruiting/first-list-goal"
 
 export type FirstDayMove = { key: "profile" | "colleges" | "event"; label: string; why: string; href: string; done: boolean }
 
-export function firstDayMoves(input: { firstName: string; athleteId: string; profilePercent: number; profileTodo: string | null; saved: number; upcomingEvents: number }): FirstDayMove[] {
+export function firstDayMoves(input: { firstName: string; athleteId: string; profilePercent: number; profileTodo: string | null; saved: number; upcomingEvents: number; suggested: number }): FirstDayMove[] {
   const name = input.firstName
   const saved = Math.min(input.saved, FIRST_LIST_GOAL)
   return [
@@ -24,8 +24,8 @@ export function firstDayMoves(input: { firstName: string; athleteId: string; pro
     {
       key: "colleges",
       label: `Save ${FIRST_LIST_GOAL} colleges`,
-      why: `${saved} of ${FIRST_LIST_GOAL} saved. Start with the shortlist below.`,
-      href: "#cc-starter",
+      why: `${saved} of ${FIRST_LIST_GOAL} saved. ${input.suggested >= FIRST_LIST_GOAL ? "Start with the shortlist below." : input.suggested > 0 ? "Start with the shortlist below, then the map." : "Find them on the college map."}`,
+      href: input.suggested > 0 ? "#cc-starter" : "/recruiting/college-map",
       done: input.saved >= FIRST_LIST_GOAL,
     },
     {

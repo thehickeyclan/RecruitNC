@@ -269,6 +269,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                   profileTodo: w?.profileTodo?.edit ?? null,
                   saved: schools.length,
                   upcomingEvents: w ? w.events.filter((e) => (e.endDate ?? e.startDate) >= todayET).length : 0,
+                  suggested: starter.length,
                 }).map((m, i) => (
                   <li key={m.key}>
                     <a href={m.href} className="flex h-full items-start gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3 hover:border-[#D3B574]">

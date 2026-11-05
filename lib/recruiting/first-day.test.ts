@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { firstDayMoves } from "./first-day"
 
-const base = { firstName: "Tyde", athleteId: "a1", profilePercent: 20, profileTodo: "academics", saved: 0, upcomingEvents: 0 }
+const base = { firstName: "Tyde", athleteId: "a1", profilePercent: 20, profileTodo: "academics", saved: 0, upcomingEvents: 0, suggested: 5 }
 
 describe("firstDayMoves", () => {
   it("is always profile, colleges, event, in that order", () => {
@@ -21,6 +21,11 @@ describe("firstDayMoves", () => {
     expect(firstDayMoves({ ...base, saved: 3 })[1]).toMatchObject({ done: false })
     expect(firstDayMoves({ ...base, saved: 7 })[1]).toMatchObject({ done: true })
     expect(firstDayMoves({ ...base, saved: 7 })[1].why).toContain("5 of 5")
+  })
+
+  it("sends the family to the map when the shortlist is short or empty", () => {
+    expect(firstDayMoves({ ...base, suggested: 3 })[1].why).toContain("then the map")
+    expect(firstDayMoves({ ...base, suggested: 0 })[1]).toMatchObject({ href: "/recruiting/college-map" })
   })
 
   it("ticks each move once it is done", () => {

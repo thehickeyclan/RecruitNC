@@ -8,7 +8,7 @@ import { FIRST_LIST_GOAL, FirstListProgress } from "@/components/portal/first-li
 
 const LEVEL_COLOR: Record<string, string> = { D1: "#60a5fa", D2: "#34d399", D3: "#fbbf24", NAIA: "#f472b6", NJCAA: "#a78bfa" }
 
-/** Step 1's starter set: a few colleges at every level to start from, each one tap to save. */
+/** Step 1's starter set: up to one earned college per level, each one tap to save. Often fewer than five. */
 export function StarterSet({
   bare = false,
   schools,
@@ -37,9 +37,11 @@ export function StarterSet({
   return (
     <section className={bare ? "mt-5 scroll-mt-24" : "mt-4 scroll-mt-24 rounded-xl border border-white/10 bg-[#0f1c2e] p-5"} id="cc-starter-set" aria-labelledby="cc-starter">
       <h2 id="cc-starter" className="text-base font-black">
-        {schools.length} colleges to start with
+        {schools.length === 1 ? "1 college" : `${schools.length} colleges`} to start with
       </h2>
-      <p className="text-xs text-white/50">One at every level, picked for {firstName}&apos;s weight, class, grades and state. Tap + to save.</p>
+      <p className="text-xs text-white/50">
+        The best fit at each level we can back up, picked for {firstName}&apos;s results, weight, class, grades and state. Tap + to save.
+      </p>
       {savedCount < FIRST_LIST_GOAL ? <FirstListProgress count={savedCount + saved.size} firstName={firstName} className="mt-3" /> : null}
       <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {schools.map((s) => (
