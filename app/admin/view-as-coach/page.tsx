@@ -42,13 +42,16 @@ export default async function ViewAsCoachPage() {
   }
   const programs = [...byProgram.values()].sort((a, b) => a.program.localeCompare(b.program))
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 text-white">
+    <main className="admin-dark-page min-h-screen bg-[#060f1f] px-4 py-8 text-white">
+      {/* Its own dark ground, like /admin/business: the admin shell is white on NC United, and white text vanished on it. */}
+      <div className="mx-auto max-w-4xl">
       <h1 className="text-3xl font-black">View as coach</h1>
       <p className="mt-1 text-sm text-white/60">
         Pick a program, then a coach: My Recruits opens exactly as that coach sees it, read-only. {programs.length} programs,{" "}
         {real.length} coaches.
       </p>
       <ViewAsCoachList programs={programs} />
+      </div>
     </main>
   )
 }
