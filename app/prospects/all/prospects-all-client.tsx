@@ -846,8 +846,9 @@ export default function ProspectsAllClient({
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0">
           <Image
-            src="/hero-banner-nchsaa-2026-arena.png"
-            alt="NCHSAA Wrestling Championship arena"
+            // RecruitWrestlers is national: no state association's arena behind it (Matt, 5 Nov 2026).
+            src={onRw ? "/hero-fargo-arena.jpg" : "/hero-banner-nchsaa-2026-arena.png"}
+            alt={onRw ? "Fargo national championships arena" : "NCHSAA Wrestling Championship arena"}
             fill
             className="object-cover"
             priority
