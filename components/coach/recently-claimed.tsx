@@ -103,6 +103,8 @@ export function RecentlyClaimedList({ wrestlers, seenAt, hasStandard }: { wrestl
   const [year, setYear] = useState<number | null>(null)
   const [honored, setHonored] = useState(false)
   const [fitOnly, setFitOnly] = useState(false)
+  // Newest claim first by default (Matt, 5 Nov 2026): the page is for who just arrived.
+  const [newestFirst, setNewestFirst] = useState(true)
   const states = useMemo(() => {
     const n = new Map<string, number>()
     for (const w of wrestlers) if (w.state) n.set(w.state, (n.get(w.state) ?? 0) + 1)
@@ -116,6 +118,8 @@ export function RecentlyClaimedList({ wrestlers, seenAt, hasStandard }: { wrestl
       (!honored || w.honorLevel === "all-american" || w.honorLevel === "state-champion" || w.honorLevel === "state-placer") &&
       (!fitOnly || w.fit?.verdict === "meets"),
   )
+  const fitRank = (w: JustClaimedCard) => (w.fit?.verdict === "meets" ? 0 : w.fit?.verdict === "possible" ? 1 : w.fit ? 3 : 2)
+  const ordered = [...shown].sort((a, b) => (newestFirst ? 0 : fitRank(a) - fitRank(b)) || b.at.localeCompare(a.at))
   return (
     <div className="mx-auto max-w-5xl text-white">
       <h1 className="text-2xl font-black sm:text-3xl">Recently claimed</h1>
@@ -152,6 +156,13 @@ export function RecentlyClaimedList({ wrestlers, seenAt, hasStandard }: { wrestl
                 Meets your Perfect Recruit
               </button>
             ) : null}
+            <span className="mx-1 h-5 w-px bg-white/15" aria-hidden />
+            <button type="button" className={chip(newestFirst)} onClick={() => setNewestFirst(true)}>
+              Newest first
+            </button>
+            <button type="button" className={chip(!newestFirst)} onClick={() => setNewestFirst(false)}>
+              Best fit first
+            </button>
           </div>
         </div>
       ) : null}
@@ -162,7 +173,7 @@ export function RecentlyClaimedList({ wrestlers, seenAt, hasStandard }: { wrestl
         </div>
       ) : (
         <ul className="mt-4 grid gap-2 md:grid-cols-2">
-          {shown.map((w) => (
+          {ordered.map((w) => (
             <li key={w.id}>
               <ClaimedTile w={w} fresh={!seenAt || w.at > seenAt} />
             </li>

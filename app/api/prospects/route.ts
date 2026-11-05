@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { isDirectoryState, visibleStates } from "@/lib/recruiting/brand"
+import { isDirectoryState, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
 import { previewStatesForUser } from "@/lib/recruiting/state-preview"
 import { HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
@@ -36,15 +36,21 @@ export async function GET(request: NextRequest) {
     const onRw = stagedBrandForHost(request.headers.get("host")) === "national"
     let isAdmin = false
     let preview: string[] = []
+    /*
+     * A college coach recruits nationally, so on NC United too they get every live state, as on
+     * RecruitWrestlers (Matt, 5 Nov 2026). Families on NC United stay on North Carolina.
+     */
+    let coachWide = false
     if (state !== HOME_STATE) {
       const { data: auth } = await (await createClient()).auth.getUser()
       if (auth.user) {
         const { data: me } = await supabase.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
         isAdmin = me?.is_admin === true || me?.role === "admin"
+        coachWide = usesRecruitingShell(me)
         /* A coach invited to look at a state before it opens — see lib/recruiting/state-preview.ts. */
         if (!isAdmin) preview = await previewStatesForUser(supabase, auth.user.id)
       }
-      if (!allStates && !isDirectoryState(state, isAdmin, onRw, preview)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
+      if (!allStates && !isDirectoryState(state, isAdmin, onRw || coachWide, preview)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
     }
 
     const nameQuery = String(searchParams.get("q") ?? "").trim().slice(0, 60)
@@ -56,7 +62,7 @@ export async function GET(request: NextRequest) {
      * An admin's "All states" is the live ones, as families see it (2 Nov 2026): it used to carry
      * every unlaunched state as well, doubling the list; each of those is still one pick away.
      */
-    const withStates = allStates ? visibleStates(false, onRw, preview).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
+    const withStates = allStates ? visibleStates(false, onRw || coachWide, preview).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
     const { prospects, hasMore } = await fetchProspectDirectoryPage(supabase, {
       graduationYear,
       gender,

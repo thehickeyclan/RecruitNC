@@ -42,7 +42,7 @@ export default async function RecentlyClaimedPage() {
     admin.auth.admin.getUserById(subjectId).then((r) => r.data?.user ?? null, () => null),
   ])
   const onBoard = new Set((board?.recruits ?? []).map((r) => r.athleteId))
-  const wrestlers = await loadJustClaimed(admin, scope.schoolId, scope.gender, onBoard, fitViewer, 200).catch(() => [])
+  const wrestlers = await loadJustClaimed(admin, scope.schoolId, scope.gender, onBoard, fitViewer, 200, "newest").catch(() => [])
   const seenAt = claimedSeenAt(account)
   // Looking as someone else must not clear that coach's count.
   if (!subject?.readOnly) await markClaimedSeen(admin, user.id).catch(() => {})
