@@ -361,7 +361,7 @@ export default async function RecruitWrestlersHome() {
             <a href="/prospects/all" className="hover:text-white">Athletes</a>
             <a href="/rankings" className="hover:text-white">Rankings</a>
             <a href="/recruiting/college-map" className="hover:text-white">Colleges</a>
-            <a href="/for-coaches" className="hover:text-white">For coaches</a>
+            <a href="/for-coaches" className="hover:text-white">College Coaches</a>
             <a href="/privacy" className="hover:text-white">Privacy</a>
             <a href="/terms" className="hover:text-white">Terms</a>
             <a href="mailto:info@recruitwrestlers.com" className="hover:text-white">info@recruitwrestlers.com</a>
