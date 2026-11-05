@@ -1,8 +1,10 @@
 /**
  * "Georgia, Tennessee, South Carolina and Virginia are open" to every signed-up college coach, men's
  * and women's (Matt, 5 Nov 2026). A letter from Matt, the format that reaches the inbox: no images or
- * buttons, a text twin, and no questions or reply prompts (coach emails ask nothing). Counts are
- * read at send time: current classes (2027-2030) per state.
+ * buttons, a text twin, and no questions or reply prompts (coach emails ask nothing). Each state is
+ * listed by its All-Americans, state champions and state placers (Matt, 5 Nov 2026), counted at send
+ * time over current classes (2027-2030) with the directory's Honors filter rules, so each number
+ * matches what the coach sees on that state's page.
  *
  * Dry run by default: writes every coach's email as HTML to --out <dir> and a list, and sends
  * nothing. Sending is explicit and only after Matt approves the preview:
@@ -37,17 +39,18 @@ const STATES = [
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
-type Counts = Record<string, number>
+type Honors = { aa: number; champs: number; placers: number }
+type Counts = Record<string, Honors>
 
 function renderLetter(coach: string, counts: Counts, unsubscribeUrl: string) {
-  const total = STATES.reduce((n, s) => n + (counts[s.code] ?? 0), 0)
   const subject = "Georgia, Tennessee, South Carolina and Virginia are open"
   const paras = [
     `${coach},`,
-    `Four more states are open to college coaches on ${BRAND}: Georgia, Tennessee, South Carolina and Virginia. That's ${total.toLocaleString("en-US")} more wrestlers in the classes of 2027 to 2030, alongside North Carolina.`,
+    `Four more states are open to college coaches on ${BRAND}: Georgia, Tennessee, South Carolina and Virginia, alongside North Carolina. In the classes of 2027 to 2030:`,
   ]
+  const n = (v: number, one: string, many: string) => `${v.toLocaleString("en-US")} ${v === 1 ? one : many}`
   const items = STATES.map((s) => ({
-    text: `${s.name}: ${(counts[s.code] ?? 0).toLocaleString("en-US")} wrestlers${s.ranked ? ", with state rankings" : ""}`,
+    text: `${s.name}: ${[n(counts[s.code].aa, "All-American", "All-Americans"), n(counts[s.code].champs, "state champion", "state champions"), n(counts[s.code].placers, "state placer", "state placers")].join(", ")}${s.ranked ? ", plus state rankings" : ""}`,
     href: `${SITE}/prospects/all?state=${s.code}`,
   }))
   const after = [
@@ -73,6 +76,7 @@ ${after.map(p).join("\n")}
 async function main() {
   const { classifyViewer } = await import("../lib/viewer-role")
   const { coachSalutation } = await import("../lib/coach-welcome-email")
+  const { loadAchievements, isAllAmerican } = await import("../lib/prospect-achievements")
   const { filterUnsubscribed, unsubscribeHeaders, unsubscribeUrl } = await import("../lib/email-unsubscribe")
 
   const out = arg("out")
@@ -82,9 +86,24 @@ async function main() {
 
   const counts: Counts = {}
   for (const s of STATES) {
-    const { count, error } = await admin.from("athletes").select("id", { count: "exact", head: true }).eq("state", s.code).gte("graduationyear", 2027).lte("graduationyear", 2030)
-    if (error) throw new Error(`count ${s.code}: ${error.message}`)
-    counts[s.code] = count ?? 0
+    const athletes: Array<{ id: string; name: string | null }> = []
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await admin.from("athletes").select("id, name").eq("state", s.code).gte("graduationyear", 2027).lte("graduationyear", 2030).order("id").range(from, from + 999)
+      if (error) throw new Error(`athletes ${s.code}: ${error.message}`)
+      athletes.push(...(data ?? []))
+      if (!data || data.length < 1000) break
+    }
+    const facts = await loadAchievements(admin as never, athletes)
+    const h: Honors = { aa: 0, champs: 0, placers: 0 }
+    for (const a of athletes) {
+      const f = facts.get(a.id) ?? {}
+      const place = Number(f.bestStatePlace)
+      // The directory's Honors filter (app/prospects/all/prospects-all-client.tsx): a champion is also a placer.
+      if (isAllAmerican(f)) h.aa++
+      if (place === 1) h.champs++
+      if (place >= 1 && place <= 6) h.placers++
+    }
+    counts[s.code] = h
   }
   console.log("Counts:", counts)
 
