@@ -44,6 +44,7 @@ import { journeyFor, remindersOn } from "./journey-data"
 import { starterSet } from "./starter-set"
 import { WhatsChanged } from "@/components/portal/whats-changed"
 import { firstDayMoves } from "@/lib/recruiting/first-day"
+import { hasAnsweredPriorities } from "@/lib/recruiting/priorities/store"
 import { loadWhatsChanged } from "./whats-changed-data"
 import { CoachNeedsList, programCount } from "@/components/recruiting/coach-needs-list"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
@@ -87,6 +88,8 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
    * college is saved.
    */
   const firstDay = schools.length === 0
+  // The "What matters" move ticks once this login has finished its own set (a preview counts the family's login).
+  const prioritiesDone = firstDay && first && cc.viewerId ? await hasAnsweredPriorities(admin, cc.viewerId, first.id).catch(() => false) : false
   // The step to do now, when its button opens the map: then the map card below would be a second "Open the map".
   const nowStep = journey?.steps.find((s) => s.status === "now") ?? null
   const pathOpensMap = nowStep?.cta.href === "/recruiting/college-map"
@@ -261,7 +264,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               <h2 id="cc-start" className="text-lg font-black text-white sm:text-xl">
                 Start here for {first.firstName}
               </h2>
-              <ol className="mt-3 grid gap-2 sm:grid-cols-3">
+              <ol className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {firstDayMoves({
                   firstName: first.firstName,
                   athleteId: first.id,
@@ -270,6 +273,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                   saved: schools.length,
                   upcomingEvents: w ? w.events.filter((e) => (e.endDate ?? e.startDate) >= todayET).length : 0,
                   suggested: starter.length,
+                  prioritiesDone,
                 }).map((m, i) => (
                   <li key={m.key}>
                     <a href={m.href} className="flex h-full items-start gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3 hover:border-[#D3B574]">

@@ -7,14 +7,14 @@ import { createClient } from "@/lib/supabase/server"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { usesRecruitingShell } from "@/lib/recruiting/brand"
-import { Activity, BookOpen, CalendarDays, ClipboardList, Compass, GraduationCap, LayoutDashboard, Map as MapIcon, MessageSquare, Scale, Send, Sparkles } from "lucide-react"
+import { Activity, BookOpen, CalendarDays, ClipboardList, Compass, GraduationCap, LayoutDashboard, ListOrdered, Map as MapIcon, MessageSquare, Scale, Send, Sparkles } from "lucide-react"
 
 /**
  * The family portal's frame (Matt's design, 14 Oct 2026): one menu down the left on a computer, a
  * scrolling bar of the same items on a phone. Every Command Center page sits inside it, so a
  * family always knows where they are and how to get to the rest.
  */
-export type PortalSection = "home" | "plan" | "colleges" | "map" | "messages" | "scout" | "learn" | "activity" | "forms" | "rules" | "reach" | "commit"
+export type PortalSection = "home" | "plan" | "colleges" | "map" | "messages" | "scout" | "learn" | "activity" | "forms" | "rules" | "reach" | "commit" | "priorities"
 
 type Item = { key: PortalSection; label: string; href: string; icon: typeof Activity }
 
@@ -27,7 +27,7 @@ type Item = { key: PortalSection; label: string; href: string; icon: typeof Acti
 type Group = { step: number | null; name: string | null; items: Item[] }
 const GROUPS: Group[] = [
   { step: null, name: null, items: [{ key: "home", label: "Command Center", href: "/my-recruiting", icon: LayoutDashboard }] },
-  { step: 1, name: "Research", items: [{ key: "map", label: "College map", href: "/recruiting/college-map", icon: MapIcon }] },
+  { step: 1, name: "Research", items: [{ key: "priorities", label: "What matters", href: "/my-recruiting/priorities", icon: ListOrdered }, { key: "map", label: "College map", href: "/recruiting/college-map", icon: MapIcon }] },
   { step: 2, name: "Select", items: [{ key: "colleges", label: "My List", href: "/my-recruiting/colleges", icon: Compass }] },
   { step: 3, name: "Rules", items: [{ key: "rules", label: "Rules and timing", href: "/my-recruiting/rules", icon: Scale }] },
   {
@@ -75,8 +75,8 @@ export async function PortalShell({ active, children }: { active: PortalSection;
   const viewing = portal?.previewing && portal.userId
     ? await admin.from("user_profiles").select("full_name, email").eq("user_id", portal.userId).maybeSingle().then((r) => String(r.data?.full_name || r.data?.email || "this family"), () => "this family")
     : null
-  // A business account sees no messages and no Scout: both are about the family's own details.
-  const hidden = new Set<PortalSection>(portal?.hidePersonal ? ["messages", "scout"] : [])
+  // A business account sees no messages, no Scout and no priorities: all are the family's own.
+  const hidden = new Set<PortalSection>(portal?.hidePersonal ? ["messages", "scout", "priorities"] : [])
   const groups = GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => !hidden.has(i.key)) })).filter((g) => g.items.length)
   const items = ITEMS.filter((i) => !hidden.has(i.key))
   // Unread recruiting messages, shown on Messages in the menu. A failure shows no badge, never an error.
