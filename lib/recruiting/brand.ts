@@ -27,6 +27,8 @@ export const RECRUITING_BRAND = {
     { code: "SC", name: "South Carolina", live: true }, // Live 26 Oct 2026 (Matt); scripts/state-readiness.ts --state SC: all data gates pass
     // Live 3 Nov 2026 (Matt: "virginia should be up.. we won't have rankings for a bit"). Open, not ranked yet.
     { code: "VA", name: "Virginia", live: true, ranked: false },
+    // Live 5 Nov 2026 (Matt: "switch it to on"). Open, not ranked yet.
+    { code: "TN", name: "Tennessee", live: true, ranked: false },
     /*
      * Maryland's data went in on 22 Oct and passes every readiness gate, but the state was
      * missing from this list entirely - and a state that is not here does not exist to the
@@ -37,7 +39,6 @@ export const RECRUITING_BRAND = {
     { code: "WV", name: "West Virginia", live: false },
     { code: "DE", name: "Delaware", live: false },
     { code: "GA", name: "Georgia", live: false },
-    { code: "TN", name: "Tennessee", live: false },
     { code: "FL", name: "Florida", live: false },
     { code: "AL", name: "Alabama", live: false },
     { code: "LA", name: "Louisiana", live: false },
