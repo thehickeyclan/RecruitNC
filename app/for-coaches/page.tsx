@@ -9,7 +9,7 @@ import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import { ArrowLeftRight, Bell, FileText, GraduationCap, MessageSquare, Search, Star, Target, Trophy } from "lucide-react"
-import { recruitingCoverage } from "@/lib/recruiting/brand"
+import { liveStates, recruitingCoverage } from "@/lib/recruiting/brand"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export const dynamic = "force-dynamic"
@@ -80,9 +80,16 @@ function BrowserFrame({ src, alt }: { src: string; alt: string }) {
   )
 }
 
-export default async function ForCoaches() {
+export default async function ForCoaches({ searchParams }: { searchParams: Promise<{ state?: string }> }) {
   const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
   if (!onRw) notFound()
+  /*
+   * ?state=GA from the coach emails (Matt, 5 Nov 2026: every link goes here, the account up top):
+   * signing up lands the coach on that state's wrestlers. Only a live state; anything else is ignored.
+   */
+  const code = String((await searchParams).state ?? "").toUpperCase()
+  const state = liveStates(true).find((s) => s.code === code) ?? null
+  const signup = state ? `${SIGNUP}&returnTo=${encodeURIComponent(`/prospects/all?state=${state.code}`)}` : SIGNUP
   return (
     <main className="min-h-screen bg-[#0B1426] text-white">
       <section className="border-b border-white/10 bg-gradient-to-br from-[#15243B] via-[#11203A] to-[#0B1426] px-4 py-14 sm:py-20">
@@ -93,14 +100,16 @@ export default async function ForCoaches() {
             Every {recruitingCoverage(true)} wrestler in the current classes, with their results, the wins that matter and a way to reach the family. Free for college coaching staff.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href={SIGNUP} className="rounded-xl bg-[#A3E635] px-6 py-3.5 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">
-              Get free coach access →
+            <Link href={signup} className="rounded-xl bg-[#A3E635] px-6 py-3.5 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">
+              Create your free account →
             </Link>
-            <Link href="/auth/signin?returnTo=%2Fmy-recruits" className="rounded-xl border border-white/20 px-6 py-3.5 text-base font-bold text-white hover:border-[#A3E635] hover:text-[#A3E635]">
+            <Link href={`/auth/signin?returnTo=${encodeURIComponent(state ? `/prospects/all?state=${state.code}` : "/my-recruits")}`} className="rounded-xl border border-white/20 px-6 py-3.5 text-base font-bold text-white hover:border-[#A3E635] hover:text-[#A3E635]">
               Coach sign in
             </Link>
           </div>
-          <p className="mt-4 text-sm text-[#A8B3C5]">Access is instant. We confirm every coach against their program&apos;s staff directory.</p>
+          <p className="mt-4 text-sm text-[#A8B3C5]">
+            Access is instant{state ? <>, and you go straight to {state.name}&apos;s wrestlers</> : null}. We confirm every coach against their program&apos;s staff directory.
+          </p>
         </div>
       </section>
       <section className="px-4 py-14 sm:py-20">
@@ -140,8 +149,8 @@ export default async function ForCoaches() {
         </div>
         <div className="mx-auto mt-12 max-w-5xl rounded-2xl border border-[#A3E635]/50 bg-[#A3E635]/[0.06] p-6 text-center">
           <p className="text-xl font-black">Free for every college coaching staff. No card, no trial.</p>
-          <Link href={SIGNUP} className="mt-4 inline-block rounded-xl bg-[#A3E635] px-6 py-3 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">
-            Get free coach access →
+          <Link href={signup} className="mt-4 inline-block rounded-xl bg-[#A3E635] px-6 py-3 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">
+            Create your free account →
           </Link>
         </div>
       </section>
