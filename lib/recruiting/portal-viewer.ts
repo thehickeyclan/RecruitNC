@@ -1,7 +1,7 @@
 import "server-only"
 
-import { viewAsRole } from "@/lib/business/view-as-coach"
-import { VIEW_AS_FAMILY_COOKIE, cleanViewAsId } from "@/lib/view-as/cookie"
+import { VIEW_AS_FAMILY_COOKIE } from "@/lib/view-as/cookie"
+import { readFamilyPass } from "@/lib/view-as/family-pass"
 import { cookies } from "next/headers"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
@@ -51,13 +51,10 @@ export async function resolvePortalViewer(options: {
    * Center from /view-as-family/<id> (Matt, 4 Nov 2026). Read-only for the same reason as the
    * developer preview below: only reads ask this function.
    */
-  const familyId = real.userId ? cleanViewAsId((await cookies()).get(VIEW_AS_FAMILY_COOKIE)?.value) : null
-  if (familyId && real.userId && familyId !== real.userId) {
-    const role = await viewAsRole(options.admin, real.userId)
-    if (role === "admin" || (role === "business" && options.allowBusiness)) {
-      const family = await resolveRankingViewerForUser({ admin: options.admin, userId: familyId })
-      return { viewer: { ...family.viewer, isAdmin: false }, userId: familyId, previewing: true, hidePersonal: role === "business" }
-    }
+  const pass = readFamilyPass((await cookies()).get(VIEW_AS_FAMILY_COOKIE)?.value, real.userId)
+  if (pass && pass.familyId !== real.userId && (pass.role === "admin" || options.allowBusiness)) {
+    const family = await resolveRankingViewerForUser({ admin: options.admin, userId: pass.familyId })
+    return { viewer: { ...family.viewer, isAdmin: false }, userId: pass.familyId, previewing: true, hidePersonal: pass.role === "business" }
   }
   if (process.env.NODE_ENV === "production" || !real.viewer.isAdmin) return { ...real, previewing: false }
   const preview = parsePreview((await cookies()).get(PREVIEW_COOKIE)?.value)

@@ -168,7 +168,7 @@ function StepNumber({ n, active = false }: { n: number; active?: boolean }) {
  * menu"). A coach reads these pages, but never inside the family's Command Center.
  */
 export async function FamilyPortalFrame({ active, children }: { active: PortalSection; children: React.ReactNode }) {
-  const family = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient() })
+  const family = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient(), allowBusiness: true })
     .then(({ viewer }) => hasPortalAccess(viewer))
     .catch(() => false)
   return family ? <PortalShell active={active}>{children}</PortalShell> : <>{children}</>
