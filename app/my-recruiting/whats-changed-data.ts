@@ -55,7 +55,7 @@ export function inferredNeeds(schools: Array<{ id: string; name: string; level: 
 }
 
 /** `needs`: loadNeedsForAthlete for this wrestler, read once by the page. */
-export async function loadWhatsChanged(admin: SupabaseClient, cc: CommandCenter, athleteId: string, weight: number | null, needs: FamilyNeed[] = [], now = new Date()): Promise<Feed | null> {
+export async function loadWhatsChanged(admin: SupabaseClient, cc: CommandCenter, athleteId: string, weight: number | null, needs: FamilyNeed[] = [], now = new Date(), skip: string[] = []): Promise<Feed | null> {
   const athlete = cc.athletes.find((a) => a.id === athleteId)
   const wrestler = cc.wrestlers.find((w) => w.id === athleteId)
   if (!athlete || !wrestler) return null
@@ -85,5 +85,6 @@ export async function loadWhatsChanged(admin: SupabaseClient, cc: CommandCenter,
     reminders: cc.reminders.reminders.filter((r) => !r.athleteId || r.athleteId === athleteId).map((r) => ({ id: r.id, note: r.note, remindAt: r.remindAt })),
     listTarget: listTarget(wrestler.grade),
     upcomingEvents: wrestler.events.filter((e) => (e.endDate ?? e.startDate) >= today).length,
+    skip,
   })
 }

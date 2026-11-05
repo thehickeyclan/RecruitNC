@@ -2,12 +2,9 @@
 
 import { ArrowRight, Check } from "lucide-react"
 
-/**
- * The first milestone in the Command Center (Matt, 2 Nov 2026): five colleges saved in the first
- * week, the activation the funnel dashboard counts (lib/funnel/compute.ts). My List still grows
- * toward ten across levels; five is where a family has enough to start reaching out.
- */
-export const FIRST_LIST_GOAL = 5
+import { FIRST_LIST_GOAL } from "@/lib/recruiting/first-list-goal"
+
+export { FIRST_LIST_GOAL }
 
 /** "2 of 5 saved" until five, then the next step: tell those coaches. */
 export function FirstListProgress({ count, firstName, className = "" }: { count: number; firstName?: string | null; className?: string }) {
@@ -30,7 +27,7 @@ export function FirstListProgress({ count, firstName, className = "" }: { count:
     <div className={`rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white ${className}`}>
       <div className="flex items-baseline justify-between gap-3">
         <span>
-          <b>Start with {FIRST_LIST_GOAL} colleges.</b> <span className="text-white/60">Save the ones worth a closer look.</span>
+          <b>Save {FIRST_LIST_GOAL} colleges.</b> <span className="text-white/60">The ones worth a closer look.</span>
         </span>
         <span className="shrink-0 font-black tabular-nums">
           {count} of {FIRST_LIST_GOAL}
