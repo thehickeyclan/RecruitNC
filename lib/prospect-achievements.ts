@@ -171,6 +171,38 @@ export async function loadAchievements(
       f.bestNhscaPlace = bestPlace(f.bestNhscaPlace, row.placement)
     }
 
+    for (const [athleteId, labels] of await loadNationalPodiums(supabase, batch)) {
+      const f = facts(athleteId)
+      f.nationalPodiums = [...new Set([...(f.nationalPodiums ?? []), ...labels])]
+    }
+  }
+
+  const byName = new Map<string, string>()
+  for (const a of athletes) {
+    const key = String(a.name ?? "").trim().toLowerCase()
+    if (key) byName.set(key, String(a.id))
+  }
+  if (byName.size) {
+    const { data } = await supabase.from("super32_results").select("athlete_name, placement")
+    for (const row of data ?? []) {
+      const id = byName.get(String(row.athlete_name ?? "").trim().toLowerCase())
+      if (!id) continue
+      const f = facts(id)
+      f.bestSuper32Place = bestPlace(f.bestSuper32Place, row.placement)
+    }
+  }
+
+  return out
+}
+
+/**
+ * Top-eight finishes at the national events above, read from the brackets: every linked wrestler,
+ * every state, boys and girls. "Fargo 2025", "NHSCA 2025", one label per event per year.
+ */
+export async function loadNationalPodiums(supabase: SupabaseClient, ids: ReadonlyArray<string>): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>()
+  for (let i = 0; i < ids.length; i += 200) {
+    const batch = ids.slice(i, i + 200)
     // National podiums from the brackets: every linked wrestler, every state, boys and girls.
     type Bout = { athlete_id: string; event_key: string; weight_class: string | null; round: string | null; win: boolean | null; is_bye: boolean | null; year: number | null }
     const bouts: Bout[] = []
@@ -199,25 +231,8 @@ export async function loadAchievements(
       const [athleteId, eventKey] = key.split("|") as [string, string]
       const year = Number(entry[0]!.year) || Number(eventKey.match(/20\d\d/)?.[0]) || null
       const label = `${aaEventLabel(eventKey)}${year ? ` ${year}` : ""}`
-      const f = facts(athleteId)
-      f.nationalPodiums = [...new Set([...(f.nationalPodiums ?? []), label])]
+      out.set(athleteId, [...new Set([...(out.get(athleteId) ?? []), label])])
     }
   }
-
-  const byName = new Map<string, string>()
-  for (const a of athletes) {
-    const key = String(a.name ?? "").trim().toLowerCase()
-    if (key) byName.set(key, String(a.id))
-  }
-  if (byName.size) {
-    const { data } = await supabase.from("super32_results").select("athlete_name, placement")
-    for (const row of data ?? []) {
-      const id = byName.get(String(row.athlete_name ?? "").trim().toLowerCase())
-      if (!id) continue
-      const f = facts(id)
-      f.bestSuper32Place = bestPlace(f.bestSuper32Place, row.placement)
-    }
-  }
-
   return out
 }
