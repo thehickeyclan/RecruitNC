@@ -483,7 +483,9 @@ export function AthleteDetail({
   // A linked parent sees the family's own private details (Matt, 14 October 2026); the server sends them on the same rule.
   const canSeePrivateInfo = isViewingOwnProfile || isParentLinkedEditor || isLinkedParentProfile || isAdmin || isVerifiedCoach
   /** The comparison: verified college coaches and admins, never on your own profile. */
-  const mayCompare = mayUseComparison({ isAdmin, profile: viewerProfile, userId: currentUserId }) && !isViewingOwnProfile
+  /** A business account (Rhett): coach tools - Compare, similar wrestlers, ranks, losses - never contact or academics. */
+  const isBusiness = viewerProfile?.business_access === true && !isAdmin && !isVerifiedCoach
+  const mayCompare = mayUseComparison({ isAdmin, profile: viewerProfile, userId: currentUserId, business: isBusiness }) && !isViewingOwnProfile
 
   // Academic fields: support both gpa/sat/act and academic_gpa/academic_sat/academic_act (DB column variants)
   const effectiveGpa = athleteData?.academic_gpa ?? athleteData?.gpa
@@ -667,7 +669,7 @@ export function AthleteDetail({
    * name on every public profile — so the whole board could be read off the roster by anybody.
    * Gated here, at the single place it is computed, so every card that renders it is covered.
    */
-  const maySeeRanking = canSeeRankingOnProfile({ isAdmin, isVerifiedCoach })
+  const maySeeRanking = canSeeRankingOnProfile({ isAdmin, isVerifiedCoach, isBusiness })
   const prospectRanking = maySeeRanking ? publishedRank : null
 
   const getAthletePhoto = () => {
@@ -2009,7 +2011,7 @@ export function AthleteDetail({
       <RecruitingNeedsBlock athleteId={String(athlete.id)} className="order-[4]" />
       {/* Contact is for college coaches, and for the family to keep current. Nobody else sees the
           row at all - not the phone, not the Instagram link (Matt, 11 October 2026). */}
-      {recruiterOrFamily && (contactButtons || mayCompare || canEdit) ? (
+      {recruiterOrFamily && !isBusiness && (contactButtons || mayCompare || canEdit) ? (
         <>
           <ProfileRow
             icon={Phone}

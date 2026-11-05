@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { hasBusinessGrant } from "@/lib/business/access"
+import { stripAcademicsForBusiness } from "@/lib/athlete-private-fields"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
@@ -86,7 +88,11 @@ export async function GET(
     const mayRank = viewer?.id
       ? canSeeProspectRanking((await resolveRankingViewerForUser({ admin: adminSupabase, userId: viewer.id })).viewer)
       : false
-    const visible = maySee ? athlete : stripPrivateAthleteFields(athlete)
+    const visible = maySee
+      ? athlete
+      : hasBusinessGrant(viewer?.app_metadata)
+        ? stripAcademicsForBusiness(stripPrivateAthleteFields(athlete))
+        : stripPrivateAthleteFields(athlete)
     return NextResponse.json(mayRank ? visible : stripRankFields(visible), {
       headers: { "Cache-Control": "private, no-store" },
     })

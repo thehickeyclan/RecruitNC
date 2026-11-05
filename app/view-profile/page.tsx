@@ -1,4 +1,6 @@
 import { profileRobots } from "@/lib/profile-search"
+import { hasBusinessGrant } from "@/lib/business/access"
+import { stripAcademicsForBusiness } from "@/lib/athlete-private-fields"
 import { Suspense } from "react"
 import type { Metadata } from "next"
 import { shareMetadata } from "@/lib/share-metadata"
@@ -104,10 +106,13 @@ async function ViewProfilePageInner({ searchParams }: ViewProfilePageProps) {
    * means an unentitled reader is never sent what the component would have refused to draw.
    */
   const entitled = result.ok ? await viewerMaySeeAthletePrivateInfo(supabase, result.athlete as { claimed_by_user_id?: unknown }) : false
+  const business = !entitled && hasBusinessGrant(user?.app_metadata)
   const athlete = result.ok
     ? entitled
       ? result.athlete
-      : (stripPrivateAthleteFields(result.athlete as unknown as Record<string, unknown>) as typeof result.athlete)
+      : business
+        ? (stripAcademicsForBusiness(stripPrivateAthleteFields(result.athlete as unknown as Record<string, unknown>)) as typeof result.athlete)
+        : (stripPrivateAthleteFields(result.athlete as unknown as Record<string, unknown>) as typeof result.athlete)
     : null
 
   /*

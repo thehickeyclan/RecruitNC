@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { businessGrantFor } from "@/lib/business/view-as-coach"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadAthleteSignificantWins } from "@/lib/athlete-significant-wins"
 import { resolveRequestUserId } from "@/lib/request-user"
@@ -27,7 +28,8 @@ async function maySeeLosses(request: NextRequest, admin: ReturnType<typeof creat
     .eq("user_id", userId)
     .maybeSingle()
   // A college coach has access from sign-up, before review (the same reading as the perfect-recruit flag).
-  return maySeeNotableLosses(profile ?? null)
+  // A business account (Rhett) sees them too, as a coach does (Matt, 4 Nov 2026).
+  return maySeeNotableLosses(profile ?? null) || (await businessGrantFor(admin, userId))
 }
 
 const PRIVATE = { headers: { "Cache-Control": "private, no-store" } }

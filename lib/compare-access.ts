@@ -32,7 +32,10 @@ export function mayUseComparison(viewer: {
   profile: (ViewerProfileInput & { is_admin?: unknown; user_id?: unknown }) | null | undefined
   /** The signed-in user, for the tester list. Falls back to `profile.user_id`. */
   userId?: string | null
+  /** A business account (lib/business/access.ts): coach tools, never personal data. */
+  business?: boolean
 }): boolean {
+  if (viewer.business === true) return true
   const uid = String(viewer.userId ?? viewer.profile?.user_id ?? "")
   if (uid && COMPARISON_TESTER_USER_IDS.has(uid)) return true
   const classified = classifyViewer(viewer.profile ?? null)

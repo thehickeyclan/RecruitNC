@@ -21,6 +21,8 @@ interface UserProfile {
   verification_status?: string
   /** Server-decided: may this account open a scouting report? Pre-launch this is an allowlist. */
   scouting_report_access?: boolean
+  /** A business account (Rhett): coach tools on profiles, no contact details or academics. */
+  business_access?: boolean
   created_at: string
   updated_at: string
 }

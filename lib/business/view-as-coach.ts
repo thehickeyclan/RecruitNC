@@ -23,6 +23,12 @@ export async function viewAsRole(admin: SupabaseClient, userId: string, appMetad
   return hasBusinessGrant(meta) ? "business" : null
 }
 
+/** Whether this account holds the business grant, for routes that only know the user id. */
+export async function businessGrantFor(admin: SupabaseClient, userId: string): Promise<boolean> {
+  const { data } = await admin.auth.admin.getUserById(userId).catch(() => ({ data: null }))
+  return hasBusinessGrant(data?.user?.app_metadata)
+}
+
 /** The board's rows with every contact field emptied, for a business viewer. */
 export function withoutContact<T extends { phone?: string | null }>(rows: T[]): T[] {
   return rows.map((row) => ({ ...row, phone: null }))

@@ -10,6 +10,7 @@
  * One resolver means a new surface cannot accidentally ship a weaker check than the last one.
  */
 
+import { hasBusinessGrant } from "@/lib/business/access"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { normalizeRole } from "./viewer-role"
 import type { RankingViewer } from "./ranking-visibility"
@@ -161,6 +162,7 @@ export async function resolveRankingViewerForUser(options: {
       hasSubscription: isSubscriptionLive(subscription ?? null),
       hasCommandCenter: isSubscriptionLive(subscription ?? null) ? await subscriptionTier(admin, user.id).then((t) => t === "command_center") : false,
       isOwnProfile,
+      isBusiness: await admin.auth.admin.getUserById(user.id).then((r) => hasBusinessGrant(r.data?.user?.app_metadata), () => false),
     },
   }
 }
