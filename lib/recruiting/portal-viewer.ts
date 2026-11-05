@@ -1,5 +1,7 @@
 import "server-only"
 
+import { viewAsRole } from "@/lib/business/view-as-coach"
+import { VIEW_AS_FAMILY_COOKIE, cleanViewAsId } from "@/lib/view-as/cookie"
 import { cookies } from "next/headers"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
@@ -24,15 +26,39 @@ import type { RankingViewer } from "@/lib/ranking-visibility"
  */
 export const PREVIEW_COOKIE = "dev_family_preview"
 
-export type PortalViewer = { viewer: RankingViewer; userId: string | null; previewing: boolean }
+export type PortalViewer = {
+  viewer: RankingViewer
+  userId: string | null
+  previewing: boolean
+  /** A business account viewing a family: no contact details, academics or messages. */
+  hidePersonal?: boolean
+}
 
 export function parsePreview(value: string | undefined): { userId: string; blue: boolean } | null {
   const m = /^([0-9a-f-]{36})(:blue)?$/i.exec(String(value ?? ""))
   return m ? { userId: m[1], blue: Boolean(m[2]) } : null
 }
 
-export async function resolvePortalViewer(options: { supabase: SupabaseClient; admin: SupabaseClient }): Promise<PortalViewer> {
+export async function resolvePortalViewer(options: {
+  supabase: SupabaseClient
+  admin: SupabaseClient
+  /** Let a business account's family view through. Only for pages and routes with no personal data in them. */
+  allowBusiness?: boolean
+}): Promise<PortalViewer> {
   const real = await resolveRankingViewer(options)
+  /*
+   * In production too: an admin, or a business account (Rhett), opening one family's Command
+   * Center from /view-as-family/<id> (Matt, 4 Nov 2026). Read-only for the same reason as the
+   * developer preview below: only reads ask this function.
+   */
+  const familyId = real.userId ? cleanViewAsId((await cookies()).get(VIEW_AS_FAMILY_COOKIE)?.value) : null
+  if (familyId && real.userId && familyId !== real.userId) {
+    const role = await viewAsRole(options.admin, real.userId)
+    if (role === "admin" || (role === "business" && options.allowBusiness)) {
+      const family = await resolveRankingViewerForUser({ admin: options.admin, userId: familyId })
+      return { viewer: { ...family.viewer, isAdmin: false }, userId: familyId, previewing: true, hidePersonal: role === "business" }
+    }
+  }
   if (process.env.NODE_ENV === "production" || !real.viewer.isAdmin) return { ...real, previewing: false }
   const preview = parsePreview((await cookies()).get(PREVIEW_COOKIE)?.value)
   if (!preview) return { ...real, previewing: false }

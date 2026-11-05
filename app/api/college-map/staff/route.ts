@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   const schoolId = request.nextUrl.searchParams.get("school")?.trim()
   if (!schoolId) return NextResponse.json({ error: "school is required" }, { status: 400 })
 
-  const { viewer } = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient() })
+  const { viewer } = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient(), allowBusiness: true })
   const full = Boolean(hasPortalAccess(viewer) || viewer.isVerifiedCoach)
 
   if (!full) {

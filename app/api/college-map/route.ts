@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic"
  */
 export async function GET() {
   const admin = createAdminClient()
-  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
+  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin, allowBusiness: true })
   const full = Boolean(hasPortalAccess(viewer) || viewer.isVerifiedCoach)
 
   try {

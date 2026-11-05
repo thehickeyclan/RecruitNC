@@ -61,18 +61,36 @@ const GROUPS: Group[] = [
 const ITEMS: Item[] = GROUPS.flatMap((g) => g.items)
 
 export async function PortalShell({ active, children }: { active: PortalSection; children: React.ReactNode }) {
+  const admin = createAdminClient()
+  // An admin or business account looking at one family (/view-as-family/<id>): say so, and whose.
+  const portal = await resolvePortalViewer({ supabase: await createClient(), admin, allowBusiness: true }).catch(() => null)
+  const viewing = portal?.previewing && portal.userId
+    ? await admin.from("user_profiles").select("full_name, email").eq("user_id", portal.userId).maybeSingle().then((r) => String(r.data?.full_name || r.data?.email || "this family"), () => "this family")
+    : null
+  // A business account sees no messages and no Scout: both are about the family's own details.
+  const hidden = new Set<PortalSection>(portal?.hidePersonal ? ["messages", "scout"] : [])
+  const groups = GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => !hidden.has(i.key)) })).filter((g) => g.items.length)
+  const items = ITEMS.filter((i) => !hidden.has(i.key))
   // Unread recruiting messages, shown on Messages in the menu. A failure shows no badge, never an error.
   const unread = await (async () => {
+    if (portal?.hidePersonal) return 0
+    if (portal?.previewing && portal.userId) return unreadCount(admin, portal.userId).catch(() => 0)
     const { data } = await (await createClient()).auth.getUser()
-    return data.user ? unreadCount(createAdminClient(), data.user.id).catch(() => 0) : 0
+    return data.user ? unreadCount(admin, data.user.id).catch(() => 0) : 0
   })().catch(() => 0)
   const badge = (key: PortalSection) =>
     key === "messages" && unread > 0 ? <span className="ml-auto rounded-full bg-[#D3B574] px-1.5 text-[10px] font-black text-[#0A1628]">{unread}</span> : null
   return (
     <div className="min-h-screen bg-[#0A1628] text-white">
+      {viewing ? (
+        <div className="border-b border-[#D3B574]/40 bg-[#D3B574]/10 px-4 py-2 text-center text-xs text-white/85">
+          Viewing as <strong className="text-white">{viewing}</strong> · read-only{portal?.hidePersonal ? " · contact details, academics and messages hidden" : ""} ·{" "}
+          <a href="/view-as-family/exit" className="font-bold text-[#D3B574] underline">Exit</a>
+        </div>
+      ) : null}
       <nav aria-label="Command Center" className="sticky top-0 z-30 border-b border-white/10 bg-[#0A1628]/95 backdrop-blur md:hidden">
         <ul className="flex gap-1 overflow-x-auto px-3 py-2">
-          {ITEMS.map(({ key, label, href, icon: Icon }) => (
+          {items.map(({ key, label, href, icon: Icon }) => (
             <li key={key} className="shrink-0">
               <Link
                 href={href}
@@ -90,7 +108,7 @@ export async function PortalShell({ active, children }: { active: PortalSection;
         <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 px-3 py-6 md:flex">
           <p className="px-3 text-[11px] font-black uppercase tracking-widest text-[#D3B574]">Recruiting Portal</p>
           <div className="mt-4 space-y-3 overflow-y-auto">
-            {GROUPS.map((g) => {
+            {groups.map((g) => {
               const single = g.step !== null && g.items.length === 1
               return (
                 <div key={g.name ?? "home"}>
