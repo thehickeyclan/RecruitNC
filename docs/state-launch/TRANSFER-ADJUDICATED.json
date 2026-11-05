@@ -1,0 +1,116 @@
+{
+  "cases": [
+    {
+      "state": "VA",
+      "name": "Nathan Taylor",
+      "verdict": "namesake",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Two different class-of-2029 wrestlers at two schools in the SAME seasons. Dated RankWrestlers records show two complete concurrent chains; the Hopewell 2025 placement does not belong to the Eastern View profile. The 49-lb spread (126 to 175) was the queue's largest and the reason this one was pushed to the front of scrutiny."
+    },
+    {
+      "state": "OK",
+      "name": "Jesse Justice",
+      "verdict": "namesake",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Two complete, concurrent dated-record chains. The Sperry 2024 and 2025 titles do NOT belong to the Bixby profile's wrestler. Flagged further: a current-season record places a Jesse Justice at Bristow."
+    },
+    {
+      "state": "OK",
+      "name": "Garrett Short",
+      "verdict": "namesake",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Two concurrent chains, Ponca City (106 throughout, Fr-Sr) and Blackwell (106/113/120) \u2014 the Ponca City 2024 placement belongs to the other wrestler, not the Blackwell profile."
+    },
+    {
+      "state": "OK",
+      "name": "Bradley Lazzerini",
+      "verdict": "hold",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "No RankWrestlers footprint on either side, across spelling variants and two independent passes. A 44-lb jump across a missing 2025 season with zero dated evidence is what the standard refuses to bridge. Reopen with a dated roster or news naming his 2025 school."
+    },
+    {
+      "state": "OK",
+      "name": "Riley Samarripa",
+      "verdict": "hold",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Harrah 2025 to McLoud 2026 unverified in RW. Part of the McLoud girls cluster."
+    },
+    {
+      "state": "OK",
+      "name": "Remy Whitney",
+      "verdict": "hold",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "El Reno 2025 to McLoud 2026 unverified in RW. Part of the McLoud girls cluster."
+    },
+    {
+      "state": "OK",
+      "name": "Paige Wainscott",
+      "verdict": "hold",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Edmond North 2025 to Union 2026 unverified in RW."
+    },
+    {
+      "state": "IA",
+      "name": "Bella Miller",
+      "verdict": "hold",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Wahlert, Dubuque 2024 to Dubuque Hempstead \u2014 two genuinely different Dubuque schools, so a real transfer question rather than a spelling fold; unverified in RW."
+    },
+    {
+      "state": "VA",
+      "name": "Manny Evans",
+      "verdict": "hold",
+      "batch": 1,
+      "date": "2026-11-03",
+      "note": "RW's only Manny Evans is the Benedictine chain; no dated record at L.C. Bird under either 'Manny' or 'Emmanuel'. Not namesakes (no second chain), not a verified transfer. His Benedictine row stays unlinked by design, which is why his profile shows no VISAA 2026 bouts."
+    },
+    {
+      "state": "VA",
+      "name": "Samantha Stephens",
+      "verdict": "hold",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Prince George 2025 to New Kent unverified; a 'Marion' record is flagged to watch."
+    },
+    {
+      "state": "SC",
+      "name": "Elijah Weston",
+      "verdict": "hold",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Pendleton 2025 to West-Oak unverified in RW."
+    },
+    {
+      "state": "SC",
+      "name": "Jonah Coleman",
+      "verdict": "hold",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Northwood Academy 2024 (SCISA champion) to Stratford unverified. Highest-cost hold in the queue: both his LINKED rows are qualifier entries with no place, so his profile shows no podium finish at all while a state title sits unattached."
+    },
+    {
+      "state": "SC",
+      "name": "Jack Turner",
+      "verdict": "hold",
+      "batch": 2,
+      "date": "2026-11-03",
+      "note": "Gilbert 2025 to Cardinal Newman unverified in RW."
+    },
+    {
+      "state": "AR",
+      "name": "Cameron Moats",
+      "verdict": "hold",
+      "batch": 1,
+      "date": "2026-11-03",
+      "note": "RW holds exactly one Cameron Moats, the CAC chain; no dated record at Pottsville in any probed year. CAC and Pottsville are the same school pair that produced the proven Tripp Price namesakes, so the 25-lb gap (132 title to 157) is not bridged by assumption."
+    }
+  ]
+}

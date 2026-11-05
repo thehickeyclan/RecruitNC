@@ -100,7 +100,32 @@ export function isHomeState(state: string | null | undefined): boolean {
  * West Virginia has none: the WVSSAC has included private schools in its own brackets since
  * 1979, so there is no separate championship to name.
  */
-const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> = {
+/*
+ * `girls` is a SECOND PUBLIC championship, for the states that run one. Iowa's girls wrestle the
+ * IGHSAU and its boys the IHSAA - two public bodies, not a public one and a private one.
+ *
+ * It is deliberately not folded into `independent`, although that list would have made
+ * `stateChampionshipName` return the right name. `isIndependentChampionship` reads `independent`
+ * to decide whether a 7th or 8th grade placement is legitimate, because independent schools roster
+ * middle-schoolers and public ones do not - so calling the IGHSAU independent would have switched
+ * off that namesake check for every girl in the state.
+ */
+const ASSOCIATIONS: Record<
+  string,
+  {
+    public: string
+    girls?: string
+    independent?: string[]
+    middleSchoolVarsity?: true
+    /**
+     * Independent schools that wrestle INSIDE the state association, as its own classification
+     * rather than a separate championship. Tennessee's TSSAA Division II is McCallie, Baylor, MBA,
+     * Brentwood Academy and Knoxville Catholic - private schools whose rows carry association
+     * "TSSAA" and classification "DII", so an association-keyed check cannot see them.
+     */
+    independentClassifications?: string[]
+  }
+> = {
   NC: { public: "NCHSAA", independent: ["NCISA"] },
   SC: { public: "SCHSL", independent: ["SCISA"] },
   VA: { public: "VHSL", independent: ["VISAA"] },
@@ -128,6 +153,55 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
   NH: { public: "NHIAA" },
   VT: { public: "VPA" },
   ME: { public: "MPA" },
+  /*
+   * Pennsylvania runs two championships, and PIAA is not the one the prep schools wrestle.
+   * Berks Catholic, Bishop McCort and Faith Christian are PIAA members and wrestle its brackets;
+   * Malvern Prep, Haverford School, Episcopal Academy, Penn Charter and Mercersburg are not, and
+   * crown their own champion at the PAISWT. We hold 520 PAISWT rows (imported 6 Oct 2026) with no
+   * name-and-season overlap with PIAA at all - two separate fields, not two spellings of one.
+   */
+  PA: { public: "PIAA", independent: ["PAISWT"] },
+  /*
+   * Texas runs four championships, not two: the UIL for public schools, and three private layers
+   * that crown their own champions - TAPPS, Texas Prep State and the SPC. The association strings
+   * are the payloads' own ("TX Prep State"), matched case-insensitively here.
+   */
+  TX: { public: "UIL", independent: ["TAPPS", "TX Prep State", "SPC"] },
+  /*
+   * Arkansas has one layer. Central Arkansas Christian, Catholic High School For Boys, Shiloh
+   * Christian and Pulaski Academy are AAA members and wrestle its brackets, so unlike PA and TX
+   * there is no independent championship to name.
+   */
+  AR: { public: "AAA" },
+  /*
+   * Oklahoma has one layer too. Bishop McGuinness, Casady and Cascia Hall are OSSAA members and
+   * wrestle its brackets, so there is no independent championship to name.
+   */
+  OK: { public: "OSSAA" },
+  /*
+   * Iowa is the first state with a separate girls championship body. Its private schools compete
+   * inside both associations, so there is no independent layer to name.
+   */
+  IA: { public: "IHSAA", girls: "IGHSAU" },
+  /* Missouri's private schools compete inside MSHSAA, and its girls wrestle it too - one layer. */
+  MO: { public: "MSHSAA" },
+  /* Michigan's private schools wrestle inside the MHSAA, and so do its girls - one layer. */
+  MI: { public: "MHSAA" },
+  /*
+   * Minnesota's private schools wrestle inside the MSHSL, and so do its girls - one layer. Unlike
+   * every state above it, the MSHSL lets 7th and 8th graders wrestle varsity and place at state:
+   * the 2024 bracket prints carry grade 7 and grade 8 against class years of 2029 and 2028 (Cayden
+   * Neisen, Grayson Eggum). So a pre-freshman placement here is ordinary, not a namesake - which is
+   * `middleSchoolVarsity`, NOT `independent`: these are public schools and calling them independent
+   * would be false in every other reader.
+   */
+  MN: { public: "MSHSL", middleSchoolVarsity: true },
+  /*
+   * Tennessee runs one association over three boys classifications plus girls: A, AA and DII, where
+   * DII is the private-school division. It shows in the data - 13 of the 504 DII placements sit
+   * before the wrestler's freshman year, against 0 of AA's 672 and 0 of the 440 girls rows.
+   */
+  TN: { public: "TSSAA", independentClassifications: ["DII"] },
 }
 
 /**
@@ -140,6 +214,88 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
  */
 const NOT_A_CHAMPIONSHIP: Record<string, RegExp> = {
   WV: /girls\s*invitational/i,
+}
+
+/**
+ * Does this association run a state's independent-schools championship?
+ *
+ * Asked of the row's `association`, not of its classification text. Callers used to test the
+ * classification, or a `/(ISA|VISAA)$/` suffix on the association, and both miss Pennsylvania:
+ * PAISWT neither ends in "ISA" nor prints its name in a classification, which is always "Open".
+ * The consequence was not cosmetic - the launch gate counts a pre-freshman placement as a
+ * namesake or a wrong class unless the tournament is an independent one, where 7th and 8th
+ * graders wrestle varsity legitimately, so five PAISWT middle-schoolers read as five errors.
+ */
+/**
+ * The slug a state championship's bouts are keyed under, which must not collide between states.
+ *
+ * Two pairs of states share an association acronym: Indiana and Iowa are both the IHSAA, and
+ * Mississippi and Michigan are both the MHSAA. Bout event keys were `<association>-states-<season>`
+ * with no state in them, so Michigan's import was aimed straight at Mississippi's 767 rows for
+ * 2026 - caught only because the importer had learned that morning to measure what it replaces.
+ *
+ * The state code goes in front ONLY where the acronym is shared, so the 113 keys that are already
+ * unambiguous keep the names they have and nothing else needs migrating. A new state that collides
+ * with an existing one is disambiguated automatically, without anyone having to notice.
+ */
+export function championshipKeySlug(state: string | null | undefined, association: string | null | undefined): string {
+  const slug = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+  const assoc = slug(String(association ?? ""))
+  if (!assoc) return assoc
+  const code = String(state ?? "").trim().toUpperCase()
+  const sharers = Object.entries(ASSOCIATIONS).filter(([, v]) =>
+    [v.public, v.girls, ...(v.independent ?? [])].filter(Boolean).some((n) => slug(String(n)) === assoc),
+  )
+  if (sharers.length < 2) return assoc
+  return code ? `${code.toLowerCase()}-${assoc}` : assoc
+}
+
+export function isIndependentChampionship(
+  state: string | null | undefined,
+  association: string | null | undefined,
+): boolean {
+  const code = String(state ?? "").trim().toUpperCase()
+  const name = String(association ?? "").trim()
+  if (!name) return false
+  return (ASSOCIATIONS[code]?.independent ?? []).some((x) => x.toLowerCase() === name.toLowerCase())
+}
+
+/**
+ * Whether this classification is the state association's own independent-school division - private
+ * schools that roster middle-schoolers, inside the public body rather than beside it.
+ */
+export function isIndependentClassification(
+  state: string | null | undefined,
+  classification: string | null | undefined,
+): boolean {
+  const code = String(state ?? "").trim().toUpperCase()
+  const name = String(classification ?? "").trim().toLowerCase()
+  if (!name) return false
+  return (ASSOCIATIONS[code]?.independentClassifications ?? []).some((x) => x.toLowerCase() === name)
+}
+
+/**
+ * Whether a 7th or 8th grade varsity placement is legitimate in this championship, rather than
+ * evidence of a namesake or a wrong class year. Two different reasons it can be: an independent
+ * association whose schools roster middle-schoolers (NCISA, SCISA, VISAA), or a state association
+ * that permits it outright (the MSHSL). Anything earlier than 7th grade is wrong everywhere.
+ */
+export function allowsMiddleSchoolVarsity(
+  state: string | null | undefined,
+  association: string | null | undefined,
+  classification?: string | null,
+): boolean {
+  if (isIndependentChampionship(state, association)) return true
+  if (isIndependentClassification(state, classification)) return true
+  const code = String(state ?? "").trim().toUpperCase()
+  const entry = ASSOCIATIONS[code]
+  if (!entry?.middleSchoolVarsity) return false
+  const name = String(association ?? "").trim().toLowerCase()
+  if (!name) return false
+  // Only that state's own championships - never a visiting association's rows filed under it.
+  return [entry.public, entry.girls, ...(entry.independent ?? [])]
+    .filter(Boolean)
+    .some((x) => String(x).toLowerCase() === name)
 }
 
 /** "WV Girls State Invitational" — the event's own name, where it is not a championship. */
@@ -176,10 +332,21 @@ export function associationForEvent(state: string | null | undefined, event: str
 export function stateChampionshipName(
   state: string | null | undefined,
   classification?: string | null,
+  association?: string | null,
 ): string {
   const code = String(state ?? "").trim().toUpperCase()
   const assoc = ASSOCIATIONS[code]
   const cls = String(classification ?? "")
+  /*
+   * The row's own `association` decides when it has one. Reading the body out of the
+   * classification only works where the independent tournament prints its name there, as NCISA
+   * and SCISA do; Pennsylvania's PAISWT rows carry the classification "Open", so a Malvern Prep
+   * placer read from the classification alone comes back "PIAA" - a championship his school is
+   * not eligible for.
+   */
+  const stated = String(association ?? "").trim()
+  const named = [assoc?.girls, ...(assoc?.independent ?? [])].filter(Boolean) as string[]
+  if (stated && named.some((name) => name.toLowerCase() === stated.toLowerCase())) return stated
   const own = assoc?.independent?.find((name) => new RegExp(`^${name}`, "i").test(cls.trim()))
   if (own) return own
   return assoc?.public ?? (stateName(code) || code)

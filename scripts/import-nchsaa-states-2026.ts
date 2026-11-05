@@ -155,7 +155,7 @@ async function main() {
     return resolved.get(key) ?? null
   }
 
-  type BoutInsert = Record<string, unknown> & { athlete_id: string; athlete_name: string; round: string; win: boolean }
+  type BoutInsert = Record<string, unknown> & { athlete_id: string | null; athlete_name: string; round: string; win: boolean }
   const inserts: BoutInsert[] = []
   for (const row of relevant) {
     const women = isWomensEvent(row.event)
@@ -181,9 +181,16 @@ async function main() {
     }
     const winner = resolve(row.winningWrestler, row.winningTeam, women)
     const loser = resolve(row.losingWrestler, row.losingTeam, women)
-    if (winner) inserts.push({
+    /*
+     * BOTH sides, always - a side whose wrestler has no profile yet is stored with a null
+     * athlete_id and reaches a profile the day one exists. Writing only the linked side made this
+     * key 45% two-sided where 2024 and 2025 are 100%, and a one-sided key cannot heal: it has to
+     * be re-imported from the CSV, which is how a wrestler ends up with a state entry and no
+     * matches on his page (4 Nov 2026).
+     */
+    inserts.push({
       ...common,
-      athlete_id: winner.id,
+      athlete_id: winner?.id ?? null,
       athlete_name: row.winningWrestler,
       athlete_club: row.winningTeam || null,
       opponent_name: row.losingWrestler,
@@ -192,9 +199,9 @@ async function main() {
       round,
       win: true,
     })
-    if (loser) inserts.push({
+    inserts.push({
       ...common,
-      athlete_id: loser.id,
+      athlete_id: loser?.id ?? null,
       athlete_name: row.losingWrestler,
       athlete_club: row.losingTeam || null,
       opponent_name: row.winningWrestler,
@@ -205,11 +212,14 @@ async function main() {
     })
   }
 
+  // Grouped per wrestler to order their bouts; an unlinked side has no id, so its name is the key.
+  const groupKey = (bout: BoutInsert) => bout.athlete_id ?? `name:${normalizeName(bout.athlete_name)}`
   const grouped = new Map<string, BoutInsert[]>()
   for (const bout of inserts) {
-    const bucket = grouped.get(bout.athlete_id) ?? []
+    const key = groupKey(bout)
+    const bucket = grouped.get(key) ?? []
     bucket.push(bout)
-    grouped.set(bout.athlete_id, bucket)
+    grouped.set(key, bucket)
   }
   for (const bouts of grouped.values()) {
     bouts.sort((a, b) => (roundRank[a.round] ?? 10) - (roundRank[b.round] ?? 10))
@@ -226,12 +236,16 @@ async function main() {
   }
 
   const proven = inserts.filter((row) => !row.round.startsWith("State Championships · Bout ")).length
+  const linkedRows = inserts.filter((row) => row.athlete_id).length
+  const linkedProfiles = new Set(inserts.filter((row) => row.athlete_id).map((row) => row.athlete_id)).size
   console.log(`Parsed ${rows.length} CSV bouts; ${relevant.length} are NCHSAA States.`)
-  console.log(`Linked ${grouped.size} profiles to ${inserts.length} bout-side rows; ${proven} have proven round labels.`)
+  console.log(`${inserts.length} bout-side rows (both sides of every bout); ${proven} have proven round labels.`)
+  console.log(`  reaching a profile now: ${linkedRows} rows across ${linkedProfiles} profiles`)
+  console.log(`  stored unlinked: ${inserts.length - linkedRows} - they reach a profile the day one exists`)
   const womenIds = new Set(currentRoster.filter(isFemale).map((athlete) => athlete.id))
-  const womenRows = inserts.filter((row) => womenIds.has(row.athlete_id)).length
+  const womenRows = inserts.filter((row) => row.athlete_id && womenIds.has(String(row.athlete_id))).length
   console.log(`  girls: ${womenRows} rows; boys: ${inserts.length - womenRows} rows`)
-  if (process.env.DUMP_PAIRS) fs.writeFileSync(process.env.DUMP_PAIRS, inserts.map((row) => `${row.athlete_id}|${normalizeName(String(row.opponent_name))}|${row.win}`).join("\n"))
+  if (process.env.DUMP_PAIRS) fs.writeFileSync(process.env.DUMP_PAIRS, inserts.map((row) => `${row.athlete_id ?? "-"}|${normalizeName(String(row.opponent_name))}|${row.win}`).join("\n"))
   console.log(`Ambiguous names left unlinked: ${ambiguous.size}`)
   for (const name of [...ambiguous].sort()) console.log(`  ? ${name}`)
   if (!apply) {

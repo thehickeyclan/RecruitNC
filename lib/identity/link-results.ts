@@ -30,6 +30,19 @@ type Source = {
   nameColumn: string
   /** Timestamps a row carries; "new since" means any of them is in the window. */
   timeColumns?: string[]
+  /**
+   * Write the decided profile back to this table's own `athlete_id` as well as the link table.
+   *
+   * For most sources the link table is the whole story, because that is what their readers read.
+   * `state_tournament_placers` is not one of them: `lib/state-tournament-results.ts` matches on
+   * `athlete_id`, the column the MINTER writes, and does not look at links at all. So a wrestler
+   * who created his own profile had 10,910 linked placer rows pointing at him and an empty results
+   * section - the join existed and nothing read it. Found 4 Nov 2026 when a Virginia coach asked
+   * what happens when a kid makes his own profile.
+   *
+   * Only ever fills a null. A row the minter already decided is never overwritten here.
+   */
+  writesAthleteId?: boolean
   map: (r: Record<string, any>) => ResultRowForLink
 }
 
@@ -60,13 +73,15 @@ export const LINK_SOURCES: Source[] = [
    * holds a RankWrestlers id, which identifies the wrestler in their system, not in ours.
    */
   { table: "state_tournament_placers", nameColumn: "wrestler_name",
-    select: "id,wrestler_name,school_raw,school_clean,season,state,grad_year",
+    select: "id,wrestler_name,school_raw,school_clean,season,state,grad_year,athlete_id",
+    writesAthleteId: true,
     map: (r) => ({
       name: r.wrestler_name,
       school: r.school_clean || r.school_raw,
       year: r.season,
       state: r.state,
       classYear: r.grad_year ?? null,
+      existingAthleteId: r.athlete_id,
       highSchoolSeason: true,
     }) },
   { table: "national_rankings", nameColumn: "athlete_name", timeColumns: ["created_at"], select: "id,athlete_name,high_school,ranking_month,class_year,state,athlete_id",
@@ -90,6 +105,8 @@ export type LinkRunResult = {
   written: number
   removed: number
   keptReviewed: number
+  /** Source rows whose own `athlete_id` this run filled (see `writesAthleteId`). */
+  athleteIdFilled: number
 }
 
 async function pageAll(build: (from: number) => PromiseLike<{ data: any[] | null; error: { message: string } | null }>) {
@@ -131,7 +148,7 @@ export async function linkResults(admin: SupabaseClient, options: LinkRunOptions
       )]
     : []
 
-  const result: LinkRunResult = { summary: {}, review: [], written: 0, removed: 0, keptReviewed: 0 }
+  const result: LinkRunResult = { summary: {}, review: [], written: 0, removed: 0, keptReviewed: 0, athleteIdFilled: 0 }
   const records: Record<string, unknown>[] = []
   const evaluated: Array<{ table: string; id: string }> = []
 
@@ -229,5 +246,37 @@ export async function linkResults(admin: SupabaseClient, options: LinkRunOptions
     if (error) throw new Error(`cleanup: ${error.message}`)
   }
   result.removed = stale.length
+
+  /*
+   * And back onto the source row, for the tables whose readers use it. Scoped to rows this run
+   * decided, filling only nulls, so the minter's own decisions and a reviewer's stand.
+   */
+  const writeBack = new Map<string, Map<string, string>>()
+  for (const r of records) {
+    if (r.status !== "linked" || !r.athlete_id) continue
+    const src = LINK_SOURCES.find((s) => s.table === r.source_table)
+    if (!src?.writesAthleteId) continue
+    if (reviewed.has(`${r.source_table}|${r.source_id}`)) continue
+    if (!writeBack.has(r.source_table)) writeBack.set(r.source_table, new Map())
+    writeBack.get(r.source_table)!.set(r.source_id, r.athlete_id)
+  }
+  let filled = 0
+  for (const [table, byId] of writeBack) {
+    const byAthlete = new Map<string, string[]>()
+    for (const [id, athleteId] of byId) byAthlete.set(athleteId, [...(byAthlete.get(athleteId) ?? []), id])
+    for (const [athleteId, ids] of byAthlete) {
+      for (let i = 0; i < ids.length; i += 200) {
+        const { data, error } = await admin
+          .from(table)
+          .update({ athlete_id: athleteId })
+          .in("id", ids.slice(i, i + 200))
+          .is("athlete_id", null)
+          .select("id")
+        if (error) throw new Error(`${table}.athlete_id: ${error.message}`)
+        filled += (data ?? []).length
+      }
+    }
+  }
+  result.athleteIdFilled = filled
   return result
 }

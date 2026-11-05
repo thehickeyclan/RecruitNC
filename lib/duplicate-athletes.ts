@@ -105,6 +105,18 @@ export type DuplicateCandidate = {
 export type DuplicateVerdict = { grade: "certain" | "likely" | "review"; why: string }
 
 const letters = (s: unknown) => String(s ?? "").toLowerCase().replace(/[^a-z]/g, "")
+/**
+ * The same letters with any doubling collapsed, so one source's "Carolline" meets another's
+ * "Caroline". A doubled letter is the commonest single-source typo in these payloads and it
+ * defeated every other rule here: the two spellings block together on their first four letters,
+ * are neither equal nor a prefix of each other, and are not an alias pair. Tennessee carried two
+ * profiles for one Cleveland girl because of it - her 2025 TSSAA title on one, her 2026 title on
+ * the other, so neither page showed a two-time state champion.
+ *
+ * Collapsing runs is only ever used to make a NEAR name, never an identical one, so it still has
+ * to clear the same class and the same school before anything is called certain.
+ */
+const squashed = (s: unknown) => letters(s).replace(/(.)\1+/g, "$1")
 /* A quoted nickname is a token of its own and must not be read as a name part. */
 const parts = (name: string) => nameWords(name).filter((w) => !/^['"`]|['"`]$/.test(w))
 const firstToken = (name: string) => parts(name)[0] ?? ""
@@ -130,6 +142,7 @@ function firstNamesAgree(a: string, b: string): boolean {
   if (!x || !y) return false
   if (x === y) return true
   if (x.length >= 3 && (y.startsWith(x) || x.startsWith(y))) return true
+  if (x.length >= 4 && squashed(x) === squashed(y)) return true
   return getAthleteNameSearchVariants(a).some((v) => letters(firstToken(v)) === y)
 }
 
@@ -139,6 +152,7 @@ function surnamesAgree(a: string, b: string): boolean {
   const y = surnameRun(b)
   if (!x || !y) return false
   if (x === y) return true
+  if (x.length >= 4 && squashed(x) === squashed(y)) return true
   return (x.length >= 5 && y.startsWith(x)) || (y.length >= 5 && x.startsWith(y))
 }
 

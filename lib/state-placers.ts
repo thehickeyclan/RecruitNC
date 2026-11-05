@@ -16,6 +16,40 @@ import { nhscaDivision } from "@/lib/nhsca-division"
  */
 const YEARS_BACK = 6
 
+/**
+ * Read every row of a query, a page at a time, by walking the id forward - never OFFSET.
+ *
+ * `.range(n, n + 999)` compiles to LIMIT/OFFSET, and Postgres answers an OFFSET by walking past
+ * the skipped rows and throwing them away. Page 90 of `state_tournament_placers` therefore reads
+ * 90,000 rows to return 1,000, so the cost of a full read grows with the SQUARE of the table. On
+ * 4 Nov 2026 that query was 95% of all database time at 341 ms a page and 690 ms at its worst,
+ * with a 99.97% cache hit rate - so it was not reading disk, it was skipping rows. The table had
+ * just grown to 129,830 rows.
+ *
+ * Walking `id` instead makes every page an index range scan of constant cost. It is sequential,
+ * where the OFFSET version fetched eight pages at once, and it is still far faster - and eight
+ * concurrent heavy queries is itself what starves PostgREST's connection pool, which is the state
+ * the project was found in. It also needs no `count`, removing an exact count over the whole
+ * table that cost 1,145 ms on its own.
+ */
+async function pageAllById<T extends { id: string | number }>(
+  build: (q: any) => any,
+  label: string,
+): Promise<T[]> {
+  const out: T[] = []
+  let after: string | number | null = null
+  for (;;) {
+    let q = build(null).order("id", { ascending: true }).limit(1000)
+    if (after !== null) q = q.gt("id", after)
+    const { data, error } = await q
+    if (error) throw new Error(`${label}: ${error.message}`)
+    const rows = (data ?? []) as T[]
+    out.push(...rows)
+    if (rows.length < 1000) return out
+    after = rows[rows.length - 1]!.id
+  }
+}
+
 type Row = { year: number; place: number; classification: string | null; wrestler_name: string; school: string | null }
 
 /**
@@ -215,13 +249,10 @@ async function loadEventPlacers(supabase: SupabaseClient, statePlacers: StatePla
     state: string | null
     nc_namesake?: boolean | null
   }
-  const rows: Row[] = []
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase.from("national_event_placers").select("*").range(from, from + 999)
-    if (error || !data?.length) break
-    rows.push(...(data as Row[]))
-    if (data.length < 1000) break
-  }
+  const rows = await pageAllById<Row & { id: string }>(
+    () => supabase.from("national_event_placers").select("*"),
+    "national_event_placers",
+  )
   const stateFlags = new Map(statePlacers.map((p) => [`${p.state}|${p.name.toLowerCase()}`, p]))
   type Entry = EventPlacer & { finishes: EventPlacer["finishes"][number][]; schools: string[]; ncNamesake: boolean }
   const byKey = new Map<string, Entry>()
@@ -296,14 +327,11 @@ async function loadEventPlacers(supabase: SupabaseClient, statePlacers: StatePla
 
 /** Every North Carolina profile's name: a placer sharing one is never credited on name alone. */
 async function loadNcAthleteNames(supabase: SupabaseClient): Promise<string[]> {
-  const names: string[] = []
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase.from("athletes").select("name").eq("is_nc_athlete", true).range(from, from + 999)
-    if (error || !data?.length) break
-    for (const row of data as { name: string | null }[]) if (row.name) names.push(row.name)
-    if (data.length < 1000) break
-  }
-  return names
+  const rows = await pageAllById<{ id: string; name: string | null }>(
+    () => supabase.from("athletes").select("id,name").eq("is_nc_athlete", true),
+    "athletes",
+  )
+  return rows.map((r) => r.name).filter((n): n is string => Boolean(n))
 }
 
 /**
@@ -385,30 +413,22 @@ export async function loadOutOfStatePlacers(supabase: SupabaseClient, now = new 
    * Ordered by id so parallel pages neither overlap nor skip.
    */
   const since = now.getFullYear() - YEARS_BACK
-  const { count } = await supabase
-    .from("state_tournament_placers")
-    .select("id", { count: "exact", head: true })
-    .gte("season", since)
-  const pages = Math.ceil((count ?? 0) / 1000)
-  const pageAt = async (page: number): Promise<OutOfStateRow[]> => {
-    const { data, error } = await supabase
-      .from("state_tournament_placers")
-      // `*` rather than naming identity_confirmed, so a database without that column still loads.
-      .select("*")
-      .gte("season", since)
-      .order("id", { ascending: true })
-      .range(page * 1000, page * 1000 + 999)
-    if (error) throw new Error(`state_tournament_placers page ${page}: ${error.message}`)
-    return (data ?? []) as OutOfStateRow[]
-  }
-  const rows: OutOfStateRow[] = []
-  const CONCURRENCY = 8
-  for (let start = 0; start < pages; start += CONCURRENCY) {
-    const batch = await Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, pages - start) }, (_, i) => pageAt(start + i)),
+  /*
+   * The nine columns this actually reads, not `*`. The table is 27 columns and 694 bytes a row, so
+   * `*` moved 62 MB per call for 89,649 rows - and that payload, not the paging, was the real cost:
+   * narrowing it is worth more than every other change here. `*` was originally used so a database
+   * missing `identity_confirmed` would still load, which the fallback below preserves.
+   */
+  const COLUMNS = "id, season, state, place, classification, weight, wrestler_name, school_raw, identity_confirmed, nc_namesake"
+  const read = (columns: string) =>
+    pageAllById<OutOfStateRow & { id: string }>(
+      () => supabase.from("state_tournament_placers").select(columns).gte("season", since),
+      "state_tournament_placers",
     )
-    for (const page of batch) rows.push(...page)
-  }
+  const rows = await read(COLUMNS).catch(async (e) => {
+    console.warn(`[state-placers] narrow select failed (${e instanceof Error ? e.message : e}); falling back to *`)
+    return read("*")
+  })
 
   const byName = new Map<string, { name: string; state: string; schools: Set<string>; confirmed: boolean; ncNamesake: boolean; rows: OutOfStateRow[] }>()
   for (const row of rows) {
@@ -483,20 +503,17 @@ export async function loadFargoAllAmericans(supabase: SupabaseClient, now = new 
 
 export async function loadStatePlacers(supabase: SupabaseClient, now = new Date()): Promise<StatePlacer[]> {
   const since = now.getFullYear() - YEARS_BACK
-  const rows: Row[] = []
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("wrestling_nchsaa_results")
-      .select("year, place, classification, wrestler_name, school")
-      .gte("year", since)
-      .gte("place", 1)
-      .lte("place", 8)
-      .order("year", { ascending: false })
-      .range(from, from + 999)
-    if (error || !data?.length) break
-    rows.push(...(data as Row[]))
-    if (data.length < 1000) break
-  }
+  // Ordered by id, not year: the read takes the whole set either way and the caller groups it.
+  const rows = await pageAllById<Row & { id: string }>(
+    () =>
+      supabase
+        .from("wrestling_nchsaa_results")
+        .select("id, year, place, classification, wrestler_name, school")
+        .gte("year", since)
+        .gte("place", 1)
+        .lte("place", 8),
+    "wrestling_nchsaa_results",
+  )
 
   const byName = new Map<string, { name: string; schools: Set<string>; rows: Row[] }>()
   for (const row of rows) {

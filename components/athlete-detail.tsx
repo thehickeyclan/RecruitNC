@@ -1415,6 +1415,7 @@ export function AthleteDetail({
   const ranked12 = rankedWinsLast12Months(appData.wins)
   const sentences = summarySentences({
     stateName: stateName(athlete?.state) || null,
+    stateCode: (athlete?.state as string | null | undefined) ?? null,
     name: athleteName,
     gender: (athlete as { gender?: string | null }).gender ?? null,
     school: hasSchool ? highSchool : null,

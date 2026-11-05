@@ -1,0 +1,135 @@
+{
+  "placers": [
+    {
+      "name": "Elysabeth Myer",
+      "school": "Brockway-G",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year, so no profile under the current-classes rule. PA resolved 667 of 692 placer keys (96.4%) after the 2 Nov pa-wrestling.com addendum, which cleared 331 of the 356 keys that shipped blank on 1 Nov and left 25. This wrestler is one of them: not on the school's pa-wrestling roster for the seasons placed, so the roster-grade mechanism that resolved everyone else has nothing to read. Closed as not found rather than guessed; a profile follows the moment a year surfaces or a family claims the wrestler (2 Nov 2026)."
+    },
+    {
+      "name": "Mack Santoro",
+      "school": "Saucon Valley",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year, deliberately. The pa-wrestling roster for Saucon Valley prints \"Matthew Santoro\" where the PIAA bracket prints \"Mack Santoro\". Mack is not a diminutive of Matthew, so the addendum held the near-match rather than forcing it, and so do we - it is the single near_match_review in PA's 25-key PIAA residue. Forcing it would hand one wrestler another's class year to clear a gate (2 Nov 2026)."
+    },
+    {
+      "name": "Joaquin Zarur",
+      "school": "Linsly School",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "Ethan Shirk",
+      "school": "Mercersburg Academy",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "Brayden Pearson",
+      "school": "Mercersburg Academy",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "Nick Rosenberry",
+      "school": "Mercersburg Academy",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "Will Lavan",
+      "school": "Mercersburg Academy",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "Carrington Polus",
+      "school": "Linsly School",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "Sam Bossart",
+      "school": "Linsly School",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "George Mamakos",
+      "school": "Linsly School",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "Carmello Kolb",
+      "school": "Western Reserve Academy",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "Braydden Crum",
+      "school": "Western Reserve Academy",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: pa-wrestling.com has no team page for this school in any season, so the roster-grade pass that resolved 288 of PAISWT's 374 athletes could not reach it. Four schools are in this position - Mercersburg Academy, Linsly, Western Reserve and Phelps - and they account for 64 of the 87 unresolved PAISWT athletes. The named next pass is a full scrape of paiswt.com's placewinners listing, which carries class years for the two Linsly wrestlers sampled so far. NOTE: Linsly is in Wheeling, West Virginia and Western Reserve Academy is in Hudson, Ohio - the residue file labels both. When these resolve they mint as WV and OH profiles under the school-state rule, not as Pennsylvania ones (2 Nov 2026)."
+    },
+    {
+      "name": "Matteo Abu El-Haj",
+      "school": "Abington Friends",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: the school has a pa-wrestling team page but this wrestler is not on its roster for the PAISWT seasons he placed, so there is no grade print to resolve from. One of the 22 not_on_roster athletes in PAISWT's 87-key residue. Closed as not found rather than guessed (2 Nov 2026)."
+    },
+    {
+      "name": "Declan O'Byrne",
+      "school": "Malvern Prep",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: the school has a pa-wrestling team page but this wrestler is not on its roster for the PAISWT seasons he placed, so there is no grade print to resolve from. One of the 22 not_on_roster athletes in PAISWT's 87-key residue. Closed as not found rather than guessed (2 Nov 2026)."
+    },
+    {
+      "name": "Matthew O'Neill",
+      "school": "Malvern Prep",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: the school has a pa-wrestling team page but this wrestler is not on its roster for the PAISWT seasons he placed, so there is no grade print to resolve from. One of the 22 not_on_roster athletes in PAISWT's 87-key residue. Closed as not found rather than guessed (2 Nov 2026)."
+    },
+    {
+      "name": "Nate Gearhart-Robboy",
+      "school": "Germantown Friends",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: the school has a pa-wrestling team page but this wrestler is not on its roster for the PAISWT seasons he placed, so there is no grade print to resolve from. One of the 22 not_on_roster athletes in PAISWT's 87-key residue. Closed as not found rather than guessed (2 Nov 2026)."
+    },
+    {
+      "name": "Ryan Filoon",
+      "school": "William Penn Charter",
+      "season": 2026,
+      "reason": "approved",
+      "note": "No class year: the school has a pa-wrestling team page but this wrestler is not on its roster for the PAISWT seasons he placed, so there is no grade print to resolve from. One of the 22 not_on_roster athletes in PAISWT's 87-key residue. Closed as not found rather than guessed (2 Nov 2026)."
+    }
+  ],
+  "notes": [
+    "Pennsylvania passes its data gates as of 2 Nov 2026, after two pa-wrestling.com grad-year addenda. PIAA resolution went from 336 of 692 placer keys (48.6%) to 667 of 692 (96.4%), above the 95% bar, and all 40 unresolved champion keys resolved - Jax Forrest, Rune Lawrence, Camden Baum, Dalton Wenner and Aaron Seidel among them. No unresolved PIAA champion remains. 949 placer rows gained a year, 0 held, meaning not one filled row disagreed with a year already on file. Profiles went from 180 to 296.",
+    "The PAISWT half closed at the same time, and it was the larger hole. Those 520 rows had carried no class year since the 6 Oct extraction, so not one had ever been eligible to mint; the addendum resolved 288 of 374 athletes and put exactly 79 placers in current classes - the 79 that had been named in this file as unaccounted the day before. PAISWT remains placements-only: no bout data was ever collected for it, so those profiles carry a state placement and no matches until someone pulls the brackets.",
+    "PIAA and PAISWT are two separate championships, not two spellings of one - across every PA row the 2,184 PIAA rows and the 520 PAISWT rows share not one name-and-season pair. Berks Catholic, Bishop McCort and Faith Christian are PIAA members; Malvern Prep, Haverford School, Episcopal Academy, Penn Charter, Wyoming Seminary, Hill School, Germantown Academy and Mercersburg are not. Two consequences had to be fixed in code rather than noted, because every PAISWT row is classified \"Open\" and so nothing in the classification text can name the body: stateChampionshipName now reads the row's own association (lib/athlete-state.ts), and state-readiness asks isIndependentChampionship instead of testing the association for an /(ISA|VISAA)$/ suffix, which PAISWT does not have.",
+    "Five PAISWT wrestlers hold a placement from before their freshman year, and they are legitimate rather than errors: independent schools roster middle-schoolers, which is why they now appear on the independent-school INFO line instead of failing the namesake gate. Braden Damm, Everett Cooper, Finn Thomas, Matteo Pritchett and Rocco Lombardo. Lombardo is the one to re-check: his 2029 rests on a single 2026 'Fr' roster print with no corroborating season, and it puts him in 8th grade when he placed 2nd in 2025. Three others carry a 'surname only on roster' line in their evidence, but those are labelled non-matches to a different wrestler (Paxton Cooper, Ian Thomas, Leo Pritchett) and the class years rest on clean dated prints beside them.",
+    "Brock Humphrey is minted as a Pennsylvania profile and should not be. Linsly School is in Wheeling, West Virginia; PAISWT is an open independent tournament, so out-of-state preps enter it, and the residue file labels his school 'Linsly School (WV)' outright. Under the school-state rule his profile belongs to West Virginia. He is also the weakest class year in the PAISWT addendum - 2028 from paiswt.com's placewinners listing rather than a roster grade print - and the only one of the five pre-freshman flags that would stop being an anomaly if the year were 2027 instead. One profile, three reasons to look again.",
+    "The four previously held at the pre-freshman offset gate all resolved, and the hold was right to exist. Brayden Hartranft, Brody Kline, Carmine Lenzi and Jaidyn Mikulak each have a dated roster grade with a stable pa-wrestling athlete id from a season they placed, and all four come back graduated (2024 or 2025) rather than the 2028/2029 the RankWrestlers pass had derived. That was exactly the offset error the gate was built to catch.",
+    "Four wrestlers placed under two schools and were adjudicated as transfers, one person each, on a shared pa-wrestling athlete id with a coherent grade progression: Abigail Dolanch (226650, Fort Cherry-G as a freshman then Avella-G - the 1 Nov package said not to merge her without new evidence, and this is it), Justin Farnsworth (219865, Germantown Academy then Malvern Prep, champion 2025 and 2026), Jack Chamberlain (201241, Malvern Prep then Wyoming Seminary, champion 2025) and Kylee Trostle, a school-form case rather than a transfer (Eastern Lebanon County-G / Eastern Lebanon Co.-G / ELCO-G, one school). Each earlier placement was linked to the profile the wrestler already had.",
+    "C.J. Caines was minted twice and has been merged: the 2025 PIAA bracket printed \"Cj Caines\" and the 2026 bracket \"C.J. Caines\", same Hanover Area school, same class of 2028, and namesReferToSamePerson kept periods so the two compared as strangers. The matcher now folds punctuation and split name particles (lib/athlete-name-match.ts), so this kind cannot be created again. 45 wrestlers across PA/OH/IL/WI/MI are still split on school strings alone, which costs an orphaned earlier placement rather than a duplicate profile.",
+    "In-season coverage is 168 of 190 mint keys, not the 166 the package reports: Morgan Hyland and Aariona Strader are flagged uncovered but both have a shipped season file under the other school form. 216 season files carrying 7,529 matches loaded onto 160 profiles.",
+    "Verified from the shipped files rather than the packages' prose: 2,184 PIAA entrant rows, 936 placed, 4,131 bouts, every row stamped PA/PIAA, no duplicate bout IDs. Bout linkage writes only a side that reaches a profile, so it rises with the profile count rather than measuring the bouts."
+  ]
+}

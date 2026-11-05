@@ -30,6 +30,8 @@ import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { isSanctioned, loadStateSanctioning } from "@/lib/recruiting/state-events"
+import { championshipKeySlug } from "@/lib/athlete-state"
+import { HOME_STATE } from "@/lib/recruiting/states"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -46,6 +48,8 @@ const STATE = String(val("--state") ?? "").toUpperCase()
 const DIR = val("--dir")
 const SOURCE = val("--source") ?? "muse-delivery"
 const WRITE = args.includes("--write")
+/** Proceed although a key would lose rows — for the real case where a source withdrew results. */
+const ALLOW_SHRINK = args.includes("--allow-shrink")
 /*
  * Regional mode: a championship above the states, whose field is drawn from several of them.
  *
@@ -145,12 +149,44 @@ async function main() {
 
   // Linked placer rows of the state: by Flo id, and by season + name for the school check.
   const placers: Array<{ season: number; state: string | null; wrestler_name: string; school_clean: string | null; school_raw: string | null; athlete_id: string; source_athlete_id: string | null }> = []
-  for (let f = 0; ; f += 1000) {
-    const q = sb.from("state_tournament_placers").select("season, state, wrestler_name, school_clean, school_raw, athlete_id, source_athlete_id").not("athlete_id", "is", null).order("id").range(f, f + 999)
-    const { data, error } = await (REGIONAL ? q.in("state", POOL) : q.eq("state", STATE))
-    if (error) throw error
-    placers.push(...((data ?? []) as never[]))
-    if (!data || data.length < 1000) break
+  /*
+   * North Carolina's placements are not in `state_tournament_placers` - it holds nothing for NC at
+   * all. They live in `wrestling_nchsaa_results`, which 136 places in the code read, and which
+   * scripts/state-readiness.ts already special-cases the same way. Without this, an NC ledger
+   * imports with every side unlinked: the 2025 ledger dry-ran at 0 of 3,464 sides reaching a
+   * profile, in a state with 1,291 of them.
+   */
+  const NC_HOME = !REGIONAL && STATE === HOME_STATE
+  if (NC_HOME) {
+    for (let f = 0; ; f += 1000) {
+      const { data, error } = await sb
+        .from("wrestling_nchsaa_results")
+        .select("year, wrestler_name, school, athlete_id")
+        .not("athlete_id", "is", null)
+        .order("id")
+        .range(f, f + 999)
+      if (error) throw error
+      for (const r of (data ?? []) as Array<Record<string, unknown>>) {
+        placers.push({
+          season: Number(r.year),
+          state: HOME_STATE,
+          wrestler_name: String(r.wrestler_name ?? ""),
+          school_clean: (r.school as string) ?? null,
+          school_raw: (r.school as string) ?? null,
+          athlete_id: String(r.athlete_id),
+          source_athlete_id: null,
+        })
+      }
+      if (!data || data.length < 1000) break
+    }
+  } else {
+    for (let f = 0; ; f += 1000) {
+      const q = sb.from("state_tournament_placers").select("season, state, wrestler_name, school_clean, school_raw, athlete_id, source_athlete_id").not("athlete_id", "is", null).order("id").range(f, f + 999)
+      const { data, error } = await (REGIONAL ? q.in("state", POOL) : q.eq("state", STATE))
+      if (error) throw error
+      placers.push(...((data ?? []) as never[]))
+      if (!data || data.length < 1000) break
+    }
   }
   const byFlo = new Map<string, Set<string>>()
   for (const p of placers) if (p.source_athlete_id) byFlo.set(p.source_athlete_id, new Set([...(byFlo.get(p.source_athlete_id) ?? []), p.athlete_id]))
@@ -198,8 +234,12 @@ async function main() {
      * A slug, not the association verbatim: Delaware's girls championship is run by the "Girls
      * Wrestling Committee", which made the key "girls wrestling committee-states-2026" - spaces
      * and all - in a column every other key is dash-separated in.
+     *
+     * And the state goes in front where two states share the acronym (championshipKeySlug): both
+     * Indiana and Iowa are the IHSAA, both Mississippi and Michigan the MHSAA, so without it
+     * Michigan's import aimed at Mississippi's rows.
      */
-    const assocSlug = assoc.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    const assocSlug = championshipKeySlug(STATE, assoc)
     const eventKey = REGIONAL
       ? `${assocSlug}-${SLUG}-${season}`
       : QUALIFIERS
@@ -259,8 +299,23 @@ async function main() {
     const w = link(season, b.Winner, b["Winner School"], b["Winner ID"])
     const l = link(season, b.Loser, b["Loser School"], b["Loser ID"])
     sides += 2
-    if (w) linked++, rows.push({ ...base, athlete_id: w, athlete_name: b.Winner, athlete_club: b["Winner School"], opponent_name: b.Loser, opponent_id: l, opponent_club: b["Loser School"], win: true })
-    if (l) linked++, rows.push({ ...base, athlete_id: l, athlete_name: b.Loser, athlete_club: b["Loser School"], opponent_name: b.Winner, opponent_id: w, opponent_club: b["Winner School"], win: false })
+    /*
+     * BOTH sides are written, whether or not either reaches a profile today (Matt, 4 Nov 2026).
+     *
+     * Until now a side that linked to nobody was dropped, and that quietly decided what a wrestler
+     * could ever see: a kid who made his own profile got no state matches at all, because his rows
+     * had never been stored. Nothing could recover them but a re-import, which only happens when
+     * somebody runs one. `getUnlinkedRowsByAthleteName` already surfaces an unlinked row on the
+     * profile whose name matches it, so storing the side is the whole fix - the day a family claims
+     * him, his matches are there.
+     *
+     * The cost is real and was accepted: these tables roughly double. `athlete_id` stays null until
+     * a mint or the result linker decides it, exactly as `state_tournament_placers` holds every
+     * entrant and links the ones it can.
+     */
+    linked += (w ? 1 : 0) + (l ? 1 : 0)
+    rows.push({ ...base, athlete_id: w ?? null, athlete_name: b.Winner, athlete_club: b["Winner School"], opponent_name: b.Loser, opponent_id: l, opponent_club: b["Loser School"], win: true })
+    rows.push({ ...base, athlete_id: l ?? null, athlete_name: b.Loser, athlete_club: b["Loser School"], opponent_name: b.Winner, opponent_id: w, opponent_club: b["Winner School"], win: false })
   }
   /*
    * A round-robin pool meets the same pair more than once under one round name.
@@ -287,17 +342,70 @@ async function main() {
   }
   if (numbered) console.log(`  ${numbered} sides in repeated pool meetings carry their bout number`)
 
-  // bout_order within each wrestler's event, in bracket order.
+  /*
+   * bout_order within each wrestler's event, in bracket order - keyed on the NAME where there is no
+   * profile yet. Keyed on athlete_id alone, every unlinked side of an event shared one null key and
+   * the whole field was numbered as if it were one wrestler's tournament.
+   */
   const groups = new Map<string, Row[]>()
-  for (const r of rows) groups.set(`${r.athlete_id}|${r.event_key}`, [...(groups.get(`${r.athlete_id}|${r.event_key}`) ?? []), r])
+  for (const r of rows) {
+    const who = r.athlete_id ?? `name:${String(r.athlete_name ?? "").trim().toLowerCase()}`
+    groups.set(`${who}|${r.event_key}`, [...(groups.get(`${who}|${r.event_key}`) ?? []), r])
+  }
   for (const g of groups.values()) g.sort((a, b) => a._rank - b._rank).forEach((r, i) => (r.bout_order = i))
   const keys = [...new Set(rows.map((r) => r.event_key))].sort()
-  const profiles = new Set(rows.map((r) => r.athlete_id))
+  const profiles = new Set(rows.map((r) => r.athlete_id).filter(Boolean))
   console.log(`${REGIONAL ?? STATE}: ${bouts.length} bout rows in ${files.length} files, ${unique.length} after Bout ID dedupe`)
-  console.log(`  sides linked to a profile: ${linked} of ${sides}, across ${profiles.size} profiles`)
+  console.log(`  sides written: ${rows.length} of ${sides} · linked to a profile now: ${linked}, across ${profiles.size} profiles`)
+  console.log(`    the rest are stored unlinked, and reach a profile the day one exists for them`)
   if (REGIONAL) console.log(`    by Flo wrestler id: ${viaFlo} · by name and school: ${viaName} · refused, wrong state: ${refusedByState}`)
   for (const k of keys) console.log(`  ${k}: ${rows.filter((r) => r.event_key === k).length} rows`)
   if (QUALIFIERS && rows.some((r) => !r.event_date)) throw new Error("--layer qualifiers needs --dates covering every tournament")
+
+  /*
+   * The unit of completeness is the EVENT KEY, and the event key is never the source tournament.
+   *
+   * This import replaces each `<association>-states-<season>` wholesale, so a file holding part of
+   * one deletes the rest. That cost nothing only because it was caught by hand three times in one
+   * day: VISAA 2026's 150 and 285 brackets, with 331 rows at risk, and Virginia's 2025 Class 1A and
+   * 4A, delivered as "complete sets for two new event keys" - true of their Trackwrestling
+   * tournament ids, not of this column, where both are vhsl-states-2025 along with everything
+   * already held.
+   *
+   * So it is measured here rather than trusted: for every key about to be replaced, how many rows
+   * and which weight classes exist now, against what this run would write. Fewer rows, or a weight
+   * set that is a strict subset of what is held, means a partial file, and the run stops before
+   * anything is deleted. --allow-shrink proceeds and names what shrinks.
+   */
+  const shrinking: string[] = []
+  for (const k of keys) {
+    const existing: Array<{ weight_class: string | null }> = []
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb
+        .from("other_tournament_bouts")
+        .select("weight_class")
+        .eq("event_key", k)
+        .order("id")
+        .range(from, from + 999)
+      if (error) throw error
+      existing.push(...((data ?? []) as Array<{ weight_class: string | null }>))
+      if (!data || data.length < 1000) break
+    }
+    if (!existing.length) continue
+    const mine = rows.filter((r) => r.event_key === k)
+    const myWeights = new Set(mine.map((r) => String((r as { weight_class?: unknown }).weight_class ?? "")))
+    const missing = [...new Set(existing.map((r) => String(r.weight_class ?? "")))].filter((w) => !myWeights.has(w))
+    if (mine.length < existing.length) shrinking.push(`${k}: holds ${existing.length} rows, this run writes ${mine.length}`)
+    else if (missing.length) shrinking.push(`${k}: holds ${missing.length} weight class(es) this run does not cover (${missing.slice(0, 8).join(", ")})`)
+  }
+  if (shrinking.length) {
+    console.log(`\n  PARTIAL EVENT — nothing deleted, nothing written:`)
+    for (const m of shrinking) console.log(`     ${m}`)
+    console.log(`     An event key is replaced whole. Import the COMPLETE set for every key above in`)
+    console.log(`     ONE run, or pass --allow-shrink if the source really did withdraw results.`)
+    if (!ALLOW_SHRINK) return
+    console.log(`     --allow-shrink given: proceeding.`)
+  }
   if (!WRITE) return console.log("\nDry run. --write to apply.")
   for (const k of keys) {
     const { error } = await sb.from("other_tournament_bouts").delete().eq("event_key", k)
