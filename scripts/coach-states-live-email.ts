@@ -65,7 +65,11 @@ function renderLetter(audience: Audience, coach: string, counts: Counts, momentu
   const n = (v: number, one: string, many: string) => `${v.toLocaleString("en-US")} ${v === 1 ? one : many}`
   const items = STATES.map((s) => ({
     text: `${s.name}: ${[n(counts[s.code].aa, "All-American", "All-Americans"), n(counts[s.code].champs, "state champion", "state champions"), n(counts[s.code].placers, "state placer", "state placers")].join(", ")}${s.ranked ? ", plus state rankings" : ""}`,
-    href: `${SITE}/prospects/all?state=${s.code}`,
+    // An invited coach has no account: the link signs him up and lands him on that state's wrestlers
+    // (the coach sign-up signs in at once and follows returnTo). A member goes straight there.
+    href: audience === "invite"
+      ? `${SIGNUP}&returnTo=${encodeURIComponent(`/prospects/all?state=${s.code}`)}`
+      : `${SITE}/prospects/all?state=${s.code}`,
   }))
   // Matt, 5 Nov 2026: programs exact, coaches "more than" a round ten.
   const programs = `${momentum.programs} college programs and more than ${Math.floor(momentum.coaches / 10) * 10} coaches are already on ${BRAND}`
