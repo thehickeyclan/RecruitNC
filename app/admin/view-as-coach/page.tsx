@@ -2,9 +2,11 @@
  * View as coach (Matt, 27 Oct 2026: "i need a way of selecting a program and seeing what they see").
  * Every program with a coach on the platform; each coach opens My Recruits exactly as that coach
  * sees it, read-only (app/my-recruits ?as=), and their tournament reports (?as= on /coach-reports).
- * Admins only: app/admin/layout.tsx requires an admin.
+ * Admins and business accounts (lib/business/view-as-coach.ts); the page checks for itself.
  */
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
+import { requireBusinessViewer } from "@/lib/business/require-business-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { isInternalAccount } from "@/lib/internal-accounts"
 import { ViewAsCoachList, type ProgramRow } from "./view-as-coach-list"
@@ -13,6 +15,9 @@ export const dynamic = "force-dynamic"
 export const metadata: Metadata = { title: "View as coach" }
 
 export default async function ViewAsCoachPage() {
+  // Admins, and business accounts (Rhett) - the board they open hides contact details for the latter.
+  const auth = await requireBusinessViewer("/admin/view-as-coach")
+  if (!auth.ok) redirect("/")
   const admin = createAdminClient()
   const { data: coaches } = await admin
     .from("user_profiles")

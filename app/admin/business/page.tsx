@@ -77,6 +77,7 @@ const LINKS: Array<{ href: string; title: string; what: string }> = [
   { href: "/admin/college-interest", title: "College interest", what: "Which programs are looking at which wrestlers" },
   { href: "/admin/card-analytics", title: "Card analytics", what: "Which wrestlers are getting viewed" },
   { href: "/admin/rankings/board", title: "Rankings board", what: "The boards college coaches recruit from" },
+  { href: "/admin/view-as-coach", title: "My Recruits, as each coach sees it", what: "Pick a program and coach: their board, needs and reports, read-only" },
 ]
 
 /** Admin-only, because it prints a row per family headed by the parent's name or email. */

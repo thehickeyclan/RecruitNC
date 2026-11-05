@@ -82,3 +82,10 @@ describe("businessDecision", () => {
     expect(businessDecision(false, { business_access: "true" }, "/admin/business").allow).toBe(false)
   })
 })
+
+describe("view as coach", () => {
+  it("is open to a business grant", () => {
+    expect(businessDecision(false, { business_access: true }, "/admin/view-as-coach")).toEqual({ allow: true, isAdmin: false })
+    expect(businessDecision(false, {}, "/admin/view-as-coach").allow).toBe(false)
+  })
+})
