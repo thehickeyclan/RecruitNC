@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { mayUseComparison } from "@/lib/compare-access"
+import { hasBusinessGrant } from "@/lib/business/access"
 import { loadSimilarWrestlers } from "@/lib/similar-wrestlers"
 
 export const dynamic = "force-dynamic"
@@ -18,6 +19,6 @@ export async function GET(request: NextRequest) {
     .select("role, profile_type, verified_coach, is_admin")
     .eq("user_id", user.id)
     .maybeSingle()
-  if (!mayUseComparison({ profile, userId: user.id })) return NextResponse.json({ error: "For verified college coaches." }, { status: 403 })
+  if (!mayUseComparison({ profile, userId: user.id, business: hasBusinessGrant(user.app_metadata) })) return NextResponse.json({ error: "For verified college coaches." }, { status: 403 })
   return NextResponse.json({ similar: await loadSimilarWrestlers(admin, id) })
 }

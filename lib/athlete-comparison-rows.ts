@@ -662,7 +662,7 @@ function activityRow(left: ActivityStatus | null, right: ActivityStatus | null):
 export function buildComparisonRows(
   left: ComparisonReport,
   right: ComparisonReport,
-  options: { personal: boolean; activity?: { left: ActivityStatus | null; right: ActivityStatus | null }; now?: Date },
+  options: { personal: boolean; /** Star ratings without personal data (business accounts). Defaults to personal. */ stars?: boolean; activity?: { left: ActivityStatus | null; right: ActivityStatus | null }; now?: Date },
 ): ComparisonRow[] {
   const { personal } = options
   const now = options.now ?? new Date()
@@ -683,7 +683,7 @@ export function buildComparisonRows(
 
     nationalRankRow(left, right),
     stateRankRow(left, right),
-    starRow(left, right, personal),
+    starRow(left, right, options.stars ?? personal),
 
     academicRow("gpa", "GPA", left, right, personal),
     academicRow("sat", "SAT", left, right, personal),
