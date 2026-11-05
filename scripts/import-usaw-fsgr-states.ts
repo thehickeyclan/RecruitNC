@@ -95,6 +95,22 @@ const DATES: Record<string, string> = {
   // and the run says so out loud rather than letting a guess pass as a date. Nothing downstream
   // turns on it at this distance: the 12-month head-to-head window closed on spring 2025 long ago.
   "KY|2025": "2025-05-01",
+  /*
+   * Parity wave 3, 5 Nov 2026. First day of each championship, read from that package's own
+   * delivery note. Arkansas is the one worth naming: it runs its FS/GR state in APRIL, which is
+   * why every May-window search in the earlier waves missed it.
+   */
+  "AR|2025": "2025-04-18",
+  "IA|2025": "2025-05-04",
+  "IA|2026": "2026-05-02",
+  "MN|2025": "2025-05-16",
+  "NY|2026": "2026-05-08",
+  "OK|2025": "2025-05-24",
+  "PA|2025": "2025-05-31",
+  "PA|2026": "2026-05-29",
+  "TX|2025": "2025-05-03",
+  "TX|2026": "2026-05-23",
+  "WI|2025": "2025-05-03",
   // Both styles the same day and venue, Walker HS (FloArena 13956434 freestyle, 14143294 Greco).
   "LA|2025": "2025-05-03",
 }

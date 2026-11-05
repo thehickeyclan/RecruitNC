@@ -118,8 +118,19 @@ async function examine(code: string, name: string, live: boolean): Promise<State
   }
   const latestSeason = Math.max(0, ...rows.map((r) => Number(r.season) || 0))
   const noYearLatest = new Set(rows.filter((r) => !r.grad_year && Number(r.season) === latestSeason).map(who))
+  /*
+   * The ceiling counts only wrestlers seen in the last TWO seasons. The mint chain creates
+   * profiles from those and merely links the season before, because a wrestler who appears once
+   * three seasons ago and never again has usually left the sport or the state - minting him gives
+   * a page nothing will ever update. Counting him made the report nag about work nobody intends
+   * to do: Georgia showed 59 "mintable and not minted" and all 59 were 2024-only, held on purpose.
+   */
+  const recentSeasons = [latestSeason, latestSeason - 1]
   const ceiling = new Set(
-    rows.filter((r) => Number(r.grad_year) >= CURRENT_CLASSES[0] && Number(r.grad_year) <= CURRENT_CLASSES[1]).map(who),
+    rows
+      .filter((r) => recentSeasons.includes(Number(r.season)))
+      .filter((r) => Number(r.grad_year) >= CURRENT_CLASSES[0] && Number(r.grad_year) <= CURRENT_CLASSES[1])
+      .map(who),
   ).size
 
   const { count: profiles } = await inState(sb.from("athletes").select("*", { count: "exact", head: true }), code)

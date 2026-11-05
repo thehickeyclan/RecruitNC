@@ -65,3 +65,17 @@ describe("an export row's evidence must soundly derive the year it claims", () =
     expect(evidenceContradictsItself("placed 2024, 2025 and 2026; class of 2027", 2027)).toBeNull()
   })
 })
+
+describe("a row that claims no year", () => {
+  it("is never refused, however its evidence reads", () => {
+    // Deliberate holds: the delivery names the chains it found and declines to choose. Treating
+    // the blank as a claim of 0 reported all 37 holds in the 5 Nov harvest as defects.
+    const ev = "2025: HS Sophomore -> 2027 (IGHSAU 12642500) | 2026: HS Senior -> 2026 — prints disagree, held"
+    expect(evidenceContradictsItself(ev, 0)).toBeNull()
+    expect(evidenceContradictsItself(ev, Number.NaN)).toBeNull()
+  })
+
+  it("still refuses a row that claims a year its evidence does not derive", () => {
+    expect(evidenceContradictsItself("2026: HS Senior -> 2026 (AAA 1)", 2027)).toMatch(/soundly derives 2026/)
+  })
+})

@@ -38,7 +38,16 @@ export const RECRUITING_BRAND = {
     { code: "MD", name: "Maryland", live: false },
     { code: "WV", name: "West Virginia", live: false },
     { code: "DE", name: "Delaware", live: false },
-    { code: "GA", name: "Georgia", live: false },
+    /*
+     * Live 5 Nov 2026, the same day as Tennessee and the largest state we have opened: 1,244
+     * profiles against South Carolina's 875 and Virginia's 825. Open, not ranked - no Georgia
+     * ranker yet.
+     *
+     * Two associations, GHSA and GIAA, 18,948 bout sides, and every single profile has a state
+     * result behind it: 431 placed, 813 qualifier-only, none with nothing. 328/328 of its 2026
+     * placers are accounted for and no current-class profile is missing a school or a gender.
+     */
+    { code: "GA", name: "Georgia", live: true, ranked: false },
     { code: "FL", name: "Florida", live: false },
     { code: "AL", name: "Alabama", live: false },
     { code: "LA", name: "Louisiana", live: false },
@@ -137,6 +146,18 @@ export const RECRUITING_BRAND = {
      * results. One association, MSHSL. Top 6, three classes plus girls.
      */
     { code: "MN", name: "Minnesota", live: false },
+    /*
+     * Ohio, Illinois and Wisconsin were built on 2 Nov and their packages sat in Downloads
+     * unregistered, so every tool that reads this list treated them as states we had never
+     * touched - the coverage map drew them grey as "Coming" while Ohio alone held 1,307 placer
+     * rows that the 5 Nov qualifier harvest filled with class years. The data was there the whole
+     * time; the registration was the missing line.
+     *
+     * Ohio and Illinois are the two largest wrestling states we hold outside the live three.
+     */
+    { code: "OH", name: "Ohio", live: false },
+    { code: "IL", name: "Illinois", live: false },
+    { code: "WI", name: "Wisconsin", live: false },
   ],
 } as const
 
