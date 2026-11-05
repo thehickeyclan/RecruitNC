@@ -27,6 +27,9 @@ type Viewer = {
   lastViewed: string
 }
 
+type Star = { userId: string; name: string; program: string | null; at: string; auto: boolean }
+type Report = { userId: string; name: string; program: string | null; opens: number; downloads: number; lastAt: string }
+
 type Payload = {
   athleteName: string | null
   totalViews: number
@@ -35,6 +38,8 @@ type Payload = {
   coachViewers: number
   collegeCoachViewers: number
   viewers: Viewer[]
+  stars?: Star[]
+  scoutingReports?: Report[]
 }
 
 const KIND_LABEL: Record<string, string> = {
@@ -103,7 +108,7 @@ export function ProfileViewersDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Who viewed {data?.athleteName || athleteName || "this profile"}</DialogTitle>
+          <DialogTitle>{data?.athleteName || athleteName || "This profile"}: views, stars and scouting reports</DialogTitle>
           <DialogDescription>
             {loading
               ? "Loading…"
@@ -127,6 +132,63 @@ export function ProfileViewersDialog({
 
         {!loading && !error && data && (
           <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {/* Three separate metrics (Matt, 5 Nov 2026): a star or a report is not a view. */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                ["Profile views", data.totalViews],
+                ["Stars", data.stars?.length ?? 0],
+                ["Scouting reports", data.scoutingReports?.length ?? 0],
+              ].map(([label, n]) => (
+                <div key={label as string} className="rounded-lg border p-3 text-center">
+                  <p className="text-2xl font-bold text-gray-900">{n}</p>
+                  <p className="text-xs text-gray-500">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            {data.stars?.length ? (
+              <div className="space-y-2 pt-2">
+                <p className="text-sm font-semibold text-gray-900">Stars</p>
+                {data.stars.map((st) => (
+                  <div key={st.userId} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="truncate font-medium text-gray-900">{st.name}</span>
+                        {st.auto ? (
+                          <Badge variant="outline" className="bg-gray-100 text-gray-600 hover:bg-gray-100">
+                            Added by system on commitment
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <p className="truncate text-xs text-gray-500">{st.program ?? "—"}</p>
+                    </div>
+                    <p className="flex-shrink-0 text-xs text-gray-500">{when(st.at)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {data.scoutingReports?.length ? (
+              <div className="space-y-2 pt-2">
+                <p className="text-sm font-semibold text-gray-900">Scouting reports</p>
+                {data.scoutingReports.map((r) => (
+                  <div key={r.userId} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                    <div className="min-w-0">
+                      <span className="truncate font-medium text-gray-900">{r.name}</span>
+                      <p className="truncate text-xs text-gray-500">{r.program ?? "—"}</p>
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      <p className="text-sm text-gray-900">
+                        {r.opens} opened{r.downloads ? ` · ${r.downloads} downloaded` : ""}
+                      </p>
+                      <p className="text-xs text-gray-500">{when(r.lastAt)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <p className="pt-2 text-sm font-semibold text-gray-900">Profile views</p>
             {data.viewers.length === 0 ? (
               <p className="py-6 text-sm text-gray-500">No views recorded for this athlete yet.</p>
             ) : (
