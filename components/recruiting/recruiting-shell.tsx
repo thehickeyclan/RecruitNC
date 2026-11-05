@@ -226,16 +226,16 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
       </div>
 
       <div className="flex flex-1">
-        <nav aria-label="Recruiting navigation" className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r border-white/10 p-3 print:hidden lg:block">
+        <nav aria-label="Recruiting navigation" className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r border-white/10 p-3 print:hidden md:block">
           <SideMenu items={items} isActive={isActive} partner={hasCommunityAccess(profile)} />
         </nav>
-        <div className="flex min-w-0 flex-1 flex-col pb-16 lg:pb-0">
+        <div className="flex min-w-0 flex-1 flex-col pb-16 md:pb-0">
           <main className="flex-1">{children}</main>
           <RecruitingFooter />
         </div>
       </div>
 
-      <nav aria-label="Recruiting navigation" className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-5 border-t border-white/10 bg-[#0A1628] print:hidden lg:hidden">
+      <nav aria-label="Recruiting navigation" className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-5 border-t border-white/10 bg-[#0A1628] print:hidden md:hidden">
         {[{ ...recruits, label: "Recruits" }, athletes, { ...rankings[0], label: "Rankings" }, ...(businessViewer ? [] : [inbox])].map((item) => {
           const active = isActive(item.href)
           return (
