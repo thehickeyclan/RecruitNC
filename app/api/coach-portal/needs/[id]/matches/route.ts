@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { requestedViewAsId } from "@/lib/view-as/subject"
 import { viewAsRole } from "@/lib/business/view-as-coach"
 
 import { VIEW_GENDER_COOKIE, viewGenderFor } from "@/lib/recruiting/coach-program"
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const admin = createAdminClient()
   const viewing = viewGenderFor(null, request.cookies.get(VIEW_GENDER_COOKIE)?.value)
   let coach = await resolveNeedsCoach(admin, user.id, viewing)
-  const as = request.nextUrl.searchParams.get("as")?.trim()
+  const as = (await requestedViewAsId(request.nextUrl.searchParams.get("as"))) ?? undefined
   if (as && as !== user.id && (coach?.isAdmin || (!coach && (await viewAsRole(admin, user.id, user.app_metadata)) === "business"))) {
     coach = (await resolveNeedsCoach(admin, as, viewing)) ?? coach
   }

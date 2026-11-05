@@ -4,7 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { loadMyRecruits } from "@/lib/my-recruits"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
-import { viewAsRole, withoutContact } from "@/lib/business/view-as-coach"
+import { withoutContact } from "@/lib/business/view-as-coach"
+import { viewSubject } from "@/lib/view-as/subject"
 
 export const dynamic = "force-dynamic"
 
@@ -18,15 +19,10 @@ export async function GET(request: Request) {
      * An admin may load one coach's board to see what that coach sees (Matt, 27 Oct 2026: "a way of
      * selecting a program and seeing what they see"). Read-only on the page; never anyone else.
      */
-    const asId = new URL(request.url).searchParams.get("as")?.trim() || null
-    let subjectId = user.id
-    let hideContact = false
-    if (asId && asId !== user.id) {
-      const role = await viewAsRole(admin, user.id, user.app_metadata)
-      if (!role) return NextResponse.json({ error: "Admins only." }, { status: 403 })
-      subjectId = asId
-      hideContact = role === "business"
-    }
+    // ?as= or the coach kept for this visit (lib/view-as/subject.ts); ignored unless admin or business.
+    const subject = await viewSubject(admin, user, new URL(request.url).searchParams.get("as"))
+    const subjectId = subject.subjectId
+    const hideContact = subject.viewer === "business"
     const loadedBoard = await loadMyRecruits(admin, subjectId)
     const board = hideContact ? { ...loadedBoard, recruits: withoutContact(loadedBoard.recruits) } : loadedBoard
     /*
