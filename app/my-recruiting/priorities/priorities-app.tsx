@@ -16,6 +16,7 @@ type Data = {
   respondent: Respondent
   athleteId: string
   wrestlers: Array<{ id: string; firstName: string }>
+  possessive: "his" | "her" | null
   firstName: string | null
   weight: number | null
   questions: Q[]
@@ -114,12 +115,16 @@ export function PrioritiesApp() {
     const s = screens[i]
     const key = s === "bsn" ? "bsn" : s.key
     // Next on a prefilled screen confirms it: the answer is saved as shown.
-    const confirmsPrefill = !own.has(key) && Boolean(data.prefill[key])
+    // The distance screen also carries the ZIP, which can be prefilled (from a brother's or sister's set) on its own.
+    const confirmsPrefill = (!own.has(key) && Boolean(data.prefill[key])) || (key === "distance" && !own.has("home_zip") && Boolean(data.prefill.home_zip))
     if (!skip && (drafts[key] || confirmsPrefill)) {
       const d = drafts[key] ?? draftFor(key)
-      const bodies: Array<Record<string, unknown>> = [{ key, value: d.value, marker: d.marker, notSure: d.notSure }]
-      if (key === "distance" && data.respondent === "parent" && typeof d.extra.zip === "string" && d.extra.zip && d.extra.zip !== own.get("home_zip")?.value) bodies.push({ key: "home_zip", value: d.extra.zip })
-      if (key === "budget" && (d.extra.kind === "target" || d.extra.kind === "limit") && d.extra.kind !== own.get("budget_kind")?.value) bodies.push({ key: "budget_kind", value: d.extra.kind })
+      // Each save names its wrestler when it is queued: a parent of two who switches while a save is
+      // still on its way can only ever write to the child it was answered for.
+      const athleteId = data.athleteId
+      const bodies: Array<Record<string, unknown>> = d.value != null || d.notSure ? [{ athleteId, key, value: d.value, marker: d.marker, notSure: d.notSure }] : []
+      if (key === "distance" && data.respondent === "parent" && typeof d.extra.zip === "string" && d.extra.zip && d.extra.zip !== own.get("home_zip")?.value) bodies.push({ athleteId, key: "home_zip", value: d.extra.zip })
+      if (key === "budget" && (d.extra.kind === "target" || d.extra.kind === "limit") && d.extra.kind !== own.get("budget_kind")?.value) bodies.push({ athleteId, key: "budget_kind", value: d.extra.kind })
       for (const body of bodies) {
         queue = queue.then(() =>
           put(body)
@@ -160,7 +165,7 @@ export function PrioritiesApp() {
             </button>
           ) : null}
         </div>
-        {data.respondent === "athlete" ? null : <p className="mt-6 text-xs text-white/45">{name} answers a set of their own. Only {name} can answer those.</p>}
+        {data.respondent === "athlete" ? null : <p className="mt-6 text-xs text-white/45">{data.possessive ? `${name} has ${data.possessive} own set. Only ${name} can answer it.` : `${name} answers a separate set. Only ${name} can answer it.`}</p>}
       </Panel>
     )
   }
@@ -456,7 +461,11 @@ function Summary({ data, name, screens, onEdit, onChanged, onPick }: { data: Dat
           )
         })}
       </ul>
-      <p className="mt-4 text-xs text-white/45">Shared: {data.respondent === "parent" ? name : "your parent"} sees it too. Scout only: used for your suggestions, never shown to anyone. Only me: just you.</p>
+      <ul className="mt-4 space-y-0.5 text-xs text-white/45">
+        <li>Shared: {data.respondent === "parent" ? name : "your parent"} sees it too.</li>
+        <li>Scout only: {data.respondent === "parent" ? name : "your parent"} never sees it. Scout uses it for your suggestions.</li>
+        <li>Only me: {data.respondent === "parent" ? name : "your parent"} never sees it. It shapes your own view only, never anything joint.</li>
+      </ul>
     </Panel>
   )
 }
@@ -472,7 +481,9 @@ function describe(s: Q | "bsn", a: Answer): string {
   if (k.type === "top3") return ((a.value as string[]) ?? []).map((v, n) => `${n + 1}. ${label(k.options, v)}`).join("  ")
   if (k.type === "grid") {
     const g = (a.value ?? {}) as Record<string, string>
-    return k.rows.filter((r) => g[r.key]).map((r) => `${r.key}: ${label(k.options, g[r.key])}`).join(" · ") || "All open"
+    // Blank means open: say so, the rule a parent is most likely to misread later (Muse, 5 Nov).
+    const set = k.rows.filter((r) => g[r.key]).map((r) => `${r.key}: ${label(k.options, g[r.key])}`)
+    return !set.length ? "All open" : set.length < k.rows.length ? `${set.join(" · ")} · others open` : set.join(" · ")
   }
   if (k.type === "majors") {
     const v = a.value as { majors: string[]; text: string | null; undecided: boolean }

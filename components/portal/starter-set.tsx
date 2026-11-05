@@ -6,6 +6,12 @@ import { Check, Plus } from "lucide-react"
 import type { StarterSchool } from "@/app/my-recruiting/starter-set"
 import { FIRST_LIST_GOAL, FirstListProgress } from "@/components/portal/first-list-progress"
 
+/** No logo on file (Ellsworth Community College, say): the college's initials, never a blank box. */
+function monogram(name: string): string {
+  const words = name.split(/\s+/).filter((w) => /^[A-Z]/.test(w) && !["Of", "The", "And", "At"].includes(w))
+  return (words.length ? words : [name]).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
+}
+
 const LEVEL_COLOR: Record<string, string> = { D1: "#60a5fa", D2: "#34d399", D3: "#fbbf24", NAIA: "#f472b6", NJCAA: "#a78bfa" }
 
 /** Step 1's starter set: up to one earned college per level, each one tap to save. Often fewer than five. */
@@ -51,7 +57,9 @@ export function StarterSet({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={s.logo} alt="" className="h-9 w-9 shrink-0 rounded bg-white object-contain p-0.5" />
               ) : (
-                <span className="h-9 w-9 shrink-0 rounded bg-white/[0.06]" aria-hidden />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-white/[0.08] text-[11px] font-black text-white/70" aria-hidden>
+                  {monogram(s.name)}
+                </span>
               )}
               <button
                 type="button"

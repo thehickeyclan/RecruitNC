@@ -25,7 +25,7 @@ export function firstDayMoves(input: { firstName: string; athleteId: string; pro
     {
       key: "priorities",
       label: "What matters to your family",
-      why: input.prioritiesDone ? "Answered. Change it any time." : "About 3 minutes. Tell us what matters most.",
+      why: input.prioritiesDone ? "Answered. Change it any time." : "About 3 minutes. Tell us what matters before you build the list.",
       href: `/my-recruiting/priorities?w=${input.athleteId}`,
       done: input.prioritiesDone,
     },

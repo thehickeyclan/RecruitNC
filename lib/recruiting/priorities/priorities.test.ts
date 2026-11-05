@@ -33,7 +33,7 @@ describe("question inventory (authoritative numbering)", () => {
   })
   it("every screen says who sees the answer, and that coaches never do", () => {
     expect(sharingLine("shared", "athlete")).toMatch(/your parent.*Coaches never/)
-    expect(sharingLine("constraint", "parent")).toMatch(/without showing the number/)
+    expect(sharingLine("constraint", "parent")).toBe("Only you see the number. Scout can use it for your suggestions.")
   })
   it("never asks income", () => {
     expect(JSON.stringify(QUESTIONS)).not.toMatch(/income/i)
@@ -192,5 +192,13 @@ describe("two children", () => {
   })
   it("a 'not sure' is not carried over", () => {
     expect(withSiblingPrefill({}, { firstName: "Gavin", answers: [{ key: "budget", value: null, notSure: true }] })).toEqual({})
+  })
+})
+
+describe("approved copy (Muse, 5 Nov)", async () => {
+  const { athleteInviteText, shortListLine } = await import("./copy")
+  it("asks no questions", () => {
+    expect(athleteInviteText("Gavin", "https://x")).not.toContain("?")
+    for (const r of ["no_results", "out_of_state", "womens"] as const) expect(shortListLine(r, "Tyde")).not.toContain("?")
   })
 })
