@@ -199,13 +199,13 @@ export default async function RecruitWrestlersHome() {
               </div>
             </div>
             <p className="mt-10 text-xs font-bold uppercase tracking-[0.2em] text-[#A3E635]">On RecruitWrestlers, both sides are in the same place</p>
-            <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {loop.map(({ icon: Icon, n, unit, title, body }, i) => (
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {/* No step numbers: beside the stats, a "4" on the card with no stat read as four messages (Matt, 5 Nov 2026). */}
+              {loop.map(({ icon: Icon, n, unit, title, body }) => (
                 <li key={title} className="relative rounded-xl border border-[#A3E635]/25 bg-[#15243B] p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#A3E635] text-sm font-black text-[#0B1426]">{i + 1}</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#A3E635]/15">
                     <Icon className="h-5 w-5 text-[#A3E635]" aria-hidden />
-                  </div>
+                  </span>
                   {n ? (
                     <p className="mt-4 text-3xl font-black tabular-nums">
                       {n} <span className="block text-xs font-semibold uppercase tracking-wide text-white/50">{unit}</span>
@@ -215,7 +215,7 @@ export default async function RecruitWrestlersHome() {
                   <p className="mt-1 text-sm leading-snug text-white/60">{body}</p>
                 </li>
               ))}
-            </ol>
+            </ul>
           </div>
         </section>
 
