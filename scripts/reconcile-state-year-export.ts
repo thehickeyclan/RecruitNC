@@ -39,6 +39,19 @@ const val = (k: string) => (args.includes(k) ? args[args.indexOf(k) + 1] : null)
 const STATE = String(val("--state") ?? "").toUpperCase()
 const FILE = val("--file")
 const APPLY = args.includes("--apply")
+/**
+ * `--overwrite` also writes the DISAGREEMENTS, which --apply never does.
+ *
+ * The default refusal is the point: a disagreement is one source against another, and the tool
+ * cannot know which is right. But sometimes the supplier CAN - Virginia's four qualifier-RW years
+ * were contradicted by tier-1 participants-tab prints, and the tab is the registration record the
+ * brackets themselves draw from, verified 927 of 927 against payload prints. That is a judgment
+ * made with evidence, by the party holding it.
+ *
+ * So this is a separate flag, used on a small delta file written for the purpose, and every change
+ * is printed old -> new. It never rides along with a bulk --apply.
+ */
+const OVERWRITE = args.includes("--overwrite")
 if (!STATE || !FILE) throw new Error("need --state XX --file <export.csv>")
 
 function parseCsv(text: string): Record<string, string>[] {
@@ -253,14 +266,25 @@ async function main() {
     for (const f of fill.slice(0, 25)) console.log(`  ${f.r.wrestler_name} (${f.r.school_clean ?? f.r.school_raw}) season ${f.r.season} place ${f.r.place ?? "-"} -> ${f.year}`)
     if (fill.length > 25) console.log(`  ... and ${fill.length - 25} more`)
   }
-  if (!APPLY) return console.log(`\nDry run. --apply fills the ${fill.length} blank row(s); it never changes a year.`)
+  if (!APPLY && !OVERWRITE) {
+    return console.log(`\nDry run. --apply fills the ${fill.length} blank row(s); it never changes a year. --overwrite --apply also rewrites the ${disagree.length} disagreement(s).`)
+  }
   let n = 0
   for (const f of fill) {
     const { error } = await sb.from("state_tournament_placers").update({ grad_year: f.year }).eq("id", f.r.id).is("grad_year", null)
     if (error) throw new Error(error.message)
     n++
   }
-  console.log(`\nfilled ${n} blank class year(s). Disagreements left untouched: ${disagree.length}`)
+  let changed = 0
+  if (OVERWRITE) {
+    for (const d of disagree) {
+      const { error } = await sb.from("state_tournament_placers").update({ grad_year: d.year }).eq("id", d.r.id)
+      if (error) throw new Error(error.message)
+      console.log(`  OVERWROTE ${d.r.wrestler_name} (${d.r.school_clean ?? d.r.school_raw}) season ${d.r.season}: ${d.r.grad_year} -> ${d.year}`)
+      changed++
+    }
+  }
+  console.log(`\nfilled ${n} blank class year(s).${OVERWRITE ? ` Overwrote ${changed}.` : ` Disagreements left untouched: ${disagree.length}`}`)
 }
 
 main().catch((e) => { console.error(e); process.exit(1) })
