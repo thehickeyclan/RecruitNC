@@ -27,6 +27,8 @@ export const RECRUITING_BRAND = {
     { code: "SC", name: "South Carolina", live: true }, // Live 26 Oct 2026 (Matt); scripts/state-readiness.ts --state SC: all data gates pass
     // Live 3 Nov 2026 (Matt: "virginia should be up.. we won't have rankings for a bit"). Open, not ranked yet.
     { code: "VA", name: "Virginia", live: true, ranked: false },
+    // Live 5 Nov 2026 (Matt: "switch it to on"). Open, not ranked yet.
+    { code: "TN", name: "Tennessee", live: true, ranked: false },
     /*
      * Maryland's data went in on 22 Oct and passes every readiness gate, but the state was
      * missing from this list entirely - and a state that is not here does not exist to the
@@ -46,19 +48,6 @@ export const RECRUITING_BRAND = {
      * placers are accounted for and no current-class profile is missing a school or a gender.
      */
     { code: "GA", name: "Georgia", live: true, ranked: false },
-    /*
-     * Live 5 Nov 2026 (Matt: "make TN public"). Open, not ranked - there is no Tennessee ranker
-     * yet, so its rankings surface says so plainly rather than showing an empty board, the way
-     * Virginia launched.
-     *
-     * It went live the day its class years arrived. Tennessee sat at 194 profiles for weeks
-     * because TSSAA's own site prints no grade and that is where we had built from; the same
-     * championships on Flo carry a grade on every entrant, and the participants tab took it from
-     * 14% qualifier coverage to 99% and 194 profiles to 532 in an afternoon. Every data gate
-     * passes: 186/186 of its 2026 placers accounted for, 531/531 recent class years resolved,
-     * no duplicates, every current-class profile carrying a school and a gender.
-     */
-    { code: "TN", name: "Tennessee", live: true, ranked: false },
     { code: "FL", name: "Florida", live: false },
     { code: "AL", name: "Alabama", live: false },
     { code: "LA", name: "Louisiana", live: false },

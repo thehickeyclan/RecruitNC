@@ -3,8 +3,8 @@ import { isVisibleState, liveStates, recruitingCoverage } from "@/lib/recruiting
 
 describe("states per address", () => {
   it("RecruitWrestlers carries the five live states in registration order", () => {
-    expect(liveStates(true).map((s) => s.code)).toEqual(["NC", "SC", "VA", "GA", "TN"])
-    expect(recruitingCoverage(true)).toBe("North Carolina, South Carolina, Virginia, Georgia, and Tennessee")
+    expect(liveStates(true).map((s) => s.code)).toEqual(["NC", "SC", "VA", "TN", "GA"])
+    expect(recruitingCoverage(true)).toBe("North Carolina, South Carolina, Virginia, Tennessee, and Georgia")
     expect(isVisibleState("SC", false, true)).toBe(true)
     expect(isVisibleState("TN", false, true)).toBe(true)
     expect(isVisibleState("GA", false, true)).toBe(true)

@@ -7,13 +7,14 @@ import { Radio, X } from "lucide-react"
 /**
  * What is new on the platform, at the top of My Recruits (Matt, 5 Nov 2026: "so their My Recruits
  * dashboard looks like a cockpit"). A new id shows again to every coach; closing one hides it in
- * this browser. Add Tennessee here the day it goes live, not before.
+ * this browser. Add each state here the day it goes live, not before.
  */
 const NEWS = {
-  id: "2026-11-05-sc-va",
+  id: "2026-11-05-sc-va-tn",
   items: [
     { text: "South Carolina profiles are live", href: "/prospects/all?state=SC", cta: "See SC wrestlers" },
     { text: "Virginia profiles are live", href: "/prospects/all?state=VA", cta: "See VA wrestlers" },
+    { text: "Tennessee profiles are live", href: "/prospects/all?state=TN", cta: "See TN wrestlers" },
     { text: "South Carolina rankings are published", href: "/public-rankings?state=SC", cta: "See SC rankings" },
   ],
 }
@@ -46,7 +47,7 @@ export function CoachNewsStrip() {
           <X className="h-4 w-4" />
         </button>
       </div>
-      <ul className="mt-2 grid gap-2 sm:grid-cols-3">
+      <ul className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {NEWS.items.map((n) => (
           <li key={n.href}>
             <Link href={n.href} className="flex h-full flex-col justify-between gap-1 rounded-lg border border-white/10 bg-[#0f1c2e] px-3 py-2.5 hover:border-[#D3B574]/50">

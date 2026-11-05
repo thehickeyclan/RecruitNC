@@ -122,7 +122,7 @@ function SnapshotRow({ icon: Icon, label, value, sub }: { icon: LucideIcon; labe
     <li className="flex items-start gap-3 py-2">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden />
       <span className="w-28 shrink-0 text-sm text-white/55">{label}</span>
-      <span className="min-w-0 text-sm font-semibold text-white">
+      <span className="min-w-0 flex-1 break-words text-right text-sm font-semibold text-white">
         {value}
         {sub ? <span className="block text-xs font-normal text-white/45">{sub}</span> : null}
       </span>
@@ -249,7 +249,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-25" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0B1D3A] via-[#0B1D3A]/90 to-[#0B1D3A]/40" aria-hidden />
-        <div className="relative flex flex-col gap-6 p-5 sm:p-8 lg:flex-row lg:items-end lg:justify-between">
+        <div className="relative flex flex-col gap-6 p-5 sm:p-8 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
             <a href="/recruiting/college-map" className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: GOLD }}>
               <ArrowLeft className="h-4 w-4" aria-hidden /> All colleges
@@ -294,8 +294,8 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-start gap-3 lg:items-end">
-            <p className="hidden text-right text-sm font-semibold uppercase leading-6 tracking-[0.3em] text-white/70 lg:block">
+          <div className="flex flex-col items-start gap-3 xl:items-end">
+            <p className="hidden text-right text-sm font-semibold uppercase leading-6 tracking-[0.3em] text-white/70 2xl:block">
               Same grind.
               <br />
               Higher opportunities.
@@ -351,7 +351,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
       ) : null}
 
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-3">
+      <div className="mt-6 grid items-start gap-5 lg:grid-cols-2">
         {/* Column one */}
         <div className="space-y-5">
           <section className={card}>
@@ -377,9 +377,26 @@ export default async function SchoolPage({ params, searchParams }: Params) {
             ) : null}
           </section>
 
-          {full ? (
+          {fitResult && ctx ? (
             <section className={card}>
               <div className="flex items-baseline justify-between">
+                <h2 className={cardTitle}>A good fit for {ctx.first}?</h2>
+                <a href={`/recruiting/compare?s=${school.id}&step=matters`} className="text-xs font-semibold" style={{ color: GOLD }}>
+                  {ctx.profileSet ? "Edit goals" : "Add goals"}
+                </a>
+              </div>
+              <div className="mt-2">
+                <FitRow icon={Target} label="Athletic" line={fitResult.lines.athletic} athletic />
+                <FitRow icon={GraduationCap} label="Academic" line={fitResult.lines.academic} />
+                <FitRow icon={DollarSign} label="Financial" line={fitResult.lines.cost} />
+                <FitRow icon={MapPin} label="Your goals" line={fitResult.lines.goals} />
+              </div>
+            </section>
+          ) : null}
+
+          {full ? (
+            <section className={card}>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                 <h2 className={cardTitle}>{homeStateName} here</h2>
                 <a href="#roster" className="text-xs font-semibold" style={{ color: GOLD }}>
                   Where you stand →
@@ -401,6 +418,28 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               ) : null}
             </section>
           ) : null}
+          {full ? (
+            <section id="staff" className={`${card} scroll-mt-16`}>
+              <h2 className={cardTitle}>Coaching staff</h2>
+              <StaffList school={{ id: school.id, programs: school.programs }} focus={theirs} />
+            </section>
+          ) : (
+            <section className="rounded-2xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-5">
+              <p className="flex items-center gap-2 text-base font-bold">
+                <Lock className="h-4 w-4" style={{ color: GOLD }} aria-hidden /> Part of the Command Center
+              </p>
+              <ul className="mt-3 space-y-1.5 text-sm text-white/75">
+                <li>Coaching staff and emails</li>
+                <li>Wrestlers from your state on the roster</li>
+                <li>Fit for your wrestler</li>
+                <li>Save, track and email the coach</li>
+              </ul>
+              <a href={onRwHost ? "/command-center" : "/plans"} className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
+                See plans
+              </a>
+            </section>
+          )}
+
         </div>
 
         {/* Column two */}
@@ -437,23 +476,6 @@ export default async function SchoolPage({ params, searchParams }: Params) {
           </section>
 
           {admissions ? <AdmissionsCard a={admissions} card={card} cardTitle={cardTitle} /> : null}
-
-          {fitResult && ctx ? (
-            <section className={card}>
-              <div className="flex items-baseline justify-between">
-                <h2 className={cardTitle}>A good fit for {ctx.first}?</h2>
-                <a href={`/recruiting/compare?s=${school.id}&step=matters`} className="text-xs font-semibold" style={{ color: GOLD }}>
-                  {ctx.profileSet ? "Edit goals" : "Add goals"}
-                </a>
-              </div>
-              <div className="mt-2">
-                <FitRow icon={Target} label="Athletic" line={fitResult.lines.athletic} athletic />
-                <FitRow icon={GraduationCap} label="Academic" line={fitResult.lines.academic} />
-                <FitRow icon={DollarSign} label="Financial" line={fitResult.lines.cost} />
-                <FitRow icon={MapPin} label="Your goals" line={fitResult.lines.goals} />
-              </div>
-            </section>
-          ) : null}
 
           {fit ? (
             <section className={card}>
@@ -494,32 +516,6 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               )}
             </section>
           ) : null}
-        </div>
-
-        {/* Column three */}
-        <div className="space-y-5">
-          {full ? (
-            <section id="staff" className={`${card} scroll-mt-16`}>
-              <h2 className={cardTitle}>Coaching staff</h2>
-              <StaffList school={{ id: school.id, programs: school.programs }} focus={theirs} />
-            </section>
-          ) : (
-            <section className="rounded-2xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-5">
-              <p className="flex items-center gap-2 text-base font-bold">
-                <Lock className="h-4 w-4" style={{ color: GOLD }} aria-hidden /> Part of the Command Center
-              </p>
-              <ul className="mt-3 space-y-1.5 text-sm text-white/75">
-                <li>Coaching staff and emails</li>
-                <li>Wrestlers from your state on the roster</li>
-                <li>Fit for your wrestler</li>
-                <li>Save, track and email the coach</li>
-              </ul>
-              <a href={onRwHost ? "/command-center" : "/plans"} className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
-                See plans
-              </a>
-            </section>
-          )}
-
           {familySide ? (
             <section className={card}>
               <h2 className={cardTitle}>Next steps</h2>
@@ -542,6 +538,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
             </section>
           ) : null}
         </div>
+
       </div>
 
       {full ? (
