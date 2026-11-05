@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { requestedViewAsId } from "@/lib/view-as/subject"
 import { siteFromRequest } from "@/lib/analytics-site"
 import { currentClassYears } from "@/lib/class-years"
 import { VIEW_GENDER_COOKIE, viewGenderFor } from "@/lib/recruiting/coach-program"
@@ -25,7 +26,7 @@ async function who(request: NextRequest): Promise<{ admin: ReturnType<typeof cre
   const admin = createAdminClient()
   const viewing = viewGenderFor(null, request.cookies.get(VIEW_GENDER_COOKIE)?.value)
   let coach = await resolveNeedsCoach(admin, user.id, viewing)
-  const as = request.nextUrl.searchParams.get("as")?.trim()
+  const as = (await requestedViewAsId(request.nextUrl.searchParams.get("as"))) ?? undefined
   // Admins, and business accounts (no board of their own), read a named coach's needs.
   if (as && as !== user.id && (coach?.isAdmin || (!coach && (await viewAsRole(admin, user.id, user.app_metadata)) === "business"))) {
     const other = await resolveNeedsCoach(admin, as, viewing)

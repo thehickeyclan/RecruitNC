@@ -2,6 +2,7 @@
  * Staff activity: the full list behind the card on Coach Home. Who added, moved, contacted or
  * messaged which wrestler on the program's shared board (lib/recruiting/staff-activity.ts).
  */
+import { viewSubject } from "@/lib/view-as/subject"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
@@ -22,7 +23,11 @@ export default async function StaffActivityPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect("/auth/signin?returnTo=/my-recruits/activity")
 
-  const items = await loadStaffActivity(createAdminClient(), user.id, 200).catch(() => null)
+  const admin = createAdminClient()
+  const subject = await viewSubject(admin, user)
+  // A business account sees no contact log: it is about families (Matt, 4 Nov 2026).
+  if (subject.viewer === "business") redirect("/my-recruits")
+  const items = await loadStaffActivity(admin, subject.subjectId, 200).catch(() => null)
 
   return (
     <main className="min-h-screen bg-[#0A1628] px-4 py-8 text-white sm:px-6">

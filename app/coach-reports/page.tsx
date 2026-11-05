@@ -2,6 +2,7 @@
  * The Reports folder in a college coach's sidebar (Matt, 26 Oct 2026): every tournament report,
  * the coach's own program's report first, with how many of their staff's starred wrestlers are in it.
  */
+import { requestedViewAsId } from "@/lib/view-as/subject"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -17,7 +18,9 @@ export const dynamic = "force-dynamic"
 export const metadata: Metadata = { title: "Reports", robots: { index: false, follow: false } }
 
 export default async function CoachReportsIndex({ searchParams }: { searchParams: Promise<{ as?: string }> }) {
-  const sp = await searchParams
+  // ?as=, or the coach kept for this visit (lib/view-as/subject.ts); only admins and business accounts get it honoured.
+  const sp = { ...(await searchParams) }
+  sp.as = sp.as ?? (await requestedViewAsId()) ?? undefined
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const viewer = await resolveCoachReportViewer(createAdminClient(), user?.id ?? null, sp.as)

@@ -6,6 +6,7 @@
  * is set here, and every North Carolina wrestler in the current classes is flagged against it
  * rather than filtered by it (Matt, 10 October 2026).
  */
+import { viewSubject } from "@/lib/view-as/subject"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { currentClassYears } from "@/lib/class-years"
@@ -31,8 +32,12 @@ export default async function PerfectRecruitPage() {
   if (!user) return <PerfectRecruitClient access="signed-out" />
 
   const admin = createAdminClient()
-  const viewer = await resolveFitViewer(admin, user.id)
-  const program = coachProgramOf(user)
+  // The coach being viewed, for an admin or business account; otherwise the signed-in coach.
+  const subject = await viewSubject(admin, user)
+  const viewer = await resolveFitViewer(admin, subject.subjectId)
+  const program = subject.readOnly
+    ? coachProgramOf((await admin.auth.admin.getUserById(subject.subjectId).catch(() => null))?.data?.user ?? null)
+    : coachProgramOf(user)
   if (!viewer.allowed) return <PerfectRecruitClient access="not-coach" />
 
   const classYears = currentClassYears()

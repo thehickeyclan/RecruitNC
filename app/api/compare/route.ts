@@ -7,6 +7,7 @@
  * North Carolina wrestlers only for now. Out-of-state results are held, but opponent strength and
  * identity links are only validated for NC; other states open up as their data is checked.
  */
+import { viewSubject } from "@/lib/view-as/subject"
 import { rankingLabel } from "@/lib/public-rankings-cap"
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -155,7 +156,7 @@ export async function GET(request: NextRequest) {
     rankedLabel: rankedLabel(report),
   })
   // The page re-checks these itself as the coach edits the needs, so it gets the facts, not a verdict.
-  const savedFit = personal ? await loadProgramFit(admin, await resolveProgramScope(admin, user.id)) : null
+  const savedFit = personal ? await loadProgramFit(admin, await resolveProgramScope(admin, (await viewSubject(admin, user)).subjectId)) : null
   const programFit = personal
     ? {
         saved: savedFit && hasPerfectRecruit(savedFit.criteria) ? savedFit : null,

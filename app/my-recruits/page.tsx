@@ -13,7 +13,7 @@ import { loadCoachHome } from "@/app/coach-home/load-coach-home"
 import { VIEW_GENDER_COOKIE } from "@/lib/recruiting/coach-program"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { viewAsRole } from "@/lib/business/view-as-coach"
+import { viewSubject } from "@/lib/view-as/subject"
 
 export const dynamic = "force-dynamic"
 
@@ -22,10 +22,11 @@ export default async function MyRecruitsPage({ searchParams }: { searchParams: P
   const admin = createAdminClient()
   let subjectId = user?.id ?? null
   let viewingAs: { userId: string; label: string } | null = null
-  const asId = (await searchParams).as?.trim()
-  if (user && asId && asId !== user.id) {
-    // An admin, or a business account (contact details hidden on the board's API).
-    if (await viewAsRole(admin, user.id, user.app_metadata)) {
+  // ?as= or the coach kept for this visit; only an admin or business account may use it.
+  const subject = user ? await viewSubject(admin, user, (await searchParams).as) : null
+  if (user && subject && subject.viewer !== "self") {
+    const asId = subject.subjectId
+    {
       const { data: coach } = await admin.from("user_profiles").select("full_name, email, institution, school_id").eq("user_id", asId).maybeSingle()
       const { data: school } = coach?.school_id ? await admin.from("schools").select("name").eq("id", coach.school_id).maybeSingle() : { data: null }
       subjectId = asId

@@ -1,5 +1,7 @@
 "use client"
 
+import { cleanViewAsId, setViewAsCookie } from "@/lib/view-as/cookie"
+import { hasBusinessGrant } from "@/lib/business/access"
 import { BrandFooter, BrandHeader } from "@/components/recruiting/brand-frames"
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
@@ -28,7 +30,8 @@ const SHELL_HINT_KEY = "recruiting-shell"
  * 2026: "you changed nc united website our front end"). A real coach still gets the portal frame
  * everywhere; this is only the staff preview.
  */
-const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/college-commitments", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/interested", "/scouting-report", "/coach-reports"]
+// "/rankings" too: on RecruitWrestlers /public-rankings 308s there, and the coach view lost its side menu.
+const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/college-commitments", "/view-profile", "/inbox", "/public-rankings", "/rankings", "/compare", "/perfect-recruit", "/interested", "/scouting-report", "/coach-reports"]
 /**
  * Pages with no Data Dawg launcher whoever is looking: the inbox (it covers the send button) and
  * the pages that exist only for coaches.
@@ -79,7 +82,18 @@ function useRecruitingShell(): boolean {
   const [preview, setPreview] = useState(false)
   useEffect(() => {
     try {
-      const view = new URLSearchParams(window.location.search).get("view")
+      const params = new URLSearchParams(window.location.search)
+      const view = params.get("view")
+      /*
+       * The coach picked at /admin/view-as-coach (?as=) stays picked for the visit, so every page
+       * shows that coach's portal, not the admin's own (lib/view-as/subject.ts).
+       */
+      const asId = cleanViewAsId(params.get("as"))
+      if (asId) {
+        setViewAsCookie(asId)
+        localStorage.setItem(COACH_PREVIEW_KEY, "1")
+      }
+      if (view === "admin") setViewAsCookie(null)
       /*
        * Coach Home is the door into the coach portal, for staff too. An admin who opened it kept
        * the community bar and could not find the side menu he had asked for (Matt, 12 October
@@ -113,7 +127,8 @@ function useRecruitingShell(): boolean {
       }
     } catch {}
   }, [user, profile, isLoading])
-  const isAdmin = profile?.is_admin === true || profile?.role === "admin"
+  // Admins, and business accounts (Rhett) viewing a coach's portal from /admin/view-as-coach.
+  const isAdmin = profile?.is_admin === true || profile?.role === "admin" || hasBusinessGrant(user?.app_metadata)
   if (profile) return usesRecruitingShell(profile) || (isAdmin && preview && portalPage)
   // Nothing is known yet; an admin previewing gets the coach frame from the first paint too.
   return (hint || (preview && portalPage)) && (isLoading || !!user)
