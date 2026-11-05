@@ -1,3 +1,4 @@
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 /**
  * The Recruiting Command Center home: a dashboard taken in at a glance (Matt's design, 15 Oct
  * 2026). The detail lives behind the menu - Plan (steps and schedule), Colleges (the board and the
@@ -167,7 +168,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
       {/* Header band: who this is for, over an NC arena. */}
       <section className="relative -mx-4 -mt-6 overflow-hidden border-b border-white/10 px-4 pb-6 pt-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero-banner-nchsaa-2026-arena.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+        <img src={ARENA_PHOTO} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628] via-[#0A1628]/85 to-[#0A1628]/40" aria-hidden />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -647,7 +648,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
             ) : (
               <section className={`${card} relative overflow-hidden p-5`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/hero-banner-nchsaa-2026-arena.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+                <img src={ARENA_PHOTO} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
                 <p className="relative text-lg font-black leading-7 text-white">Same grind. Higher opportunities.</p>
                 <p className="relative mt-2 text-sm text-white/65">Plan, prepare, compete, succeed.</p>
               </section>
