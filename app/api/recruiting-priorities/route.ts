@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
   try {
     const [sets, { data: athlete }, { data: account }] = await Promise.all([
       loadFamilySets(c.admin, c.athleteId),
-      c.admin.from("athletes").select('"firstName", name, graduationyear, academic_interest').eq("id", c.athleteId).maybeSingle(),
+      c.admin.from("athletes").select('"firstName", name, gender, graduationyear, academic_interest').eq("id", c.athleteId).maybeSingle(),
       c.admin.auth.admin.getUserById(c.userId),
     ])
     const own = c.respondent === "parent" ? sets.parent : sets.athlete
@@ -76,6 +76,8 @@ export async function GET(req: NextRequest) {
       respondent: c.respondent,
       athleteId: c.athleteId,
       wrestlers: c.wrestlers,
+      // "his" or "her" from the profile; nothing when it isn't set (copy then uses the name).
+      possessive: /^f/i.test(String(athlete?.gender ?? "")) ? "her" : /^m/i.test(String(athlete?.gender ?? "")) ? "his" : null,
       firstName,
       weight,
       questions: questionsFor(c.respondent, { grade, answers }).map((q) => ({ ...q, sharingLine: sharingLine(q.sharing, c.respondent, firstName) })),

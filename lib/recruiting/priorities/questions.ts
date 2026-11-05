@@ -217,6 +217,6 @@ export function defaultSharing(respondent: Respondent, key: string): SharingClas
 export function sharingLine(cls: SharingClass, respondent: Respondent, wrestlerName?: string | null): string {
   const other = respondent === "parent" ? wrestlerName || "your wrestler" : "your parent"
   if (cls === "shared") return `Shared with ${other}. Coaches never see it.`
-  if (cls === "constraint") return "Scout can use this without showing the number. Only you see it."
+  if (cls === "constraint") return "Only you see the number. Scout can use it for your suggestions."
   return "Only you see this."
 }
