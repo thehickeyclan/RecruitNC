@@ -332,3 +332,38 @@ export async function loadFeaturedStoreProducts(limit = 6): Promise<HomeStorePro
     return []
   }
 }
+
+/**
+ * How many current-class profiles each state holds, for the coverage map.
+ *
+ * One narrow read of the state column rather than a count per state: thirty count queries to draw
+ * a picture is how a home page ends up holding connections, which is the shape that took the
+ * database down on 4 Nov 2026. North Carolina's profiles carry a flag rather than a state code,
+ * so they are counted separately.
+ */
+export async function loadProfilesByState(): Promise<Record<string, number>> {
+  const admin = createAdminClient()
+  const counts: Record<string, number> = {}
+  let after: string | null = null
+  for (;;) {
+    let q = admin
+      .from("athletes")
+      .select("id,state,is_nc_athlete")
+      .gte("graduationyear", 2027)
+      .lte("graduationyear", 2030)
+      .order("id", { ascending: true })
+      .limit(1000)
+    if (after) q = q.gt("id", after)
+    const { data, error } = await q
+    if (error) {
+      console.error("[home-data] profiles by state:", error.message)
+      return counts
+    }
+    for (const row of data ?? []) {
+      const code = (row as any).is_nc_athlete ? "NC" : String((row as any).state ?? "").toUpperCase()
+      if (code.length === 2) counts[code] = (counts[code] ?? 0) + 1
+    }
+    if (!data || data.length < 1000) return counts
+    after = String((data[data.length - 1] as any).id)
+  }
+}
