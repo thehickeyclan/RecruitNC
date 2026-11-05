@@ -1,3 +1,4 @@
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 // NOTE: This homepage is intentionally PUBLIC and accessible without authentication.
 // Do NOT wrap this page with AuthGuard - it must be accessible to all users, including mobile.
 //
@@ -39,7 +40,7 @@ export const metadata = shareMetadata({
 
 export const revalidate = 120
 
-const HERO_BACKGROUND_IMAGE = "/hero-banner-nchsaa-2026-arena.png"
+const HERO_BACKGROUND_IMAGE = ARENA_PHOTO
 
 /**
  * Stats bar reflects the current signing class, which rolls over each July rather than

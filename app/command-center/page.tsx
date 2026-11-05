@@ -1,3 +1,4 @@
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 /**
  * The Recruiting Command Center's own sales page (Matt, 15 Oct 2026: "people will want to know more
  * info before they sign up"). What it is, shown rather than described: the plan, the college list,
@@ -250,7 +251,7 @@ export default async function CommandCenterSalesPage() {
           under the college map, once a family has seen the record, the coaches and the programs. */}
       <section className="relative overflow-hidden border-b border-white/10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
+        <img src={ARENA_PHOTO} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {/* No state name on the singlet on RecruitWrestlers (Matt, 29 Oct 2026). */}
         {/* eslint-disable-next-line @next/next/no-img-element */}

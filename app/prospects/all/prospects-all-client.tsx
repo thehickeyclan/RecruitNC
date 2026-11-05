@@ -1,5 +1,6 @@
 "use client"
 
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
 import { directoryStates, isRankedState, recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
 import { HOME_STATE } from "@/lib/recruiting/states"
@@ -846,9 +847,8 @@ export default function ProspectsAllClient({
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0">
           <Image
-            // RecruitWrestlers is national: no state association's arena behind it (Matt, 5 Nov 2026).
-            src={onRw ? "/hero-fargo-arena.jpg" : "/hero-banner-nchsaa-2026-arena.png"}
-            alt={onRw ? "Fargo national championships arena" : "NCHSAA Wrestling Championship arena"}
+            src={ARENA_PHOTO}
+            alt=""
             fill
             className="object-cover"
             priority

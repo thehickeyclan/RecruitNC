@@ -1,5 +1,6 @@
 "use client"
 
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
@@ -312,7 +313,7 @@ export function RankingsSalesClient({
         {/* Hero: two-tone display headline, the three promises, and a wrestler */}
         <section className="relative overflow-hidden border-b border-white/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
+          <img src={ARENA_PHOTO} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/toc-finals-north-carolina-bw.jpg" alt="" aria-hidden className="absolute inset-y-0 right-0 hidden h-full w-[50%] object-cover object-[55%_30%] opacity-90 lg:block" style={{ maskImage: "linear-gradient(to right, transparent, black 35%)", WebkitMaskImage: "linear-gradient(to right, transparent, black 35%)" }} />
           <div className="absolute inset-0 bg-gradient-to-r from-[#060f1f] via-[#060f1f]/90 to-[#060f1f]/10" aria-hidden />
