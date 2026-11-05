@@ -43,7 +43,9 @@ const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g,
 type Honors = { aa: number; champs: number; placers: number }
 type Counts = Record<string, Honors>
 
-function renderLetter(coach: string, counts: Counts, unsubscribeUrl: string) {
+type Momentum = { families: number; lastWeek: number }
+
+function renderLetter(coach: string, counts: Counts, momentum: Momentum, unsubscribeUrl: string) {
   const subject = "Georgia, Tennessee, South Carolina and Virginia are open"
   const paras = [
     `${coach},`,
@@ -55,7 +57,9 @@ function renderLetter(coach: string, counts: Counts, unsubscribeUrl: string) {
     href: `${SITE}/prospects/all?state=${s.code}`,
   }))
   const mid = [
-    `Rankings for Georgia, Tennessee and Virginia will follow. Families are claiming profiles in every state now and adding academics, contact information and the rest of their season.`,
+    `Rankings for Georgia, Tennessee and Virginia will follow.`,
+    // Matt, 5 Nov 2026. "More than" a round fifty, so the claim stays true as the count moves.
+    `Our goal is to revolutionize high school recruiting for college programs and families. More than ${(Math.floor(momentum.families / 50) * 50).toLocaleString("en-US")} families have claimed their wrestler's profile, ${momentum.lastWeek} of them in the past week, and they're adding academics, contact information and the rest of their season.`,
     `What you get on every wrestler, free for college coaching staff:`,
   ]
   // The value list (Matt, 5 Nov 2026: "we need somewhere that we list our value proposition"). Each line is a feature coaches have today.
@@ -127,6 +131,31 @@ async function main() {
   }
   console.log("Counts:", counts)
 
+  // Families: wrestlers whose profile a family has claimed, by any of the three records a claim leaves.
+  const claimedAt = new Map<string, string>()
+  const note = (id: string | null, at: string | null) => {
+    if (!id) return
+    const prev = claimedAt.get(id)
+    if (prev === undefined || (at && (!prev || at < prev))) claimedAt.set(id, at ?? prev ?? "")
+  }
+  for (const [table, idCol, atCol, claimedOnly] of [
+    ["parent_athlete_links", "athlete_id", "created_at", false],
+    ["profile_claim_consents", "athlete_id", "created_at", false],
+    ["athletes", "id", "claimed_at", true],
+  ] as const) {
+    for (let from = 0; ; from += 1000) {
+      let q = admin.from(table).select(`${idCol}, ${atCol}`).order(idCol).range(from, from + 999)
+      if (claimedOnly) q = q.not("claimed_by_user_id", "is", null)
+      const { data, error: e } = await q
+      if (e) throw new Error(`${table}: ${e.message}`)
+      for (const r of (data ?? []) as Array<Record<string, string | null>>) note(r[idCol], r[atCol])
+      if (!data || data.length < 1000) break
+    }
+  }
+  const weekAgo = new Date(Date.now() - 7 * 86400e3).toISOString()
+  const momentum: Momentum = { families: claimedAt.size, lastWeek: [...claimedAt.values()].filter((at) => at && at >= weekAgo).length }
+  console.log("Momentum:", momentum)
+
   const { data: profiles, error } = await admin.from("user_profiles").select("user_id, email, full_name, first_name, last_name, role, profile_type, verified_coach, verification_status, is_admin").eq("verified_coach", true)
   if (error) throw new Error(error.message)
   const coaches = (profiles ?? []).filter((p) => classifyViewer(p as never).isCollegeCoach && p.email && !p.is_admin)
@@ -143,7 +172,7 @@ async function main() {
     const name = (c.full_name as string | null) || [c.first_name, c.last_name].filter(Boolean).join(" ") || null
     const coach = coachSalutation(name, email)
     const status = !allowedSet.has(email) ? "unsubscribed" : sent[email] ? "already sent" : "to send"
-    const mail = renderLetter(coach, counts, unsubscribeUrl("https://app.ncwrestlingunited.com", email))
+    const mail = renderLetter(coach, counts, momentum, unsubscribeUrl("https://app.ncwrestlingunited.com", email))
     fs.writeFileSync(path.join(out, `${email.replace(/[^a-z0-9@._-]/g, "_")}.html`), mail.html)
     rows.push(`${email},${status}`)
     if (status === "to send") list.push({ email, coach })
@@ -168,7 +197,7 @@ async function main() {
     done++
     for (const rcpt of to ? to.split(",").map((t) => t.trim()) : [m.email]) {
       const unsub = unsubscribeUrl("https://app.ncwrestlingunited.com", rcpt)
-      const mail = renderLetter(m.coach, counts, unsub)
+      const mail = renderLetter(m.coach, counts, momentum, unsub)
       const res = await resend.emails.send({
         // As Matt alone, like the letters that landed in Primary; RecruitWrestlers has no verified sending domain yet.
         from: "Matt Hickey <info@ncwrestlingunited.com>",
