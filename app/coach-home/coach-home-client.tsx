@@ -636,9 +636,9 @@ export function JustClaimedPanel({ wrestlers }: { wrestlers: NonNullable<CoachHo
   return (
     <section className={`${PANEL} mt-4 border-[#D3B574]/40 p-4 sm:p-5`} aria-labelledby="ch-claimed">
       <h2 id="ch-claimed" className="text-base font-black uppercase tracking-wide text-white">
-        Just claimed
+        Recently claimed
       </h2>
-      <p className="text-xs text-white/45">These families just joined. You can message them now.</p>
+      <p className="text-xs text-white/45">These families joined in the last 30 days. You can message them now.</p>
       <ul className="mt-3 grid gap-2 lg:grid-cols-2">
         {wrestlers.map((w) => (
           <li key={w.id}>
