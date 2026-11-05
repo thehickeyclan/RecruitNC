@@ -111,7 +111,7 @@ export default async function RecruitWrestlersHome() {
   const proof = [
     { n: mapPreview?.dots.length ?? null, label: "colleges on the map" },
     // Coaches are counted in the band above; here, what they have done (Matt, 2 Nov 2026).
-    { n: platform?.programs ?? null, label: "college programs" },
+    { n: platform?.programs ?? null, label: "college programs on RecruitWrestlers" },
     { n: platform?.profilesViewed ?? null, label: "wrestlers viewed by coaches" },
   ].filter((t) => t.n != null && t.n > 0)
 
