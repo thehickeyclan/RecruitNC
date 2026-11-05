@@ -23,6 +23,7 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
+import { evidenceContradictsItself } from "@/lib/evidence-derivation"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -68,44 +69,6 @@ function parseCsv(text: string): Record<string, string>[] {
  * and twelve more would have been written into blank rows with nothing to catch them. A row whose
  * own evidence does not derive the year it claims is never applied, whatever it agrees with.
  */
-const GRADE_OFFSET: Record<string, number> = {
-  sr: 0, senior: 0,
-  jr: 1, junior: 1,
-  so: 2, sophomore: 2,
-  fr: 3, freshman: 3,
-}
-/**
- * The two shapes the evidence strings use. Both must be read, or the check reports silence as
- * cleanliness: the reconciliation exports write "2024: HS Junior -> 2025 (IHSAA 11731425)" and the
- * discovery passes write "'106 - Luke Houchins (Benedictine), Jr.' in 2024 -> class of 2026".
- * Checking only the second read five states as having no contradictions when it had not looked.
- */
-const DERIVATIONS: RegExp[] = [
-  /(Sr|Jr|So|Fr)\.'\s*in\s*(\d{4})\s*->\s*class of\s*(\d{4})/g,
-  /(?:^|[^\d])(\d{4}):\s*(?:HS\s+)?(Freshman|Sophomore|Junior|Senior|Fr|So|Jr|Sr)\b[^>]*?->\s*(\d{4})/gi,
-]
-export function evidenceContradictsItself(evidence: string, claimed: number): string | null {
-  const text = String(evidence ?? "")
-  for (const [i, re] of DERIVATIONS.entries()) {
-    for (const m of text.matchAll(re)) {
-      // The first shape prints grade then season; the second prints season then grade.
-      const grade = i === 0 ? m[1]! : m[2]!
-      const season = i === 0 ? m[2]! : m[1]!
-      const stated = m[3]!
-      const off = GRADE_OFFSET[grade.toLowerCase()]
-      if (off === undefined) continue
-      const expected = Number(season) + off
-      if (Number(stated) !== expected) {
-        return `${grade} in the season ending ${season} graduates ${expected}, but the evidence says ${stated}`
-      }
-      if (Number(stated) !== claimed) {
-        return `the evidence derives ${stated} but the row claims ${claimed}`
-      }
-    }
-  }
-  return null
-}
-
 const norm = (s: unknown) => String(s ?? "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]/g, " ").replace(/\b(jr|sr|ii|iii|iv)\b/g, " ").replace(/\s+/g, " ").trim()
 const nameKey = (s: unknown) => norm(s).replace(/ /g, "")
 const g = (s: unknown) => (/^f|girl|women/i.test(String(s ?? "")) ? "girls" : "boys")
