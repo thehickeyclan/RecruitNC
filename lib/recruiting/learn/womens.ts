@@ -100,7 +100,7 @@ export const WOMENS_PLAYBOOK = [
 export const NEW_PROGRAM_QUESTIONS = [
   "How long has the program existed, and how long has the coach been here?",
   "How many scholarships (or how much aid) does it fund, and how many wrestlers are on the roster?",
-  "Where does the team practise, and who are the training partners?",
+  "Where does the team practice, and who are the training partners?",
   "Is the college committed long-term: budget, staff, facilities?",
   "Where have its wrestlers placed, and how many stay all four years?",
 ]

@@ -8,8 +8,9 @@
  *
  * - Athletic: the wrestler's best results so far against the North Carolina wrestlers who went to
  *   that level (lib/college-programs/went-here), five or more of them, or it says so.
- * - Academic: test scores against the middle half of admitted students; GPA against the NC
- *   wrestlers who went there, where five or more reported one.
+ * - Academic: the level's eligibility minimum is the gate; GPA against the lowest of the NC
+ *   wrestlers who went there (five or more); SAT/ACT ranges for all students are information,
+ *   except at a highly selective college (academicFit).
  * - Finances: what families at their income paid, against their budget.
  * - Goals: intended major offered, distance from home, size and setting, against what they said.
  *
@@ -121,33 +122,108 @@ export function athleticFit(mine: Standing | null, group: Standing[], level: str
   return { status: gap <= 0 ? "fit" : gap === 1 ? "stretch" : "concern", text: `${want} ${name} so far: ${describe(mine)}.` }
 }
 
-/** Test scores against the middle half; GPA against the NC wrestlers who went there. */
+/**
+ * Below this admit rate a college is highly selective: coaches there have little room to help a
+ * recruited wrestler in admissions, so scores under the middle half of admitted students make it a
+ * stretch. Everywhere else those ranges describe ALL students and are shown as information only
+ * (Matt, 5 Nov 2026: App State, 89% admitted, told Gavin he lacked the grades). 15, not 20, on
+ * purpose: under 15 is the Ivies, Stanford, Chicago, Duke, Northwestern, Hopkins, NYU, Williams and
+ * Davidson; 15 to 20 is UNC, Virginia and Michigan, big athletic programs that do help recruits.
+ */
+export const HIGHLY_SELECTIVE_ADMIT_RATE = 15
+
+/** The level's eligibility minimum, as lib/recruiting/eligibility-floor.ts reads it from the rules library. */
+export type AcademicFloor = {
+  levelName: string
+  gpa: number | null
+  coreCourses: boolean
+  shortfall: string | null
+  twoOfThree: { act: number; sat: number; gpa: number } | null
+  none: string | null
+}
+
+const ALL_STUDENTS = "These numbers are for all students. Coaches can often help a recruited wrestler in admissions."
+
+/**
+ * Academic fit for a recruited wrestler, in three parts:
+ * 1. The gate: the level's eligibility minimum. Below it is the only "concern".
+ * 2. The NC wrestlers who went there: below the LOWEST of them is a stretch (half of any group is
+ *    below its average and still got in, so the average is never the line).
+ * 3. SAT/ACT against the middle half of all admitted students: information, except at a highly
+ *    selective college (HIGHLY_SELECTIVE_ADMIT_RATE), where below it is a stretch.
+ */
 export function academicFit(input: {
+  floor: AcademicFloor | null
+  gpa: number | null
+  group: { low: number; high: number; count: number; label: string } | null
   sat: { score: number; low: number; high: number } | null
   act: { score: number; low: number; high: number } | null
-  gpa: { mine: number; average: number; count: number; label: string } | null
   admitRate: number | null
 }): FitLine {
+  const { floor, gpa, group, admitRate } = input
   const parts: string[] = []
   const marks: FitStatus[] = []
-  for (const [name, t] of [["SAT", input.sat], ["ACT", input.act]] as const) {
+
+  // 1. The gate.
+  if (floor?.gpa != null) {
+    const kind = floor.coreCourses ? "core-course GPA" : "GPA"
+    if (gpa == null) parts.push(`${floor.levelName} needs a ${floor.gpa.toFixed(1)} ${kind} to compete as a freshman. Add a GPA to check`)
+    else if (gpa >= floor.gpa) {
+      marks.push("fit")
+      parts.push(`GPA ${gpa.toFixed(2)} clears the ${floor.gpa.toFixed(1)} ${kind} ${floor.levelName} needs to compete${floor.coreCourses ? " (the NCAA counts core courses only)" : ""}`)
+    } else {
+      const alt = floor.twoOfThree
+      const altMet = alt && gpa >= alt.gpa && ((input.act?.score ?? 0) >= alt.act || (input.sat?.score ?? 0) >= alt.sat)
+      if (altMet) {
+        marks.push("fit")
+        parts.push(`GPA ${gpa.toFixed(2)} is under ${floor.gpa.toFixed(1)}, but a ${alt.gpa.toFixed(1)} GPA with ${alt.act} ACT or ${alt.sat} SAT meets two of the NAIA's three`)
+      } else {
+        marks.push("concern")
+        parts.push(
+          `GPA ${gpa.toFixed(2)} is under the ${floor.gpa.toFixed(1)} ${kind} ${floor.levelName} needs to compete as a freshman` +
+            (floor.shortfall ? `. ${floor.shortfall.replace(/\.$/, "")}` : "") +
+            (alt ? `. The NAIA also takes two of three: ${alt.act} ACT or ${alt.sat} SAT, a ${alt.gpa.toFixed(1)} GPA, top half of the class` : ""),
+        )
+      }
+    }
+  } else if (floor?.none) {
+    if (gpa != null) marks.push("fit")
+    parts.push(floor.none.replace(/\.$/, ""))
+  }
+
+  // 2. The NC wrestlers who went there.
+  if (gpa != null && group) {
+    const below = gpa < group.low
+    marks.push(below ? "stretch" : "fit")
+    parts.push(
+      below
+        ? `GPA ${gpa.toFixed(2)} is below all ${group.count} ${group.label} who gave a GPA (lowest ${group.low.toFixed(2)})`
+        : `${group.count} ${group.label} gave a GPA of ${group.low.toFixed(2)} to ${group.high.toFixed(2)}`,
+    )
+  }
+
+  // 3. Published test ranges.
+  const selective = admitRate != null && admitRate < HIGHLY_SELECTIVE_ADMIT_RATE
+  const tests: string[] = []
+  for (const [label, t] of [["SAT", input.sat], ["ACT", input.act]] as const) {
     if (!t) continue
     const where = t.score > t.high ? "above" : t.score < t.low ? "below" : "within"
-    marks.push(where === "below" ? "stretch" : "fit")
-    parts.push(`${name} ${t.score} is ${where} the middle half (${t.low} to ${t.high})`)
+    if (selective) marks.push(where === "below" ? "stretch" : "fit")
+    else if (where !== "below") marks.push("fit")
+    tests.push(`${label} ${t.score} is ${where} the middle half of admitted students (${t.low} to ${t.high})`)
   }
-  if (input.gpa) {
-    const g = input.gpa
-    marks.push(g.mine >= g.average - 0.1 ? "fit" : "stretch")
-    parts.push(`GPA ${g.mine.toFixed(2)} against an average of ${g.average.toFixed(2)} for ${g.label} (${g.count}, as reported)`)
+  if (selective) {
+    if (!tests.length) marks.push("stretch")
+    parts.push(`Highly selective: ${admitRate}% of applicants are admitted, and coaches here have less room to help in admissions`)
+    parts.push(...tests)
+  } else if (tests.length) {
+    parts.push(...tests)
+    parts.push(ALL_STUDENTS.replace(/\.$/, ""))
   }
-  if (input.admitRate != null && input.admitRate < 20) {
-    marks.push("stretch")
-    parts.push(`only ${input.admitRate}% of applicants are admitted`)
-  }
+
   if (!parts.length) return { status: "unknown", text: "No test score or GPA to compare. Add them to the profile." }
-  const status: FitStatus = marks.includes("stretch") ? "stretch" : "fit"
-  return { status, text: `${parts.join("; ")}.` }
+  const status: FitStatus = marks.includes("concern") ? "concern" : marks.includes("stretch") ? "stretch" : marks.length ? "fit" : "unknown"
+  return { status, text: `${parts.join(". ")}.` }
 }
 
 /** What aided students paid on average, against the family's budget. Family income is never asked. */

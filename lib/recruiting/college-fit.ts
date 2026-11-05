@@ -21,6 +21,7 @@ import { parseGpa, standingOf, type Standing } from "@/lib/college-programs/went
 import { loadAthleteCredentials } from "@/lib/credentials/athlete-credentials"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { DEMO_FAMILY, isDemoFamily } from "@/lib/recruiting/demo-family"
+import { eligibilityFloor } from "@/lib/recruiting/eligibility-floor"
 import { EMPTY_PROFILE, academicFit, athleticFit, cleanProfile, costFit, goalsFit, milesBetween, type FamilyFitProfile, type FitLine } from "@/lib/recruiting/family-fit"
 import ncZips from "@/lib/recruiting/nc-zips.json"
 
@@ -132,6 +133,7 @@ export function collegeFitFor(ctx: FamilyFitContext, school: CollegeMapSchool, i
       ? { ...levelGpa, label: `NC ${among} who went ${division ? DIVISION_SHORT[division] : ""}` }
       : null
   const satR = fit ? satTotalRange(fit) : [null, null]
+  const floor = eligibilityFloor(division)
   const { sat, act, myGpa, profile, home } = ctx
   return {
     fit,
@@ -145,9 +147,11 @@ export function collegeFitFor(ctx: FamilyFitContext, school: CollegeMapSchool, i
         ? athleticFit(ctx.mine, group, DIVISION_SHORT[division], among, ctx.first ?? "Your wrestler")
         : { status: "unknown", text: `No ${among === "women" ? "women's" : "men's"} team.` },
       academic: academicFit({
+        floor: floor ? { ...floor, levelName: DIVISION_SHORT[floor.level] } : null,
+        gpa: myGpa,
+        group: gpaGroup ? { low: gpaGroup.low, high: gpaGroup.high, count: gpaGroup.count, label: gpaGroup.label } : null,
         sat: sat && satR[0] != null && satR[1] != null ? { score: sat, low: satR[0], high: satR[1] } : null,
         act: act && fit?.act[0] != null && fit.act[1] != null ? { score: act, low: fit.act[0], high: fit.act[1] } : null,
-        gpa: myGpa != null && gpaGroup ? { mine: myGpa, average: gpaGroup.average, count: gpaGroup.count, label: gpaGroup.label } : null,
         admitRate: fit?.admitRate ?? null,
       }),
       cost: costFit({ netPrice: net?.amount ?? null, netNote: net?.note ?? "", published: cost?.amount ?? null, budget: profile.budget }),
