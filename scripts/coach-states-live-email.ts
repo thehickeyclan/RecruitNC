@@ -53,8 +53,8 @@ const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g,
 type Honors = { aa: number; champs: number; placers: number }
 type Counts = Record<string, Honors>
 
-/** Families who claimed, and programs on the platform; "recruiting" = a program whose staff have starred a wrestler. */
-type Momentum = { families: number; lastWeek: number; programs: number; recruiting: number }
+/** Families who claimed; programs and coaches on the platform. */
+type Momentum = { families: number; lastWeek: number; programs: number; coaches: number }
 
 function renderLetter(audience: Audience, coach: string, counts: Counts, momentum: Momentum, unsubscribeUrl: string) {
   const subject = SUBJECT
@@ -67,7 +67,8 @@ function renderLetter(audience: Audience, coach: string, counts: Counts, momentu
     text: `${s.name}: ${[n(counts[s.code].aa, "All-American", "All-Americans"), n(counts[s.code].champs, "state champion", "state champions"), n(counts[s.code].placers, "state placer", "state placers")].join(", ")}${s.ranked ? ", plus state rankings" : ""}`,
     href: `${SITE}/prospects/all?state=${s.code}`,
   }))
-  const programs = `${momentum.programs} college programs are already on ${BRAND}, and ${momentum.recruiting} of them have recruits on their boards`
+  // Matt, 5 Nov 2026: programs exact, coaches "more than" a round ten.
+  const programs = `${momentum.programs} college programs and more than ${Math.floor(momentum.coaches / 10) * 10} coaches are already on ${BRAND}`
   const families = `More than ${(Math.floor(momentum.families / 50) * 50).toLocaleString("en-US")} families have claimed their wrestler's profile, ${momentum.lastWeek} of them in the past week`
   const sig = ["Matt Hickey", BRAND, "Cell 631.662.5409"]
   const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
@@ -182,18 +183,11 @@ async function main() {
   const { data: sch } = await admin.from("schools").select("id, name").in("id", [...new Set(coaches.map((c) => c.school_id).filter(Boolean))] as string[])
   const progKey = (c: (typeof coaches)[number]) =>
     String(sch?.find((x) => x.id === c.school_id)?.name ?? c.institution ?? "").replace(/\s*\(.*?\)\s*/g, " ").replace(/^the\s+/i, "").replace(/university of /i, "").replace(/ university| college/gi, "").trim().toLowerCase()
-  const starring = new Set<string>()
-  for (let from = 0; ; from += 1000) {
-    const { data, error: e } = await admin.from("college_coach_stars").select("coach_user_id").order("coach_user_id").range(from, from + 999)
-    if (e) throw new Error(`college_coach_stars: ${e.message}`)
-    for (const r of data ?? []) starring.add(String(r.coach_user_id))
-    if (!data || data.length < 1000) break
-  }
   const momentum: Momentum = {
     families: claimedAt.size,
     lastWeek: [...claimedAt.values()].filter((at) => at && at >= weekAgo).length,
     programs: new Set(coaches.map(progKey).filter(Boolean)).size,
-    recruiting: new Set(coaches.filter((c) => starring.has(String(c.user_id))).map(progKey).filter(Boolean)).size,
+    coaches: coaches.length,
   }
   console.log("Momentum:", momentum)
   const audience: Audience = arg("audience") === "invite" ? "invite" : "members"
