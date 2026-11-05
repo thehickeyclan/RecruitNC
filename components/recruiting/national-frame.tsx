@@ -39,10 +39,10 @@ const FREE = [
 const PRODUCTS = [
   { href: "/rankings", label: "Insider" },
   { href: "/command-center", label: "Command Center" },
-  { href: "/for-coaches", label: "For coaches" },
+  { href: "/for-coaches", label: "College Coaches" },
 ]
 const LINKS = [...FREE, ...PRODUCTS]
-const FOOTER = [...FREE, { href: "/membership", label: "Plans" }, { href: "/command-center", label: "Command Center" }, { href: "/for-coaches", label: "For coaches" }, { href: "/about", label: "About" }, { href: "/contact", label: "Contact" }, { href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" }]
+const FOOTER = [...FREE, { href: "/membership", label: "Plans" }, { href: "/command-center", label: "Command Center" }, { href: "/for-coaches", label: "College Coaches" }, { href: "/about", label: "About" }, { href: "/contact", label: "Contact" }, { href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" }]
 
 export function NationalLockup({ className = "" }: { className?: string }) {
   return (
