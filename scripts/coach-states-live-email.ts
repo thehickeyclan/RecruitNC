@@ -57,10 +57,6 @@ type Momentum = { families: number; lastWeek: number; programs: number; coaches:
 
 function renderLetter(audience: Audience, coach: string, counts: Counts, momentum: Momentum, unsubscribeUrl: string) {
   const subject = SUBJECT
-  const paras = [
-    `${coach},`,
-    `Four more states are open to college coaches on ${BRAND}: Georgia, Tennessee, South Carolina and Virginia, alongside North Carolina. In the classes of 2027 to 2030:`,
-  ]
   const n = (v: number, one: string, many: string) => `${v.toLocaleString("en-US")} ${v === 1 ? one : many}`
   const items = STATES.map((s) => ({
     text: `${s.name}: ${[n(counts[s.code].aa, "All-American", "All-Americans"), n(counts[s.code].champs, "state champion", "state champions"), n(counts[s.code].placers, "state placer", "state placers")].join(", ")}${s.ranked ? ", plus state rankings" : ""}`,
@@ -70,7 +66,14 @@ function renderLetter(audience: Audience, coach: string, counts: Counts, momentu
   }))
   // Matt, 5 Nov 2026: programs exact, coaches "more than" a round ten.
   const programs = `${momentum.programs} college programs and more than ${Math.floor(momentum.coaches / 10) * 10} coaches are already on ${BRAND}`
+  // "More than" a round fifty, so the claim stays true as the count moves.
   const families = `More than ${(Math.floor(momentum.families / 50) * 50).toLocaleString("en-US")} families have claimed their wrestler's profile, ${momentum.lastWeek} of them in the past week`
+  // The goal first, then the states as the proof (Matt, 5 Nov 2026), matching the subject line.
+  const paras = [
+    `${coach},`,
+    `Our goal is to revolutionize high school recruiting for college programs and families. ${programs}. ${families}${audience === "invite" ? ", and they're adding academics, contact information and the rest of their season" : ""}.`,
+    `Four more states are now open: Georgia, Tennessee, South Carolina and Virginia, alongside North Carolina. In the classes of 2027 to 2030:`,
+  ]
   const sig = ["Matt Hickey", BRAND, "Cell 631.662.5409"]
   const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
   const ul = (lis: string[]) => `<ul style="margin:0 0 14px;padding-left:20px;">${lis.map((li) => `<li style="margin:0 0 6px;">${li}</li>`).join("")}</ul>`
@@ -86,7 +89,7 @@ ${body}
 
   if (audience === "members") {
     // Coaches already on the platform know the tools: the news and the momentum only.
-    const after = [`Rankings for Georgia, Tennessee and Virginia will follow. ${programs}. ${families}. New claims from every state show up under Recently Claimed.`]
+    const after = [`Rankings for Georgia, Tennessee and Virginia will follow. New claims from every state show up under Recently Claimed.`]
     return {
       subject,
       html: page(`${paras.map(p).join("\n")}\n${stateList}\n${after.map(p).join("\n")}`),
@@ -96,8 +99,6 @@ ${body}
 
   const mid = [
     `Rankings for Georgia, Tennessee and Virginia will follow.`,
-    // Matt, 5 Nov 2026. "More than" a round fifty, so the claim stays true as the count moves.
-    `Our goal is to revolutionize high school recruiting for college programs and families. ${programs}. ${families}, and they're adding academics, contact information and the rest of their season.`,
     `What you get on every wrestler, free for college coaching staff:`,
   ]
   // The value list (Matt, 5 Nov 2026: "we need somewhere that we list our value proposition"). Each line is a feature coaches have today.
