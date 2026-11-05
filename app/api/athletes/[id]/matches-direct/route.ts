@@ -69,7 +69,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!results || results.length === 0) {
       const { data: athlete, error: athleteError } = await supabase
         .from("athletes")
-        .select("id, name, firstName, lastName, firstname, lastname")
+        /*
+         * Only the columns that exist. `athletes` has firstName/lastName in camelCase and no
+         * lowercase twins, and PostgREST refuses the WHOLE select when one column is missing - so
+         * asking for both spellings did not "try both", it failed every time and killed this
+         * fallback entirely, logging a Postgres error on each attempt. The reads below still check
+         * the lowercase keys, which costs nothing and keeps working if they are ever added.
+         */
+        .select("id, name, firstName, lastName")
         .eq("id", athleteId)
         .single()
 
