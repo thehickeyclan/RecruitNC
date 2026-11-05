@@ -39,9 +39,11 @@ import { CommandCenterTour } from "@/components/portal/command-center-tour"
 import { RecruitingPath } from "@/components/portal/recruiting-path"
 import { RecruitingPathStrip } from "@/components/portal/recruiting-path-strip"
 import { RemindersPanel } from "@/components/portal/reminders-panel"
+import { PriorityLists } from "@/components/portal/priority-lists"
 import { StarterSet } from "@/components/portal/starter-set"
 import { daysUntilText, visitDates, visitPhase, VISIT_GUIDE } from "@/lib/recruiting/visits"
 import { journeyFor, remindersOn } from "./journey-data"
+import { priorityLists } from "./priority-lists"
 import { starterSet } from "./starter-set"
 import { WhatsChanged } from "@/components/portal/whats-changed"
 import { firstDayMoves } from "@/lib/recruiting/first-day"
@@ -110,7 +112,15 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
   // "Where does he compete next?" is the one place to add an event on the full home.
   const askForEvent = !firstDay && blue && Boolean(w) && w!.events.length === 0
 
-  const [lastCompeted, sheet, contacts, following, inbound, starter, needs] = await Promise.all([
+  // Once either side has finished "What matters", its two lists replace the starter set (survey v3, part 3).
+  const lists =
+    first && cc.viewerId && !cc.hidePersonal
+      ? await priorityLists(admin, { viewerId: cc.viewerId, athleteId: first.id, team: focus?.gender ?? null, includeViews: blue, store: !cc.previewing }).catch((e) => {
+          console.error("[my-recruiting] priority lists", e)
+          return null
+        })
+      : null
+  const [lastCompeted, sheet, contacts, following, inbound, starterRaw, needs] = await Promise.all([
     // Every wrestler's last competed weight: a parent of two saw only one son's (Cheryl Shuster, 28 Oct 2026).
     athletes.length ? loadLastCompeted(admin, athletes.map((a) => a.id), new Map(athletes.map((a) => [a.id, a.classYear]))).catch(() => new Map()) : new Map(),
     // The info sheet is the wrestler's contact details and academics: never for a business account.
@@ -120,10 +130,11 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
     first ? programsFollowing(admin, first.id).catch(() => 0) : 0,
     blue ? loadListInbound(admin, viewerId, athletes.map((a) => a.id)).catch(() => new Map()) : new Map(),
     // A family with nothing saved gets the starter shortlist too, at the top (the "what changed" empty state).
-    (researchNow || schools.length === 0) && first ? starterSet(admin, viewerId, focus?.gender ?? null, schools.map((s) => s.id)).catch(() => []) : [],
+    !lists && (researchNow || schools.length === 0) && first ? starterSet(admin, viewerId, focus?.gender ?? null, schools.map((s) => s.id)).catch(() => []) : [],
     // Coach-confirmed needs at this wrestler's weight and class (never fails: empty on any error).
     first ? loadNeedsForAthlete(admin, first.id) : [],
   ])
+  const starter = starterRaw as Awaited<ReturnType<typeof starterSet>>
   // College programs whose coaches just joined, men's or women's to match the wrestler (Matt, 5 Nov 2026). Never fails the page.
   const joined = await loadRecentlyJoined(admin, focus?.gender ?? null).catch(() => [])
   // What changed for you: the reason to come back each week (lib/recruiting/whats-changed.ts).
@@ -287,7 +298,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                   profileTodo: w?.profileTodo?.edit ?? null,
                   saved: schools.length,
                   upcomingEvents: w ? w.events.filter((e) => (e.endDate ?? e.startDate) >= todayET).length : 0,
-                  suggested: starter.length,
+                  suggested: lists ? lists.bestFit.length + lists.opportunities.length : starter.length,
                   prioritiesDone,
                 }).map((m, i) => (
                   <li key={m.key}>
@@ -312,7 +323,11 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                   </li>
                 ))}
               </ol>
-              {starter.length ? <StarterSet bare schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
+              {lists ? (
+                <PriorityLists bare lists={lists} athleteId={first.id} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} />
+              ) : starter.length ? (
+                <StarterSet bare schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} />
+              ) : null}
               <p className="mt-3 text-xs text-white/50">
                 Want more choices?{" "}
                 <a href="/recruiting/college-map" className="font-bold text-[#D3B574] hover:underline">
@@ -359,6 +374,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               </ul>
             </section>
           ) : null}
+          {lists && !firstDay ? <PriorityLists lists={lists} athleteId={first.id} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
           {starter.length && !firstDay ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
 
           {/* Coming up: visits and the family's own reminders (Matt, 28 Oct 2026). */}

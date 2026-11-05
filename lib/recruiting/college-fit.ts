@@ -48,8 +48,11 @@ export type FamilyFitContext = {
   homeState: string
 }
 
-/** The family's wrestler (the oldest still in school) and their own fit profile. */
-export async function loadFamilyFitContext(admin: SupabaseClient, userId: string, team: "mens" | "womens" | null): Promise<FamilyFitContext> {
+/**
+ * The family's wrestler (the oldest still in school, or `athleteId` when it names one of the
+ * family's wrestlers) and their own fit profile.
+ */
+export async function loadFamilyFitContext(admin: SupabaseClient, userId: string, team: "mens" | "womens" | null, athleteId?: string | null): Promise<FamilyFitContext> {
   // Product screenshots on a developer's machine (lib/recruiting/demo-family.ts): an invented family.
   if (await isDemoFamily()) {
     const d = DEMO_FAMILY
@@ -65,9 +68,11 @@ export async function loadFamilyFitContext(admin: SupabaseClient, userId: string
     ? await admin.from("athletes").select('id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, college, college_id, academic_gpa, academic_sat, academic_act, nhsca_results, super32_results').in("id", ids)
     : { data: [] }
   const graduated = mostRecentGraduatedClassYear()
-  const wrestler = (rows ?? [])
-    .filter((a) => !a.graduationyear || Number(a.graduationyear) > graduated)
-    .sort((a, b) => Number(a.graduationyear ?? 9999) - Number(b.graduationyear ?? 9999))[0]
+  const wrestler =
+    (athleteId ? (rows ?? []).find((a) => String(a.id) === athleteId) : undefined) ??
+    (rows ?? [])
+      .filter((a) => !a.graduationyear || Number(a.graduationyear) > graduated)
+      .sort((a, b) => Number(a.graduationyear ?? 9999) - Number(b.graduationyear ?? 9999))[0]
   const first = wrestler ? String(wrestler.firstName ?? "").trim() || String(wrestler.name ?? "").split(" ")[0] || null : null
   const { data: account } = await admin.auth.admin.getUserById(userId)
   const profile = cleanProfile(account?.user?.user_metadata?.family_fit ?? EMPTY_PROFILE)

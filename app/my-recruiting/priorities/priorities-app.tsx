@@ -176,15 +176,15 @@ export function PrioritiesApp() {
         <Check className="h-8 w-8 text-emerald-400" aria-hidden />
         <h1 className="mt-2 text-2xl font-black">{saveFailed ? "Some answers didn't save." : "Saved."}</h1>
         {saveFailed ? <p className="mt-2 text-sm text-amber-300">Check your connection, then open My answers and change the ones that are missing.</p> : null}
-        <p className="mt-2 text-white/75">Change any answer whenever you like. Most families do, more than once.</p>
+        <p className="mt-2 text-white/75">Your answers now shape the colleges on your Command Center. Change any answer whenever you like. Most families do, more than once.</p>
         {data.respondent === "parent" ? (
           <p className="mt-3 text-white/75">
             Next, {name} answers their own set{data.other.completed ? " (already done)" : ""}. Where you agree, great. Where you differ, that&apos;s worth knowing now.
           </p>
         ) : null}
         <div className="mt-6 flex flex-wrap gap-3">
-          <a href="/my-recruiting" className={BTN}>
-            Back to the Command Center <ArrowRight className="h-4 w-4" aria-hidden />
+          <a href="/my-recruiting#cc-lists" className={BTN}>
+            See your colleges <ArrowRight className="h-4 w-4" aria-hidden />
           </a>
           <button type="button" className={GHOST} onClick={() => setStep("summary")}>
             See my answers
