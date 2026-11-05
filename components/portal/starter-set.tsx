@@ -65,11 +65,11 @@ export function StarterSet({
             </div>
             <a href={`/recruiting/schools/${s.id}`} className="mt-2 min-w-0">
               <span className="line-clamp-2 text-sm font-bold leading-5 hover:underline">{s.name}</span>
-              <span className="mt-1 flex items-center gap-1 text-[11px] text-white/50">
-                <span className="rounded px-1 text-[10px] font-black text-[#071427]" style={{ backgroundColor: colors[s.level] ?? "#94a3b8" }}>
+              <span className="mt-1 flex items-start gap-1 text-[11px] leading-4 text-white/50">
+                <span className="shrink-0 rounded px-1 text-[10px] font-black text-[#071427]" style={{ backgroundColor: colors[s.level] ?? "#94a3b8" }}>
                   {s.level}
                 </span>
-                <span className="truncate">{s.why}</span>
+                <span className="line-clamp-2">{s.why}</span>
               </span>
             </a>
           </li>
