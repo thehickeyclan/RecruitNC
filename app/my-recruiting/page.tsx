@@ -44,7 +44,8 @@ import { journeyFor, remindersOn } from "./journey-data"
 import { starterSet } from "./starter-set"
 import { WhatsChanged } from "@/components/portal/whats-changed"
 import { firstDayMoves } from "@/lib/recruiting/first-day"
-import { hasAnsweredPriorities } from "@/lib/recruiting/priorities/store"
+import { hasAnsweredPriorities, respondentFor } from "@/lib/recruiting/priorities/store"
+import { WelcomeModal } from "@/components/portal/welcome-modal"
 import { loadWhatsChanged } from "./whats-changed-data"
 import { CoachNeedsList, programCount } from "@/components/recruiting/coach-needs-list"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
@@ -88,6 +89,18 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
    * college is saved.
    */
   const firstDay = schools.length === 0
+  // The first-visit welcome, by name, for the family's own login (never a preview).
+  const welcome =
+    // ?cc-welcome=1 shows it again on a developer's machine only, for screenshots.
+    (cc.firstVisit || (process.env.NODE_ENV !== "production" && params["cc-welcome"] === "1")) && !cc.previewing && first && cc.viewerId
+      ? await Promise.all([
+          respondentFor(admin, cc.viewerId, first.id).catch(() => null),
+          admin.from("user_profiles").select("first_name, full_name").eq("user_id", cc.viewerId).maybeSingle().then((r) => r.data, () => null),
+        ]).then(([respondent, me]) => ({
+          parent: respondent !== "athlete",
+          name: String(me?.first_name ?? "").trim() || String(me?.full_name ?? "").trim().split(/\s+/)[0] || null,
+        }))
+      : null
   // The "What matters" move ticks once this login has finished its own set (a preview counts the family's login).
   const prioritiesDone = firstDay && first && cc.viewerId ? await hasAnsweredPriorities(admin, cc.viewerId, first.id).catch(() => false) : false
   // The step to do now, when its button opens the map: then the map card below would be a second "Open the map".
@@ -173,7 +186,8 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
             ))}
             {first ? (
               <div className="mt-3">
-                <CommandCenterTour firstName={athletes.map((a) => a.firstName).join(" and ")} autoOpen={cc.firstVisit} />
+                <CommandCenterTour firstName={athletes.map((a) => a.firstName).join(" and ")} autoOpen={cc.firstVisit && !welcome} />
+                {welcome ? <WelcomeModal name={welcome.name} wrestler={athletes.map((a) => a.firstName).join(" and ")} athleteId={first.id} parent={welcome.parent} autoOpen /> : null}
               </div>
             ) : null}
           </div>

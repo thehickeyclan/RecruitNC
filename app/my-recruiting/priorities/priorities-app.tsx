@@ -1,6 +1,9 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+
+/** Saves run one after another, in the order the screens were answered. */
+let queue: Promise<unknown> = Promise.resolve()
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Lock } from "lucide-react"
 
 import type { Answer } from "@/lib/recruiting/priorities/sharing"
@@ -12,6 +15,7 @@ type Data = {
   available: boolean
   respondent: Respondent
   athleteId: string
+  wrestlers: Array<{ id: string; firstName: string }>
   firstName: string | null
   weight: number | null
   questions: Q[]
@@ -40,9 +44,12 @@ export function PrioritiesApp() {
   const [step, setStep] = useState<number | "intro" | "done" | "summary">("intro")
   const [drafts, setDrafts] = useState<Record<string, Draft>>({})
   const [saving, setSaving] = useState(false)
+  const [saveFailed, setSaveFailed] = useState(false)
 
-  const load = () =>
-    fetch("/api/recruiting-priorities", { cache: "no-store" })
+  // Whose set: the wrestler the home page was showing (?w=), else the API's default (oldest in school).
+  const [who, setWho] = useState<string | null>(null)
+  const load = (id: string | null = who) =>
+    fetch(`/api/recruiting-priorities${id ? `?athleteId=${encodeURIComponent(id)}` : ""}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((d: Data) => {
         setData(d)
@@ -50,8 +57,19 @@ export function PrioritiesApp() {
       })
       .catch(() => setFailed(true))
   useEffect(() => {
-    load()
+    const w = new URLSearchParams(window.location.search).get("w")
+    setWho(w)
+    load(w)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  const switchTo = (id: string) => {
+    setWho(id)
+    setData(null)
+    setDrafts({})
+    setStep("intro")
+    window.history.replaceState(null, "", `?w=${encodeURIComponent(id)}`)
+    load(id)
+  }
 
   const name = data?.firstName ?? "your wrestler"
   const own = useMemo(() => new Map((data?.own.answers ?? []).map((a) => [a.key, a])), [data])
@@ -77,7 +95,8 @@ export function PrioritiesApp() {
   const draftFor = (key: string): Draft => {
     if (drafts[key]) return drafts[key]
     const a = own.get(key)
-    const extra: Record<string, unknown> = key === "budget" ? { kind: own.get("budget_kind")?.value } : {}
+    const extra: Record<string, unknown> =
+      key === "budget" ? { kind: own.get("budget_kind")?.value ?? data.prefill.budget_kind?.value } : key === "distance" ? { zip: own.get("home_zip")?.value ?? data.prefill.home_zip?.value } : {}
     if (a) return { value: a.value, marker: a.marker ?? null, notSure: Boolean(a.notSure), extra }
     return { value: data.prefill[key]?.value ?? null, marker: null, notSure: false, extra }
   }
@@ -87,30 +106,44 @@ export function PrioritiesApp() {
     fetch("/api/recruiting-priorities", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ athleteId: data.athleteId, ...body }) })
 
   /** Saves what's on this screen (nothing when it was skipped) and moves on. */
+  /**
+   * Next moves on at once; the answer saves behind it, one save at a time (a quick second tap on a
+   * slow connection used to land on the next screen and skip it). Finish waits for every save.
+   */
   const next = async (i: number, skip = false) => {
     const s = screens[i]
     const key = s === "bsn" ? "bsn" : s.key
-    if (!skip && drafts[key]) {
-      setSaving(true)
-      const d = drafts[key]
-      const saves = [put({ key, value: d.value, marker: d.marker, notSure: d.notSure })]
-      if (key === "distance" && data.respondent === "parent" && typeof d.extra.zip === "string" && d.extra.zip) saves.push(put({ key: "home_zip", value: d.extra.zip }))
-      if (key === "budget" && (d.extra.kind === "target" || d.extra.kind === "limit")) saves.push(put({ key: "budget_kind", value: d.extra.kind }))
-      await Promise.all(saves).catch(() => null)
-      setSaving(false)
+    // Next on a prefilled screen confirms it: the answer is saved as shown.
+    const confirmsPrefill = !own.has(key) && Boolean(data.prefill[key])
+    if (!skip && (drafts[key] || confirmsPrefill)) {
+      const d = drafts[key] ?? draftFor(key)
+      const bodies: Array<Record<string, unknown>> = [{ key, value: d.value, marker: d.marker, notSure: d.notSure }]
+      if (key === "distance" && data.respondent === "parent" && typeof d.extra.zip === "string" && d.extra.zip && d.extra.zip !== own.get("home_zip")?.value) bodies.push({ key: "home_zip", value: d.extra.zip })
+      if (key === "budget" && (d.extra.kind === "target" || d.extra.kind === "limit") && d.extra.kind !== own.get("budget_kind")?.value) bodies.push({ key: "budget_kind", value: d.extra.kind })
+      for (const body of bodies) {
+        queue = queue.then(() =>
+          put(body)
+            .then((r) => {
+              if (!r.ok && r.status !== 400) setSaveFailed(true)
+            })
+            .catch(() => setSaveFailed(true)),
+        )
+      }
     }
-    if (i + 1 < screens.length) setStep(i + 1)
-    else {
-      await fetch("/api/recruiting-priorities", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ athleteId: data.athleteId }) }).catch(() => null)
-      setDrafts({})
-      await load()
-      setStep("done")
-    }
+    if (i + 1 < screens.length) return setStep(i + 1)
+    setSaving(true)
+    await queue
+    await fetch("/api/recruiting-priorities", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ athleteId: data.athleteId }) }).catch(() => null)
+    setDrafts({})
+    await load()
+    setSaving(false)
+    setStep("done")
   }
 
   if (step === "intro") {
     return (
       <Panel>
+        <WrestlerPicker data={data} onPick={switchTo} />
         <h1 className="text-2xl font-black sm:text-3xl">What matters to your family?</h1>
         <p className="mt-3 text-white/75">
           A few questions, mostly one tap each. &ldquo;Not sure yet&rdquo; is fine everywhere.
@@ -136,7 +169,8 @@ export function PrioritiesApp() {
     return (
       <Panel>
         <Check className="h-8 w-8 text-emerald-400" aria-hidden />
-        <h1 className="mt-2 text-2xl font-black">Saved.</h1>
+        <h1 className="mt-2 text-2xl font-black">{saveFailed ? "Some answers didn't save." : "Saved."}</h1>
+        {saveFailed ? <p className="mt-2 text-sm text-amber-300">Check your connection, then open My answers and change the ones that are missing.</p> : null}
         <p className="mt-2 text-white/75">Change any answer whenever you like. Most families do, more than once.</p>
         {data.respondent === "parent" ? (
           <p className="mt-3 text-white/75">
@@ -155,7 +189,7 @@ export function PrioritiesApp() {
     )
   }
 
-  if (step === "summary") return <Summary data={data} name={name} screens={screens} onEdit={(i) => setStep(i)} onChanged={load} />
+  if (step === "summary") return <Summary data={data} name={name} screens={screens} onEdit={(i) => setStep(i)} onChanged={() => load()} onPick={switchTo} />
 
   const i = step
   const s = screens[i]
@@ -222,6 +256,20 @@ export function PrioritiesApp() {
         </div>
       </div>
     </Panel>
+  )
+}
+
+/** A parent of two answers once per wrestler: pick whose. */
+function WrestlerPicker({ data, onPick }: { data: Data; onPick: (id: string) => void }) {
+  if (data.wrestlers.length < 2) return null
+  return (
+    <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Whose answers">
+      {data.wrestlers.map((w) => (
+        <button key={w.id} type="button" onClick={() => w.id !== data.athleteId && onPick(w.id)} aria-pressed={w.id === data.athleteId} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${w.id === data.athleteId ? "border-[#D3B574] bg-[#D3B574]/15 text-white" : "border-white/20 text-white/70"}`}>
+          For {w.firstName}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -363,7 +411,7 @@ function Field({ q, d, set, respondent, zip }: { q: Q; d: Draft; set: (p: Partia
 }
 
 /** My Recruiting Priorities: every answer, who sees it, and a way to change either. */
-function Summary({ data, name, screens, onEdit, onChanged }: { data: Data; name: string; screens: Array<Q | "bsn">; onEdit: (i: number) => void; onChanged: () => void }) {
+function Summary({ data, name, screens, onEdit, onChanged, onPick }: { data: Data; name: string; screens: Array<Q | "bsn">; onEdit: (i: number) => void; onChanged: () => void; onPick: (id: string) => void }) {
   const own = new Map(data.own.answers.map((a) => [a.key, a]))
   const setClass = async (key: string, sharing: SharingClass) => {
     await fetch("/api/recruiting-priorities", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ athleteId: data.athleteId, key, sharing }) }).catch(() => null)
@@ -371,6 +419,7 @@ function Summary({ data, name, screens, onEdit, onChanged }: { data: Data; name:
   }
   return (
     <Panel>
+      <WrestlerPicker data={data} onPick={onPick} />
       <h1 className="text-2xl font-black">My recruiting priorities</h1>
       <p className="mt-1 text-sm text-white/60">
         {data.respondent === "parent" ? "Your answers as a parent." : "Your answers."} Coaches never see any of them. {data.own.completedAt ? `Saved ${new Date(data.own.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}.` : "Not finished yet."}

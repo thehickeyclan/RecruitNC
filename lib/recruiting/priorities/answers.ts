@@ -112,3 +112,17 @@ export function prefillFor(respondent: Respondent, fit: FamilyFitProfile | null,
   }
   return out
 }
+
+/** Family-wide parent answers: the same for every child, so a second child's set starts from the first's. */
+export const FAMILY_WIDE_KEYS = ["budget", "budget_kind", "home_zip", "benefits"] as const
+
+/** Adds a sibling's family-wide answers to the prefill, where the profile held nothing better. */
+export function withSiblingPrefill(prefill: Prefill, sibling: { firstName: string; answers: Array<{ key: string; value: unknown; notSure?: boolean }> } | null): Prefill {
+  if (!sibling) return prefill
+  const out = { ...prefill }
+  for (const a of sibling.answers) {
+    if (!(FAMILY_WIDE_KEYS as readonly string[]).includes(a.key) || a.notSure || a.value == null) continue
+    out[a.key] = { value: a.value, from: `your answers for ${sibling.firstName}` }
+  }
+  return out
+}
