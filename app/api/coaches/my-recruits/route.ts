@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { loadMyRecruits } from "@/lib/my-recruits"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
+import { viewAsRole, withoutContact } from "@/lib/business/view-as-coach"
 
 export const dynamic = "force-dynamic"
 
@@ -19,12 +20,15 @@ export async function GET(request: Request) {
      */
     const asId = new URL(request.url).searchParams.get("as")?.trim() || null
     let subjectId = user.id
+    let hideContact = false
     if (asId && asId !== user.id) {
-      const { data: me } = await admin.from("user_profiles").select("is_admin, role").eq("user_id", user.id).maybeSingle()
-      if (!(me?.is_admin === true || me?.role === "admin")) return NextResponse.json({ error: "Admins only." }, { status: 403 })
+      const role = await viewAsRole(admin, user.id, user.app_metadata)
+      if (!role) return NextResponse.json({ error: "Admins only." }, { status: 403 })
       subjectId = asId
+      hideContact = role === "business"
     }
-    const board = await loadMyRecruits(admin, subjectId)
+    const loadedBoard = await loadMyRecruits(admin, subjectId)
+    const board = hideContact ? { ...loadedBoard, recruits: withoutContact(loadedBoard.recruits) } : loadedBoard
     /*
      * Each wrestler flagged against the program's perfect recruit, when it has set one. Never
      * allowed to fail the board: the flags are an extra, the list is the page.

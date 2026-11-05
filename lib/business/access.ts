@@ -41,6 +41,10 @@ export const BUSINESS_PAGES: readonly string[] = [
   "/admin/college-interest",
   "/admin/card-analytics",
   "/admin/rankings/board",
+  // Every program's coaches, each opening My Recruits as that coach sees it (Matt, 4 Nov 2026).
+  // The board itself drops the wrestler's phone for a business viewer (lib/business/view-as-coach.ts);
+  // the names listed here are college coaches, not families.
+  "/admin/view-as-coach",
 ]
 
 /** Whether a grant opens this page: an exact match, or a page beneath one of the listed ones. */

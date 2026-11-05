@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { viewAsRole } from "@/lib/business/view-as-coach"
 
 import { VIEW_GENDER_COOKIE, viewGenderFor } from "@/lib/recruiting/coach-program"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
@@ -20,9 +21,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const admin = createAdminClient()
   const viewing = viewGenderFor(null, request.cookies.get(VIEW_GENDER_COOKIE)?.value)
   let coach = await resolveNeedsCoach(admin, user.id, viewing)
-  if (!coach) return NextResponse.json({ error: "For college coaching staff." }, { status: 403, headers: PRIVATE })
   const as = request.nextUrl.searchParams.get("as")?.trim()
-  if (as && as !== user.id && coach.isAdmin) coach = (await resolveNeedsCoach(admin, as, viewing)) ?? coach
+  if (as && as !== user.id && (coach?.isAdmin || (!coach && (await viewAsRole(admin, user.id, user.app_metadata)) === "business"))) {
+    coach = (await resolveNeedsCoach(admin, as, viewing)) ?? coach
+  }
+  if (!coach) return NextResponse.json({ error: "For college coaching staff." }, { status: 403, headers: PRIVATE })
   const { needs } = await loadProgramNeeds(admin, { schoolId: coach.schoolId, userId: coach.userId, programName: coach.programName })
   const need = needs.find((n) => n.id === id)
   if (!need) return NextResponse.json({ error: "Not found." }, { status: 404, headers: PRIVATE })
