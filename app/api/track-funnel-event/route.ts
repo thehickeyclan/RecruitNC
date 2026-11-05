@@ -28,6 +28,12 @@ const ALLOWED_EVENTS = new Set([
   "upsell_click",
   // Pressed to claim a found wrestler (lib/track-claim-started.ts), for the funnel dashboard.
   "claim_started",
+  /*
+     A browser's first page here, signed in or not (components/analytics/first-touch.tsx). Page views
+     are recorded for signed-in users only, so on 5 Nov 2026 Meta counted 13 ad landings and we saw
+     4: the visitors who never signed up left no row at all.
+  */
+  "first_visit",
 ])
 
 function cleanPath(value: unknown): string {
