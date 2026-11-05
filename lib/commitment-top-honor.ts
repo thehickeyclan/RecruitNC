@@ -3,8 +3,8 @@
  * "3x State Champ", "All-American · State Champ", "State Placer", "State Qualifier" (Matt, 17
  * October 2026: "why not put their highest achievement in that column").
  *
- * All-American is a top-8 finish at NHSCA Nationals or Super 32, as the directory's pills read it.
- * A state title or placing is from the NCHSAA/NCISA state results. Counted per year: one state
+ * All-American is a top-8 finish at any national event the directory's pills count (NHSCA, Super 32,
+ * Fargo, Ironman and the rest). A state title or placing is from any state's results we hold. Counted per year: one state
  * bracket per season, one finish per event per year.
  */
 export type HonorFacts = {
@@ -14,7 +14,7 @@ export type HonorFacts = {
   bestStatePlace: number | null
   /** Was at a state tournament at all. */
   stateQualifier: boolean
-  /** Distinct NHSCA / Super 32 top-8 finishes, as "event|year". */
+  /** Distinct national top-8 finishes, as "Event year" ("NHSCA 2025"). */
   allAmericanFinishes: string[]
 }
 
