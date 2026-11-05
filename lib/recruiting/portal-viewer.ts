@@ -6,7 +6,8 @@ import { cookies } from "next/headers"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { resolveRankingViewer, resolveRankingViewerForUser } from "@/lib/ranking-access"
-import type { RankingViewer } from "@/lib/ranking-visibility"
+import { hasPortalAccess, type RankingViewer } from "@/lib/ranking-visibility"
+import { accountFamily } from "@/lib/view-as/account-family"
 
 /**
  * Who the recruiting portal is being shown to.
@@ -55,6 +56,17 @@ export async function resolvePortalViewer(options: {
   if (pass && pass.familyId !== real.userId && (pass.role === "admin" || options.allowBusiness)) {
     const family = await resolveRankingViewerForUser({ admin: options.admin, userId: pass.familyId })
     return { viewer: { ...family.viewer, isAdmin: false }, userId: pass.familyId, previewing: true, hidePersonal: pass.role === "business" }
+  }
+  /*
+   * A business account's family view, kept on the account (lib/view-as/account-family.ts). Only
+   * asked when the viewer has no Command Center of their own, so families pay nothing for it.
+   */
+  if (options.allowBusiness && real.userId && !hasPortalAccess(real.viewer)) {
+    const familyId = await accountFamily(options.admin, real.userId)
+    if (familyId && familyId !== real.userId) {
+      const family = await resolveRankingViewerForUser({ admin: options.admin, userId: familyId })
+      return { viewer: { ...family.viewer, isAdmin: false }, userId: familyId, previewing: true, hidePersonal: true }
+    }
   }
   if (process.env.NODE_ENV === "production" || !real.viewer.isAdmin) return { ...real, previewing: false }
   const preview = parsePreview((await cookies()).get(PREVIEW_COOKIE)?.value)
