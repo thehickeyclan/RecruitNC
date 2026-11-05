@@ -150,6 +150,19 @@ export function AppChrome({ children, hideNcUnited = false }: { children: React.
    * the community frame - top menu, chat launcher - around a coach's content. A coach never sees
    * that combination, and a preview that is wrong about the frame is wrong about the page.
    */
+  /*
+   * The pages a reader came through, for the profile's "Back to …" link (components/profile/profile-back-link.tsx).
+   * document.referrer only names the page the browser first loaded, and a profile is reached
+   * through /athletes/<id>, which redirects: so a coach who came from Recently claimed was sent to
+   * Athletes (Matt, 5 Nov 2026). The trail keeps the address with its query, newest last.
+   */
+  useEffect(() => {
+    try {
+      const here = window.location.pathname + window.location.search
+      const trail: string[] = JSON.parse(window.sessionStorage.getItem("nav:trail") ?? "[]")
+      if (trail[trail.length - 1] !== here) window.sessionStorage.setItem("nav:trail", JSON.stringify([...trail, here].slice(-8)))
+    } catch {}
+  }, [path])
   const devCoachPreview = process.env.NODE_ENV !== "production" && path.startsWith("/dev/coach-preview")
   const recruitingShell = useRecruitingShell() || devCoachPreview
   /*
