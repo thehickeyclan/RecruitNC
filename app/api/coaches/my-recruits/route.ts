@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { loadMyRecruits } from "@/lib/my-recruits"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
+import { withoutContact } from "@/lib/business/view-as-coach"
+import { viewSubject } from "@/lib/view-as/subject"
 
 export const dynamic = "force-dynamic"
 
@@ -17,14 +19,12 @@ export async function GET(request: Request) {
      * An admin may load one coach's board to see what that coach sees (Matt, 27 Oct 2026: "a way of
      * selecting a program and seeing what they see"). Read-only on the page; never anyone else.
      */
-    const asId = new URL(request.url).searchParams.get("as")?.trim() || null
-    let subjectId = user.id
-    if (asId && asId !== user.id) {
-      const { data: me } = await admin.from("user_profiles").select("is_admin, role").eq("user_id", user.id).maybeSingle()
-      if (!(me?.is_admin === true || me?.role === "admin")) return NextResponse.json({ error: "Admins only." }, { status: 403 })
-      subjectId = asId
-    }
-    const board = await loadMyRecruits(admin, subjectId)
+    // ?as= or the coach kept for this visit (lib/view-as/subject.ts); ignored unless admin or business.
+    const subject = await viewSubject(admin, user, new URL(request.url).searchParams.get("as"))
+    const subjectId = subject.subjectId
+    const hideContact = subject.viewer === "business"
+    const loadedBoard = await loadMyRecruits(admin, subjectId)
+    const board = hideContact ? { ...loadedBoard, recruits: withoutContact(loadedBoard.recruits) } : loadedBoard
     /*
      * Each wrestler flagged against the program's perfect recruit, when it has set one. Never
      * allowed to fail the board: the flags are an extra, the list is the page.

@@ -9,6 +9,8 @@
 import Link from "next/link"
 import { ArrowRight, ClipboardList, MessageSquare } from "lucide-react"
 import { MyRecruitsBoard } from "@/components/my-recruits-board"
+import { CoachNewsStrip } from "@/components/coach/coach-news-strip"
+import { RecentlyClaimedPanel } from "@/components/coach/recently-claimed"
 import { AlertsPanel, CompetingNextPanel, Super32Notice, TopUncommitted, type CoachHomeData } from "@/app/coach-home/coach-home-client"
 
 function MessagesToAnswer({ data }: { data: CoachHomeData }) {
@@ -61,7 +63,16 @@ function NeedsCard({ data, asUserId }: { data: CoachHomeData; asUserId: string |
   )
 }
 
-export function MyRecruitsHome({ data, viewingAs = null }: { data: CoachHomeData | null; viewingAs?: { userId: string; label: string } | null }) {
+export function MyRecruitsHome({
+  data,
+  viewingAs = null,
+  board = null,
+}: {
+  data: CoachHomeData | null
+  viewingAs?: { userId: string; label: string } | null
+  /** The board already loaded (the dev preview, which has no session to fetch it with). */
+  board?: React.ComponentProps<typeof MyRecruitsBoard>["initialData"]
+}) {
   const womens = data?.viewGender === "Female"
   const needsYou = data ? (
     <div className="mt-2">
@@ -73,12 +84,14 @@ export function MyRecruitsHome({ data, viewingAs = null }: { data: CoachHomeData
   ) : null
   const below = data ? (
     <div className="mt-8">
+      {/* Under the table, not between the funnel and it (Matt, 5 Nov 2026): four, then open in place. */}
+      <RecentlyClaimedPanel wrestlers={data.justClaimed ?? []} />
       {data.suggested?.length ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} womens={womens} /> : null}
       <CompetingNextPanel data={data} />
     </div>
   ) : null
   const identity = data ? { logo: data.programLogo, program: data.program, coachName: data.coachName } : null
-  if (!viewingAs) return <MyRecruitsBoard needsYou={needsYou} below={below} identity={identity} />
+  if (!viewingAs) return <MyRecruitsBoard initialData={board} banner={<CoachNewsStrip />} needsYou={needsYou} below={below} identity={identity} />
   return (
     <>
       <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-2 border-b border-[#A3E635]/40 bg-[#15243B] px-4 py-2 text-sm text-white">
@@ -89,7 +102,7 @@ export function MyRecruitsHome({ data, viewingAs = null }: { data: CoachHomeData
           Pick another coach
         </Link>
       </div>
-      <MyRecruitsBoard needsYou={needsYou} below={below} asUserId={viewingAs.userId} identity={identity} />
+      <MyRecruitsBoard banner={<CoachNewsStrip />} needsYou={needsYou} below={below} asUserId={viewingAs.userId} identity={identity} />
     </>
   )
 }

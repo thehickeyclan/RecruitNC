@@ -7,6 +7,7 @@ import { programLogo as resolveProgramLogo } from "@/lib/coach-program-logo"
 import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
 import type { AthleteEventReport } from "@/lib/coach-event-report"
 import { liveStates } from "@/lib/recruiting/brand"
+import { viewAsRole } from "@/lib/business/view-as-coach"
 
 /**
  * College coaches' tournament reports (Matt, 26 Oct 2026): one full report per event, every NC
@@ -144,7 +145,13 @@ export async function resolveCoachReportViewer(admin: SupabaseClient, userId: st
   const cols = "user_id, role, profile_type, verified_coach, verification_status, is_admin, school_id, institution"
   const { data: me } = await admin.from("user_profiles").select(cols).eq("user_id", userId).maybeSingle()
   const meClass = classifyViewer(me ?? null)
-  const isAdmin = meClass.kind === "admin" || me?.is_admin === true
+  const fullAdmin = meClass.kind === "admin" || me?.is_admin === true
+  /*
+   * A business account (Rhett) reads a named coach's reports like an admin does, and only that:
+   * with no ?as= it is not a coach and gets nothing. The reports carry no family contact details.
+   */
+  const business = !fullAdmin && Boolean(asUserId) && !(meClass.isCollegeCoach && meClass.verifiedCoach) && (await viewAsRole(admin, userId)) === "business"
+  const isAdmin = fullAdmin || business
   if (!isAdmin && !(meClass.isCollegeCoach && meClass.verifiedCoach)) return { access: "not-coach" }
 
   let subject = me

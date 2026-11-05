@@ -34,6 +34,8 @@ export type RankingViewer = {
   hasSubscription?: boolean
   /** A live Command Center subscription: the recruiting portal without Blue (Matt, 15 Oct 2026). */
   hasCommandCenter?: boolean
+  /** A business account (Rhett): sees ranks as a coach does (Matt, 4 Nov 2026). Not a paid tier. */
+  isBusiness?: boolean
 }
 
 /**
@@ -96,6 +98,7 @@ export function canSeeProspectRanking(viewer: RankingViewer | null | undefined):
    * them, and is still used wherever the role legitimately decides something.)
    */
   if (viewer.isVerifiedCoach) return true
+  if (viewer.isBusiness === true) return true
   if (viewer.isBlueMember === true) return true
   return viewer.hasSubscription === true
 }
@@ -115,7 +118,7 @@ export function canSeeProspectRanking(viewer: RankingViewer | null | undefined):
 export function canSeeRankingOnProfile(viewer: RankingViewer | null | undefined): boolean {
   if (!viewer) return false
   if (viewer.isAdmin) return true
-  return viewer.isVerifiedCoach === true
+  return viewer.isVerifiedCoach === true || viewer.isBusiness === true
 }
 
 /** What a viewer without access is told, which is an offer rather than a refusal. */

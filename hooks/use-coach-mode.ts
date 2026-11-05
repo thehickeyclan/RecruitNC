@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { COACH_PREVIEW_KEY, usesRecruitingShell } from "@/lib/recruiting/brand"
+import { hasBusinessGrant } from "@/lib/business/access"
 
 /**
  * Is this viewer working as a college coach?
@@ -12,7 +13,7 @@ import { COACH_PREVIEW_KEY, usesRecruitingShell } from "@/lib/recruiting/brand"
  * coach and cannot write to a family - `previewNotice` is what a compose box says instead.
  */
 export function useCoachMode() {
-  const { profile } = useAuth()
+  const { profile, user } = useAuth()
   const [flag, setFlag] = useState(false)
   useEffect(() => {
     try {
@@ -20,7 +21,7 @@ export function useCoachMode() {
     } catch {}
   }, [])
   const isCoach = usesRecruitingShell(profile)
-  const preview = !isCoach && flag && (profile?.is_admin === true || profile?.role === "admin")
+  const preview = !isCoach && flag && (profile?.is_admin === true || profile?.role === "admin" || hasBusinessGrant(user?.app_metadata))
   return {
     isCoach,
     preview,

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { hasBusinessGrant } from "@/lib/business/access"
 import { NextRequest, NextResponse } from "next/server"
 import { classifyViewer } from "@/lib/viewer-role"
 import { countsAsCoachView } from "@/lib/coach-view-rule"
@@ -49,7 +50,9 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .single()
 
-    if (!adminRow?.is_admin) {
+    // Admins, and the business grant (lib/business/access.ts): counts of views per wrestler,
+    // grouped by the viewer’s role. No viewer is named.
+    if (!adminRow?.is_admin && !hasBusinessGrant(user.app_metadata)) {
       return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
     }
 

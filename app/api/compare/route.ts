@@ -7,6 +7,8 @@
  * North Carolina wrestlers only for now. Out-of-state results are held, but opponent strength and
  * identity links are only validated for NC; other states open up as their data is checked.
  */
+import { hasBusinessGrant } from "@/lib/business/access"
+import { viewSubject } from "@/lib/view-as/subject"
 import { rankingLabel } from "@/lib/public-rankings-cap"
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -75,7 +77,9 @@ export async function GET(request: NextRequest) {
     .select("role, profile_type, verified_coach, is_admin, verified_method")
     .eq("user_id", user.id)
     .maybeSingle()
-  if (!mayUseComparison({ profile, userId: user.id })) {
+  // A business account (Rhett) compares like a coach, with no contact details or academics.
+  const business = hasBusinessGrant(user.app_metadata)
+  if (!mayUseComparison({ profile, userId: user.id, business })) {
     return NextResponse.json({ error: "The comparison is for verified college coaches." }, { status: 403 })
   }
   const classified = classifyViewer(profile ?? null)
@@ -87,7 +91,8 @@ export async function GET(request: NextRequest) {
     verifiedMethod: (profile?.verified_method as string) ?? null,
   })
   // A listed tester sees the comparison as a coach does (lib/compare-access.ts).
-  const personal = releasesPersonalData(tier) || isComparisonTester(user.id)
+  const personal = !business && (releasesPersonalData(tier) || isComparisonTester(user.id))
+  const reportTier = personal ? "full" : business ? "coach_no_pii" : tier
 
   const [leftLoaded, rightLoaded] = await Promise.all([
     loadPublicAthleteProfile(leftId, admin),
@@ -118,8 +123,8 @@ export async function GET(request: NextRequest) {
 
   const side = (athlete: Record<string, unknown>) => ({ id: String(athlete.id), name: String(athlete.name ?? "") })
   const [leftReport, rightReport, leftBouts, rightBouts] = await Promise.all([
-    buildScoutingReport(admin, leftAthlete, opponentIndex, personal ? "full" : tier, null).then((r) => withClassPositionFloor(r, String(leftAthlete.id))),
-    buildScoutingReport(admin, rightAthlete, opponentIndex, personal ? "full" : tier, null).then((r) => withClassPositionFloor(r, String(rightAthlete.id))),
+    buildScoutingReport(admin, leftAthlete, opponentIndex, reportTier, null).then((r) => withClassPositionFloor(r, String(leftAthlete.id))),
+    buildScoutingReport(admin, rightAthlete, opponentIndex, reportTier, null).then((r) => withClassPositionFloor(r, String(rightAthlete.id))),
     loadComparisonBouts(admin, side(leftAthlete)),
     loadComparisonBouts(admin, side(rightAthlete)),
   ])
@@ -155,7 +160,7 @@ export async function GET(request: NextRequest) {
     rankedLabel: rankedLabel(report),
   })
   // The page re-checks these itself as the coach edits the needs, so it gets the facts, not a verdict.
-  const savedFit = personal ? await loadProgramFit(admin, await resolveProgramScope(admin, user.id)) : null
+  const savedFit = personal ? await loadProgramFit(admin, await resolveProgramScope(admin, (await viewSubject(admin, user)).subjectId)) : null
   const programFit = personal
     ? {
         saved: savedFit && hasPerfectRecruit(savedFit.criteria) ? savedFit : null,
@@ -173,6 +178,7 @@ export async function GET(request: NextRequest) {
       verdict: onTheMat.verdict,
       rows: buildComparisonRows(leftReport, rightReport, {
         personal,
+        stars: personal || business,
         activity: { left: activity.get(leftReport.athleteId) ?? null, right: activity.get(rightReport.athleteId) ?? null },
       }),
       sections: buildComparisonSections(leftReport, rightReport),

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { requestedViewAsId } from "@/lib/view-as/subject"
 import { siteFromRequest } from "@/lib/analytics-site"
 import { currentClassYears } from "@/lib/class-years"
 import { VIEW_GENDER_COOKIE, viewGenderFor } from "@/lib/recruiting/coach-program"
@@ -8,6 +9,7 @@ import { loadProgramNeeds, resolveNeedsCoach, saveNeeds, updateNeed, type NeedsC
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { isDemoNeeds } from "@/lib/recruiting/demo-needs"
+import { viewAsRole } from "@/lib/business/view-as-coach"
 
 export const dynamic = "force-dynamic"
 
@@ -24,13 +26,14 @@ async function who(request: NextRequest): Promise<{ admin: ReturnType<typeof cre
   const admin = createAdminClient()
   const viewing = viewGenderFor(null, request.cookies.get(VIEW_GENDER_COOKIE)?.value)
   let coach = await resolveNeedsCoach(admin, user.id, viewing)
-  if (!coach) return NextResponse.json({ error: "For college coaching staff." }, { status: 403, headers: PRIVATE })
-  const as = request.nextUrl.searchParams.get("as")?.trim()
-  if (as && as !== user.id && coach.isAdmin) {
+  const as = (await requestedViewAsId(request.nextUrl.searchParams.get("as"))) ?? undefined
+  // Admins, and business accounts (no board of their own), read a named coach's needs.
+  if (as && as !== user.id && (coach?.isAdmin || (!coach && (await viewAsRole(admin, user.id, user.app_metadata)) === "business"))) {
     const other = await resolveNeedsCoach(admin, as, viewing)
     if (!other) return NextResponse.json({ error: "Not a coach." }, { status: 404, headers: PRIVATE })
     coach = { ...other, canPost: false }
   }
+  if (!coach) return NextResponse.json({ error: "For college coaching staff." }, { status: 403, headers: PRIVATE })
   return { admin, coach }
 }
 

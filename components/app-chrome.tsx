@@ -1,5 +1,7 @@
 "use client"
 
+import { cleanViewAsId, setViewAsCookie } from "@/lib/view-as/cookie"
+import { hasBusinessGrant } from "@/lib/business/access"
 import { BrandFooter, BrandHeader } from "@/components/recruiting/brand-frames"
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
@@ -28,7 +30,8 @@ const SHELL_HINT_KEY = "recruiting-shell"
  * 2026: "you changed nc united website our front end"). A real coach still gets the portal frame
  * everywhere; this is only the staff preview.
  */
-const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/college-commitments", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/interested", "/scouting-report", "/coach-reports"]
+// "/rankings" too: on RecruitWrestlers /public-rankings 308s there, and the coach view lost its side menu.
+const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/college-commitments", "/view-profile", "/inbox", "/public-rankings", "/rankings", "/compare", "/perfect-recruit", "/interested", "/recently-claimed", "/scouting-report", "/coach-reports"]
 /**
  * Pages with no Data Dawg launcher whoever is looking: the inbox (it covers the send button) and
  * the pages that exist only for coaches.
@@ -62,6 +65,7 @@ const NO_CHAT_PATHS = [
   "/my-recruits",
   "/perfect-recruit",
   "/interested",
+  "/recently-claimed",
   // Sign-up is where a college coach first meets the site, before we know he is one: the coach
   // step is a choice made on /auth/signup itself, so the whole page goes without (Matt, 13 Oct 2026).
   "/auth/signup",
@@ -79,7 +83,18 @@ function useRecruitingShell(): boolean {
   const [preview, setPreview] = useState(false)
   useEffect(() => {
     try {
-      const view = new URLSearchParams(window.location.search).get("view")
+      const params = new URLSearchParams(window.location.search)
+      const view = params.get("view")
+      /*
+       * The coach picked at /admin/view-as-coach (?as=) stays picked for the visit, so every page
+       * shows that coach's portal, not the admin's own (lib/view-as/subject.ts).
+       */
+      const asId = cleanViewAsId(params.get("as"))
+      if (asId) {
+        setViewAsCookie(asId)
+        localStorage.setItem(COACH_PREVIEW_KEY, "1")
+      }
+      if (view === "admin") setViewAsCookie(null)
       /*
        * Coach Home is the door into the coach portal, for staff too. An admin who opened it kept
        * the community bar and could not find the side menu he had asked for (Matt, 12 October
@@ -113,7 +128,8 @@ function useRecruitingShell(): boolean {
       }
     } catch {}
   }, [user, profile, isLoading])
-  const isAdmin = profile?.is_admin === true || profile?.role === "admin"
+  // Admins, and business accounts (Rhett) viewing a coach's portal from /admin/view-as-coach.
+  const isAdmin = profile?.is_admin === true || profile?.role === "admin" || hasBusinessGrant(user?.app_metadata)
   if (profile) return usesRecruitingShell(profile) || (isAdmin && preview && portalPage)
   // Nothing is known yet; an admin previewing gets the coach frame from the first paint too.
   return (hint || (preview && portalPage)) && (isLoading || !!user)
@@ -200,6 +216,18 @@ export function AppChrome({ children, hideNcUnited = false }: { children: React.
     return (
       <div id="app-content" className="relative flex min-h-screen flex-col bg-[#0A1628]">
         <main className="flex-1">{children}</main>
+      </div>
+    )
+  }
+  /*
+   * The family deck is shown to a room, often full screen. Nothing of ours belongs on top of it -
+   * no menu, no footer, no assistant launcher - so it gets the bare frame. Access is decided by
+   * the page itself (lib/business/require-business-viewer.ts), not here.
+   */
+  if (path === "/admin/business/deck") {
+    return (
+      <div id="app-content" className="relative min-h-screen bg-[#060f1f]">
+        {children}
       </div>
     )
   }

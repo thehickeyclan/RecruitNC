@@ -43,7 +43,7 @@ import {
 } from "@/lib/significant-wins"
 import { isBlueTeam } from "@/lib/blue-team"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } from "@/lib/public-rankings-cap"
-import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
+import { releasesAssessment, releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
 import { productName } from "@/lib/recruiting/product-name"
@@ -764,7 +764,7 @@ export async function buildScoutingReport(
      *
      * Built from data already in hand, so withholding it costs the report nothing either way.
      */
-    starRating: personal && isRatedAthlete({ gender: athlete.gender as string, graduationYear: gradYear })
+    starRating: releasesAssessment(accessTier) && isRatedAthlete({ gender: athlete.gender as string, graduationYear: gradYear })
       ? applyStarOverride(
           rateAthlete({
           nationalRows: nationalEventRows(bundle as never),

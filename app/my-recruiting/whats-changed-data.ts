@@ -62,7 +62,7 @@ export async function loadWhatsChanged(admin: SupabaseClient, cc: CommandCenter,
   const today = now.toISOString().slice(0, 10)
   const team: "mens" | "womens" = cc.focus?.gender ?? (athlete.gender?.toLowerCase().startsWith("f") ? "womens" : "mens")
   const listed = cc.schools.filter((s) => !s.noTeam)
-  const threads = await listThreads(admin, cc.viewerId, { athleteId }).catch(() => [])
+  const threads = cc.hidePersonal ? [] : await listThreads(admin, cc.viewerId, { athleteId }).catch(() => [])
   const confirmed = coachConfirmedNeeds(needs, listed, now)
   const inferred = weight && athlete.classYear ? inferredNeeds(listed, team, weight, athlete.classYear) : []
   const views = (cc.views.get(athleteId)?.visits ?? []).flatMap((v) => {

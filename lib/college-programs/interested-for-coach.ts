@@ -28,6 +28,22 @@ export async function loadInterested(
   fitViewer: Awaited<ReturnType<typeof resolveFitViewer>> | null,
 ) {
   const rows = await interestedInProgram(admin, schoolId, gender)
+  return withFitSignals(admin, rows, schoolId, gender, onBoard, fitViewer)
+}
+
+/**
+ * Any list of wrestlers, as a coach sees them: last-competed weight, whether each is already on the
+ * board, the coach's Perfect Recruit verdict and the room at that weight in the fall he would
+ * arrive. Shared by "Interested in your program" and "Just claimed" (lib/college-programs/just-claimed-for-coach.ts).
+ */
+export async function withFitSignals<T extends { id: string; gender: string | null; classYear: number | null }>(
+  admin: SupabaseClient,
+  rows: T[],
+  schoolId: string | null,
+  gender: "Male" | "Female" | null,
+  onBoard: Set<string>,
+  fitViewer: Awaited<ReturnType<typeof resolveFitViewer>> | null,
+) {
   if (!rows.length) return []
   const ids = rows.map((r) => r.id)
   const [last, flags] = await Promise.all([
@@ -38,7 +54,7 @@ export async function loadInterested(
   return rows.map((r) => {
     const weight = Number(String(last.get(r.id)?.weight ?? "").replace(/[^0-9]/g, "")) || null
     const team = roomOf(r.gender ?? gender)
-    const room = roomFor(schoolId, team)
+    const room = schoolId ? roomFor(schoolId, team) : null
     const at = weight && room && weightsPublished(room) && r.classYear ? nearestCollegeWeights(weight, team)[0] : null
     const row = at ? roomByWeight(room!, team, r.classYear!).find((x) => x.weight === at) : null
     const flag = flags?.get(r.id)

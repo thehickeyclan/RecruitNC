@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic"
 
 /** Part of the Recruiting Command Center: Blue, a Command Center plan, or staff. */
 async function commandCenterRefusal(): Promise<NextResponse | null> {
-  const { viewer } = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient() })
+  const { viewer } = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient(), allowBusiness: true })
   return hasPortalAccess(viewer) ? null : NextResponse.json({ error: "Part of the Recruiting Command Center.", upgrade: "/command-center" }, { status: 403 })
 }
 

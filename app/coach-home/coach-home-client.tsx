@@ -7,6 +7,7 @@ import Link from "next/link"
 import { CoachTabs } from "@/components/coach-tabs"
 import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
+import type { JustClaimedCard } from "@/lib/college-programs/just-claimed-for-coach"
 import { StaffActivityList } from "@/components/recruiting/staff-activity-list"
 import type { StaffActivityItem } from "@/lib/recruiting/staff-activity"
 import type { EventWithRecruits } from "@/lib/college-programs/competing-next"
@@ -55,6 +56,8 @@ export type CoachHomeData = {
     fit: FitBadgeFlag | null
     room: { weight: number; need: "likely" | "some" | "crowded"; label: string; staying: number; fall: number } | null
   }>
+  /** Wrestlers whose families claimed the profile in the last 30 days, any state, fits first (approved coaches only). */
+  justClaimed?: JustClaimedCard[]
   /** Events families just added, and who competes this weekend (approved coaches only). */
   alerts?: { added: Array<{ athleteId: string; name: string; title: string; startDate: string; endDate: string | null; location: string | null; addedAt: string }>; weekend: EventWithRecruits[] }
   /** Top-ranked uncommitted wrestlers not on the board yet, to star from here. */

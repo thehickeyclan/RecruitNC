@@ -7,6 +7,7 @@
  *
  * Verified college coaches and admins. An admin can add ?as=<coach user id> to see one coach's report.
  */
+import { requestedViewAsId } from "@/lib/view-as/subject"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
@@ -112,7 +113,9 @@ export default async function CoachReportPage({ params, searchParams }: {
   searchParams: Promise<{ starred?: string; as?: string; devcoach?: string }>
 }) {
   const { slug } = await params
-  const sp = await searchParams
+  // ?as=, or the coach kept for this visit (lib/view-as/subject.ts); only admins and business accounts get it honoured.
+  const sp = { ...(await searchParams) }
+  sp.as = sp.as ?? (await requestedViewAsId()) ?? undefined
   // NC United carries North Carolina's reports; RecruitWrestlers every live state's.
   const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
   const def = reportsOnAddress(onRw).find((d) => d.slug === slug)

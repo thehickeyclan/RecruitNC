@@ -19,6 +19,11 @@
 export type ScoutingAccessTier =
   /** Results and analysis only. No contact details, no academics. */
   | "intelligence"
+  /**
+   * A business account (Rhett, Matt 4 Nov 2026): what a coach sees - star rating and assessment -
+   * but never contact details or academics.
+   */
+  | "coach_no_pii"
   /** Adds cell, email, GPA and test scores. Verified against a staff directory. */
   | "full"
 
@@ -56,6 +61,11 @@ export function scoutingAccessTier(viewer: ScoutingViewer): ScoutingAccessTier {
 /** True when the tier releases personal detail belonging to the athlete. */
 export function releasesPersonalData(tier: ScoutingAccessTier): boolean {
   return tier === "full"
+}
+
+/** The coach's assessment (star rating): coaches, admins, and business accounts. */
+export function releasesAssessment(tier: ScoutingAccessTier): boolean {
+  return tier === "full" || tier === "coach_no_pii"
 }
 
 /**
