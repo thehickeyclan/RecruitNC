@@ -151,6 +151,22 @@ export function useInterestBadge(signedIn: boolean, pathname: string) {
   return count
 }
 
+/** New claims since the coach last opened /recently-claimed. */
+export function useClaimedBadge(signedIn: boolean, pathname: string) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (!signedIn) {
+      setCount(0)
+      return
+    }
+    fetch("/api/recently-claimed/new", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setCount(Number(d?.count) || 0))
+      .catch(() => {})
+  }, [signedIn, pathname])
+  return count
+}
+
 
 /**
  * New reports (a count), a new rankings release and a new story (lib/nav-new.ts). The feed is

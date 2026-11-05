@@ -14,6 +14,7 @@ import {
   GitCompareArrows,
   GraduationCap,
   HeartHandshake,
+  UserPlus,
   LogOut,
   Menu,
   MessageSquare,
@@ -25,7 +26,7 @@ import {
   FileText,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { useCoachMessageBadge, useInterestBadge, useNavNew } from "@/hooks/use-nav-badges"
+import { useClaimedBadge, useCoachMessageBadge, useInterestBadge, useNavNew } from "@/hooks/use-nav-badges"
 import { NotificationBell } from "@/components/recruiting/notification-bell"
 import { COACH_PREVIEW_KEY, COMMUNITY_PARTNER_LINKS, RECRUITING_BRAND, hasCommunityAccess, recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { RecruitingFooter } from "@/components/recruiting/recruiting-footer"
@@ -106,6 +107,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   const { user, profile, signOut } = useAuth()
   const messages = useCoachMessageBadge(!!user, pathname)
   const interestNew = useInterestBadge(!!user, pathname)
+  const claimedNew = useClaimedBadge(!!user, pathname)
   const fresh = useNavNew(!!user, pathname)
 
   /**
@@ -139,6 +141,8 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
     athletes,
     ...rankings,
     { href: "/interested", label: "Interested", icon: HeartHandshake, badge: interestNew },
+    // Families who just claimed, any state (Matt, 5 Nov 2026); My Recruits shows the first four.
+    { href: "/recently-claimed", label: "Recently Claimed", icon: UserPlus, badge: claimedNew },
     { href: "/coach-reports", label: "Reports", icon: FileText, badge: fresh.reports },
     // A business account (Rhett) viewing a coach's portal gets no Messages: they are with families.
     ...(businessViewer ? [] : [inbox]),

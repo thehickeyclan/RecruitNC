@@ -7,6 +7,7 @@ import Link from "next/link"
 import { CoachTabs } from "@/components/coach-tabs"
 import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
+import type { JustClaimedCard } from "@/lib/college-programs/just-claimed-for-coach"
 import { StaffActivityList } from "@/components/recruiting/staff-activity-list"
 import type { StaffActivityItem } from "@/lib/recruiting/staff-activity"
 import type { EventWithRecruits } from "@/lib/college-programs/competing-next"
@@ -56,7 +57,7 @@ export type CoachHomeData = {
     room: { weight: number; need: "likely" | "some" | "crowded"; label: string; staying: number; fall: number } | null
   }>
   /** Wrestlers whose families claimed the profile in the last 30 days, any state, fits first (approved coaches only). */
-  justClaimed?: Array<NonNullable<CoachHomeData["interested"]>[number] & { state: string | null; honor: string | null; honorLevel: string }>
+  justClaimed?: JustClaimedCard[]
   /** Events families just added, and who competes this weekend (approved coaches only). */
   alerts?: { added: Array<{ athleteId: string; name: string; title: string; startDate: string; endDate: string | null; location: string | null; addedAt: string }>; weekend: EventWithRecruits[] }
   /** Top-ranked uncommitted wrestlers not on the board yet, to star from here. */
@@ -568,13 +569,6 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
   )
 }
 
-const HONOR_TONE: Record<string, string> = {
-  "all-american": "bg-purple-500/20 text-purple-200 ring-purple-400/40",
-  "state-champion": "bg-amber-400/20 text-amber-200 ring-amber-400/40",
-  "state-placer": "bg-sky-400/15 text-sky-200 ring-sky-400/30",
-  "state-qualifier": "bg-white/10 text-white/70 ring-white/20",
-}
-
 const ROOM_TONE = { likely: "bg-emerald-400/15 text-emerald-300 ring-emerald-400/30", some: "bg-sky-400/15 text-sky-200 ring-sky-400/30", crowded: "bg-amber-400/15 text-amber-200 ring-amber-400/30" } as const
 
 /** "Wrestlers interested in your program" (Matt, 21 Oct 2026): families chose to tell this program. */
@@ -611,58 +605,6 @@ function InterestedPanel({ wrestlers, program }: { wrestlers: NonNullable<CoachH
                 <span className="block truncate text-xs text-white/55">{[w.weight ? `${w.weight} lbs` : null, w.highSchool].filter(Boolean).join(" · ")}</span>
                 <span className="mt-1 flex flex-wrap items-center gap-1.5">
                   <span className="text-[11px] font-bold text-emerald-300">✓ Interested in you · {ago(w.at)}</span>
-                  {w.room ? (
-                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ${ROOM_TONE[w.room.need]}`} title={`${w.room.staying} on your roster at ${w.room.weight} in fall ${w.room.fall}`}>
-                      {w.room.weight}: {w.room.label}
-                    </span>
-                  ) : null}
-                </span>
-                {w.fit ? <FitBadge flag={w.fit} className="mt-1" /> : null}
-              </span>
-              <ArrowRight className="h-4 w-4 shrink-0 text-white/30" aria-hidden />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-/**
- * "Just claimed" (Matt, 5 Nov 2026): families who claimed in the last 30 days, from any state, so a
- * coach hears about a Virginia or New York family the week they arrive. Fits come first.
- */
-export function JustClaimedPanel({ wrestlers }: { wrestlers: NonNullable<CoachHomeData["justClaimed"]> }) {
-  if (!wrestlers.length) return null
-  // Calendar days in Eastern time: a claim at 3 pm yesterday is "yesterday", not "today" because 24 hours have not passed.
-  const day = (t: number) => Math.floor(Date.parse(new Date(t).toLocaleDateString("en-CA", { timeZone: "America/New_York" })) / 864e5)
-  const ago = (iso: string) => {
-    const d = day(Date.now()) - day(Date.parse(iso))
-    return d <= 0 ? "today" : d === 1 ? "yesterday" : `${d} days ago`
-  }
-  return (
-    <section className={`${PANEL} mt-4 border-[#D3B574]/40 p-4 sm:p-5`} aria-labelledby="ch-claimed">
-      <h2 id="ch-claimed" className="text-base font-black uppercase tracking-wide text-white">
-        Recently claimed
-      </h2>
-      <p className="text-xs text-white/45">These families joined in the last 30 days. You can message them now.</p>
-      <ul className="mt-3 grid gap-2 lg:grid-cols-2">
-        {wrestlers.map((w) => (
-          <li key={w.id}>
-            <Link href={`/athletes/${w.id}`} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 hover:border-[#D3B574]/50 hover:bg-white/[0.06]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={w.photo || "/wrestler-silhouette.png"} alt="" className="h-14 w-14 shrink-0 rounded-full bg-[#13294B] object-cover" />
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="truncate font-black text-white">{w.name}</span>
-                  {w.state ? <span className="rounded bg-[#D3B574]/20 px-1.5 py-0.5 text-[11px] font-black text-[#F3DCA4] ring-1 ring-[#D3B574]/40">{w.state}</span> : null}
-                  {w.classYear ? <span className="rounded bg-white/90 px-1.5 py-0.5 text-[11px] font-black text-[#0A1628]">{w.classYear}</span> : null}
-                  {w.onBoard ? <Star className={`h-3.5 w-3.5 fill-current ${GOLD}`} aria-label="On your board" /> : null}
-                </span>
-                <span className="block truncate text-xs text-white/55">{[w.weight ? `${w.weight} lbs` : null, w.highSchool].filter(Boolean).join(" · ")}</span>
-                {w.honor ? <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-[11px] font-black ring-1 ${HONOR_TONE[w.honorLevel] ?? HONOR_TONE["state-qualifier"]}`}>{w.honor}</span> : null}
-                <span className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-emerald-300">Claimed {ago(w.at)}</span>
                   {w.room ? (
                     <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ${ROOM_TONE[w.room.need]}`} title={`${w.room.staying} on your roster at ${w.room.weight} in fall ${w.room.fall}`}>
                       {w.room.weight}: {w.room.label}
