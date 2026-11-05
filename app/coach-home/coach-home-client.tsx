@@ -56,7 +56,7 @@ export type CoachHomeData = {
     room: { weight: number; need: "likely" | "some" | "crowded"; label: string; staying: number; fall: number } | null
   }>
   /** Wrestlers whose families claimed the profile in the last 30 days, any state, fits first (approved coaches only). */
-  justClaimed?: Array<NonNullable<CoachHomeData["interested"]>[number] & { state: string | null }>
+  justClaimed?: Array<NonNullable<CoachHomeData["interested"]>[number] & { state: string | null; honor: string | null; honorLevel: string }>
   /** Events families just added, and who competes this weekend (approved coaches only). */
   alerts?: { added: Array<{ athleteId: string; name: string; title: string; startDate: string; endDate: string | null; location: string | null; addedAt: string }>; weekend: EventWithRecruits[] }
   /** Top-ranked uncommitted wrestlers not on the board yet, to star from here. */
@@ -568,6 +568,13 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
   )
 }
 
+const HONOR_TONE: Record<string, string> = {
+  "all-american": "bg-purple-500/20 text-purple-200 ring-purple-400/40",
+  "state-champion": "bg-amber-400/20 text-amber-200 ring-amber-400/40",
+  "state-placer": "bg-sky-400/15 text-sky-200 ring-sky-400/30",
+  "state-qualifier": "bg-white/10 text-white/70 ring-white/20",
+}
+
 const ROOM_TONE = { likely: "bg-emerald-400/15 text-emerald-300 ring-emerald-400/30", some: "bg-sky-400/15 text-sky-200 ring-sky-400/30", crowded: "bg-amber-400/15 text-amber-200 ring-amber-400/30" } as const
 
 /** "Wrestlers interested in your program" (Matt, 21 Oct 2026): families chose to tell this program. */
@@ -653,6 +660,7 @@ export function JustClaimedPanel({ wrestlers }: { wrestlers: NonNullable<CoachHo
                   {w.onBoard ? <Star className={`h-3.5 w-3.5 fill-current ${GOLD}`} aria-label="On your board" /> : null}
                 </span>
                 <span className="block truncate text-xs text-white/55">{[w.weight ? `${w.weight} lbs` : null, w.highSchool].filter(Boolean).join(" · ")}</span>
+                {w.honor ? <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-[11px] font-black ring-1 ${HONOR_TONE[w.honorLevel] ?? HONOR_TONE["state-qualifier"]}`}>{w.honor}</span> : null}
                 <span className="mt-1 flex flex-wrap items-center gap-1.5">
                   <span className="text-[11px] font-bold text-emerald-300">Claimed {ago(w.at)}</span>
                   {w.room ? (

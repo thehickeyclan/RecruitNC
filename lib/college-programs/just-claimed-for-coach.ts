@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { currentClassYears } from "@/lib/class-years"
 import { withFitSignals } from "@/lib/college-programs/interested-for-coach"
+import { highestAchievement, loadAchievements, type AchievementLevel } from "@/lib/prospect-achievements"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
 
 /**
@@ -70,8 +71,26 @@ export async function loadJustClaimed(
       state: /^[A-Z]{2}$/.test(String(a.state ?? "")) && a.state !== "XX" ? String(a.state) : null,
       at: at.get(String(a.id))!,
     }))
-  const cards = await withFitSignals(admin, rows, schoolId, gender, onBoard, fitViewer)
+  const [fitted, facts] = await Promise.all([
+    withFitSignals(admin, rows, schoolId, gender, onBoard, fitViewer),
+    // The tile's credential (Matt, 5 Nov 2026), from the same tables the directory's honour pills read, every state's included.
+    loadAchievements(admin, rows.map((r) => ({ id: r.id, name: r.name }))).catch(() => new Map()),
+  ])
+  const cards = fitted.map((c) => ({ ...c, ...honorOf(facts.get(c.id) ?? {}) }))
   const fitRank = (c: (typeof cards)[number]) =>
     (c.fit?.verdict === "meets" ? 0 : c.fit?.verdict === "possible" ? 1 : c.fit ? 3 : 2) + (c.room?.need === "likely" ? 0 : c.room?.need === "some" ? 0.5 : 0.9)
-  return cards.sort((a, b) => fitRank(a) - fitRank(b) || b.at.localeCompare(a.at)).slice(0, limit)
+  return cards
+    // Fit, then newest: ranking by honour put a 29-day-old claim above yesterday's, and the point is who just arrived.
+    .sort((a, b) => fitRank(a) - fitRank(b) || b.at.localeCompare(a.at))
+    .slice(0, limit)
+}
+
+/** "All-American · State Placer", "State Champ", "State Qualifier", or nothing for a wrestler with neither. */
+function honorOf(facts: Parameters<typeof highestAchievement>[0]): { honor: string | null; honorLevel: AchievementLevel } {
+  const top = highestAchievement(facts)
+  const place = facts.bestStatePlace
+  const state = place === 1 ? "State Champ" : place != null && place >= 2 && place <= 6 ? "State Placer" : null
+  if (top.level === "all-american") return { honor: ["All-American", state].filter(Boolean).join(" · "), honorLevel: top.level }
+  if (top.level === "dnq") return { honor: null, honorLevel: top.level }
+  return { honor: top.level === "state-champion" ? "State Champ" : top.badge, honorLevel: top.level }
 }
