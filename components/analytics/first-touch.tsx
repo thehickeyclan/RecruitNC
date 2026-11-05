@@ -24,6 +24,11 @@ export function FirstTouch() {
       })
       const secure = window.location.protocol === "https:" ? "; Secure" : ""
       document.cookie = `${FIRST_TOUCH_COOKIE}=${encodeFirstTouch(touch)}; Path=/; Max-Age=${FIRST_TOUCH_MAX_AGE_DAYS * 86400}; SameSite=Lax${secure}`
+      // One row per new browser, carrying the cookie just written, so ad visitors who leave without signing up still count.
+      const body = JSON.stringify({ event: "first_visit", path: window.location.pathname, source: "first_touch" })
+      if (!navigator.sendBeacon?.("/api/track-funnel-event", new Blob([body], { type: "application/json" }))) {
+        void fetch("/api/track-funnel-event", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {})
+      }
     } catch {
       /* A blocked cookie only loses the label. */
     }
