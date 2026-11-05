@@ -36,7 +36,16 @@ export const RECRUITING_BRAND = {
     { code: "MD", name: "Maryland", live: false },
     { code: "WV", name: "West Virginia", live: false },
     { code: "DE", name: "Delaware", live: false },
-    { code: "GA", name: "Georgia", live: false },
+    /*
+     * Live 5 Nov 2026, the same day as Tennessee and the largest state we have opened: 1,244
+     * profiles against South Carolina's 875 and Virginia's 825. Open, not ranked - no Georgia
+     * ranker yet.
+     *
+     * Two associations, GHSA and GIAA, 18,948 bout sides, and every single profile has a state
+     * result behind it: 431 placed, 813 qualifier-only, none with nothing. 328/328 of its 2026
+     * placers are accounted for and no current-class profile is missing a school or a gender.
+     */
+    { code: "GA", name: "Georgia", live: true, ranked: false },
     /*
      * Live 5 Nov 2026 (Matt: "make TN public"). Open, not ranked - there is no Tennessee ranker
      * yet, so its rankings surface says so plainly rather than showing an empty board, the way
