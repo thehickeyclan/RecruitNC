@@ -58,6 +58,7 @@ export default function AdminMessagingPage() {
       sms: { sent: number; failed: number }
     }
     emailSkippedNoAddress?: number
+    emailSkippedTestAddress?: number
     testOnly?: boolean
   } | null>(null)
   const [bodyHtml, setBodyHtml] = useState("")
@@ -832,6 +833,9 @@ export default function AdminMessagingPage() {
                       {(sendResult.emailSkippedNoAddress ?? 0) > 0 && (
                         <span> {sendResult.emailSkippedNoAddress} had no email on file.</span>
                       )}
+                      {(sendResult.emailSkippedTestAddress ?? 0) > 0 && (
+                        <span> {sendResult.emailSkippedTestAddress} test address{sendResult.emailSkippedTestAddress === 1 ? "" : "es"} skipped.</span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -882,6 +886,7 @@ export default function AdminMessagingPage() {
                             recipientCount: data.recipientCount,
                             result: data.result,
                             emailSkippedNoAddress: data.emailSkippedNoAddress,
+                            emailSkippedTestAddress: data.emailSkippedTestAddress,
                           })
                         } else {
                           setError(data.error ?? "Send failed")
@@ -890,6 +895,7 @@ export default function AdminMessagingPage() {
                               recipientCount: data.recipientCount ?? count ?? 0,
                               result: data.result,
                               emailSkippedNoAddress: data.emailSkippedNoAddress,
+                              emailSkippedTestAddress: data.emailSkippedTestAddress,
                             })
                           }
                         }
