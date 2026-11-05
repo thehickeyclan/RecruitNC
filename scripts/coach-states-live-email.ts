@@ -6,6 +6,12 @@
  * time over current classes (2027-2030) with the directory's Honors filter rules, so each number
  * matches what the coach sees on that state's page.
  *
+ * Two versions (Matt, 5 Nov 2026), one subject:
+ *   --audience members (default)  coaches with an account: a short note
+ *   --audience invite --list <csv> D2, D3, NAIA and NJCAA staff without an account (the CSV Matt
+ *                                  approved: email,name,...): the full letter with the sign-up link.
+ *                                  Anyone who has an account or unsubscribed by send time is dropped.
+ *
  * Dry run by default: writes every coach's email as HTML to --out <dir> and a list, and sends
  * nothing. Sending is explicit and only after Matt approves the preview:
  *
@@ -30,6 +36,10 @@ const flag = (k: string) => argv.includes(`--${k}`)
 const SITE = "https://www.recruitwrestlers.com"
 const BRAND = "RecruitWrestlers"
 const FOR_COACHES = `${SITE}/for-coaches`
+const SIGNUP = `${SITE}/auth/signup?type=college-coach`
+// Matt's line (5 Nov 2026), with "wrestling" so the coach knows what it is before opening it.
+const SUBJECT = "Revolutionizing High School Wrestling Recruiting"
+type Audience = "members" | "invite"
 // Largest first; SC is the only one of the four with rankings published.
 const STATES = [
   { code: "GA", name: "Georgia" },
@@ -43,10 +53,11 @@ const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g,
 type Honors = { aa: number; champs: number; placers: number }
 type Counts = Record<string, Honors>
 
-type Momentum = { families: number; lastWeek: number }
+/** Families who claimed, and programs on the platform; "recruiting" = a program whose staff have starred a wrestler. */
+type Momentum = { families: number; lastWeek: number; programs: number; recruiting: number }
 
-function renderLetter(coach: string, counts: Counts, momentum: Momentum, unsubscribeUrl: string) {
-  const subject = "Georgia, Tennessee, South Carolina and Virginia are open"
+function renderLetter(audience: Audience, coach: string, counts: Counts, momentum: Momentum, unsubscribeUrl: string) {
+  const subject = SUBJECT
   const paras = [
     `${coach},`,
     `Four more states are open to college coaches on ${BRAND}: Georgia, Tennessee, South Carolina and Virginia, alongside North Carolina. In the classes of 2027 to 2030:`,
@@ -56,10 +67,35 @@ function renderLetter(coach: string, counts: Counts, momentum: Momentum, unsubsc
     text: `${s.name}: ${[n(counts[s.code].aa, "All-American", "All-Americans"), n(counts[s.code].champs, "state champion", "state champions"), n(counts[s.code].placers, "state placer", "state placers")].join(", ")}${s.ranked ? ", plus state rankings" : ""}`,
     href: `${SITE}/prospects/all?state=${s.code}`,
   }))
+  const programs = `${momentum.programs} college programs are already on ${BRAND}, and ${momentum.recruiting} of them have recruits on their boards`
+  const families = `More than ${(Math.floor(momentum.families / 50) * 50).toLocaleString("en-US")} families have claimed their wrestler's profile, ${momentum.lastWeek} of them in the past week`
+  const sig = ["Matt Hickey", BRAND, "Cell 631.662.5409"]
+  const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
+  const ul = (lis: string[]) => `<ul style="margin:0 0 14px;padding-left:20px;">${lis.map((li) => `<li style="margin:0 0 6px;">${li}</li>`).join("")}</ul>`
+  const page = (body: string) => `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
+${body}
+<p style="margin:18px 0 0;">${sig.map(esc).join("<br>")}</p>
+<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>
+</div></body></html>`
+  const stateList = ul(items.map((i) => `<a href="${i.href}" style="color:#1d4ed8;">${esc(i.text)}</a>`))
+  const stateText = items.map((i) => `- ${i.text}: ${i.href}`).join("\n")
+
+  if (audience === "members") {
+    // Coaches already on the platform know the tools: the news and the momentum only.
+    const after = [`Rankings for Georgia, Tennessee and Virginia will follow. ${programs}. ${families}. New claims from every state show up under Recently Claimed.`]
+    return {
+      subject,
+      html: page(`${paras.map(p).join("\n")}\n${stateList}\n${after.map(p).join("\n")}`),
+      text: [...paras, stateText, ...after, sig.join("\n"), `Unsubscribe: ${unsubscribeUrl}`].join("\n\n"),
+    }
+  }
+
   const mid = [
     `Rankings for Georgia, Tennessee and Virginia will follow.`,
     // Matt, 5 Nov 2026. "More than" a round fifty, so the claim stays true as the count moves.
-    `Our goal is to revolutionize high school recruiting for college programs and families. More than ${(Math.floor(momentum.families / 50) * 50).toLocaleString("en-US")} families have claimed their wrestler's profile, ${momentum.lastWeek} of them in the past week, and they're adding academics, contact information and the rest of their season.`,
+    `Our goal is to revolutionize high school recruiting for college programs and families. ${programs}. ${families}, and they're adding academics, contact information and the rest of their season.`,
     `What you get on every wrestler, free for college coaching staff:`,
   ]
   // The value list (Matt, 5 Nov 2026: "we need somewhere that we list our value proposition"). Each line is a feature coaches have today.
@@ -70,30 +106,15 @@ function renderLetter(coach: string, counts: Counts, momentum: Momentum, unsubsc
     ["Messages", "write to any wrestler, even when there is no cell number on file. Parents are on every conversation, and if the family hasn't joined yet, your message waits on the profile and you're told when they claim it"],
     ["My Recruits", "one board for your whole staff, plus Compare and Recently Claimed"],
   ] as const
+  const signup = `Create your coach account here: ${SIGNUP.replace(/^https:\/\//, "")}. Access is instant.`
   const tail = [`The full list is at ${FOR_COACHES.replace(/^https:\/\//, "")}.`]
-  const sig = ["Matt Hickey", BRAND, "Cell 631.662.5409"]
-  const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
-  const ul = (lis: string[]) => `<ul style="margin:0 0 14px;padding-left:20px;">${lis.map((li) => `<li style="margin:0 0 6px;">${li}</li>`).join("")}</ul>`
-  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
-<body style="margin:0;padding:0;background:#ffffff;">
-<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
-${paras.map(p).join("\n")}
-${ul(items.map((i) => `<a href="${i.href}" style="color:#1d4ed8;">${esc(i.text)}</a>`))}
+  const html = page(`${paras.map(p).join("\n")}
+${stateList}
 ${mid.map(p).join("\n")}
 ${ul(value.map(([k, v]) => `<strong>${esc(k)}:</strong> ${esc(v)}`))}
-<p style="margin:0 0 14px;">The full list is at <a href="${FOR_COACHES}" style="color:#1d4ed8;">${esc(FOR_COACHES.replace(/^https:\/\//, ""))}</a>.</p>
-<p style="margin:18px 0 0;">${sig.map(esc).join("<br>")}</p>
-<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>
-</div></body></html>`
-  const text = [
-    ...paras,
-    items.map((i) => `- ${i.text}: ${i.href}`).join("\n"),
-    ...mid,
-    value.map(([k, v]) => `- ${k}: ${v}`).join("\n"),
-    ...tail,
-    sig.join("\n"),
-    `Unsubscribe: ${unsubscribeUrl}`,
-  ].join("\n\n")
+<p style="margin:0 0 14px;">Create your coach account here: <a href="${SIGNUP}" style="color:#1d4ed8;">${esc(SIGNUP.replace(/^https:\/\//, ""))}</a>. Access is instant.</p>
+<p style="margin:0 0 14px;">The full list is at <a href="${FOR_COACHES}" style="color:#1d4ed8;">${esc(FOR_COACHES.replace(/^https:\/\//, ""))}</a>.</p>`)
+  const text = [...paras, stateText, ...mid, value.map(([k, v]) => `- ${k}: ${v}`).join("\n"), signup, ...tail, sig.join("\n"), `Unsubscribe: ${unsubscribeUrl}`].join("\n\n")
   return { subject, html, text }
 }
 
@@ -153,13 +174,56 @@ async function main() {
     }
   }
   const weekAgo = new Date(Date.now() - 7 * 86400e3).toISOString()
-  const momentum: Momentum = { families: claimedAt.size, lastWeek: [...claimedAt.values()].filter((at) => at && at >= weekAgo).length }
-  console.log("Momentum:", momentum)
-
-  const { data: profiles, error } = await admin.from("user_profiles").select("user_id, email, full_name, first_name, last_name, role, profile_type, verified_coach, verification_status, is_admin").eq("verified_coach", true)
+  const { data: profiles, error } = await admin.from("user_profiles").select("user_id, email, full_name, first_name, last_name, role, profile_type, verified_coach, verification_status, is_admin, institution, school_id").eq("verified_coach", true)
   if (error) throw new Error(error.message)
-  const coaches = (profiles ?? []).filter((p) => classifyViewer(p as never).isCollegeCoach && p.email && !p.is_admin)
-  const { allowed } = await filterUnsubscribed(admin as never, coaches.map((c) => String(c.email)))
+  const coaches = (profiles ?? []).filter((p) => classifyViewer(p as never).isCollegeCoach && p.email && !p.is_admin && p.verification_status !== "rejected")
+
+  // Programs, one per school however its coaches spelled it (scripts/coach-invite-email.ts counts the same way).
+  const { data: sch } = await admin.from("schools").select("id, name").in("id", [...new Set(coaches.map((c) => c.school_id).filter(Boolean))] as string[])
+  const progKey = (c: (typeof coaches)[number]) =>
+    String(sch?.find((x) => x.id === c.school_id)?.name ?? c.institution ?? "").replace(/\s*\(.*?\)\s*/g, " ").replace(/^the\s+/i, "").replace(/university of /i, "").replace(/ university| college/gi, "").trim().toLowerCase()
+  const starring = new Set<string>()
+  for (let from = 0; ; from += 1000) {
+    const { data, error: e } = await admin.from("college_coach_stars").select("coach_user_id").order("coach_user_id").range(from, from + 999)
+    if (e) throw new Error(`college_coach_stars: ${e.message}`)
+    for (const r of data ?? []) starring.add(String(r.coach_user_id))
+    if (!data || data.length < 1000) break
+  }
+  const momentum: Momentum = {
+    families: claimedAt.size,
+    lastWeek: [...claimedAt.values()].filter((at) => at && at >= weekAgo).length,
+    programs: new Set(coaches.map(progKey).filter(Boolean)).size,
+    recruiting: new Set(coaches.filter((c) => starring.has(String(c.user_id))).map(progKey).filter(Boolean)).size,
+  }
+  console.log("Momentum:", momentum)
+  const audience: Audience = arg("audience") === "invite" ? "invite" : "members"
+  // Who gets it: coaches with an account, or the approved invite CSV (email,name,... one per row).
+  let recipients: Array<{ email: string; name: string | null }>
+  if (audience === "invite") {
+    const listPath = arg("list")
+    if (!listPath) throw new Error("--audience invite needs --list <csv>")
+    const [head, ...lines] = fs.readFileSync(listPath, "utf8").trim().split(/\r?\n/)
+    const cols = head!.split(",")
+    const cell = (line: string) => { const cells: string[] = []; let cur = ""; let q = false
+      for (const ch of line) { if (ch === '"') q = !q; else if (ch === "," && !q) { cells.push(cur); cur = "" } else cur += ch }
+      cells.push(cur); return Object.fromEntries(cols.map((c, i) => [c, (cells[i] ?? "").trim()])) as Record<string, string> }
+    // Signed up since the list was approved: they get the members' note instead, never an invite.
+    const users = new Set<string>()
+    for (let from = 0; ; from += 1000) {
+      const { data } = await admin.from("user_profiles").select("email").order("user_id").range(from, from + 999)
+      for (const u of data ?? []) users.add(String(u.email ?? "").toLowerCase().trim())
+      if (!data || data.length < 1000) break
+    }
+    const seen = new Set<string>()
+    recipients = lines.map(cell).map((r) => ({ email: String(r.email).toLowerCase().trim(), name: r.name || null }))
+      .filter((r) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(r.email) && !users.has(r.email) && !seen.has(r.email) && seen.add(r.email))
+  } else {
+    recipients = coaches.map((c) => ({
+      email: String(c.email).toLowerCase(),
+      name: (c.full_name as string | null) || [c.first_name, c.last_name].filter(Boolean).join(" ") || null,
+    }))
+  }
+  const { allowed } = await filterUnsubscribed(admin as never, recipients.map((r) => r.email))
   const allowedSet = new Set(allowed.map((e) => e.toLowerCase()))
   const sentPath = path.join(out, "sent.json")
   const sent: Record<string, string> = fs.existsSync(sentPath) ? JSON.parse(fs.readFileSync(sentPath, "utf8")) : {}
@@ -167,18 +231,16 @@ async function main() {
   const to = arg("to")
   const rows: string[] = ["email,status"]
   const list: Array<{ email: string; coach: string }> = []
-  for (const c of coaches) {
-    const email = String(c.email).toLowerCase()
-    const name = (c.full_name as string | null) || [c.first_name, c.last_name].filter(Boolean).join(" ") || null
-    const coach = coachSalutation(name, email)
-    const status = !allowedSet.has(email) ? "unsubscribed" : sent[email] ? "already sent" : "to send"
-    const mail = renderLetter(coach, counts, momentum, unsubscribeUrl("https://app.ncwrestlingunited.com", email))
-    fs.writeFileSync(path.join(out, `${email.replace(/[^a-z0-9@._-]/g, "_")}.html`), mail.html)
-    rows.push(`${email},${status}`)
-    if (status === "to send") list.push({ email, coach })
+  for (const r of recipients) {
+    const coach = coachSalutation(r.name, r.email)
+    const status = !allowedSet.has(r.email) ? "unsubscribed" : sent[r.email] ? "already sent" : "to send"
+    const mail = renderLetter(audience, coach, counts, momentum, unsubscribeUrl("https://app.ncwrestlingunited.com", r.email))
+    fs.writeFileSync(path.join(out, `${r.email.replace(/[^a-z0-9@._-]/g, "_")}.html`), mail.html)
+    rows.push(`${r.email},${status}`)
+    if (status === "to send") list.push({ email: r.email, coach })
   }
   fs.writeFileSync(path.join(out, "list.csv"), rows.join("\n"))
-  console.log(`Coaches: ${coaches.length} · to send: ${list.length}`)
+  console.log(`${audience}: ${recipients.length} recipients · to send: ${list.length}`)
   console.log(`Previews: ${path.resolve(out)}`)
 
   if (!flag("send")) { console.log("Dry run: nothing sent."); return }
@@ -197,7 +259,7 @@ async function main() {
     done++
     for (const rcpt of to ? to.split(",").map((t) => t.trim()) : [m.email]) {
       const unsub = unsubscribeUrl("https://app.ncwrestlingunited.com", rcpt)
-      const mail = renderLetter(m.coach, counts, momentum, unsub)
+      const mail = renderLetter(audience, m.coach, counts, momentum, unsub)
       const res = await resend.emails.send({
         // As Matt alone, like the letters that landed in Primary; RecruitWrestlers has no verified sending domain yet.
         from: "Matt Hickey <info@ncwrestlingunited.com>",
