@@ -37,7 +37,19 @@ export const RECRUITING_BRAND = {
     { code: "WV", name: "West Virginia", live: false },
     { code: "DE", name: "Delaware", live: false },
     { code: "GA", name: "Georgia", live: false },
-    { code: "TN", name: "Tennessee", live: false },
+    /*
+     * Live 5 Nov 2026 (Matt: "make TN public"). Open, not ranked - there is no Tennessee ranker
+     * yet, so its rankings surface says so plainly rather than showing an empty board, the way
+     * Virginia launched.
+     *
+     * It went live the day its class years arrived. Tennessee sat at 194 profiles for weeks
+     * because TSSAA's own site prints no grade and that is where we had built from; the same
+     * championships on Flo carry a grade on every entrant, and the participants tab took it from
+     * 14% qualifier coverage to 99% and 194 profiles to 532 in an afternoon. Every data gate
+     * passes: 186/186 of its 2026 placers accounted for, 531/531 recent class years resolved,
+     * no duplicates, every current-class profile carrying a school and a gender.
+     */
+    { code: "TN", name: "Tennessee", live: true, ranked: false },
     { code: "FL", name: "Florida", live: false },
     { code: "AL", name: "Alabama", live: false },
     { code: "LA", name: "Louisiana", live: false },
@@ -136,6 +148,18 @@ export const RECRUITING_BRAND = {
      * results. One association, MSHSL. Top 6, three classes plus girls.
      */
     { code: "MN", name: "Minnesota", live: false },
+    /*
+     * Ohio, Illinois and Wisconsin were built on 2 Nov and their packages sat in Downloads
+     * unregistered, so every tool that reads this list treated them as states we had never
+     * touched - the coverage map drew them grey as "Coming" while Ohio alone held 1,307 placer
+     * rows that the 5 Nov qualifier harvest filled with class years. The data was there the whole
+     * time; the registration was the missing line.
+     *
+     * Ohio and Illinois are the two largest wrestling states we hold outside the live three.
+     */
+    { code: "OH", name: "Ohio", live: false },
+    { code: "IL", name: "Illinois", live: false },
+    { code: "WI", name: "Wisconsin", live: false },
   ],
 } as const
 

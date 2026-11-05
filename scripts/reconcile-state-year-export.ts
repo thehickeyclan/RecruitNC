@@ -69,6 +69,14 @@ function parseCsv(text: string): Record<string, string>[] {
  * and twelve more would have been written into blank rows with nothing to catch them. A row whose
  * own evidence does not derive the year it claims is never applied, whatever it agrees with.
  */
+/**
+ * The year column, whatever the delivery calls it. The reconciliation exports write
+ * `class_year_final`; the Flo participants-tab harvests write `class_year`. A reader that knows
+ * only one name silently matches nothing and reports a clean run - Tennessee's 587 resolutions and
+ * Maryland's 1,625 both read as "0 fillable" before this.
+ */
+const yearOf = (r: Record<string, string>) => r.class_year_final ?? r.class_year ?? r.classYear ?? ""
+
 const norm = (s: unknown) => String(s ?? "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]/g, " ").replace(/\b(jr|sr|ii|iii|iv)\b/g, " ").replace(/\s+/g, " ").trim()
 const nameKey = (s: unknown) => norm(s).replace(/ /g, "")
 const g = (s: unknown) => (/^f|girl|women/i.test(String(s ?? "")) ? "girls" : "boys")
@@ -171,7 +179,7 @@ async function main() {
   const agree: any[] = [], disagree: any[] = [], fill: any[] = [], noSchool: any[] = [], missing: any[] = [], ambiguous: any[] = []
   const selfContradicting = new Map<string, string>()
   for (const e of exported) {
-    const why = evidenceContradictsItself(e.evidence_tier_or_source ?? "", Number(e.class_year_final))
+    const why = evidenceContradictsItself(e.evidence_tier_or_source ?? "", Number(yearOf(e)))
     if (why) selfContradicting.set(`${nameKey(e.wrestler_name)}|${g(e.gender)}|${norm(e.school)}`, `${e.wrestler_name} (${e.school}): ${why}`)
   }
   const seenKeys = new Set<string>()
@@ -184,9 +192,9 @@ async function main() {
     if (!sameSchool.length) { noSchool.push({ e: cands[0]!, r }); continue }
     const usable = sameSchool.filter((e) => !selfContradicting.has(`${nameKey(e.wrestler_name)}|${g(e.gender)}|${norm(e.school)}`))
     if (!usable.length) continue
-    const years = [...new Set(usable.map((e) => Number(e.class_year_final)).filter(Boolean))]
+    const years = [...new Set(usable.map((e) => Number(yearOf(e))).filter(Boolean))]
     if (!years.length) continue // the export ships a named conflict with no year; nothing to compare
-    const e = usable.find((x) => Number(x.class_year_final) === years[0])!
+    const e = usable.find((x) => Number(yearOf(x)) === years[0])!
     if (years.length > 1) {
       /*
        * The corroborating exported rows disagree - a cross-key print conflict, where the same

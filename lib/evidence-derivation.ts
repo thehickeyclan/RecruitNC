@@ -40,6 +40,16 @@ const DERIVATIONS: Array<{ re: RegExp; gradeFirst: boolean }> = [
  * derivations and none of them both computes correctly and lands on the claimed year.
  */
 export function evidenceContradictsItself(evidence: string, claimed: number): string | null {
+  /*
+   * A row shipped with no year claims nothing, so nothing in its evidence can contradict it. Those
+   * are the deliberate holds and conflicts - the delivery states the chains it found and then
+   * declines to pick between them - and a hold is the supplier being careful, not being wrong.
+   *
+   * Without this the guard read `claimed` as 0 and reported every hold as a defect. On the
+   * 5 Nov 2026 harvest that was all 37 of the 37 rows it refused, and I passed them to Muse as
+   * errors to investigate before checking what they had in common.
+   */
+  if (!Number.isFinite(claimed) || claimed <= 0) return null
   const text = String(evidence ?? "")
   const seen: Array<{ sound: boolean; stated: number; detail: string }> = []
   for (const { re, gradeFirst } of DERIVATIONS) {
