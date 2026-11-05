@@ -59,6 +59,7 @@ import {
   Legend 
 } from "recharts"
 import { isCollegeCoachRole, needsCoachReview } from "@/lib/coach-auto-approve"
+import { USER_SITE_LABEL, matchesSiteFilter, type SiteFilter, type UserSite } from "@/lib/admin/user-site"
 
 type UserProfile = {
   user_id: string
@@ -84,6 +85,49 @@ type UserProfile = {
   school_id: string | null
   school_name: string | null
   institution?: string | null
+  /** Where they signed up (recorded from 27 Oct 2026). */
+  signup_site?: "rw" | "ncu" | null
+  /** Where they last signed in, and last used, by tagged activity (recorded from 3 Nov 2026). */
+  signin_site?: UserSite | null
+  last_site?: UserSite | null
+  sites_30d?: UserSite[]
+}
+
+const SITE_BADGE: Record<UserSite, string> = {
+  rw: "bg-[#0b1f3a] text-[#c6f432] border-[#0b1f3a]",
+  ncu: "bg-amber-100 text-amber-900 border-amber-300",
+  app: "bg-gray-100 text-gray-700 border-gray-300",
+}
+
+const siteFacts = (p: UserProfile) => ({
+  signup_site: p.signup_site ?? null,
+  signin_site: p.signin_site ?? null,
+  last_site: p.last_site ?? null,
+  sites_30d: p.sites_30d ?? [],
+})
+
+function SiteBadges({ user }: { user: UserProfile }) {
+  const sites = user.sites_30d ?? []
+  if (!user.signup_site && sites.length === 0) return null
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px]">
+      {user.signup_site ? (
+        <span className={`rounded border px-1.5 py-0.5 font-semibold ${SITE_BADGE[user.signup_site]}`} title="The site they signed up on">
+          Joined {USER_SITE_LABEL[user.signup_site]}
+        </span>
+      ) : null}
+      {sites.map((site) => (
+        <span
+          key={site}
+          className={`rounded border px-1.5 py-0.5 ${SITE_BADGE[site]}`}
+          title={site === user.signin_site ? "Last signed in here" : "Used in the last 30 days"}
+        >
+          {site === user.signin_site ? "Signed in " : site === user.last_site ? "Last on " : "Uses "}
+          {USER_SITE_LABEL[site]}
+        </span>
+      ))}
+    </div>
+  )
 }
 
 type CollegeOption = {
@@ -187,6 +231,7 @@ export default function UsersDashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
+  const [siteFilter, setSiteFilter] = useState<SiteFilter>("all")
   /*
    * An account that never confirmed its email and never signed in is not a user: a typo address,
    * a sign-up abandoned at the email step, or a bot. They stay out of the list unless asked for.
@@ -573,6 +618,10 @@ export default function UsersDashboardPage() {
       filtered = filtered.filter(p => p.role === roleFilter)
     }
 
+    if (siteFilter !== "all") {
+      filtered = filtered.filter(p => matchesSiteFilter(siteFacts(p), siteFilter))
+    }
+
     // Sort
     filtered.sort((a, b) => {
       let aVal: any = a[sortField as keyof UserProfile]
@@ -600,7 +649,7 @@ export default function UsersDashboardPage() {
     })
 
     return filtered
-  }, [profiles, searchQuery, roleFilter, sortField, sortDirection, showUnconfirmed])
+  }, [profiles, searchQuery, roleFilter, siteFilter, sortField, sortDirection, showUnconfirmed])
 
   const pendingCoaches = useMemo(() => 
     filteredProfiles.filter(p => 
@@ -814,6 +863,7 @@ export default function UsersDashboardPage() {
             <div>
               <div className="font-medium text-gray-900">{user.name || "N/A"}</div>
               <div className="text-sm text-gray-500">{user.email}</div>
+              <SiteBadges user={user} />
             </div>
           </div>
         </td>
@@ -1269,6 +1319,24 @@ export default function UsersDashboardPage() {
                 <SelectItem value="parent">Parents</SelectItem>
                 <SelectItem value="coach">HS/Club Coaches</SelectItem>
                 <SelectItem value="admin">Admins</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={siteFilter} onValueChange={(v) => setSiteFilter(v as SiteFilter)}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Filter by site" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All sites</SelectItem>
+                {/* The iPhone app records no site on its activity, so it has no filter of its own. */}
+                {(["rw", "ncu"] as const).map((site) => {
+                  const n = profiles.filter((p) => isRealUser(p) && matchesSiteFilter(siteFacts(p), site)).length
+                  return (
+                    <SelectItem key={site} value={site}>
+                      {site === "rw" ? "RecruitWrestlers" : "NC United"} ({n})
+                    </SelectItem>
+                  )
+                })}
+                <SelectItem value="unknown">No site on record</SelectItem>
               </SelectContent>
             </Select>
             <label className="flex items-center gap-2 whitespace-nowrap text-sm text-gray-600">
