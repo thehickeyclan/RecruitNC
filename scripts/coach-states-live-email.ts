@@ -29,6 +29,7 @@ const flag = (k: string) => argv.includes(`--${k}`)
 
 const SITE = "https://www.recruitwrestlers.com"
 const BRAND = "RecruitWrestlers"
+const FOR_COACHES = `${SITE}/for-coaches`
 // Largest first; SC is the only one of the four with rankings published.
 const STATES = [
   { code: "GA", name: "Georgia" },
@@ -53,23 +54,42 @@ function renderLetter(coach: string, counts: Counts, unsubscribeUrl: string) {
     text: `${s.name}: ${[n(counts[s.code].aa, "All-American", "All-Americans"), n(counts[s.code].champs, "state champion", "state champions"), n(counts[s.code].placers, "state placer", "state placers")].join(", ")}${s.ranked ? ", plus state rankings" : ""}`,
     href: `${SITE}/prospects/all?state=${s.code}`,
   }))
-  const after = [
-    `Every profile starts from the wrestler's state tournament results. Families are claiming them now and adding academics, contact information and the rest of their season.`,
-    `Star anyone to add them to My Recruits. New claims from every state show up under Recently Claimed.`,
-    `Rankings for Georgia, Tennessee and Virginia will follow.`,
+  const mid = [
+    `Rankings for Georgia, Tennessee and Virginia will follow. Families are claiming profiles in every state now and adding academics, contact information and the rest of their season.`,
+    `What you get on every wrestler, free for college coaching staff:`,
   ]
+  // The value list (Matt, 5 Nov 2026: "we need somewhere that we list our value proposition"). Each line is a feature coaches have today.
+  const value = [
+    ["Strength of competition", "every win and loss with the opponent's credentials, so you see who he beat, not just his record"],
+    ["Scouting reports", "significant wins, notable losses, star rating, academics and contact information"],
+    ["Alerts", "when a recruit commits elsewhere, places at a tournament, marks interest in your program or is competing this weekend"],
+    ["Messages", "write to any wrestler, even when there is no cell number on file. Parents are on every conversation, and if the family hasn't joined yet, your message waits on the profile and you're told when they claim it"],
+    ["My Recruits", "one board for your whole staff, plus Compare and Recently Claimed"],
+  ] as const
+  const tail = [`The full list is at ${FOR_COACHES.replace(/^https:\/\//, "")}.`]
   const sig = ["Matt Hickey", BRAND, "Cell 631.662.5409"]
   const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
+  const ul = (lis: string[]) => `<ul style="margin:0 0 14px;padding-left:20px;">${lis.map((li) => `<li style="margin:0 0 6px;">${li}</li>`).join("")}</ul>`
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
 <body style="margin:0;padding:0;background:#ffffff;">
 <div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
 ${paras.map(p).join("\n")}
-<ul style="margin:0 0 14px;padding-left:20px;">${items.map((i) => `<li style="margin:0 0 4px;"><a href="${i.href}" style="color:#1d4ed8;">${esc(i.text)}</a></li>`).join("")}</ul>
-${after.map(p).join("\n")}
+${ul(items.map((i) => `<a href="${i.href}" style="color:#1d4ed8;">${esc(i.text)}</a>`))}
+${mid.map(p).join("\n")}
+${ul(value.map(([k, v]) => `<strong>${esc(k)}:</strong> ${esc(v)}`))}
+<p style="margin:0 0 14px;">The full list is at <a href="${FOR_COACHES}" style="color:#1d4ed8;">${esc(FOR_COACHES.replace(/^https:\/\//, ""))}</a>.</p>
 <p style="margin:18px 0 0;">${sig.map(esc).join("<br>")}</p>
 <p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>
 </div></body></html>`
-  const text = [...paras, items.map((i) => `- ${i.text}: ${i.href}`).join("\n"), ...after, sig.join("\n"), `Unsubscribe: ${unsubscribeUrl}`].join("\n\n")
+  const text = [
+    ...paras,
+    items.map((i) => `- ${i.text}: ${i.href}`).join("\n"),
+    ...mid,
+    value.map(([k, v]) => `- ${k}: ${v}`).join("\n"),
+    ...tail,
+    sig.join("\n"),
+    `Unsubscribe: ${unsubscribeUrl}`,
+  ].join("\n\n")
   return { subject, html, text }
 }
 

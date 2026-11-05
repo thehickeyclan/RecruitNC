@@ -27,7 +27,7 @@ const FEATURES = [
   { icon: FileText, title: "Scouting reports", body: "Every result, the wins that matter and the losses, with the opponent's credentials. Contact details and academics for verified coaches." },
   { icon: ArrowLeftRight, title: "Compare", body: "Two wrestlers side by side: head to head, common opponents and strength of schedule over the last twelve months." },
   { icon: Target, title: "Perfect Recruit", body: "Tell us what your program needs and every wrestler is checked against it." },
-  { icon: MessageSquare, title: "Message families", body: "Write to a wrestler; parents are on every conversation. Tournament reports on your recruits land in your Reports folder." },
+  { icon: MessageSquare, title: "Message families", body: "Write to any wrestler, even with no cell number on file; parents are on every conversation. Tournament reports on your recruits land in your Reports folder." },
 ]
 
 /**
@@ -62,7 +62,7 @@ const SHOWCASE = [
   },
   { img: "compare", icon: ArrowLeftRight, kicker: "Compare", title: "Two wrestlers, side by side", points: ["Head to head over the last twelve months", "Common opponents and strength of schedule", "The edge marked, line by line"] },
   { img: "athletes", icon: Search, kicker: "Athletes", title: "Every wrestler in the current classes", points: ["Filter by class, last-competed weight, state and commitment", "Results from the brackets, never typed in", "Star anyone onto your board"] },
-  { img: "messages", icon: MessageSquare, kicker: "Messages", title: "Write to the wrestler, with his parents on the thread", points: ["Parents see every message", "Division I contact dates shown before you write", "Every message counts as contact on your board"] },
+  { img: "messages", icon: MessageSquare, kicker: "Messages", title: "Write to the wrestler, with his parents on the thread", points: ["Write to any wrestler, even when there is no cell number on file", "Not on the platform yet: your message waits on his profile, and you are told when the family claims it", "Parents see every message", "Division I contact dates shown before you write"] },
   { img: "commitments", icon: GraduationCap, kicker: "Commitments", title: "Who committed where, as it happens", points: ["Every division, D1 to NAIA", "Reported by families, confirmed by us", "Your recruits flagged the day they commit"] },
 ] as const
 
