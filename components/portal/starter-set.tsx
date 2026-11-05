@@ -10,6 +10,7 @@ const LEVEL_COLOR: Record<string, string> = { D1: "#60a5fa", D2: "#34d399", D3: 
 
 /** Step 1's starter set: a few colleges at every level to start from, each one tap to save. */
 export function StarterSet({
+  bare = false,
   schools,
   firstName,
   levelColors,
@@ -22,6 +23,8 @@ export function StarterSet({
   readOnly?: boolean
   /** Colleges already on My List, so the first-five progress counts them too. */
   savedCount?: number
+  /** Inside another card (the first-day "Start here"): no border of its own. */
+  bare?: boolean
 }) {
   const [saved, setSaved] = useState<Set<string>>(new Set())
   const colors = levelColors ?? LEVEL_COLOR
@@ -32,11 +35,11 @@ export function StarterSet({
   }
   if (!schools.length) return null
   return (
-    <section className="mt-4 rounded-xl border border-white/10 bg-[#0f1c2e] p-5" aria-labelledby="cc-starter">
+    <section className={bare ? "mt-5 scroll-mt-24" : "mt-4 scroll-mt-24 rounded-xl border border-white/10 bg-[#0f1c2e] p-5"} id="cc-starter-set" aria-labelledby="cc-starter">
       <h2 id="cc-starter" className="text-base font-black">
-        A starter set for {firstName}
+        {schools.length} colleges to start with
       </h2>
-      <p className="text-xs text-white/50">Two at every level, from roster room at the weight last wrestled, class, academic fit, cost and your state. Save the ones worth a closer look.</p>
+      <p className="text-xs text-white/50">One at every level, picked for {firstName}&apos;s weight, class, grades and state. Tap + to save.</p>
       {savedCount < FIRST_LIST_GOAL ? <FirstListProgress count={savedCount + saved.size} firstName={firstName} className="mt-3" /> : null}
       <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {schools.map((s) => (

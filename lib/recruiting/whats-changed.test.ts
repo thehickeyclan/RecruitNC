@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { buildFeed, firstThreeActions, orderNeeds, type FeedInput } from "./whats-changed"
+import { buildFeed, orderNeeds, type FeedInput } from "./whats-changed"
 
 const NOW = "2026-11-02T15:00:00.000Z"
 const daysAgo = (n: number) => new Date(Date.parse(NOW) - n * 864e5).toISOString()
@@ -97,13 +97,17 @@ describe("buildFeed", () => {
 
   it("never says him or her", () => {
     const f = buildFeed(base({ upcomingEvents: 0, list: [] }))
-    for (const a of [...f.actions, ...firstThreeActions({ firstName: "Jake", athleteId: "x", upcomingEvents: 0, profilePercent: 50 })]) expect(`${a.label} ${a.why}`).not.toMatch(/\b(him|her|he|she|his)\b/i)
+    for (const a of f.actions) expect(`${a.label} ${a.why}`).not.toMatch(/\b(him|her|he|she|his)\b/i)
   })
 })
 
-describe("firstThreeActions", () => {
-  it("asks for the next event before the profile", () => {
-    expect(firstThreeActions({ firstName: "Jake", athleteId: "x", upcomingEvents: 0, profilePercent: 40 }).map((a) => a.key)).toEqual(["starter", "event", "rules"])
-    expect(firstThreeActions({ firstName: "Jake", athleteId: "x", upcomingEvents: 1, profilePercent: 40 }).map((a) => a.key)).toEqual(["starter", "profile", "rules"])
+describe("skip", () => {
+  it("leaves out actions the page shows elsewhere and still gives two", () => {
+    const f = buildFeed(base({ list: [], upcomingEvents: 0, skip: ["build", "event", "map"] }))
+    expect(f.actions.map((a) => a.key)).toEqual(["rules", "scout"])
+  })
+
+  it("keeps the event when it is not skipped", () => {
+    expect(buildFeed(base({ list: [], upcomingEvents: 0 })).actions.map((a) => a.key)).toEqual(["build", "event"])
   })
 })
