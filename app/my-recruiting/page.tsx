@@ -82,7 +82,8 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
   const [lastCompeted, sheet, contacts, following, inbound, starter, needs] = await Promise.all([
     // Every wrestler's last competed weight: a parent of two saw only one son's (Cheryl Shuster, 28 Oct 2026).
     athletes.length ? loadLastCompeted(admin, athletes.map((a) => a.id), new Map(athletes.map((a) => [a.id, a.classYear]))).catch(() => new Map()) : new Map(),
-    blue && first ? buildInfoSheet(admin, first.id).catch(() => null) : null,
+    // The info sheet is the wrestler's contact details and academics: never for a business account.
+    blue && first && !cc.hidePersonal ? buildInfoSheet(admin, first.id).catch(() => null) : null,
     loadCollegeContacts(admin, athletes.map((a) => a.id)),
     // College programs following the wrestler: a count for the "where he competes next" reminder, never names.
     first ? programsFollowing(admin, first.id).catch(() => 0) : 0,

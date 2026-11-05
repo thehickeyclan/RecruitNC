@@ -50,7 +50,7 @@ export async function loadCommandCenter(returnTo: string) {
   const admin = createAdminClient()
   await sendCollegeCoachesToTheirPortal(admin, user.id)
   // The signed-in viewer - or, on a developer's machine, the family an admin is previewing.
-  const portal = await resolvePortalViewer({ supabase, admin })
+  const portal = await resolvePortalViewer({ supabase, admin, allowBusiness: true })
   const viewerId = portal.userId ?? user.id
   // The family's own state: college costs, in-state labels and alumni are theirs, not North Carolina's.
   const homeState = await familyState(admin, viewerId).catch(() => "NC")
@@ -185,7 +185,8 @@ export async function loadCommandCenter(returnTo: string) {
     loadVisits(admin, ids2),
     loadReminders(admin, viewerId),
     interestSent(admin, ids2).catch(() => ({ available: false, sent: [] as Array<{ athleteId: string; schoolId: string }> })),
-    unreadCount(admin, viewerId).catch(() => 0),
+    // A business account viewing a family sees no messages (they are with coaches about a minor).
+    portal.hidePersonal ? 0 : unreadCount(admin, viewerId).catch(() => 0),
     // First visit: no earlier Command Center page view in the log (the tracker records this one after it renders).
     admin.from("user_analytics").select("id").eq("user_id", viewerId).eq("event_type", "page_view").like("page_url", "/my-recruiting%").limit(1).then((r) => (r.error ? 1 : (r.data ?? []).length), () => 1),
     // Step 3 is ticked once the family has opened the rules: a Learn page or the Rules page.
@@ -228,6 +229,8 @@ export async function loadCommandCenter(returnTo: string) {
     firstVisit: ccVisits === 0,
     rulesSeen: rulesVisits > 0,
     previewing: portal.previewing,
+    /** A business account viewing this family: no contact details, academics or messages. */
+    hidePersonal: portal.hidePersonal === true,
   }
 }
 

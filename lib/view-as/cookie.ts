@@ -20,3 +20,10 @@ export function setViewAsCookie(id: string | null): void {
     ? `${VIEW_AS_COOKIE}=${clean}; path=/; max-age=43200; samesite=lax`
     : `${VIEW_AS_COOKIE}=; path=/; max-age=0; samesite=lax`
 }
+
+/**
+ * The family whose Command Center an admin or business account is looking at (Matt, 4 Nov 2026:
+ * "same view for gemma amiott command center"). Set only by /view-as-family/<id>, which checks the
+ * account first; the server checks again on every read (lib/recruiting/portal-viewer.ts).
+ */
+export const VIEW_AS_FAMILY_COOKIE = "view_as_family"

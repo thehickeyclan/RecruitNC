@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic"
 export async function GET(request: NextRequest) {
   const schoolId = request.nextUrl.searchParams.get("school")?.trim() ?? ""
   const admin = createAdminClient()
-  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
+  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin, allowBusiness: true })
   if (!(hasPortalAccess(viewer) || viewer.isVerifiedCoach)) {
     // Locked: who went here is paid, but how many is the reason to subscribe (Matt, 17 Oct 2026).
     // Counted for the family's own state - South Carolina alumni for an SC family - and North
