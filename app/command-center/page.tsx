@@ -235,30 +235,32 @@ export default async function CommandCenterSalesPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#060f1f] via-[#060f1f]/90 to-[#060f1f]/10" aria-hidden />
         <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-12 sm:pt-16">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/70"><BrandName /> · Recruiting Command Center</p>
+          {/* The family deck's cover, word for word (lib/business/deck/slides.ts): the wrestler first, then the opportunity. */}
           <h1 className={`mt-5 text-6xl leading-[0.9] sm:text-8xl ${tocDisplayClass()}`}>
-            Recruiting shouldn&apos;t depend on who you know.
+            Your wrestler is putting in the work.
             <span className="block" style={{ color: SKY }}>
-              Now it doesn&apos;t.
+              Now let&apos;s find the right opportunity.
             </span>
           </h1>
           <p className="mt-5 max-w-xl text-base text-white/75 sm:text-lg">
-            <span className="sm:hidden">It starts with your wrestler&apos;s verified results — already on here — and what college coaches read in them.</span>
-            <span className="hidden sm:inline">It starts with what your wrestler has already done. Every bout, every placement and every opponent is on here, verified, before you create an account. We compute what a college coach wants from it, hand it to the {d.platform?.coaches ? `${d.platform.coaches} ` : ""}coaches already on this platform, and then help you run the rest of recruiting: the colleges that fit, the plan for your class, and Scout, your recruiting assistant, on call 24/7.</span>
+            Find the right colleges. See where coaches are looking. Build a plan for what&apos;s next.
+            {d.platform?.coaches ? <span className="font-semibold text-white"> {d.platform.coaches} college coaches are already on it.</span> : null}
           </p>
           {/* recruitwrestlers.com sells its own two memberships, billed by Guild Ventures (Matt, 22 Oct 2026). */}
+          {/* /athletes redirects to commitments; the lookup is /create-profile, step one of the family funnel. */}
           <p className="national-only">
-            <a href="/athletes" className="mt-7 mr-3 inline-block rounded-xl bg-[#A3E635] px-7 py-3.5 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">Look up your wrestler →</a>
+            <a href="/create-profile" className="mt-7 mr-3 inline-block rounded-xl bg-[#A3E635] px-7 py-3.5 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">Find your wrestler&apos;s profile →</a>
             <a href="#what-it-costs" className="mt-7 inline-block rounded-xl border border-white/25 bg-[#060f1f]/40 px-7 py-3.5 text-base font-bold hover:bg-white/10">See what it costs</a>
           </p>
           <div className="ncu-only mt-7 flex flex-wrap gap-3">
-            <Link href="/athletes" className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: SKY }}>
-              Look up your wrestler →
+            <Link href="/create-profile" className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: SKY }}>
+              Find your wrestler&apos;s profile →
             </Link>
             <a href="#what-it-costs" className="rounded-xl border border-white/25 bg-[#060f1f]/40 px-7 py-3.5 text-base font-bold transition hover:bg-white/10">
               See what it costs
             </a>
           </div>
-          <p className="mt-3 text-sm text-white/50">Free to look up · {price}/month to run your recruiting</p>
+          <p className="mt-3 text-sm text-white/50">Free to be found. {formatPrice(SCOUTING_REPORT_PRICES.subscription)} to see who is looking. {price} to act on it.</p>
           <p className="ncu-only mt-1 text-xs text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
         </div>
       </section>
