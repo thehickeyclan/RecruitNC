@@ -9,6 +9,9 @@
  * Recruiting needs came off this page the same day: it is about whether coaches are here and
  * using it, and the needs counts were answering a different question.
  *
+ * The top two tiles count who holds an account, by the deck's rule. The next two count who was
+ * actually busy. Those are different questions and the tiles say which is which.
+ *
  * Programs are named; a coach never is. Admins, and the business grant.
  */
 import Link from "next/link"
@@ -65,14 +68,14 @@ export default async function CoachUsagePage({ searchParams }: { searchParams: P
 
   // The four lines.
   const lines = [
-    distinctSeries("coach_views", "College programs", views, data.dims, filters, window, (e) => e.by),
-    distinctSeries("coach_views", "College coaches", views, data.dims, filters, window, (e) => e.byUser),
+    distinctSeries("coach_views", "Programs that looked", views, data.dims, filters, window, (e) => e.by),
+    distinctSeries("coach_views", "Coaches who looked", views, data.dims, filters, window, (e) => e.byUser),
     series("coach_views", views, data.dims, filters, window),
     distinctSeries("coach_stars", "Wrestlers starred", stars, data.dims, filters, window, (e) => e.athleteId),
   ]
   const ever = [
-    distinctSeries("coach_views", "College programs", views, data.dims, filters, EVER, (e) => e.by),
-    distinctSeries("coach_views", "College coaches", views, data.dims, filters, EVER, (e) => e.byUser),
+    distinctSeries("coach_views", "Programs that looked", views, data.dims, filters, EVER, (e) => e.by),
+    distinctSeries("coach_views", "Coaches who looked", views, data.dims, filters, EVER, (e) => e.byUser),
     series("coach_views", views, data.dims, filters, EVER),
     distinctSeries("coach_stars", "Wrestlers starred", stars, data.dims, filters, EVER, (e) => e.athleteId),
   ]
@@ -80,13 +83,21 @@ export default async function CoachUsagePage({ searchParams }: { searchParams: P
   // The tiles: everything we have ever seen, and what moved in the last 30 days.
   const last30 = { from: dayStr(30), to: today, bucket: "day" as Bucket }
   const recentActivity = [...views, ...stars]
-  // The tiles follow the gender chip too, so they have to say which wrestlers they mean.
+  /*
+   * The first two tiles are WHO IS HERE, by the same rule the family deck's coach wall uses, so
+   * the two can never disagree in front of a customer. They do not follow the gender chip: a coach
+   * holds an account or does not, whoever they have looked at.
+   *
+   * They used to count programs and coaches that had opened a wrestler - 56 and 70 against the 122
+   * and 88 who hold accounts (Matt, 4 Nov 2026: "these numbers are not right"). Both were true;
+   * the tile was answering a question nobody had asked at the top of a page.
+   */
   const whom = gender === "Female" ? "a girl" : gender === "Male" ? "a boy" : "a wrestler"
   const tiles = [
-    { n: ever[0].total, l: "College programs", note: `have opened ${whom}` },
-    { n: ever[1].total, l: "College coaches", note: `have opened ${whom}` },
-    { n: distinctSeries("coach_views", "p", recentActivity, data.dims, filters, last30, (e) => e.by).total, l: "Programs active", note: "in the last 30 days" },
-    { n: distinctSeries("coach_views", "c", recentActivity, data.dims, filters, last30, (e) => e.byUser).total, l: "Coaches active", note: "in the last 30 days" },
+    { n: data.roster.programs, l: "College programs", note: "with a verified coach" },
+    { n: data.roster.coaches, l: "College coaches", note: "with a verified account" },
+    { n: distinctSeries("coach_views", "p", recentActivity, data.dims, filters, last30, (e) => e.by).total, l: "Programs active", note: `opened ${whom}, last 30 days` },
+    { n: distinctSeries("coach_views", "c", recentActivity, data.dims, filters, last30, (e) => e.byUser).total, l: "Coaches active", note: `opened ${whom}, last 30 days` },
   ]
 
   // The wrestlers being opened, with names fetched only for the ones we are about to show.
@@ -156,6 +167,11 @@ export default async function CoachUsagePage({ searchParams }: { searchParams: P
             opened {gender === "Female" ? "a girl" : "a boy"}.
           </p>
         ) : null}
+
+        <p className="mt-3 text-xs text-white/40">
+          The lines count who looked in the window; the tiles above count who holds an account. A coach who signed up
+          and has not opened anybody yet is in the tiles and not in the lines.
+        </p>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {lines.map((s, i) => (

@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { collegeCoachIds, type AuthRow, type ProfileRow, type StarRow } from "@/lib/admin/coach-usage"
 import { collegeForCoach } from "@/lib/college-domain-schools"
+import { isInternalAccount } from "@/lib/internal-accounts"
 import type { AthleteDim, Gender, Metric, MetricEvent, SiteKey } from "@/lib/business/metrics"
 import { athleteStateCode } from "@/lib/recruiting/states"
 
@@ -52,9 +53,21 @@ type AthleteRow = {
   claimed_by_user_id: string | null
 }
 
+/**
+ * How many college coaches hold an account, and how many programs they are between them.
+ *
+ * The SAME rule the family deck's coach wall uses - verified_coach, minus our own staff and test
+ * logins, minus admins - so the admin page and the deck can never disagree in front of a customer.
+ * It counts who is here, not who has been busy: a coach who signed up and has not opened anybody
+ * yet is still a coach on the platform, which is what the top of the page is asked.
+ */
+export type CoachRoster = { coaches: number; programs: number }
+
 export type BusinessData = {
   /** Every wrestler's state and gender, for attributing the five wrestler-shaped series. */
   dims: Map<string, AthleteDim>
+  /** Who is here at all, as against who has looked at somebody. */
+  roster: CoachRoster
   events: Record<Metric, MetricEvent[]>
   /** When this was read, for the "as of" line. */
   readAt: string
@@ -179,8 +192,18 @@ export async function loadBusinessData(admin: SupabaseClient): Promise<BusinessD
     }
   }
 
+  const verified = profiles.filter(
+    (p) => p.verified_coach === true && p.email && !isInternalAccount(String(p.email)) && p.is_admin !== true,
+  )
+  const rosterPrograms = new Set<string>()
+  for (const p of verified) {
+    const school = collegeForCoach({ institution: p.institution as string, email: p.email as string })
+    if (school) rosterPrograms.add(school)
+  }
+
   return {
     dims,
+    roster: { coaches: verified.length, programs: rosterPrograms.size },
     readAt: new Date().toISOString(),
     events: {
       profiles_created: created,
