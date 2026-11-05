@@ -25,8 +25,10 @@ export const RECRUITING_BRAND = {
   states: [
     { code: "NC", name: "North Carolina", live: true },
     { code: "SC", name: "South Carolina", live: true }, // Live 26 Oct 2026 (Matt); scripts/state-readiness.ts --state SC: all data gates pass
-    // Being built (Matt, 21 Oct 2026): profiles first, not open to coaches until he says go.
-    { code: "VA", name: "Virginia", live: false },
+    // Live 3 Nov 2026 (Matt: "virginia should be up.. we won't have rankings for a bit"). Open, not ranked yet.
+    { code: "VA", name: "Virginia", live: true, ranked: false },
+    // Live 5 Nov 2026 (Matt: "switch it to on"). Open, not ranked yet.
+    { code: "TN", name: "Tennessee", live: true, ranked: false },
     /*
      * Maryland's data went in on 22 Oct and passes every readiness gate, but the state was
      * missing from this list entirely - and a state that is not here does not exist to the
@@ -37,7 +39,6 @@ export const RECRUITING_BRAND = {
     { code: "WV", name: "West Virginia", live: false },
     { code: "DE", name: "Delaware", live: false },
     { code: "GA", name: "Georgia", live: false },
-    { code: "TN", name: "Tennessee", live: false },
     { code: "FL", name: "Florida", live: false },
     { code: "AL", name: "Alabama", live: false },
     { code: "LA", name: "Louisiana", live: false },
@@ -52,6 +53,90 @@ export const RECRUITING_BRAND = {
     { code: "NH", name: "New Hampshire", live: false },
     { code: "VT", name: "Vermont", live: false },
     { code: "ME", name: "Maine", live: false },
+    /*
+     * Pennsylvania ships below the 95% placer bar and says so: the PIAA event prints no grades at
+     * all for 2025, so a wrestler who placed only that season has nothing to resolve a class year
+     * from, and RankWrestlers holds little of the state. 336 of 692 placer keys carry a year
+     * (48.6%); the other 356 ship blank and do not mint. Thirty-eight unresolved champions are
+     * named in the package note. Registered anyway so the rows are reachable while the gap is
+     * worked - a state that is not in this list does not exist to the product, to admins included.
+     *
+     * PA is also the first state where we hold two championships: PIAA, and the PAISWT the prep
+     * schools wrestle instead (lib/athlete-state.ts).
+     */
+    { code: "PA", name: "Pennsylvania", live: false },
+    /*
+     * Texas clears the placer bar on arrival: 1,017 of 1,022 keys (99.5%), no unresolved champion,
+     * and a stable wrestler id on all 3,663 entrant rows. Four championships, so four names a
+     * credential card can carry (lib/athlete-state.ts).
+     */
+    { code: "TX", name: "Texas", live: false },
+    /*
+     * Arkansas clears the placer bar: 1,040 of 1,042 keys (99.8%), every champion resolved, and
+     * one association - the private schools wrestle inside the AAA brackets, so there is no second
+     * championship to name.
+     *
+     * It is the first state whose podium is not unique. Arkansas wrestles no fifth-place match, so
+     * both consolation semi-final losers take fifth: 420 tied placements across 210 brackets, in
+     * every bracket of every year. `state_tournament_placers` cannot hold them until its unique
+     * index admits a tie, so the rows in the table are the 6 Oct build - places 1-4 only.
+     */
+    { code: "AR", name: "Arkansas", live: false },
+    /*
+     * Oklahoma clears the placer bar: 926 of 932 keys (99.4%), every one of its 235 champion keys
+     * resolved, and all 252 champions verified against the winner of their own final. One
+     * association - the private schools are OSSAA members and wrestle its brackets.
+     *
+     * OSSAA places TOP 4 ONLY. Every one of the 252 brackets carries a final and one third-place
+     * match and nothing below, so unlike Arkansas there are no ties to store - but it is the second
+     * state running in a row whose podium is not the assumed six.
+     */
+    { code: "OK", name: "Oklahoma", live: false },
+    /*
+     * Iowa clears the placer bar at 1,108 of 1,109 keys (99.9%), with one named unresolved
+     * champion - Koy Davidson, whose Flo print reads 'HS Senior' in two different years and whom
+     * RankWrestlers does not hold at all.
+     *
+     * It is the first state with a separate girls championship body: IHSAA for the boys, IGHSAU
+     * for the girls (lib/athlete-state.ts). Girls ran a single class in 2024 and split into 1A/2A
+     * for 2025, so their 2024 placements carry the classification "Girls". Top 8 in all 196
+     * brackets, and every figure lands exactly on the scoping ceiling in all three years.
+     */
+    { code: "IA", name: "Iowa", live: false },
+    /*
+     * Missouri is the first state in the lineage to resolve every placer key from the payloads'
+     * own grade prints: 1,054 of 1,054, no conflicts and nothing not found. All 192 champion keys
+     * resolved, and all 252 champions verified against the winner of their own final.
+     *
+     * Top 6, and the one thing that makes it importable at all is Arkansas's work: the 2025 Class 2
+     * bracket at 132 has a VACANT 5th and two wrestlers TIED at 6th, because the placement match
+     * was a double forfeit (MSHSAA prints it verbatim). Under the old unique podium index that
+     * slice would have been refused outright. One association for both genders.
+     */
+    { code: "MO", name: "Missouri", live: false },
+    /*
+     * Michigan: 1,504 of 1,504 placer keys resolved, all 191 champion keys among them, and all 210
+     * champions verified against the winner of their own final. Top 8, 14 weights, 16-wrestler
+     * brackets throughout, and boys and girls share one event each year at Ford Field. One
+     * association, MHSAA, which the private schools wrestle inside.
+     *
+     * Its canonical retrofit came back needing nothing: 426 mint keys fold to 357 athletes on
+     * literal names alone, the same 357 the build states, with no differing-name folds anywhere -
+     * so unlike Texas it mints without --canonical.
+     */
+    { code: "MI", name: "Michigan", live: false },
+    /*
+     * Minnesota is the cleanest package the pipeline has produced: 672 of 672 placer keys resolved,
+     * all 114 champion keys among them, and all 156 champions verified against the winner of their
+     * own final. Every one of its 936 placed rows carries a class year.
+     *
+     * It is also the first to ship `canonical_athlete_id` natively rather than by retrofit, and the
+     * first where that grouping and our matcher agree exactly - 213 athletes either way - so it
+     * needs no --canonical at all. Its championships never entered FloArena: the build runs on
+     * Trackwrestling for 2024/2025 and USA Bracketing for 2026, against The Guillotine's official
+     * results. One association, MSHSL. Top 6, three classes plus girls.
+     */
+    { code: "MN", name: "Minnesota", live: false },
   ],
 } as const
 
@@ -124,6 +209,48 @@ export function isVisibleState(
   preview: readonly string[] = [],
 ): boolean {
   return visibleStates(isAdmin, onRecruitWrestlers, preview).some((s) => s.code === String(code ?? "").toUpperCase())
+}
+
+/**
+ * States the athlete directory lists. RecruitWrestlers lists every state we hold profiles for,
+ * ranked or not (Matt, 3 Nov 2026: "why not have it there too?"): the profiles are public by link
+ * already, and a family who cannot find their wrestler makes a second one. Rankings and state
+ * pages stay on the live states. NC United lists what it always did.
+ */
+export function directoryStates(
+  isAdmin: boolean,
+  onRecruitWrestlers = false,
+  preview: readonly string[] = [],
+): RecruitingState[] {
+  return onRecruitWrestlers ? RECRUITING_BRAND.states : visibleStates(isAdmin, false, preview)
+}
+
+export function isDirectoryState(
+  code: string | null | undefined,
+  isAdmin: boolean,
+  onRecruitWrestlers = false,
+  preview: readonly string[] = [],
+): boolean {
+  return directoryStates(isAdmin, onRecruitWrestlers, preview).some((s) => s.code === String(code ?? "").toUpperCase())
+}
+
+/**
+ * Live states that have rankings. A state can open before its board exists (Virginia, 3 Nov 2026):
+ * its profiles, directory and claims are live, but Insider is not sold there and the rankings pages
+ * do not offer it until `ranked: false` comes off.
+ */
+export function isRankedState(state: RecruitingState): boolean {
+  return !("ranked" in state) || (state as { ranked?: boolean }).ranked !== false
+}
+
+export function rankedStates(onRecruitWrestlers = false): RecruitingState[] {
+  return liveStates(onRecruitWrestlers).filter(isRankedState)
+}
+
+/** "North Carolina and South Carolina": the live states with rankings. */
+export function rankingsCoverage(onRecruitWrestlers = false): string {
+  const names = rankedStates(onRecruitWrestlers).map((s) => s.name)
+  return new Intl.ListFormat("en-US", { style: "long", type: "conjunction" }).format(names)
 }
 
 /** "North Carolina", "North Carolina and South Carolina", "North Carolina, South Carolina, and Virginia". */

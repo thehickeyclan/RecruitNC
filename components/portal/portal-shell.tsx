@@ -4,22 +4,25 @@ import Link from "next/link"
 import { unreadCount } from "@/lib/coach-messages"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { usesRecruitingShell } from "@/lib/recruiting/brand"
-import { Activity, BookOpen, CalendarDays, ClipboardList, Compass, LayoutDashboard, Map as MapIcon, MessageSquare, Scale, Send, Sparkles } from "lucide-react"
+import { Activity, BookOpen, CalendarDays, ClipboardList, Compass, GraduationCap, LayoutDashboard, Map as MapIcon, MessageSquare, Scale, Send, Sparkles } from "lucide-react"
 
 /**
  * The family portal's frame (Matt's design, 14 Oct 2026): one menu down the left on a computer, a
  * scrolling bar of the same items on a phone. Every Command Center page sits inside it, so a
  * family always knows where they are and how to get to the rest.
  */
-export type PortalSection = "home" | "plan" | "colleges" | "map" | "messages" | "scout" | "learn" | "activity" | "forms" | "rules" | "reach"
+export type PortalSection = "home" | "plan" | "colleges" | "map" | "messages" | "scout" | "learn" | "activity" | "forms" | "rules" | "reach" | "commit"
 
 type Item = { key: PortalSection; label: string; href: string; icon: typeof Activity }
 
 /**
  * The menu follows the recruiting path (Matt, 28 Oct 2026): the five steps in order, then Scout
- * and Learn as helpers. No step labels or numbers (Matt, 2 Nov): a label over a single tool only
- * repeated it, and numbers read oddly. The order carries the path; a gap separates the steps.
+ * and Learn as helpers. No step numbers or step labels (Matt, 2 Nov 2026): a label over a single
+ * tool only repeated it, and the numbers read oddly. The order carries the path; a gap separates
+ * the steps, and only Commit and Help keep a small label.
  */
 type Group = { step: number | null; name: string | null; items: Item[] }
 const GROUPS: Group[] = [
@@ -44,6 +47,9 @@ const GROUPS: Group[] = [
       { key: "plan", label: "Schedule and visits", href: "/my-recruiting/plan", icon: CalendarDays },
     ],
   },
+  // The end of the path: the family hears first, so the family announces it (Matt, 3 Nov 2026).
+  // Unnumbered, like Help: the path is five steps everywhere else (tour, home cards, Learn).
+  { step: null, name: "Commit", items: [{ key: "commit", label: "Announce a commitment", href: "/submit-commitment", icon: GraduationCap }] },
   {
     step: null,
     name: "Help",
@@ -56,23 +62,43 @@ const GROUPS: Group[] = [
 const ITEMS: Item[] = GROUPS.flatMap((g) => g.items)
 
 export async function PortalShell({ active, children }: { active: PortalSection; children: React.ReactNode }) {
-  const { data: auth } = await (await createClient()).auth.getUser()
   const admin = createAdminClient()
   // A college coach always works in the My Recruits menu, never this one (Matt, 2 Nov 2026): the
-  // page's content shows inside the coach frame app-chrome already draws around it.
+  // page shows inside the coach frame app-chrome already draws around it.
+  const { data: auth } = await (await createClient()).auth.getUser()
   if (auth.user) {
-    const { data: profile } = await admin.from("user_profiles").select("role, profile_type, is_admin").eq("user_id", auth.user.id).maybeSingle()
-    if (usesRecruitingShell(profile)) return <>{children}</>
+    const { data: me } = await admin.from("user_profiles").select("role, profile_type, is_admin").eq("user_id", auth.user.id).maybeSingle()
+    if (usesRecruitingShell(me)) return <>{children}</>
   }
+  // An admin or business account looking at one family (/view-as-family/<id>): say so, and whose.
+  const portal = await resolvePortalViewer({ supabase: await createClient(), admin, allowBusiness: true }).catch(() => null)
+  const viewing = portal?.previewing && portal.userId
+    ? await admin.from("user_profiles").select("full_name, email").eq("user_id", portal.userId).maybeSingle().then((r) => String(r.data?.full_name || r.data?.email || "this family"), () => "this family")
+    : null
+  // A business account sees no messages and no Scout: both are about the family's own details.
+  const hidden = new Set<PortalSection>(portal?.hidePersonal ? ["messages", "scout"] : [])
+  const groups = GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => !hidden.has(i.key)) })).filter((g) => g.items.length)
+  const items = ITEMS.filter((i) => !hidden.has(i.key))
   // Unread recruiting messages, shown on Messages in the menu. A failure shows no badge, never an error.
-  const unread = auth.user ? await unreadCount(admin, auth.user.id).catch(() => 0) : 0
+  const unread = await (async () => {
+    if (portal?.hidePersonal) return 0
+    if (portal?.previewing && portal.userId) return unreadCount(admin, portal.userId).catch(() => 0)
+    const { data } = await (await createClient()).auth.getUser()
+    return data.user ? unreadCount(admin, data.user.id).catch(() => 0) : 0
+  })().catch(() => 0)
   const badge = (key: PortalSection) =>
     key === "messages" && unread > 0 ? <span className="ml-auto rounded-full bg-[#D3B574] px-1.5 text-[10px] font-black text-[#0A1628]">{unread}</span> : null
   return (
     <div className="min-h-screen bg-[#0A1628] text-white">
+      {viewing ? (
+        <div className="border-b border-[#D3B574]/40 bg-[#D3B574]/10 px-4 py-2 text-center text-xs text-white/85">
+          Viewing as <strong className="text-white">{viewing}</strong> · read-only{portal?.hidePersonal ? " · contact details, academics and messages hidden" : ""} ·{" "}
+          <a href="/view-as-family/exit" className="font-bold text-[#D3B574] underline">Exit</a>
+        </div>
+      ) : null}
       <nav aria-label="Command Center" className="sticky top-0 z-30 border-b border-white/10 bg-[#0A1628]/95 backdrop-blur md:hidden">
         <ul className="flex gap-1 overflow-x-auto px-3 py-2">
-          {ITEMS.map(({ key, label, href, icon: Icon }) => (
+          {items.map(({ key, label, href, icon: Icon }) => (
             <li key={key} className="shrink-0">
               <Link
                 href={href}
@@ -90,9 +116,9 @@ export async function PortalShell({ active, children }: { active: PortalSection;
         <aside className="sticky top-0 hidden max-h-screen w-56 shrink-0 flex-col self-start overflow-y-auto border-r border-white/10 px-3 py-6 md:flex">
           <p className="px-3 text-[11px] font-black uppercase tracking-widest text-[#D3B574]">Recruiting Portal</p>
           <div className="mt-4 space-y-3">
-            {GROUPS.map((g) => (
+            {groups.map((g) => (
               <div key={g.name ?? "home"}>
-                {g.name === "Help" ? <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-white/35">{g.name}</p> : null}
+                {g.step === null && g.name ? <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-white/35">{g.name}</p> : null}
                 <ul className="space-y-0.5">
                   {g.items.map(({ key, label, href, icon: Icon }) => (
                     <li key={key}>
@@ -121,3 +147,15 @@ export async function PortalShell({ active, children }: { active: PortalSection;
   )
 }
 
+/**
+ * A page the Command Center links to that also serves the public and college coaches (the college
+ * map, Learn, announcing a commitment): inside the menu for a family with the Command Center, as
+ * itself for everyone else (Matt, 3 Nov 2026: "no matter what i click on i should always have side
+ * menu"). A coach reads these pages, but never inside the family's Command Center.
+ */
+export async function FamilyPortalFrame({ active, children }: { active: PortalSection; children: React.ReactNode }) {
+  const family = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient(), allowBusiness: true })
+    .then(({ viewer }) => hasPortalAccess(viewer))
+    .catch(() => false)
+  return family ? <PortalShell active={active}>{children}</PortalShell> : <>{children}</>
+}

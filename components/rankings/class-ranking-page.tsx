@@ -17,7 +17,7 @@ import { RankingsSummary } from "@/components/rankings/rankings-summary"
 import { RankingsWatermark } from "@/components/rankings/rankings-watermark"
 import { headers } from "next/headers"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
-import { liveStates } from "@/lib/recruiting/brand"
+import { rankedStates } from "@/lib/recruiting/brand"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 
 /**
@@ -33,7 +33,7 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
    * state pill on each tile (Matt, 26 Oct 2026). NC United is North Carolina only.
    */
   const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
-  const states = liveStates(onRw)
+  const states = rankedStates(onRw)
   const state = states.some((s) => s.code === String(askedState ?? "").toUpperCase()) ? String(askedState).toUpperCase() : "NC"
   const stateName = STATE_NAMES[state] ?? state
   // "Women's " in front of every heading on the women's board; nothing on the men's, as before.

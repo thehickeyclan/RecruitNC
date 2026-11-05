@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { hasBusinessGrant } from "@/lib/business/access"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   // The website sends cookies; the iPhone app sends its bearer token. Reading cookies alone
   // treated every app request as signed out.
   const user = await getUserFromRequest(request)
+  const business = hasBusinessGrant(user?.app_metadata)
   if (!user) {
     return NextResponse.json({ error: "Sign in to view scouting reports." }, { status: 401 })
   }
@@ -53,8 +55,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     email: (profile?.email as string) ?? user.email ?? null,
     athleteId: id,
     isAdmin,
-    // A coach we have let in, not anyone who chose "college coach" from a list.
-    isCollegeCoach: viewer.isCollegeCoach && viewer.verifiedCoach,
+    // A coach we have let in, not anyone who chose "college coach" from a list - or a business
+    // account (Rhett), whose report carries no contact details or academics (tier below).
+    isCollegeCoach: (viewer.isCollegeCoach && viewer.verifiedCoach) || business,
   })
   if (!entitlement.canAccess) {
     return NextResponse.json(
@@ -90,7 +93,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   // Two grants: a .edu address unlocks browsing, a human check against the program's staff
   // directory unlocks the portable document with the athlete's contact and academics in it.
-  const tier = scoutingAccessTier({
+  const tier = business ? ("coach_no_pii" as const) : scoutingAccessTier({
     isCollegeCoach: viewer.isCollegeCoach,
     isAdmin,
     verifiedCoach: viewer.verifiedCoach || isAdmin,

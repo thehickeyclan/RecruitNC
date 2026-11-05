@@ -1,4 +1,5 @@
 import { after, NextResponse, type NextRequest } from "next/server"
+import { viewSubject } from "@/lib/view-as/subject"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { coachSend, listThreads } from "@/lib/coach-messages"
@@ -25,7 +26,12 @@ export async function GET(request: NextRequest) {
   const userId = await resolveRequestUserId(request)
   if (!userId) return NextResponse.json({ error: "Sign in to see your messages." }, { status: 401 })
   const athleteId = request.nextUrl.searchParams.get("athleteId")?.trim() || undefined
-  const threads = await listThreads(createAdminClient(), userId, { athleteId })
+  const admin = createAdminClient()
+  // Viewing a coach's portal: an admin reads that coach's list; a business account sees no
+  // messages, which are with families (lib/view-as/subject.ts).
+  const subject = await viewSubject(admin, { id: userId })
+  if (subject.viewer === "business") return NextResponse.json({ threads: [] })
+  const threads = await listThreads(admin, subject.subjectId, { athleteId })
   return NextResponse.json({ threads })
 }
 

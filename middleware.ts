@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { isNationalPath, isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { isStaticAssetPath } from "@/lib/static-asset-path"
 import { isCommunityAdminPath } from "@/lib/recruiting/admin-scope"
 import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
@@ -261,7 +262,7 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
   if (staticPaths.some((p) => pathname === p || pathname.startsWith(p + "."))) {
     return NextResponse.next({ request })
   }
-  if (/\.(json|ico|png|jpg|jpeg|gif|webp|svg)$/i.test(pathname)) {
+  if (isStaticAssetPath(pathname)) {
     return NextResponse.next({ request })
   }
 
@@ -419,6 +420,6 @@ export const config = {
     /*
      * Match all request paths except: static assets, and /store (store runs with zero middleware).
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|icon-|store(?:/|$)|store-app(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|icon-|store(?:/|$)|store-app(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|ico|pdf)$).*)",
   ],
 }

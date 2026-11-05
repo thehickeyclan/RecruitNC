@@ -32,6 +32,12 @@ export function ConditionalAuthGuard({
 
   const isHomepage = path === "/"
   const publicRoutePrefixes = [
+    /*
+     * The calendar: practices and drop-ins (Matt, 3 Nov 2026). A note sent families to check it for
+     * Sunday's drop-in and every one of them hit a sign-in wall. Booking a drop-in needs no account
+     * (/api/calendar/stripe/create-checkout-session), so neither does seeing the date.
+     */
+    "/calendar",
     // Local-only "view as this coach" preview; the page itself does not exist in production.
     "/dev/coach-preview",
     "/dev/profile-preview",

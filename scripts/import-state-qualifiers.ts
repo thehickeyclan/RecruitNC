@@ -37,6 +37,8 @@ const sb = createClient(
   { auth: { persistSession: false } },
 )
 const WRITE = process.argv.includes("--write")
+/** Proceed although a slice would lose rows — for the real case where a source withdrew entrants. */
+const ALLOW_SHRINK = process.argv.includes("--allow-shrink")
 const FILES = process.argv.slice(2).filter((a) => a.endsWith(".csv")).map((a) => a.replace(/^~/, process.env.HOME ?? "~"))
 
 function csv(file: string): Array<Record<string, string>> {
@@ -246,35 +248,55 @@ async function main() {
     console.log(`   entrants ${entries.length}   placed ${placed.length}   qualifiers who did not place ${entries.length - placed.length}`)
     console.log(`   brackets ${byBracket.size}   with a stable wrestler id ${withId.length}/${entries.length}`)
     if (noName) console.log(`   rows with no usable name or weight, skipped: ${noName}`)
-    /* Two wrestlers in one place is two people or a bad parse; refuse rather than write it. */
     /*
+     * The SAME wrestler twice in one place is a bad parse; refuse rather than write it.
+     *
      * Keyed by association as well. Georgia runs GHSA and GIAA, and both crown a 1st place at
-     * Girls 100 — two champions of two championships, not two wrestlers in one place. Without the
+     * Girls 100 — two champions of two championships, not one wrestler written twice. Without the
      * association the check rejected a whole state for doing nothing wrong.
+     *
+     * Two DIFFERENT wrestlers in one place used to stop the slice too, and until 3 Nov 2026 it had
+     * to: `state_tournament_placers` carried a unique index over
+     * (season, state, association, gender, classification, weight, place), so a tie could not be
+     * stored however true it was. A flag to skip the check was added on 24 Oct and removed the same
+     * hour, because it let the delete run and then the insert fail on that index, emptying
+     * Georgia's 2025 boys — 1,538 rows.
+     *
+     * Arkansas settled it the other way. AAA wrestles no fifth-place match at all, so both
+     * consolation semi-final losers take fifth in every bracket of every year: 420 tied placements
+     * across 210 brackets, confirmed against the bout ledger, which carries 210 first-place and 210
+     * third-place bouts and no fifth-place round. Blanking those rows would have falsified 420 real
+     * podium finishes and cost 132 of 325 profiles in a state whose ladder ends at fifth. The index
+     * now carries lower(wrestler_name), so it admits a tie between two people and still refuses one
+     * person twice — and this guard is keyed to match it exactly, not relaxed past it.
+     *
+     * The residual edge: two different wrestlers with the identical name tying at one weight are
+     * still refused. Rare, and it fails loudly here rather than silently in the data.
      */
     const seen = new Map<string, number>()
-    for (const e of placed) { const k = `${e.association}|${e.classification}|${e.weight}|${e.place}`; seen.set(k, (seen.get(k) ?? 0) + 1) }
-    /*
-     * Two wrestlers in one place stops the slice, and this guard must NOT be bypassable.
-     *
-     * `state_tournament_placers` carries a unique index over
-     * (season, state, association, gender, classification, weight, place), so a shared place
-     * cannot be stored however true it is. A flag to skip the check was added on 24 Oct and
-     * removed the same hour: it let the delete run and then the insert failed on that index,
-     * emptying Georgia's 2025 boys - 1,538 rows - which is precisely the failure the block
-     * below exists to prevent.
-     *
-     * A genuine tie does happen. Georgia's 2025 GHSA 1A 144 awarded two sixths and no fifth
-     * because one semi-finalist was disqualified and the other took a medical forfeit, so the
-     * fifth-place match was never wrestled. Reconcile the FILE before importing - blank the
-     * place on the rows that cannot be stored and name them in the state's accounted file - or
-     * relax the index first. Do not make this guard optional.
-     */
+    for (const e of placed) {
+      const k = `${e.association}|${e.classification}|${e.weight}|${e.place}|${String(e.wrestler_name ?? "").toLowerCase()}`
+      seen.set(k, (seen.get(k) ?? 0) + 1)
+    }
     const clash = [...seen.entries()].filter(([, n]) => n > 1)
     if (clash.length) {
-      console.log(`   TWO WRESTLERS IN ONE PLACE — nothing deleted, nothing written: ${clash.slice(0, 5).map(([k]) => k).join(" ")}`)
-      console.log(`      the unique index cannot hold a shared place: check it against the bouts, then reconcile the file`)
+      console.log(`   ONE WRESTLER TWICE IN ONE PLACE — nothing deleted, nothing written: ${clash.slice(0, 5).map(([k]) => k).join(" ")}`)
+      console.log(`      that is a parse error, not a tie: check it against the bouts, then reconcile the file`)
       continue
+    }
+    /*
+     * Ties are written as ties, and named every time. A shared place is no longer silent: if a
+     * state that should have no ties grows one, it says so in this log before anything is written.
+     */
+    const sharedPlace = new Map<string, string[]>()
+    for (const e of placed) {
+      const k = `${e.association} ${e.classification} ${e.weight} place ${e.place}`
+      if (!sharedPlace.has(k)) sharedPlace.set(k, [])
+      sharedPlace.get(k)!.push(String(e.wrestler_name ?? ""))
+    }
+    const ties = [...sharedPlace.entries()].filter(([, names]) => names.length > 1)
+    if (ties.length) {
+      console.log(`   ${ties.length} shared place(s), written as ties: ${ties.slice(0, 3).map(([k, n]) => `${k} — ${n.join(" / ")}`).join("; ")}`)
     }
 
 
@@ -344,6 +366,76 @@ async function main() {
      * every entry below; it belongs here too.
      */
     const associations = [...new Set(entries.map((e) => String((e as { association?: unknown }).association ?? "")))].filter(Boolean)
+    /*
+     * Keep what is about to be deleted, on disk, before deleting it.
+     *
+     * The delete has to run before the insert, because the replacement rows collide with the ones
+     * they replace on the podium index. That order is why Georgia's 2025 boys went to zero on
+     * 24 Oct: the delete succeeded and the insert failed behind it. Validating first makes that
+     * unlikely; a file on disk makes it recoverable, which is a different and better promise. The
+     * JSON holds the rows themselves, so a failed insert is undone by inserting them back.
+     */
+    const doomed: Array<Record<string, unknown>> = []
+    for (const assoc of associations) {
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await sb
+          .from("state_tournament_placers")
+          .select("*")
+          .eq("state", state).eq("season", Number(season)).eq("gender", gender).eq("association", assoc)
+          .order("id")
+          .range(from, from + 999)
+        if (error) { console.log(`   could not read the rows it would delete — nothing deleted: ${error.message}`); return }
+        doomed.push(...((data ?? []) as Array<Record<string, unknown>>))
+        if (!data || data.length < 1000) break
+      }
+    }
+    /*
+     * The same measurement the bout importer makes, for the same reason: a slice is deleted whole,
+     * so a file holding part of one deletes the rest. Virginia's 185 addendum was ten qualifier
+     * rows against a 182-row girls slice, and run through here it would have left ten. That one was
+     * inserted directly instead - which is what an addendum needs - but nothing in the code said so.
+     */
+    /*
+     * A file can be complete in ROWS and still be a regression.
+     *
+     * Virginia's 2025 boys arrived on 4 Nov as the complete VHSL slice - 1,224 rows against the
+     * 1,007 held, carrying the Class 1A and 4A entrants Flo never published. Importing it would
+     * have been a gain by every count the check below makes, and would have cleared 415 class
+     * years and unlinked 209 profiles, because a freshly built slice carries neither: those are
+     * added afterwards by addenda, adjudications and the minter. Only the 217 genuinely new rows
+     * were inserted instead.
+     *
+     * So the enrichment is measured too. A slice that has been minted, or had its years resolved,
+     * is not replaceable by a rebuild of its own source.
+     */
+    const doomedLinked = doomed.filter((r) => r.athlete_id).length
+    const doomedYears = doomed.filter((r) => r.grad_year).length
+    const incomingYears = entries.filter((e) => (e as { grad_year?: unknown }).grad_year).length
+    const regressions: string[] = []
+    if (doomedLinked) regressions.push(`${doomedLinked} row(s) are linked to a profile and this file carries no links`)
+    if (incomingYears < doomedYears) regressions.push(`${doomedYears} row(s) carry a class year, this file carries ${incomingYears}`)
+    if (regressions.length && !ALLOW_SHRINK) {
+      console.log(`   WOULD LOSE ENRICHMENT — nothing deleted, nothing written:`)
+      for (const r of regressions) console.log(`      ${r}`)
+      console.log(`      A rebuilt slice does not carry what was added after it. Insert the rows this slice is`)
+      console.log(`      missing directly, or pass --allow-shrink if the replacement really is better.`)
+      continue
+    }
+    if (regressions.length) for (const r of regressions) console.log(`   --allow-shrink: ${r}`)
+    const fewer = doomed.length && entries.length < doomed.length
+    if (fewer && !ALLOW_SHRINK) {
+      console.log(`   PARTIAL SLICE — nothing deleted, nothing written: holds ${doomed.length} rows, this run writes ${entries.length}`)
+      console.log(`      A slice is replaced whole. Import the COMPLETE (state, season, gender) set, insert an`)
+      console.log(`      addendum's rows directly, or pass --allow-shrink if the source withdrew entrants.`)
+      continue
+    }
+    if (fewer) console.log(`   --allow-shrink: replacing ${doomed.length} rows with ${entries.length}`)
+    if (doomed.length) {
+      fs.mkdirSync("ranking-snapshots", { recursive: true })
+      const snap = `ranking-snapshots/state-qualifiers-${state}-${season}-${gender}-${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}.json`
+      fs.writeFileSync(snap, JSON.stringify({ undo: `insert these rows back into state_tournament_placers`, state, season: Number(season), gender, associations, rows: doomed }, null, 2))
+      console.log(`   ${doomed.length} row(s) saved before the delete: ${snap}`)
+    }
     for (const assoc of associations) {
       const { error } = await sb
         .from("state_tournament_placers")

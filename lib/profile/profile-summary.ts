@@ -1,3 +1,5 @@
+import { stateChampionshipName } from "@/lib/athlete-state"
+
 /**
  * The three sentences under a wrestler's name, and the facts they are built from.
  *
@@ -14,6 +16,9 @@
  * each with its count, then the state finish. "Year-round" is two or more
  * events outside the North Carolina season (November to February) in the last twelve months.
  */
+
+import { associationForEvent } from "@/lib/athlete-state"
+
 export type SummaryRow = {
   event: string
   year: number
@@ -33,8 +38,12 @@ export type Accolades = {
   /** "7A" for the best finish, when the event names one. */
   bestStateClass: string | null
   /**
-   * Whose championship the best finish was: SCHSL, SCISA, NCISA, NCHSAA. Read from the event, so
-   * a South Carolina champion is never called an NCHSAA one (17 Oct 2026). Absent means NCHSAA.
+   * Whose championship the best finish was, when the EVENT NAMES IT: "SCISA 3A State
+   * Championships" gives SCISA. Most states do not name it - Virginia's rows read "Virginia 3A
+   * State Championships" - so absent means "ask the state", not "NCHSAA". It used to mean the
+   * latter, which told every wrestler outside the Carolinas that he had won a North Carolina
+   * title: Paden Alyea, a two-time VHSL champion from Skyline, read "two-time NCHSAA 3A state
+   * champion" on RecruitWrestlers (3 Nov 2026).
    */
   bestStateAssociation?: string | null
   statePlacings: number
@@ -68,7 +77,13 @@ const placeNumber = (placement: string | null): number | null => {
 
 const isAllAmericanEvent = (event: string) => /fargo|nhsca(?!.*duals)|super 32(?!.*early)/i.test(event)
 
-export function accoladesFrom(input: { stateRows: readonly SummaryRow[]; tournamentRows: readonly SummaryRow[] }): Accolades {
+export function accoladesFrom(input: {
+  stateRows: readonly SummaryRow[]
+  tournamentRows: readonly SummaryRow[]
+  /** The wrestler's state: names the association when the event doesn't (VHSL, not NCHSAA). */
+  state?: string | null
+}): Accolades {
+  const homeState = String(input.state ?? "").trim().toUpperCase()
   const out: Accolades = { allAmericans: 0, nationalTitles: 0, bestStatePlace: null, bestStateClass: null, statePlacings: 0, stateTitles: 0, titleClasses: [], stateQualifier: false, byEvent: { nhsca: { aa: 0, titles: 0 }, super32: { aa: 0, titles: 0 }, fargo: { aa: 0, titles: 0 } } }
   for (const row of input.tournamentRows) {
     if (row.isDuals || /\(OF\)|overflow/i.test(row.event) || !isAllAmericanEvent(row.event)) continue
@@ -100,7 +115,9 @@ export function accoladesFrom(input: { stateRows: readonly SummaryRow[]; tournam
     if (out.bestStatePlace == null || place < out.bestStatePlace) {
       out.bestStatePlace = place
       out.bestStateClass = row.event.match(/\b(\d+A)\b/i)?.[1]?.toUpperCase() ?? null
-      out.bestStateAssociation = row.event.match(/\b(SCHSL|SCISA|NCISAA?|NCHSAA)\b/i)?.[1]?.toUpperCase().replace("NCISAA", "NCISA") ?? null
+      out.bestStateAssociation =
+        row.event.match(/\b(SCHSL|SCISA|NCISAA?|NCHSAA)\b/i)?.[1]?.toUpperCase().replace("NCISAA", "NCISA") ??
+        (homeState && homeState !== "NC" ? associationForEvent(homeState, row.event) : null)
     }
   }
   return out
@@ -113,7 +130,7 @@ const times = (n: number) => (n >= 2 ? `${TIMES[n] ?? `${n}-time`} ` : "")
  * Each national event by name (NHSCA, Super 32, Fargo), a title over All-American, then the state
  * finish: ["two-time NHSCA All-American", "Super 32 All-American", "two-time NCHSAA 8A state champion"].
  */
-export function accoladePhrases(a: Accolades): string[] {
+export function accoladePhrases(a: Accolades, stateCode?: string | null): string[] {
   const out: string[] = []
   if (a.byEvent) {
     for (const ev of ["nhsca", "super32", "fargo"] as const) {
@@ -138,7 +155,13 @@ export function accoladePhrases(a: Accolades): string[] {
   // "two-time NCHSAA state champion" when the titles came in different classes (8A in '26, 4A in '25)
   const mixedClasses = a.bestStatePlace === 1 && new Set(a.titleClasses ?? []).size > 1
   const cls = a.bestStateClass && !mixedClasses ? ` ${a.bestStateClass}` : ""
-  const assoc = a.bestStateAssociation || "NCHSAA"
+  /*
+   * The association the event named, when it named one - that is the strongest evidence and
+   * beats everything, including a state code that disagrees with it. Otherwise the state's own
+   * body: VHSL for Virginia, PIAA for Pennsylvania, UIL for Texas, and the state's own name
+   * where we hold no association rather than an invented acronym.
+   */
+  const assoc = a.bestStateAssociation || stateChampionshipName(stateCode || "NC", a.bestStateClass)
   if (a.bestStatePlace === 1) out.push(`${times(a.stateTitles)}${assoc}${cls} state champion`)
   else if (a.bestStatePlace === 2) out.push(`${assoc}${cls} state runner-up`)
   else if (a.bestStatePlace != null) out.push(`${times(a.statePlacings)}state placer`)
@@ -209,6 +232,8 @@ export function summarySentences(input: {
   scope: "national" | "in-state" | null
   /** The wrestler's state by name, for "competes in South Carolina"; North Carolina when absent. */
   stateName?: string | null
+  /** The wrestler's state code, for naming his championship body. North Carolina when absent. */
+  stateCode?: string | null
   styles: readonly string[]
   offSeasonEvents: number
   lastCompeted?: { weight?: string | number | null; event?: string | null; date?: string | null; year?: number | null } | null
@@ -231,7 +256,7 @@ export function summarySentences(input: {
     out.push(parts)
   }
 
-  const accolades = accoladePhrases(input.accolades)
+  const accolades = accoladePhrases(input.accolades, input.stateCode)
   const styles = input.styles.map((st) => STYLE_WORD[st] ?? st)
   if (accolades.length || input.scope || styles.length) {
     const parts: SummaryPart[] = [{ text: out.length ? `${subject} ` : `${name} ` }]

@@ -17,19 +17,28 @@
  *   - A placer who has already graduated is NOT, by default. Minting 113 South Carolina seniors
  *     who left in June only to prune them again is churn, and a graduated profile is what
  *     scripts/prune-graduated-profiles.ts exists to remove. --include-graduated overrides it.
- *   - A placer with no class year IS minted. We may learn the year later, and a profile with a
- *     placement and no year is recoverable; a wrestler we never created is invisible.
+ *   - A placer with no class year is NOT minted. The profile rule is never to mint without one
+ *     (Matt; the Sarissa Tucker miss), and the opposite default cost two deletions in one day -
+ *     Alyssa Beasley in Arkansas and Koy Davidson in Iowa, both unresolved state placers the
+ *     package had deliberately held, both minted here and removed again within the hour.
+ *     --include-no-class-year restores the old behaviour for a state that wants it.
  *
  * A name that already belongs to a profile at the same school is LINKED, never duplicated, and a
  * name matching a profile at a DIFFERENT school is left alone and printed — out of state we have
  * no school list to rule a namesake out, and 133 placer names already repeat nationally.
  *
- *   npx tsx scripts/mint-state-placer-profiles.ts --state SC [--season 2026] [--include-qualifiers] [--include-graduated] [--write]
+ *   npx tsx scripts/mint-state-placer-profiles.ts --state SC [--season 2026] [--include-qualifiers] [--include-graduated] [--include-no-class-year] [--link-only] [--write]
  */
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
-import { nameReadings, nameWords, namesReferToSamePerson, schoolsLikelySame } from "@/lib/athlete-name-match"
+import {
+  ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS,
+  nameReadings,
+  nameWords,
+  namesReferToSamePerson,
+  schoolsLikelySame,
+} from "@/lib/athlete-name-match"
 import { currentClassYears } from "@/lib/class-years"
 import { normalizeState } from "@/lib/athlete-state"
 
@@ -53,12 +62,29 @@ const arg = (n: string, d?: string) => {
 /*
  * An unknown flag stops the run rather than being ignored.
  *
- * Several state imports were invoked with `--link-only`, which this script has never had. It was
+ * Several state imports were invoked with `--link-only`, which this script did not have. It was
  * silently dropped and the run did something subtly different from what the command said - it
  * minted as well as linked. The behaviour was the right one, so nothing was damaged, but a flag
- * that does nothing and says nothing is how a real mistake gets made on the run after.
+ * that does nothing and says nothing is how a real mistake gets made on the run after. It now
+ * means what it says (below), so a recorded command that carries it links without minting.
+ *
+ * The guard itself had the opposite hole: this list was never extended when --include-qualifiers
+ * and --max-place were added, so the two flags in this script's own usage line - and the one in
+ * the standing instruction for minting a state - threw `unknown flag` instead of running. Anything
+ * read from argv belongs here.
  */
-const KNOWN_FLAGS = new Set(["--write", "--include-graduated", "--only-with-class-year", "--state", "--season"])
+const KNOWN_FLAGS = new Set([
+  "--write",
+  "--include-graduated",
+  "--only-with-class-year",
+  "--include-qualifiers",
+  "--include-no-class-year",
+  "--link-only",
+  "--state",
+  "--season",
+  "--max-place",
+  "--canonical",
+])
 for (let i = 0; i < process.argv.length; i += 1) {
   const a = process.argv[i]!
   if (!a.startsWith("--")) continue
@@ -68,17 +94,52 @@ for (let i = 0; i < process.argv.length; i += 1) {
 const WRITE = process.argv.includes("--write")
 const INCLUDE_GRADUATED = process.argv.includes("--include-graduated")
 /**
- * Skip placers with no class year (21 Oct 2026, VISAA 2026: 62 of 92 had none, and most of a
- * podium with no year are seniors who have left). Hold them until the year is known.
+ * Mint placers with no class year after all, which is NOT the default (see the header).
+ *
+ * Holding them is the rule: 62 of VISAA 2026's 92 placers had no year, and most of a podium with no
+ * year are seniors who have left. The states that ship an unresolved key ship it deliberately -
+ * Arkansas held Alyssa Beasley's conflicting prints and Iowa held Koy Davidson's, and each arrives
+ * named in docs/state-launch/<STATE>-accounted.json rather than as a profile to create.
  */
+const INCLUDE_NO_CLASS_YEAR = process.argv.includes("--include-no-class-year")
 /**
  * State qualifiers who did not place, too (Matt, 30 Oct 2026: SC's launch push). The state files hold
  * every entrant; a non-placer is a row with no place. Qualifiers are minted only with a current class
  * year (the profile rule: never mint without one), so this flag also turns on --only-with-class-year.
  */
 const INCLUDE_QUALIFIERS = process.argv.includes("--include-qualifiers")
-const ONLY_KNOWN = process.argv.includes("--only-with-class-year") || INCLUDE_QUALIFIERS
+/**
+ * Attach this season's placements to profiles that already exist, and create nothing.
+ *
+ * A state is minted from the last two seasons, because a wrestler whose last podium finish is two
+ * years old is either graduated or no longer the recruit the file describes. But the earlier
+ * seasons still belong to the wrestlers who ARE minted: 67 of Arkansas's class-2027 placers had a
+ * 2024 podium finish that reached no profile, because the 2024 pass was never run - and running it
+ * the ordinary way would have minted 22 wrestlers whose only placement is that old season.
+ *
+ * Opponent detail is the product, so an unattached placement is a hole in it. This is how a state's
+ * back seasons are swept in after the mint: --season 2024 --link-only.
+ */
+const LINK_ONLY = process.argv.includes("--link-only")
+/* Kept as an explicit no-op flag: it names the default, and recorded commands still pass it. */
+const ONLY_KNOWN = !INCLUDE_NO_CLASS_YEAR
 const STATE = normalizeState(arg("state"))
+/**
+ * The build's own grouping of keys into real athletes, when it ships one.
+ *
+ * Our matcher has twice been the last thing standing between a package and a duplicate profile, and
+ * twice it lost: Iowa's Koy Davidson and Missouri's Charles/Charlie Robinson were both found after
+ * the mint had run. Muse's mint lists now carry `canonical_athlete_id`, which is that grouping
+ * stated rather than inferred - so where it is supplied it decides, and the matcher is the fallback
+ * for the rows it does not cover.
+ *
+ * It only ever JOINS keys. A canonical id cannot split a group our matcher folded, because folding
+ * two different wrestlers is the error that matters and nothing here should be able to cause it
+ * silently.
+ *
+ *   --canonical docs/state-launch/canonical/TX-mint-list-canonical-v2.csv
+ */
+const CANONICAL = arg("canonical")
 const SEASON = Number(arg("season", "2026"))
 const MAX_PLACE = Number(arg("max-place", "8"))
 const nn = (raw: unknown) => nameWords(String(raw ?? "")).join(" ")
@@ -161,6 +222,88 @@ async function main() {
       byName.delete(b)
     }
   }
+  /*
+   * Then the build's own grouping, which outranks ours where it exists. Keyed on name and school as
+   * the mint list prints them, matched through the same school fold the rest of this script uses,
+   * so a key filed under "St. John`s School Houston" still finds "St. John`s School (TX)".
+   */
+  const toLink: Array<{ ids: string[]; athleteId: string; label: string }> = []
+  if (CANONICAL) {
+    const text = fs.readFileSync(CANONICAL, "utf8").replace(/\r/g, "").trim().split("\n")
+    const cols = text.shift()!.split(",")
+    const idx = (n: string) => cols.indexOf(n)
+    const rowsOf = text.filter((l) => l.trim()).map((l) => {
+      const v: string[] = []
+      let cur = ""
+      let q = false
+      for (let i = 0; i < l.length; i += 1) {
+        const ch = l[i]
+        if (q) { if (ch === '"' && l[i + 1] === '"') { cur += '"'; i += 1 } else if (ch === '"') q = false; else cur += ch }
+        else if (ch === '"') q = true
+        else if (ch === ",") { v.push(cur); cur = "" }
+        else cur += ch
+      }
+      v.push(cur)
+      return { name: (v[idx("name")] ?? "").trim(), school: (v[idx("school")] ?? "").trim(), id: (v[idx("canonical_athlete_id")] ?? "").trim() }
+    }).filter((r) => r.id)
+    const canonOf = (r: Placer) => {
+      const n = nn(r.wrestler_name)
+      const hit = rowsOf.find((x) => nn(x.name) === n && schoolsLikelySame(x.school, schoolOf(r)))
+      return hit?.id ?? null
+    }
+    const joined: string[] = []
+    for (const [a, rowsA] of [...byName]) {
+      if (!byName.has(a)) continue
+      const idA = rowsA.map(canonOf).find(Boolean)
+      if (!idA) continue
+      for (const [b, rowsB] of [...byName]) {
+        if (b === a || !byName.has(b) || !byName.has(a)) continue
+        if (rowsB.map(canonOf).find(Boolean) !== idA) continue
+        joined.push(`${rowsA[0]!.wrestler_name} + ${rowsB[0]!.wrestler_name} (${idA})`)
+        byName.set(a, [...byName.get(a)!, ...rowsB])
+        byName.delete(b)
+      }
+    }
+    /*
+     * And the commoner half: an unlinked key whose canonical twin is ALREADY a profile.
+     *
+     * Michigan has four, all of them one school printed two ways that no string rule should fold -
+     * "Cass Technical HS" against "Detroit Cass Tech" and "Meridian Early College HS" against
+     * "Sanford Meridian" share exactly one distinctive word, and folding on one shared word would
+     * merge genuinely different schools. Wyatt Burns is a real transfer, Dundee to Springport, which
+     * no school rule should fold either. Each is one athlete because the build says so, and this is
+     * where saying so pays: the linked row carries the profile, the unlinked row inherits it.
+     */
+    /*
+     * Built from EVERY season's rows, not this one's: the twin that already carries the profile is
+     * usually in another season, which is the whole shape of the problem. Scoping this to the
+     * season under import found nothing at all.
+     */
+    const profileOfCanonical = new Map<string, string>()
+    for (const r of all) {
+      if (!r.athlete_id) continue
+      const id = canonOf(r)
+      if (id && !profileOfCanonical.has(id)) profileOfCanonical.set(id, r.athlete_id)
+    }
+    const inherited: string[] = []
+    for (const [k, rowsK] of [...byName]) {
+      const id = rowsK.map(canonOf).find(Boolean)
+      if (!id) continue
+      const athleteId = profileOfCanonical.get(id)
+      if (!athleteId) continue
+      toLink.push({
+        ids: rowsK.map((x) => x.id),
+        athleteId,
+        label: `${rowsK[0]!.wrestler_name} (${schoolOf(rowsK[0]!)}) -> existing profile [canonical ${id}]`,
+      })
+      inherited.push(`${rowsK[0]!.wrestler_name} (${schoolOf(rowsK[0]!)}) [${id}]`)
+      byName.delete(k)
+    }
+    const covered = unlinked.filter((r) => canonOf(r)).length
+    console.log(`   canonical ids: ${rowsOf.length} supplied, covering ${covered}/${unlinked.length} rows; joined ${joined.length} group(s), ${inherited.length} to an existing profile`)
+    for (const j of joined) console.log(`      ${j}`)
+    for (const i of inherited) console.log(`      ${i} -> existing profile`)
+  }
   const groups = new Map<string, Placer[]>()
   for (const [name, rows] of byName) {
     const clusters: Placer[][] = []
@@ -192,7 +335,6 @@ async function main() {
     return !s || s === STATE
   })
 
-  const toLink: Array<{ ids: string[]; athleteId: string; label: string }> = []
   const toCreate: Array<{ row: Record<string, unknown>; label: string; ids: string[] }> = []
   const graduated: string[] = []
   const heldNoYear: string[] = []
@@ -223,7 +365,52 @@ async function main() {
       const theirs = Number((a as { graduationyear?: unknown }).graduationyear)
       return !(placerYear && theirs > 0 && theirs !== placerYear)
     })
-    const sameSchool = sameName.filter((a) => schoolsLikelySame(a.highschool, school))
+    let sameSchool = sameName.filter((a) => schoolsLikelySame(a.highschool, school))
+    /*
+     * A wrestler who changes which form of his own first name the bracket prints.
+     *
+     * Missouri's Centralia has one Charles Robinson, class of 2027: the brackets print "Charlie" in
+     * 2024 and 2025 and "Charles" in 2026, one school and one class all three years, 126 to 132 to
+     * 138 and never concurrent. `namesReferToSamePerson` is deliberately strict and does not fold
+     * nicknames - Charlie and Charles at two DIFFERENT schools may well be two people, and that
+     * function also decides namesakes - so he minted twice.
+     *
+     * Folded here instead, where the two guards that make it safe are already in force: the school
+     * must agree and the class year must not contradict. Same surname, and first names in one
+     * equivalence group (the list that widens search variants). Out of that context a nickname
+     * proves nothing, so nothing outside it changes.
+     */
+    if (!sameSchool.length) {
+      const first = (v: string) => (nameWords(v)[0] ?? "").toLowerCase()
+      const last = (v: string) => {
+        const w = nameWords(v)
+        return (w[w.length - 1] ?? "").toLowerCase()
+      }
+      const equivalent = (a: string, b: string) => {
+        const [fa, fb] = [first(a), first(b)]
+        if (!fa || !fb || fa === fb) return fa === fb
+        return ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS.some((g) => {
+          const lower = g.map((x) => x.toLowerCase())
+          return lower.includes(fa) && lower.includes(fb)
+        })
+      }
+      const byNickname = athletes.filter((a) => {
+        if (last(a.name) !== last(r.wrestler_name)) return false
+        if (!equivalent(a.name, r.wrestler_name)) return false
+        const theirs = Number((a as { graduationyear?: unknown }).graduationyear)
+        if (placerYear && theirs > 0 && theirs !== placerYear) return false
+        return schoolsLikelySame(a.highschool, school)
+      })
+      if (byNickname.length === 1) {
+        toLink.push({
+          ids: rows.map((x) => x.id),
+          athleteId: byNickname[0]!.id,
+          label: `${r.wrestler_name} -> ${byNickname[0]!.name} (${byNickname[0]!.highschool ?? "no school"}) [first-name form]`,
+        })
+        continue
+      }
+      sameSchool = byNickname
+    }
     if (sameSchool.length === 1) {
       toLink.push({ ids: rows.map((x) => x.id), athleteId: sameSchool[0]!.id, label: `${r.wrestler_name} -> ${sameSchool[0]!.name} (${sameSchool[0]!.highschool ?? "no school"})` })
       continue
@@ -278,9 +465,9 @@ async function main() {
 
   console.log(`   distinct wrestlers                        : ${groups.size}`)
   console.log(`   already have a profile, to LINK           : ${toLink.length}`)
-  console.log(`   need a profile created                    : ${toCreate.length}`)
+  console.log(`   need a profile created                    : ${toCreate.length}${LINK_ONLY ? " (--link-only: not created)" : ""}`)
   console.log(`      of those, class year known             : ${toCreate.filter((c) => c.row.graduationyear).length}`)
-  if (ONLY_KNOWN) console.log(`   no class year, held (--only-with-class-year): ${heldNoYear.length}`)
+  if (ONLY_KNOWN && heldNoYear.length) console.log(`   no class year, held (the default; --include-no-class-year mints them): ${heldNoYear.length}`)
   console.log(`   graduated, skipped${INCLUDE_GRADUATED ? " (OVERRIDDEN)" : "                      "}: ${graduated.length}`)
   console.log(`   name matches a profile elsewhere, skipped : ${ambiguous.length}`)
   for (const a of ambiguous) console.log(`      ${a}`)
@@ -303,6 +490,10 @@ async function main() {
 
   let made = 0
   let attached = 0
+  if (LINK_ONLY) {
+    console.log(`--link-only: ${toCreate.length} profile(s) NOT created`)
+    return
+  }
   for (const c of toCreate) {
     const { data, error } = await sb.from("athletes").insert(c.row).select("id").single()
     if (error || !data) {

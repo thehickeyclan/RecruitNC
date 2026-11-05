@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { requestedViewAsId } from "@/lib/view-as/subject"
 import { headers } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -25,7 +26,7 @@ export async function GET() {
   const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
   const today = new Date().toISOString().slice(0, 10)
 
-  const viewer = await resolveCoachReportViewer(admin, user.id)
+  const viewer = await resolveCoachReportViewer(admin, user.id, await requestedViewAsId())
   const reports =
     viewer.access === "ok"
       ? reportsOnAddress(onRw).filter((d) => viewer.genders.includes(d.gender))

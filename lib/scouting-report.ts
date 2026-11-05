@@ -43,7 +43,7 @@ import {
 } from "@/lib/significant-wins"
 import { isBlueTeam } from "@/lib/blue-team"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } from "@/lib/public-rankings-cap"
-import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
+import { releasesAssessment, releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
 import { productName } from "@/lib/recruiting/product-name"
@@ -281,7 +281,7 @@ export async function loadOpponentIndex(supabase: SupabaseClient): Promise<Oppon
   for (let from = 0; ; from += 1000) {
     const { data } = await supabase
       .from("athletes")
-      .select("name,prospect_ranking,graduationyear,gender")
+      .select("name,prospect_ranking,graduationyear,gender,state")
       .not("prospect_ranking", "is", null)
       .range(from, from + 999)
     if (!data?.length) break
@@ -293,6 +293,7 @@ export async function loadOpponentIndex(supabase: SupabaseClient): Promise<Oppon
           graduationYear: row.graduationyear == null ? null : Number(row.graduationyear),
           // Whose board: narrowed per athlete by rankedOnBoard before any name is matched.
           gender: (row.gender as string | null) ?? null,
+          state: (row.state as string | null) ?? null,
         })
       }
     }
@@ -763,7 +764,7 @@ export async function buildScoutingReport(
      *
      * Built from data already in hand, so withholding it costs the report nothing either way.
      */
-    starRating: personal && isRatedAthlete({ gender: athlete.gender as string, graduationYear: gradYear })
+    starRating: releasesAssessment(accessTier) && isRatedAthlete({ gender: athlete.gender as string, graduationYear: gradYear })
       ? applyStarOverride(
           rateAthlete({
           nationalRows: nationalEventRows(bundle as never),

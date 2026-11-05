@@ -71,6 +71,8 @@ export type AppWin = {
   boutVerified?: boolean
   /** The opponent's state podium finish, whatever the headline reason (the endpoint sets it). */
   stateFinish?: "champion" | "placer" | null
+  /** For a "ranked" win: whose state board ranks the opponent ("NC", "SC"). */
+  rankState?: string | null
 }
 
 const accoladeOf = (w: AppWin) => w.credential ?? w.nationalRankLabel ?? w.stateLabel ?? null
@@ -91,19 +93,34 @@ const dayMs = (raw: string | null | undefined): number | null => {
 }
 
 /**
- * Wins over ranked opponents in the last twelve months, national and North Carolina apart.
+ * Wins over ranked opponents in the last twelve months, national and state apart.
  * Never one "ranked" number: the two lists are different things and a coach means the first.
+ * `states` holds the boards the state-ranked opponents are on, for the label.
  */
-export function rankedWinsLast12Months(wins: AppWin[], now: Date = new Date()): { national: number; nc: number } {
+export function rankedWinsLast12Months(wins: AppWin[], now: Date = new Date()): { national: number; state: number; states: string[] } {
   let national = 0
-  let nc = 0
+  let state = 0
+  const states = new Set<string>()
   for (const w of wins) {
     const ms = dayMs(w.date)
     if (ms == null || now.getTime() - ms > 365 * 86_400_000) continue
     if (w.reason === "national-ranked") national += 1
-    else if (w.reason === "ranked") nc += 1
+    else if (w.reason === "ranked") {
+      state += 1
+      if (w.rankState) states.add(w.rankState.toUpperCase())
+    }
   }
-  return { national, nc }
+  return { national, state, states: [...states].sort() }
+}
+
+/**
+ * "3 NC-ranked": the board the opponents are ranked on, never assumed from the product. A New York
+ * wrestler read "0 NC-ranked" (Kade Mustin, 3 November 2026). With no ranked wins, an NC wrestler
+ * keeps "NC-ranked" (his own board); anyone else reads "state-ranked". Mixed boards read "state-ranked".
+ */
+export function stateRankedLabel(r: { state: number; states: string[] }, athleteState?: string | null): string {
+  const board = r.states.length === 1 ? r.states[0] : r.state === 0 && String(athleteState ?? "").toUpperCase() === "NC" ? "NC" : null
+  return `${r.state} ${board ? `${board}-ranked` : "state-ranked"}`
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`

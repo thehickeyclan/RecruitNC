@@ -688,6 +688,11 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <a href="/profile">My Account</a>
                   </DropdownMenuItem>
+                  {!showMyRecruits && (
+                    <DropdownMenuItem asChild>
+                      <a href="/submit-commitment">Announce a commitment</a>
+                    </DropdownMenuItem>
+                  )}
                   {showMyRecruits && (
                     <>
                       <DropdownMenuSeparator />

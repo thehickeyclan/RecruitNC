@@ -21,6 +21,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { productName } from "@/lib/recruiting/product-name"
+import { FamilyPortalFrame } from "@/components/portal/portal-shell"
 
 export const dynamic = "force-dynamic"
 
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 const checkedLabel = new Date(`${CHECKED}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
 
-export default async function LearnPage({ params }: Params) {
+async function LearnPageBody({ params }: Params) {
   const page = learnPage((await params).slug)
   if (!page) notFound()
 
@@ -120,5 +121,15 @@ export default async function LearnPage({ params }: Params) {
 
         <LearnDisclaimer checkedLabel={checkedLabel} />
     </LearnFrame>
+  )
+}
+
+
+/** Inside the Command Center menu for a family (components/portal/portal-shell.tsx). */
+export default async function LearnPage(props: Parameters<typeof LearnPageBody>[0]) {
+  return (
+    <FamilyPortalFrame active="learn">
+      <LearnPageBody {...props} />
+    </FamilyPortalFrame>
   )
 }

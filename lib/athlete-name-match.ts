@@ -151,21 +151,64 @@ function normalizeForAlias(name: string): string {
 }
 
 /** Same person regardless of "First Last" vs "Last, First" token order. */
+/*
+ * Name particles a bracket operator may type attached or detached: "McClelland" and "Mc Clelland",
+ * "LeNoble" and "Le Noble", "DuChemin" and "Du Chemin". Joined to the token that follows, never
+ * standing alone, so "Mack" and "Mc Clelland" are not drawn together by the particle itself.
+ */
+const NAME_PARTICLES = new Set(["mc", "mac", "le", "la", "du", "de", "del", "della", "di", "da", "van", "von", "der", "den", "st", "ste", "o", "al", "el", "bin", "ibn", "abu"])
+
+/**
+ * The letters of each word, and nothing else.
+ *
+ * Punctuation inside a token used to survive this, which split people who differ only by how a
+ * source punctuates an initial: Pennsylvania's 2025 PIAA bracket printed "Cj Caines" and its 2026
+ * bracket "C.J. Caines", one Hanover Area 2028 wrestler who came out of the mint as two profiles.
+ * A stray mark does the same - Ohio's girls bracket carries "Bella Ndinga Mbappe`" against the
+ * same name clean.
+ */
+const letterWords = (s: string) =>
+  normalizeApostrophes((s ?? "").trim().toLowerCase())
+    .replace(/,/g, " ")
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-z]/g, ""))
+    .filter(Boolean)
+
+/** The word list with particles folded forward, when there is one to fold. */
+function joinParticles(words: string[]): string[] | null {
+  const out: string[] = []
+  let joined = false
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i]!
+    if (NAME_PARTICLES.has(w) && i + 1 < words.length && out.length > 0) {
+      out.push(w + words[i + 1]!)
+      i++
+      joined = true
+    } else out.push(w)
+  }
+  return joined ? out : null
+}
+
 export function namesReferToSamePerson(nameA: string, nameB: string): boolean {
-  const norm = (s: string) =>
-    normalizeApostrophes((s ?? "").trim().toLowerCase())
-      .replace(/,/g, " ")
-      .split(/\s+/)
-      .filter(Boolean)
-      .sort()
-      .join(" ")
+  /*
+   * Sorted, because a source may print "Smith, John" or lead with a middle name; the comma is
+   * already a separator above.
+   */
+  const forms = (s: string) => {
+    const words = letterWords(s)
+    if (!words.length) return []
+    const out = [words.slice().sort().join(" ")]
+    const folded = joinParticles(words)
+    if (folded) out.push(folded.slice().sort().join(" "))
+    return out
+  }
   /*
    * A quoted nickname gives a name two readings and either can be the match — see nameReadings.
    * Without this, Florida's `Steven \`Jett\` Johnson` and `Jett Johnson` compare as strangers.
    */
-  const as = nameReadings(nameA).map(norm).filter(Boolean)
-  const bs = nameReadings(nameB).map(norm).filter(Boolean)
-  return as.some((a) => bs.includes(a))
+  const as = nameReadings(nameA).flatMap(forms)
+  const bs = new Set(nameReadings(nameB).flatMap(forms))
+  return as.some((a) => bs.has(a))
 }
 
 export function firstNamesLikelySame(firstA: string, firstB: string): boolean {
@@ -276,6 +319,39 @@ export function rowNameMatchesAthleteContext(rowName: string, context: AthleteMa
  */
 export function schoolsLikelySame(a?: string | null, b?: string | null): boolean {
   /*
+   * "School, City" is one of the forms Iowa prints, and the city is not part of the name: the same
+   * school arrives as "Wahlert, Dubuque" one year and "Wahlert Catholic" the next, "Union, LaPorte
+   * City" and then "Union Community". Neither pair shares enough to fold, so Eve Skrocki and
+   * Jillian Worthen would each have been minted twice.
+   *
+   * Tried as an ADDITIONAL form, never a replacement, so this can only ever create a fold and
+   * never remove one. That matters for the opposite case in the same state: Greta Brus's 2024 row
+   * is the bare string "Davenport" against her "Assumption, Davenport" key, which still folds on
+   * the full strings - and bare "Davenport" is genuinely ambiguous there (Davenport Central, North
+   * and West all exist, and another wrestler carries "Davenport" alone), which is why dropping the
+   * city is offered here rather than imposed.
+   */
+  const beforeComma = (v?: string | null) => {
+    const raw = String(v ?? "")
+    const i = raw.indexOf(",")
+    return i > 0 ? raw.slice(0, i).trim() : ""
+  }
+  const ca = beforeComma(a)
+  const cb = beforeComma(b)
+  if (ca || cb) {
+    const fullA = String(a ?? "").trim()
+    const fullB = String(b ?? "").trim()
+    for (const [x, y] of [
+      [ca, fullB],
+      [fullA, cb],
+      [ca, cb],
+    ] as Array<[string, string]>) {
+      if (!x || !y) continue
+      if (x === fullA && y === fullB) continue
+      if (schoolsLikelySame(x, y)) return true
+    }
+  }
+  /*
    * Punctuation is not a school. One tournament writes "Corinth-Holders" and the next "Corinth
    * Holders"; "R.J. Reynolds" and "R J Reynolds" are one place, as are "Rutherfordton-Spindale
    * Central" and its unhyphenated spelling. Folding every non-letter to a space settles all of
@@ -285,6 +361,17 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
    */
   const fold = (v?: string | null) =>
     normalizeApostrophes((v ?? "").trim().toLowerCase().replace(/`/g, "'"))
+      /*
+       * An apostrophe is DELETED, not spaced. The comment below has always said apostrophes are
+       * folded the way names are, and for a one-word name they were - but turning "'" into a space
+       * leaves an orphaned "s" that the single-letter filter then drops, so "Gray's Creek" folded
+       * to "gray creek" and never met "Grays Creek". The accidental passes were substring hits:
+       * "st andrew" sits inside "st andrews". Where a word follows the apostrophe it failed
+       * outright - "Bishop O'Connell High School" against "Bishop OConnell", "The King's Academy"
+       * against "The Kings Academy". Thirteen school-name groups in the data differ by nothing but
+       * this mark, across SC, MD, DE, PA, NJ, TN, FL and GA.
+       */
+      .replace(/'/g, "")
       .replace(/\bhigh school\b|\bhigh\b|\bh\.?s\.?\b|\bschool\b/g, " ")
       /* "Saint" and "St." are the same word, and brackets use both: Virginia's 2026 field has
          "Saint John Paul the Great Catholic High School" and "St. John Paul the Great Catholic".
@@ -299,8 +386,28 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
       .filter((w) => w.length > 1)
       .join(" ")
       .trim()
-  const x = fold(a)
-  const y = fold(b)
+  /*
+   * A trailing gender or sport marker is not part of the school's name. Wisconsin's 2026 WIAA
+   * print writes "Freedom", "Freedom Girls" and "Freedom Wrestling" for one program, and Michigan
+   * writes "Mio-Au Sable Hs Girls" against "Mio (Girls)". Only ever TRAILING: Boys' Latin is a
+   * school whose name begins with one of these words, and stripping it there would leave "latin"
+   * to collide with every other Latin school.
+   */
+  /*
+   * A trailing two-letter token is the row's own state, not part of the school's name. Texas
+   * writes one school into two of its four championships as "St. John`s School Houston" and
+   * "St. John`s School (TX)", and "Episcopal Hs Tx" against "Episcopal High School- Houston (TX)";
+   * by the time the fold above has run, the bracketed code and the bare one look the same, so one
+   * rule reaches both. It also closes a co-op abbreviation Wisconsin prints two ways,
+   * "Chetek-Weyer/PF" against "Chetek-Weyer./Prairie Farm".
+   */
+  const dropTrailingMarker = (v: string) =>
+    v
+      .replace(/(?: (?:girls|boys|women|womens|mens|men|wrestling))+$/g, "")
+      .replace(/ [a-z]{2}$/, "")
+      .trim()
+  const x = dropTrailingMarker(fold(a))
+  const y = dropTrailingMarker(fold(b))
   if (!x || !y) return false
   /*
    * A word break is not a school either. Maryland's brackets write both "North East" and
@@ -310,7 +417,98 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
    * rule is deliberately loose and does not need to be looser.
    */
   if (x.replace(/ /g, "") === y.replace(/ /g, "")) return true
-  return x.includes(y) || y.includes(x)
+  /*
+   * A sibling school is NOT its parent town's school. Arkansas runs Bentonville and Bentonville
+   * West in the same 6A bracket, Springdale and Springdale Har-Ber, Southside and Southside
+   * Batesville; Oklahoma runs Moore, Southmoore and Westmoore. The substring test below folds
+   * every one of those pairs, because the shorter name sits inside the longer - so two different
+   * schools read as one, and two different wrestlers of the same name would merge into one profile.
+   *
+   * Checked before the fold rather than after: where the ONLY difference is a trailing compass
+   * word, that word is the school, not a spelling of it. Deliberately narrow. "Fort Smith
+   * Northside" against "Northside" still folds, because the extra words are a town and not a
+   * direction, and that is the far more common shape - the loose substring rule below is carrying
+   * sixteen of Arkansas's nineteen real school-form pairs and must not be tightened past this.
+   */
+  const COMPASS = new Set(["north", "south", "east", "west"])
+  const trailingCompassApart = (p: string, q: string) => {
+    const ps = p.split(" ").filter(Boolean)
+    const qs = q.split(" ").filter(Boolean)
+    const [shortSide, longSide] = ps.length < qs.length ? [ps, qs] : [qs, ps]
+    if (longSide.length !== shortSide.length + 1) return false
+    if (!COMPASS.has(longSide[longSide.length - 1]!)) return false
+    return shortSide.every((w, i) => w === longSide[i])
+  }
+  if (trailingCompassApart(x, y)) return false
+  /*
+   * Containment is matched on WHOLE WORDS, not raw substring.
+   *
+   * Oklahoma runs Perry and Sperry as separate 3A schools in the same brackets in all three years,
+   * and "perry" simply sits inside "sperry" - so a Perry wrestler and a different Sperry wrestler
+   * of the same name folded into one person. Muse's own grouping of the state kept the two apart;
+   * ours did not. The same accident is what joined Moore to Westmoore and Southmoore in that
+   * state's Moore district.
+   *
+   * Padding both sides with spaces is the whole fix, and it costs none of the shape this rule
+   * exists for: "Northside" still sits inside "Fort Smith Northside", "Heritage" inside "Rogers
+   * Heritage", "Central" inside "Little Rock Central" - every one of those is a word boundary.
+   * What it refuses is a match that starts or ends mid-word, which was never evidence of anything.
+   */
+  const containsWholeWords = (hay: string, needle: string) => ` ${hay} `.includes(` ${needle} `)
+  if (containsWholeWords(x, y) || containsWholeWords(y, x)) return true
+  /*
+   * An initialism the source printed instead of the name: Arkansas writes "CAC" in its 2026 field
+   * for the Central Arkansas Christian it spells out in 2024 and 2025, and a state champion's two
+   * earlier titles reached no profile because of it. The letters must spell the other name's word
+   * initials exactly and in order, and three letters are required - a two-letter initialism is too
+   * easy to collide with - so the only thing forgiven is the abbreviation itself.
+   */
+  const initialsOf = (v: string) => v.split(" ").filter(Boolean).map((w) => w[0]).join("")
+  const acronymOf = (one: string, other: string) =>
+    !one.includes(" ") && one.length >= 3 && other.includes(" ") && initialsOf(other) === one
+  if (acronymOf(x, y) || acronymOf(y, x)) return true
+  /*
+   * Word order is not a school either. Michigan's MHSAA print names the school then the town in
+   * brackets - "Huron HS (New Boston)", "Adams HS (Rochester)", "John Glenn HS (Bay City)" - where
+   * its Flo payload leads with the town: "New Boston Huron", "Rochester Adams", "Bay City John
+   * Glenn". Same words, no shared prefix, so the substring test above misses every one of them and
+   * six wrestlers lose their earlier placement to the namesake guard.
+   */
+  const words = (v: string) => v.split(" ").filter(Boolean)
+  const xs = words(x)
+  const ys = words(y)
+  if (xs.length === ys.length && xs.length > 1) {
+    const sx = [...xs].sort()
+    const sy = [...ys].sort()
+    if (sx.every((w, i) => w === sy[i])) return true
+    /*
+     * An abbreviated word, marked as one by the period the source printed: Ohio writes "Mass.
+     * Perry" for Massillon Perry, "Dub. Coffman" for Dublin Coffman, "Med. Highland" for Medina
+     * Highland. The period is required - a bare prefix would fold "North Allegheny" into
+     * "Northampton Allegheny", two real and different Pennsylvania schools - and every other word
+     * must match, so the abbreviation is the only thing being forgiven.
+     */
+    const marked = (v?: string | null) =>
+      new Set(
+        normalizeApostrophes((v ?? "").toLowerCase())
+          .split(/[^a-z0-9.]+/)
+          .filter((w) => w.endsWith(".") && w.length > 2)
+          .map((w) => w.replace(/\.+$/, "")),
+      )
+    const abbrev = new Set([...marked(a), ...marked(b)])
+    if (abbrev.size) {
+      const aligns = (p: string[], q: string[]) =>
+        p.every((w, i) => {
+          const v = q[i]!
+          if (w === v) return true
+          if (abbrev.has(w) && v.startsWith(w)) return true
+          if (abbrev.has(v) && w.startsWith(v)) return true
+          return false
+        })
+      if (aligns(xs, ys) || aligns(sx, sy)) return true
+    }
+  }
+  return false
 }
 
 export function tournamentYearFitsGradYear(tournamentYear: number, gradYear: number): boolean {

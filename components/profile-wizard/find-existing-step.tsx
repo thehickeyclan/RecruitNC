@@ -33,17 +33,21 @@ export function FindExistingStep({
   onCreateNew,
   initialName = "",
   who = "self",
+  onResults,
 }: {
   onClaim: (match: ExistingMatch) => void
   onCreateNew: (typedName: string) => void
   initialName?: string
   who?: Who
+  /** How many profiles the current search found, or null before a search. */
+  onResults?: (count: number | null) => void
 }) {
   const parent = who === "parent"
 
   const [name, setName] = useState(initialName)
   const [matches, setMatches] = useState<ExistingMatch[] | null>(null)
   const [searching, setSearching] = useState(false)
+  useEffect(() => onResults?.(matches ? matches.length : null), [matches, onResults])
 
   const search = useCallback(async (value: string) => {
     const q = value.trim()

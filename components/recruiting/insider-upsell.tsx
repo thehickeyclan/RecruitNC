@@ -41,6 +41,8 @@ export function InsiderUpsell({
   className?: string
 }) {
   const [hidden, setHidden] = useState(true)
+  /* Outside the ranked states the plan is the Command Center (lib/recruiting/plans-for-state.ts). */
+  const [commandCenterOnly, setCommandCenterOnly] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -48,7 +50,12 @@ export function InsiderUpsell({
     let cancelled = false
     fetch("/api/membership/status", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((s: { insider?: boolean } | null) => !cancelled && setHidden(s?.insider === true))
+      .then((s: { insider?: boolean; commandCenter?: boolean; plans?: { insider?: boolean } } | null) => {
+        if (cancelled) return
+        const ccOnly = s?.plans?.insider === false
+        setCommandCenterOnly(ccOnly)
+        setHidden(ccOnly ? s?.commandCenter === true : s?.insider === true)
+      })
       .catch(() => !cancelled && setHidden(false))
     return () => {
       cancelled = true
@@ -64,7 +71,7 @@ export function InsiderUpsell({
       const res = await fetch("/api/scouting-report/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "subscription", returnTo }),
+        body: JSON.stringify({ kind: commandCenterOnly ? "command_center" : "subscription", returnTo }),
       })
       const body = (await res.json().catch(() => ({}))) as { url?: string; error?: string; reason?: string }
       if (res.status === 401) {
@@ -86,7 +93,13 @@ export function InsiderUpsell({
     setBusy(false)
   }
 
-  const pitch = insiderPitch(firstName, state)
+  const pitch = commandCenterOnly
+    ? {
+        title: `See which colleges view ${firstName}'s profile`,
+        plus: "Plus a plan for every grade and a college list across every program.",
+        body: `The Recruiting Command Center names every college program looking at ${firstName}, with the plan for every grade and a college list across every program.`,
+      }
+    : insiderPitch(firstName, state)
   const button = (
     <button
       type="button"
@@ -95,7 +108,7 @@ export function InsiderUpsell({
       className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-extrabold text-[#0A1628] hover:brightness-110 disabled:opacity-60"
     >
       {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-      Get Insider · $9.99/mo
+      {commandCenterOnly ? "Get the Command Center · $24.99/mo" : "Get Insider · $9.99/mo"}
     </button>
   )
 

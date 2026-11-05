@@ -53,6 +53,8 @@ export const NATIONAL_PATH_PREFIXES = [
   "/profile-setup",
   "/request-edit",
   "/w",
+  // Staff read-only view of a family's Command Center (Matt, 4 Nov 2026): Rhett's link is here.
+  "/view-as-family",
 ] as const
 
 export function isNationalPath(pathname: string): boolean {

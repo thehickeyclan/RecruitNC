@@ -69,6 +69,18 @@ export function stripRankFields<T extends Record<string, unknown>>(row: T): T {
   return out
 }
 
+/**
+ * A business account (Rhett) sees a profile as a coach does but never academics (Matt, 4 Nov
+ * 2026). The private strip already takes GPA and test scores; these two are public text for
+ * everyone else, so they come off only for him.
+ */
+export function stripAcademicsForBusiness<T extends Record<string, unknown>>(row: T): T {
+  const out = { ...row } as Record<string, unknown>
+  delete out.academic_interest
+  delete out.academic_summary
+  return out as T
+}
+
 export function stripPrivateAthleteFields<T extends Record<string, unknown>>(row: T): T & { is_claimed?: boolean } {
   const out: Record<string, unknown> = { ...row }
   for (const field of PRIVATE_ATHLETE_FIELDS) delete out[field]

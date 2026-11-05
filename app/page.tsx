@@ -20,7 +20,10 @@ import {
   loadFeaturedStoreProducts,
   loadCommitCountsByClass,
   loadLatestCommits,
+  loadProfilesByState,
 } from "@/lib/home-data"
+import { StateCoverageMap } from "@/components/state-coverage-map"
+import { buildCoverage } from "@/lib/recruiting/state-coverage"
 import { shareMetadata } from "@/lib/share-metadata"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { PREVIEW, buildMapPreview } from "@/lib/college-programs/map-preview"
@@ -105,13 +108,16 @@ function SectionHeader({
 export default async function HomePage() {
   // One parallel server-side load instead of six client round-trips. Each loader degrades to
   // an empty result rather than throwing, so a slow table can't take down the front door.
-  const [commitsByClass, latestCommitsRaw, storeProducts, platform] = await Promise.all([
+  const [commitsByClass, latestCommitsRaw, storeProducts, platform, profilesByState] = await Promise.all([
     loadCommitCountsByClass(STATS_CLASS_YEARS),
     loadLatestCommits(3),
     loadFeaturedStoreProducts(6),
     // The Command Center announcement's proof: coaches and programs on the platform (cached an hour).
     loadPlatformStats(createAdminClient()).catch(() => null),
+    // Which states are open, built, or still coming - the coverage map below the college map.
+    loadProfilesByState().catch(() => ({}) as Record<string, number>),
   ])
+  const coverage = buildCoverage(profilesByState)
   // A picture of the college map, not the live map: the front page stays fast (Matt, 19 Oct 2026).
   const mapPreview = (() => {
     try {
@@ -291,6 +297,11 @@ export default async function HomePage() {
               </Link>
             ) : null}
           </div>
+        </section>
+
+        {/* Which states we cover, and which are coming (Matt, 5 Nov 2026). */}
+        <section className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
+          <StateCoverageMap rows={coverage} backdropUrl={mapPreview?.backdropUrl ?? null} />
         </section>
 
         {/* News */}

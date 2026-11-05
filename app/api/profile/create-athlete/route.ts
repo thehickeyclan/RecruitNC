@@ -1,9 +1,11 @@
 import { after, type NextRequest, NextResponse } from "next/server"
 import { siteFromRequest } from "@/lib/analytics-site"
+import { firstTouchFromRequest } from "@/lib/traffic-source"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
+import { loadClaimAccount, relationshipForRole, saveCellIfMissing } from "@/lib/account-claim-role"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { claimProfile, recordClaimConsent } from "@/lib/profile-claim"
@@ -61,7 +63,11 @@ export async function POST(request: NextRequest) {
      * same way a parent claims an existing one - not made its owner, which left the wrestler
      * unable to claim their own page later. The website form sends neither, and stays "self".
      */
-    const relationship: "self" | "parent" = formData.relationship === "parent" ? "parent" : "self"
+    const claimAccount = await loadClaimAccount(createAdminClient(), user.id)
+    const relationship: "self" | "parent" =
+      relationshipForRole(claimAccount, formData.relationship === "parent" ? "parent" : "self") ?? "self"
+    // Making the profile is the signature; the form has no separate box, and claimProfile refuses a parent without one.
+    const parentSignedName = String(formData.signedName ?? "").trim() || claimAccount.fullName || user.email || null
     if (!formData.email && relationship === "self" && user.email) formData.email = user.email
 
     const requiredFields = [
@@ -216,11 +222,12 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         athleteId: athlete.id,
         relationship: "parent",
-        signedName: String(formData.signedName ?? "").trim() || null,
-        viewerName: String(formData.signedName ?? "").trim() || null,
+        signedName: parentSignedName,
+        viewerName: parentSignedName,
         ip: auditIpFrom(request),
         userAgent: request.headers.get("user-agent"),
         site: siteFromRequest(request),
+        firstTouch: firstTouchFromRequest(request),
       })
       if (!claim.ok) {
         return NextResponse.json({ error: claim.error }, { status: claim.status })
@@ -240,6 +247,8 @@ export async function POST(request: NextRequest) {
         .update({ athlete_id: athlete.id })
         .eq("user_id", user.id)
     }
+
+    await saveCellIfMissing(adminSupabase, user.id, claimAccount, formData.phone)
 
     // Their results are usually on file already - most wrestlers compete before anyone makes them
     // a profile. The hourly link-results cron would attach them within the hour; run the same

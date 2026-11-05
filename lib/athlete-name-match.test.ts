@@ -9,6 +9,7 @@ import {
   pickBestAthleteCandidate,
   scoreAthleteRowMatch,
   schoolsLikelySame,
+  ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS,
 } from "@/lib/athlete-name-match"
 
 describe("athlete-name-match", () => {
@@ -226,5 +227,276 @@ describe("a nickname in quotes", () => {
     expect(nameReadings("Mason O`dell")).toEqual(["Mason O`dell"])
     expect(nameReadings("A`Niyah Leon-Goodrich")).toEqual(["A`Niyah Leon-Goodrich"])
     expect(nameReadings("Jackson D?Ettore")).toEqual(["Jackson D?Ettore"])
+  })
+})
+
+describe("one wrestler, two ways a bracket typed the name", () => {
+  it("reads a punctuated initial and a bare one as one person", () => {
+    /*
+     * Pennsylvania's 2025 PIAA bracket printed "Cj Caines" and its 2026 bracket "C.J. Caines" -
+     * one Hanover Area wrestler, class of 2028, who came out of the mint as two profiles.
+     */
+    expect(namesReferToSamePerson("Cj Caines", "C.J. Caines")).toBe(true)
+    expect(namesReferToSamePerson("A.J. Corp", "A.j. Corp")).toBe(true)
+  })
+
+  it("ignores a stray mark a bracket leaves on a name", () => {
+    expect(namesReferToSamePerson("Bella Ndinga Mbappe`", "Bella Ndinga Mbappe")).toBe(true)
+  })
+
+  it("joins a name particle to the word after it, attached or detached", () => {
+    expect(namesReferToSamePerson("Mackey Mc Clelland", "Mackey McClelland")).toBe(true)
+    expect(namesReferToSamePerson("Jaydon Le Noble", "Jaydon LeNoble")).toBe(true)
+    expect(namesReferToSamePerson("William Du Chemin", "William DuChemin")).toBe(true)
+  })
+
+  it("does not draw two wrestlers together on a particle alone", () => {
+    expect(namesReferToSamePerson("Mack Clelland", "Mackey McClelland")).toBe(false)
+    expect(namesReferToSamePerson("Jaydon Noble", "Jaydon Le Noble")).toBe(false)
+    expect(namesReferToSamePerson("Evan Ours", "Evan Hours")).toBe(false)
+  })
+
+  it("still keeps two different wrestlers apart", () => {
+    expect(namesReferToSamePerson("Jon Smith", "Jonathan Smith")).toBe(false)
+    expect(namesReferToSamePerson("Mason Horwat", "Mason Howard")).toBe(false)
+  })
+})
+
+describe("one school, two ways a state's sources print it", () => {
+  it("ignores a trailing gender or sport marker", () => {
+    /* Wisconsin's 2026 WIAA print writes all three of these for one Freedom program. */
+    expect(schoolsLikelySame("Freedom Girls", "Freedom Wrestling")).toBe(true)
+    expect(schoolsLikelySame("Mio-Au Sable Hs Girls", "Mio (Girls)")).toBe(true)
+    expect(schoolsLikelySame("Dowagiac Union HS", "Dowagiac (Girls)")).toBe(true)
+  })
+
+  it("keeps a school whose name BEGINS with one of those words", () => {
+    /* Boys' Latin is a school; stripping the first word would collide it with every Latin school. */
+    expect(schoolsLikelySame("Boys Latin", "Chicago Latin")).toBe(false)
+    expect(schoolsLikelySame("Girls Preparatory School", "Memphis Preparatory")).toBe(false)
+  })
+
+  it("reads school-then-town and town-then-school as one place", () => {
+    /*
+     * Michigan's MHSAA print brackets the town where its Flo payload leads with it. Six wrestlers
+     * lost an earlier placement to the namesake guard over this.
+     */
+    expect(schoolsLikelySame("Huron HS (New Boston)", "New Boston Huron")).toBe(true)
+    expect(schoolsLikelySame("Adams HS (Rochester)", "Rochester Adams")).toBe(true)
+    expect(schoolsLikelySame("John Glenn HS (Bay City)", "Bay City John Glenn")).toBe(true)
+    expect(schoolsLikelySame("Gabriel Richard (Riverview)", "Riverview Gabriel Richard")).toBe(true)
+  })
+
+  it("forgives a word the source abbreviated with a period", () => {
+    expect(schoolsLikelySame("Mass. Perry", "Massillon Perry")).toBe(true)
+    expect(schoolsLikelySame("Dub. Coffman", "Dublin Coffman")).toBe(true)
+    expect(schoolsLikelySame("Med. Highland", "Medina Highland")).toBe(true)
+  })
+
+  it("will not take a bare prefix as an abbreviation", () => {
+    /* Northampton and North Allegheny are two real and different Pennsylvania schools. */
+    expect(schoolsLikelySame("North Allegheny", "Northampton Allegheny")).toBe(false)
+    expect(schoolsLikelySame("Beaver Local", "Lisbon Beaver")).toBe(false)
+  })
+
+  it("still keeps two different schools apart", () => {
+    expect(schoolsLikelySame("Carlyle", "Vandalia")).toBe(false)
+    expect(schoolsLikelySame("Dundee", "Springport")).toBe(false)
+    expect(schoolsLikelySame("Buffalo Grove", "Arlington Heights (Hersey)")).toBe(false)
+  })
+})
+
+describe("a trailing state code is not part of the school name", () => {
+  it("folds one school entered into two of a state's championships", () => {
+    /* Texas runs four championships; its payloads suffix the state in one layer and not the other. */
+    expect(schoolsLikelySame("St. John`s School Houston", "St. John`s School (TX)")).toBe(true)
+    expect(schoolsLikelySame("Episcopal Hs Tx", "Episcopal High School- Houston (TX)")).toBe(true)
+    expect(schoolsLikelySame("St.thomas Catholic", "St. Thomas High School (TX)")).toBe(true)
+  })
+
+  it("closes a co-op abbreviation printed two ways", () => {
+    expect(schoolsLikelySame("Chetek-Weyer./Prairie Farm", "Chetek-Weyer/PF")).toBe(true)
+  })
+
+  it("does not fold two schools that merely share a word", () => {
+    expect(schoolsLikelySame("Lewisville Marcus", "All Saints Episcopal School")).toBe(false)
+    expect(schoolsLikelySame("El Paso Eastwood", "Allen")).toBe(false)
+    expect(schoolsLikelySame("Willis", "Conroe Woodlands College Park")).toBe(false)
+  })
+})
+
+describe("an apostrophe is not part of a school name either", () => {
+  it("folds the spellings that differ by nothing but the mark", () => {
+    expect(schoolsLikelySame("Gray's Creek", "Grays Creek")).toBe(true)
+    expect(schoolsLikelySame("Gray`s Creek", "Grays Creek")).toBe(true)
+    expect(schoolsLikelySame("Bishop O`Connell High School", "Bishop OConnell")).toBe(true)
+    expect(schoolsLikelySame("The King`s Academy", "The Kings Academy")).toBe(true)
+    expect(schoolsLikelySame("St. Benedict`s Prep School", "St. Benedicts Prep School")).toBe(true)
+  })
+
+  it("still keeps two different saints apart", () => {
+    expect(schoolsLikelySame("St. Mary's", "St. Michael's")).toBe(false)
+    expect(schoolsLikelySame("St. John's", "St. Joseph's Prep")).toBe(false)
+  })
+})
+
+describe("a sibling school is not its town's school", () => {
+  it("keeps a trailing compass sibling apart", () => {
+    /* Arkansas runs both in the same 6A bracket; the substring rule folded them. */
+    expect(schoolsLikelySame("Bentonville", "Bentonville West")).toBe(false)
+    expect(schoolsLikelySame("BENTONVILLE HIGH SCHOOL", "Bentonville West High School")).toBe(false)
+    expect(schoolsLikelySame("Norman High School", "Norman North")).toBe(false)
+  })
+
+  it("keeps a compass sibling apart when it is written closed up", () => {
+    /* Oklahoma's Moore district: three schools, and "westmoore" simply contains "moore". */
+    expect(schoolsLikelySame("Moore", "Westmoore")).toBe(false)
+    expect(schoolsLikelySame("Moore", "Southmoore High School")).toBe(false)
+    expect(schoolsLikelySame("MOORE", "WESTMOORE (Girls)")).toBe(false)
+  })
+
+  it("does not match containment that starts or ends mid-word", () => {
+    /*
+     * Perry and Sperry are separate Oklahoma 3A schools wrestling the same brackets in all three
+     * years, and "perry" sits inside "sperry" - so a Perry wrestler and a different Sperry
+     * wrestler of the same name folded into one person. Muse's own grouping of the state kept the
+     * two apart; ours did not.
+     */
+    expect(schoolsLikelySame("PERRY", "Sperry")).toBe(false)
+    expect(schoolsLikelySame("Perry-Girls", "SPERRY (Girls)")).toBe(false)
+    expect(schoolsLikelySame("Edmond North", "Edmond Santa Fe")).toBe(false)
+  })
+
+  it("still folds the far commoner shape, where the extra words are whole words", () => {
+    expect(schoolsLikelySame("Fort Smith Northside", "Northside")).toBe(true)
+    expect(schoolsLikelySame("Heritage", "Rogers Heritage High School")).toBe(true)
+    expect(schoolsLikelySame("Central", "Little Rock Central High School")).toBe(true)
+  })
+
+  it("one school spelled open and closed up is still one school", () => {
+    expect(schoolsLikelySame("North East", "Northeast")).toBe(true)
+  })
+
+  /*
+   * The boundary, recorded rather than implied. A sibling distinguished by anything OTHER than a
+   * compass word is still folded: Springdale against Springdale Har-Ber, Southside against
+   * Southside Batesville. Tightening that would need the substring rule to go, and it is carrying
+   * sixteen of Arkansas's nineteen real school-form pairs. No wrestler in Arkansas or Oklahoma
+   * appears at both halves of such a pair, so nothing merges wrongly today; the next state that
+   * does will need evidence, not a looser string rule.
+   */
+  it("documents the siblings it still folds", () => {
+    expect(schoolsLikelySame("Springdale", "Springdale Har-Ber")).toBe(true)
+    expect(schoolsLikelySame("Southside", "Southside Batesville")).toBe(true)
+  })
+})
+
+describe("an initialism the source printed instead of the name", () => {
+  it("folds CAC into Central Arkansas Christian", () => {
+    expect(schoolsLikelySame("CAC", "Central Arkansas Christian")).toBe(true)
+    expect(schoolsLikelySame("CAC", "Central Arkansas Christian School")).toBe(true)
+  })
+
+  it("needs three letters, so a two-letter collision is refused", () => {
+    expect(schoolsLikelySame("LR", "Little Rock")).toBe(false)
+  })
+
+  it("needs the initials to spell it exactly, in order", () => {
+    expect(schoolsLikelySame("PAC", "Central Arkansas Christian")).toBe(false)
+    expect(schoolsLikelySame("CAC", "Central Christian Arkansas")).toBe(false)
+    expect(schoolsLikelySame("CACS", "Central Arkansas Christian")).toBe(false)
+  })
+
+  /*
+   * The limit of the rule: any other school whose words begin with the same three letters folds
+   * too, so the initials alone do not identify a school. The wrestler's NAME still has to match
+   * before anything merges, which is what makes this safe in practice rather than in principle -
+   * two same-named wrestlers at two same-initialled schools in one state is the case it would get
+   * wrong, and no state we hold has one.
+   */
+  it("cannot tell two schools with the same initials apart", () => {
+    expect(schoolsLikelySame("CAC", "Cabot Area Comprehensive High School")).toBe(true)
+  })
+})
+
+describe("Oklahoma rotates its school strings every year", () => {
+  /*
+   * One school, four strings across three events: ALL CAPS with no suffix in 2024, Title Case with
+   * a "-Girls" suffix in 2025, ALL CAPS with a " (Girls)" suffix in 2026 - plus two operator
+   * artifacts the source shipped and we keep verbatim, a stray backtick and a missing paren.
+   * Every one of these has to reach the same wrestler or her 2024 placement mints a second
+   * profile.
+   */
+  it("folds a school across all of its yearly forms", () => {
+    expect(schoolsLikelySame("BIXBY", "Bixby-Girls")).toBe(true)
+    expect(schoolsLikelySame("Bixby-Girls", "BIXBY (Girls)")).toBe(true)
+    expect(schoolsLikelySame("UNION", "UNION (Girls)")).toBe(true)
+    expect(schoolsLikelySame("Bishop McGuinness-Girls", "BISHOP MCGUINNESS (Girls)")).toBe(true)
+  })
+
+  it("folds the two operator artifacts in the 2026 girls strings", () => {
+    /* The real strings: a backtick after the closing paren, and a closing paren never typed. */
+    expect(schoolsLikelySame("SHAWNEE (Girls)`", "SHAWNEE")).toBe(true)
+    expect(schoolsLikelySame("SHAWNEE (Girls)`", "Shawnee-Girls")).toBe(true)
+    expect(schoolsLikelySame("BARNSDALL (Girls", "BARNSDALL")).toBe(true)
+    expect(schoolsLikelySame("BARNSDALL (Girls", "Barnsdall-Girls")).toBe(true)
+  })
+
+  it("keeps all three Moore-district schools apart in every suffix form", () => {
+    expect(schoolsLikelySame("MOORE (Girls)", "WESTMOORE (Girls)")).toBe(false)
+    expect(schoolsLikelySame("Moore-Girls", "Southmoore-Girls")).toBe(false)
+    expect(schoolsLikelySame("Westmoore", "Southmoore")).toBe(false)
+    /* But each one still folds across its own yearly forms. */
+    expect(schoolsLikelySame("WESTMOORE (Girls)", "Westmoore-Girls")).toBe(true)
+    expect(schoolsLikelySame("SOUTHMOORE", "Southmoore-Girls")).toBe(true)
+  })
+})
+
+describe('Iowa prints some schools as "School, City"', () => {
+  it("folds the city-suffixed form onto the school's other name", () => {
+    /* Eve Skrocki and Jillian Worthen would each have been minted twice. */
+    expect(schoolsLikelySame("Wahlert, Dubuque", "Wahlert Catholic")).toBe(true)
+    expect(schoolsLikelySame("Union, LaPorte City", "Union Community")).toBe(true)
+  })
+
+  it("is additive, so it never breaks a fold that worked on the full strings", () => {
+    /*
+     * Greta Brus's 2024 row is the bare string "Davenport" against her "Assumption, Davenport"
+     * key. Dropping the city would pit "Assumption" against "Davenport" and lose her; tried as an
+     * extra form instead, the full-string fold still carries her.
+     */
+    expect(schoolsLikelySame("Assumption, Davenport", "Davenport")).toBe(true)
+  })
+
+  it("still keeps two different schools apart when both carry a city", () => {
+    expect(schoolsLikelySame("Assumption, Davenport", "Wahlert, Dubuque")).toBe(false)
+    expect(schoolsLikelySame("Union, LaPorte City", "Wahlert Catholic")).toBe(false)
+  })
+
+  it("keeps Iowa's proven namesakes apart", () => {
+    /* Ben Walsh of Sergeant Bluff-Luton and Benjamin Walsh of Ankeny placed in the SAME
+       tournaments in consecutive years - two wrestlers who both resolve to the class of 2026. */
+    expect(schoolsLikelySame("Sergeant Bluff-Luton", "Ankeny")).toBe(false)
+  })
+})
+
+describe("a wrestler whose brackets print two forms of his own first name", () => {
+  it("is deliberately NOT folded by the strict same-person test", () => {
+    /*
+     * Charlie and Charles at two DIFFERENT schools may well be two people, and this function also
+     * decides namesakes - so it stays strict. The fold belongs where the school and class year
+     * are already known to agree, which is the mint (scripts/mint-state-placer-profiles.ts).
+     */
+    expect(namesReferToSamePerson("Charlie Robinson", "Charles Robinson")).toBe(false)
+    expect(namesReferToSamePerson("Jake Smith", "Jacob Smith")).toBe(false)
+  })
+
+  it("but the equivalence the mint folds on is in the list", () => {
+    const group = (n: string) =>
+      ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS.find((g) => g.map((x) => x.toLowerCase()).includes(n))
+    expect(group("charlie")).toEqual(group("charles"))
+    expect(group("jake")).toEqual(group("jacob"))
+    /* Two names that are not forms of one another must not share a group. */
+    expect(group("charlie")).not.toEqual(group("james"))
   })
 })

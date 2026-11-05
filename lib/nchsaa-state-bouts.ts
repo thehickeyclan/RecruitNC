@@ -98,6 +98,16 @@ export function extractNchsaaStateBouts(rows: MatchHistoryRow[]): NchsaaStateBou
   return [...found.values()].sort((a, b) => b.year - a.year || String(a.date).localeCompare(String(b.date)))
 }
 
+/**
+ * A high school state championship's event key: the association, "-states-", the year
+ * ("vhsl-states-2026"). Not USA Wrestling's state events ("nc-usaw-states-2026-16u-boys-fs"),
+ * which carry a division after the year, nor "united-states-…".
+ */
+export function isHighSchoolStateEventKey(key: unknown): boolean {
+  const k = String(key ?? "")
+  return /^[a-z]+(?:-[a-z]+)*-states-\d{4}$/.test(k) && !/usaw|^united-/.test(k)
+}
+
 export async function getNchsaaStateBoutsForAthlete(
   supabase: SupabaseClient,
   athleteId: string,
@@ -107,9 +117,11 @@ export async function getNchsaaStateBoutsForAthlete(
     supabase.from("matches").select("season,matches").eq("athlete_id", athleteId),
     supabase
       .from("other_tournament_bouts")
-      .select("year,event_date,weight_class,round,bout_order,opponent_name,opponent_club,win,win_type,score")
+      .select("event_key,year,event_date,weight_class,round,bout_order,opponent_name,opponent_club,win,win_type,score")
       .eq("athlete_id", athleteId)
-      .like("event_key", "nchsaa-states-%")
+      // Every state's high school championship ("vhsl-states-2026", "schsl-states-2025"), not only
+      // North Carolina's: a Virginia champion's state card had no bouts (Reza Massjouni, 3 Nov 2026).
+      .like("event_key", "%-states-%")
       .order("year", { ascending: false })
       .order("bout_order", { ascending: true }),
   ])
@@ -119,7 +131,8 @@ export async function getNchsaaStateBoutsForAthlete(
     : extractNchsaaStateBouts(historyResponse.data)
   if (csvResponse.error || !csvResponse.data?.length) return history
 
-  const authoritative = csvResponse.data.flatMap((row): NchsaaStateBout[] => {
+  const stateRows = csvResponse.data.filter((row) => isHighSchoolStateEventKey((row as { event_key?: string }).event_key))
+  const authoritative = stateRows.flatMap((row): NchsaaStateBout[] => {
     const opponent = String(row.opponent_name ?? "").trim()
     const year = Number(row.year)
     if (!opponent || !Number.isFinite(year)) return []

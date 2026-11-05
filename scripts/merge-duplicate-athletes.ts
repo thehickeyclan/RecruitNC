@@ -30,6 +30,17 @@ if (!url || !key) {
 const admin = createClient(url, key, { auth: { persistSession: false } })
 const emitSql = process.argv.includes("--sql")
 const write = process.argv.includes("--write")
+/**
+ * `--only <id>` merges just the one group that id belongs to, survivor or duplicate. The planner
+ * reads the whole database and finds every group at once, but a merge deletes a profile, and the
+ * groups are not equally safe: one of them discards a claimed, verified profile with matches on
+ * it. So they are applied one at a time, deliberately, rather than in a batch that is as risky as
+ * its worst member.
+ */
+const only = (() => {
+  const i = process.argv.indexOf("--only")
+  return i >= 0 ? String(process.argv[i + 1] ?? "").trim() : null
+})()
 
 /** Every column in the database that points at an athlete, read from the live schema. */
 async function athleteReferences(): Promise<Array<{ table: string; column: string }>> {
@@ -285,6 +296,23 @@ async function main() {
     console.log()
   }
 
+  if (only) {
+    const picked = plan.filter((g) => g.keepId === only || g.drops.some((d) => d.id === only))
+    if (!picked.length) {
+      console.error(`--only ${only}: no group holds that profile. Run without --only to list them.`)
+      process.exit(1)
+    }
+    if (picked.length > 1) {
+      console.error(`--only ${only}: that id is in ${picked.length} groups, which should be impossible. Nothing applied.`)
+      process.exit(1)
+    }
+    console.log(`--only ${only}: ${picked[0]!.label}, keeping ${picked[0]!.keepId}, dropping ${picked[0]!.drops.map((d) => d.id).join(", ")}`)
+    if (!write) {
+      console.log("Add --write to apply just this group.")
+      return
+    }
+    return apply(picked, refs)
+  }
   if (write) return apply(plan, refs)
   if (!emitSql) {
     console.log("Re-run with --sql to print the SQL, or --write to apply it here.")

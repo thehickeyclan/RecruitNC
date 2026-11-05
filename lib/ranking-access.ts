@@ -10,6 +10,7 @@
  * One resolver means a new surface cannot accidentally ship a weaker check than the last one.
  */
 
+import { hasBusinessGrant } from "@/lib/business/access"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { normalizeRole } from "./viewer-role"
 import type { RankingViewer } from "./ranking-visibility"
@@ -103,19 +104,27 @@ export async function resolveRankingViewerForUser(options: {
    * `isWiqCurrent` keeps a cancelled subscription inside its paid window, for the same reason
    * `past_due` entitles on the Stripe side: they have paid for those days.
    */
-  let isBlueViaAthlete = false
-  let isWiqBlue = false
-  if (!isBlueFromStripe(memberships)) {
+  // The wrestlers this account owns or is a linked parent of, read once and shared below.
+  let familyIds: string[] | null = null
+  const familyAthleteIds = async (): Promise<string[]> => {
+    if (familyIds) return familyIds
     const [{ data: links }, { data: claimed }] = await Promise.all([
       admin.from("parent_athlete_links").select("athlete_id").eq("user_id", user.id),
       admin.from("athletes").select("id").eq("claimed_by_user_id", user.id),
     ])
-    const athleteIds = [
+    familyIds = [
       ...new Set([
         ...(links ?? []).map((l) => String(l.athlete_id)).filter(Boolean),
         ...(claimed ?? []).map((c) => String(c.id)).filter(Boolean),
       ]),
     ]
+    return familyIds
+  }
+
+  let isBlueViaAthlete = false
+  let isWiqBlue = false
+  if (!isBlueFromStripe(memberships)) {
+    const athleteIds = await familyAthleteIds()
     if (athleteIds.length > 0) {
       /*
        * A Blue membership belongs to the wrestler, not only to the card.
@@ -140,6 +149,41 @@ export async function resolveRankingViewerForUser(options: {
     }
   }
 
+
+  /*
+   * Insider and the Command Center belong to the family too, the same as Blue (Matt, 5 Nov 2026:
+   * "when a family signs up, their athlete and parent should have access"). They were read by
+   * user_id alone, so a parent's subscription left the wrestler's own account locked out (seven
+   * accounts that day). A subscription now also counts for
+   * every other account that owns or is a linked parent of the same wrestler.
+   */
+  let familySubscription: { status?: string | null; current_period_end?: string | null; plan?: string | null } | null = null
+  const ownLive = isSubscriptionLive(subscription ?? null)
+  const ownCommandCenter = ownLive ? (await subscriptionTier(admin, user.id)) === "command_center" : false
+  if (!ownCommandCenter) {
+    const athleteIds = await familyAthleteIds()
+    if (athleteIds.length > 0) {
+      const [{ data: parents }, { data: owners }] = await Promise.all([
+        admin.from("parent_athlete_links").select("user_id").in("athlete_id", athleteIds),
+        admin.from("athletes").select("claimed_by_user_id").in("id", athleteIds),
+      ])
+      const others = [
+        ...new Set(
+          [...(parents ?? []).map((p) => p.user_id), ...(owners ?? []).map((o) => o.claimed_by_user_id)]
+            .filter((id): id is string => Boolean(id) && id !== user.id),
+        ),
+      ]
+      if (others.length > 0) {
+        const { data: rows } = await admin
+          .from("recruitnc_subscriptions")
+          .select("status, current_period_end, plan")
+          .in("user_id", others)
+        const live = (rows ?? []).filter((r) => isSubscriptionLive(r as never))
+        familySubscription = live.find((r) => (r as { plan?: string }).plan === "command_center") ?? live[0] ?? null
+      }
+    }
+  }
+
   let isOwnProfile = false
   if (options.athleteId) {
     const { data: owned } = await admin
@@ -158,9 +202,10 @@ export async function resolveRankingViewerForUser(options: {
       isVerifiedCoach: profile?.verified_coach === true,
       role: profile?.role ?? null,
       isBlueMember: isBlueFromStripe(memberships) || isBlueViaAthlete || isWiqBlue,
-      hasSubscription: isSubscriptionLive(subscription ?? null),
-      hasCommandCenter: isSubscriptionLive(subscription ?? null) ? await subscriptionTier(admin, user.id).then((t) => t === "command_center") : false,
+      hasSubscription: ownLive || familySubscription !== null,
+      hasCommandCenter: ownCommandCenter || familySubscription?.plan === "command_center",
       isOwnProfile,
+      isBusiness: await admin.auth.admin.getUserById(user.id).then((r) => hasBusinessGrant(r.data?.user?.app_metadata), () => false),
     },
   }
 }

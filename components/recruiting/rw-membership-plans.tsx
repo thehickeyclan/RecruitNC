@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { Check, Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entitlement"
+import { rankedStateCodes, type StatePlans } from "@/lib/recruiting/plans-for-state"
+import { stateName } from "@/lib/athlete-state"
 
 /**
  * RecruitWrestlers' two memberships, each with its own button (Matt, 15 and 22 Oct 2026: only
@@ -31,7 +33,7 @@ const PLANS: Array<{ kind: Kind; name: string; cents: number; lines: string[]; f
     kind: "command_center",
     name: "Recruiting Command Center",
     cents: SCOUTING_REPORT_PRICES.command_center,
-    lines: ["Everything in Insider", "Your plan, 8th grade to signing", "Every college: coaches, cost, roster", "Your college list, compare and coach messages", "Scout, your recruiting assistant"],
+    lines: ["Which colleges view your profile, and when", "Everything in Insider where we rank", "Your plan, 8th grade to signing", "Every college: coaches, cost, roster", "Your college list, compare and coach messages", "Scout, your recruiting assistant"],
     featured: true,
   },
 ]
@@ -42,7 +44,7 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
   const [yearly, setYearly] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [purchased, setPurchased] = useState(false)
-  const [status, setStatus] = useState<{ insider: boolean; commandCenter: boolean; via: string | null; email: string | null } | null>(null)
+  const [status, setStatus] = useState<{ insider: boolean; commandCenter: boolean; via: string | null; email: string | null; plans?: StatePlans } | null>(null)
 
   // Say what the account already has before anyone clicks: a refusal after the click read as a dead button.
   useEffect(() => {
@@ -52,7 +54,16 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
       .then((s) => s && setStatus(s))
       .catch(() => {})
   }, [user])
+  /*
+   * Insider is the rankings, and we rank only some states (lib/recruiting/plans-for-state.ts): a
+   * family in any other state is sold the Command Center alone, and told why.
+   */
+  const ranked = rankedStateCodes()
+  const rankedNames = ranked.map((c) => stateName(c) || c).join(" and ")
+  const familyState = status?.plans?.state ?? null
+  const insiderOffered = status?.plans ? status.plans.insider : true
   const has = (kind: Kind) => (kind === "command_center" ? status?.commandCenter : status?.insider) === true
+  const plans = PLANS.filter((p) => p.kind !== "subscription" || insiderOffered || has("subscription"))
   const viaText =
     status?.via === "staff" ? "as staff" : status?.via === "blue" ? "through NC United Blue" : status?.via === "coach" ? "as a college coach" : "with your membership"
 
@@ -135,7 +146,13 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
           ))}
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
+      {familyState && !insiderOffered ? (
+        <p className="mb-5 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-center text-sm text-[#D6DEEA]">
+          Rankings cover {rankedNames} wrestlers. For {stateName(familyState) || familyState}, the Recruiting Command Center is the
+          plan: it shows which colleges view the profile, with the whole recruiting plan.
+        </p>
+      ) : null}
+      <div className={`grid gap-4 ${plans.length === 2 ? "md:grid-cols-3" : "md:grid-cols-2 md:mx-auto md:max-w-3xl"}`}>
         {/* Free first (Matt, 22 Oct 2026): the profile, claiming it and coach messages cost nothing. */}
         <div className="flex flex-col rounded-2xl border border-white/10 bg-[#15243B]/40 p-6 text-left">
           <p className="text-sm font-black uppercase tracking-wider text-white">Free</p>
@@ -156,13 +173,14 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
             {user ? "Claim your profile" : "Create free account"}
           </a>
         </div>
-        {PLANS.map((plan) => (
+        {plans.map((plan) => (
           <div
             key={plan.kind}
             id={plan.kind === "subscription" ? "insider" : "command-center"}
             className={`flex flex-col rounded-2xl border p-6 text-left ${plan.featured ? "border-2 border-[#A3E635] bg-[#15243B]" : "border-white/10 bg-[#15243B]/60"}`}
           >
             <p className={`text-sm font-black uppercase tracking-wider ${plan.featured ? "text-[#A3E635]" : "text-white"}`}>{plan.name}</p>
+            {plan.kind === "subscription" ? <p className="mt-0.5 text-xs font-semibold text-[#A8B3C5]">For {rankedNames} wrestlers</p> : null}
             <p className="mt-2 text-4xl font-black text-white">
               {formatPrice(yearly ? ANNUAL[plan.kind].cents : plan.cents)}
               <span className="text-base font-semibold text-[#A8B3C5]"> / {yearly ? "year" : "month"}</span>

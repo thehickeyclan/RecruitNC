@@ -8,9 +8,11 @@
  */
 import type { Metadata } from "next"
 import Image from "next/image"
-import { ArrowLeftRight, ArrowRight, FileText, Map as MapIcon, Star, Target, TrendingUp, UserRound } from "lucide-react"
+import { ArrowRight, Eye, Map as MapIcon, MessageSquare, Search, ShieldCheck } from "lucide-react"
 import { RwLogo } from "@/components/recruiting/rw-mark"
-import { NATIONAL_BRAND, RECRUITING_BRAND } from "@/lib/recruiting/brand"
+import { NATIONAL_BRAND, RECRUITING_BRAND, liveStates } from "@/lib/recruiting/brand"
+import { inStates } from "@/lib/recruiting/states"
+import { currentClassYears } from "@/lib/class-years"
 import { loadPlatformStats } from "@/lib/platform-stats"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
@@ -21,9 +23,9 @@ import { NationalHeader } from "@/components/recruiting/national-frame"
 
 export const revalidate = 3600
 
-const SHARE_TITLE = "RecruitWrestlers | College wrestling recruiting, built on verified results"
+const SHARE_TITLE = "RecruitWrestlers | The college recruiting platform for high school wrestlers"
 const SHARE_DESCRIPTION =
-  "The recruiting platform where college wrestling coaches and families meet: verified results, a Command Center for families, and a free recruiting portal for college coaches."
+  "One platform for families and coaches. High school wrestlers get a recruiting plan, a college list and see which programs are watching; college coaches find, evaluate and reach recruits, free."
 
 /*
  * Every field the site-wide metadata sets (app/layout.tsx) is replaced here. Left alone, a link to
@@ -44,7 +46,7 @@ export const metadata: Metadata = {
     url: "/",
     siteName: NATIONAL_BRAND.name,
     type: "website",
-    images: [{ url: "/recruitwrestlers/share.jpg", width: 1200, height: 630, alt: "RecruitWrestlers: get recruited on verified results" }],
+    images: [{ url: "/recruitwrestlers/share.jpg", width: 1200, height: 630, alt: "RecruitWrestlers: the college recruiting platform for high school wrestlers" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -68,17 +70,30 @@ const BTN = "inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.
 const PRIMARY = `${BTN} bg-[#A3E635] text-[#0B1426] hover:bg-[#BEF264]`
 const OUTLINE = `${BTN} border-2 border-[#A3E635] text-[#A3E635] hover:bg-[#A3E635]/10`
 
-const COACH_TOOLS = [
-  { icon: FileText, title: "Scouting reports", body: "One page per athlete: evaluation, academics, best wins. PDF-ready." },
-  { icon: ArrowLeftRight, title: "Compare wrestlers", body: "Head to head, common opponents, best wins, national results, and our read." },
-  { icon: TrendingUp, title: "Prospect rankings", body: "Every published class, ranked on results." },
-  { icon: UserRound, title: "Full athlete profiles", body: "Results, academics, contact details and film." },
-  { icon: Star, title: "My Recruits", body: "A watch list your whole staff shares, with who's gone quiet." },
-  { icon: Target, title: "Your perfect recruit", body: "Set your needs once; every comparison reads against them." },
-]
-
 export default async function RecruitWrestlersHome() {
-  const platform = await loadPlatformStats(createAdminClient()).catch(() => null)
+  const admin = createAdminClient()
+  const [platform, profileCount] = await Promise.all([
+    loadPlatformStats(admin).catch(() => null),
+    // Wrestlers with a profile in the open states and current classes, counted, never typed.
+    (async () => {
+      const { count } = await inStates(
+        admin.from("athletes").select("id", { count: "exact", head: true }).in("graduationyear", currentClassYears()),
+        liveStates(true).map((st) => st.code),
+      )
+      return count ?? null
+    })().catch(() => null),
+  ])
+  const fmt = (n: number | null | undefined) => (n && n > 0 ? n.toLocaleString() : null)
+  /*
+   * The loop the page exists to explain (Matt, 2 Nov 2026: the page read as two product brochures,
+   * one per audience, and never said what problem it solves). Each step names who does it.
+   */
+  const loop = [
+    { icon: ShieldCheck, n: fmt(profileCount), unit: "verified profiles", title: "Every state placer has a profile", body: "Built from state and national tournament results, before anyone signs up." },
+    { icon: Search, n: fmt(platform?.coaches), unit: "college coaches", title: "Coaches search, star and follow", body: "On the same profiles your family claims and keeps up to date." },
+    { icon: Eye, n: fmt(platform?.coachViews), unit: "coach profile views", title: "Families see who's looking", body: "When a college program views your wrestler, you know, and you reach out to the right ones." },
+    { icon: MessageSquare, n: null, unit: null, title: "Coaches message families directly", body: "Approved college coaches only, and parents see every message." },
+  ]
   // A picture of the college map, not the live map: the front page stays fast.
   const mapPreview = (() => {
     try {
@@ -89,8 +104,9 @@ export default async function RecruitWrestlersHome() {
   })()
   const proof = [
     { n: mapPreview?.dots.length ?? null, label: "colleges on the map" },
-    { n: platform?.coaches ?? null, label: "college coaches on it" },
+    // Coaches are counted in the band above; here, what they have done (Matt, 2 Nov 2026).
     { n: platform?.programs ?? null, label: "college programs" },
+    { n: platform?.profilesViewed ?? null, label: "wrestlers viewed by coaches" },
   ].filter((t) => t.n != null && t.n > 0)
 
   return (
@@ -117,8 +133,8 @@ export default async function RecruitWrestlersHome() {
               Where wrestlers get <span className="text-[#A3E635]">recruited.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/80">
-              Verified results, rankings and commitments in one place, built for the college coaches looking and the families
-              who want to be found.
+              One platform for families and coaches. Families know who is watching and what to do next; coaches find,
+              evaluate and reach their next recruits.
             </p>
             <div className="mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
               {/* Families first, with the search right here (Matt, 1 Nov 2026): on a phone the coaches'
@@ -159,6 +175,47 @@ export default async function RecruitWrestlersHome() {
               </a>
               <a href="/recruiting/learn" className="text-white/70 hover:text-[#A3E635]">How recruiting works <ArrowRight className="inline h-3.5 w-3.5" /></a>
             </div>
+          </div>
+        </section>
+
+        {/* The problem, then the loop (Matt, 2 Nov 2026): recruiting done in the dark on both sides, and the one place both sides meet. */}
+        <section className="border-b border-white/10 bg-[#0E1A30]">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="max-w-3xl text-3xl font-black leading-tight tracking-tight sm:text-4xl">
+              Recruiting shouldn&apos;t happen <span className="text-[#A3E635]">in the dark.</span>
+            </h2>
+            <div className="mt-7 grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-white/50">Families today</p>
+                <p className="mt-2 text-base leading-relaxed text-white/80">
+                  Guess which colleges fit, email coaches who may never open it, and wait for a call with no idea who&apos;s looking.
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-white/50">College coaches today</p>
+                <p className="mt-2 text-base leading-relaxed text-white/80">
+                  Piece together results from a dozen sites, can&apos;t check what&apos;s real, and miss wrestlers outside their circle.
+                </p>
+              </div>
+            </div>
+            <p className="mt-10 text-xs font-bold uppercase tracking-[0.2em] text-[#A3E635]">On RecruitWrestlers, both sides are in the same place</p>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {/* No step numbers: beside the stats, a "4" on the card with no stat read as four messages (Matt, 5 Nov 2026). */}
+              {loop.map(({ icon: Icon, n, unit, title, body }) => (
+                <li key={title} className="relative rounded-xl border border-[#A3E635]/25 bg-[#15243B] p-5">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#A3E635]/15">
+                    <Icon className="h-5 w-5 text-[#A3E635]" aria-hidden />
+                  </span>
+                  {n ? (
+                    <p className="mt-4 text-3xl font-black tabular-nums">
+                      {n} <span className="block text-xs font-semibold uppercase tracking-wide text-white/50">{unit}</span>
+                    </p>
+                  ) : null}
+                  <p className={`${n ? "mt-3" : "mt-4"} font-bold`}>{title}</p>
+                  <p className="mt-1 text-sm leading-snug text-white/60">{body}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
@@ -239,37 +296,21 @@ export default async function RecruitWrestlersHome() {
           </section>
         </div>
 
-        {/* Built for college coaches: every tool a coach gets. */}
-        <section className="border-y border-[#A3E635]/25 bg-gradient-to-b from-[#15243B] to-[#0B1426]">
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+        {/* College coaches: one card on the families' front door, the full tool list on /for-coaches (Matt, 2 Nov 2026). */}
+        <section className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="flex flex-col gap-5 rounded-2xl border border-[#A3E635]/30 bg-gradient-to-br from-[#15243B] to-[#0B1426] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div>
-              <div>
-                <p className="inline-flex items-center gap-2 rounded-full border border-[#A3E635]/50 bg-[#A3E635]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">
-                  Free for college coaches
-                </p>
-                <h2 className="mt-3 text-3xl font-extrabold leading-tight sm:text-4xl">Built for college coaches</h2>
-                <p className="mt-3 text-base leading-relaxed text-white/70 sm:text-lg">
-                  A complete, objective look at the wrestlers you recruit, from first look to the staff meeting.
-                </p>
-                <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {COACH_TOOLS.map(({ icon: Icon, title, body }) => (
-                    <div key={title} className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                      <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#A3E635]" aria-hidden />
-                      <div>
-                        <p className="font-bold">{title}</p>
-                        <p className="mt-0.5 text-sm leading-snug text-white/60">{body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
-                  <a href="/auth/signup?type=college-coach" className="inline-flex items-center gap-2 rounded-xl bg-[#A3E635] px-8 py-4 text-base font-extrabold text-[#0B1426] hover:bg-[#BEF264] sm:text-lg">
-                    College coaches: get free access <ArrowRight className="h-5 w-5" />
-                  </a>
-                  <a href="/compare" className="text-sm font-semibold text-white/70 hover:text-white">See the comparison tool</a>
-                </div>
-                <p className="mt-3 text-center text-xs text-white/45 sm:text-left">Name, email, cell and college. Access is immediate.</p>
-              </div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#A3E635]">Free for college coaches</p>
+              <h2 className="mt-2 text-2xl font-extrabold">Find your next recruits.</h2>
+              <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-white/65">
+                Scouting reports, side-by-side comparisons, rankings and a shared watch list for your staff. Access is immediate.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+              <a href="/auth/signup?type=college-coach" className={`${PRIMARY} px-6 py-3`}>
+                Get free access <ArrowRight className="h-4 w-4" />
+              </a>
+              <a href="/for-coaches" className="text-sm font-semibold text-white/70 hover:text-white">See every coach tool →</a>
             </div>
           </div>
         </section>
@@ -278,7 +319,7 @@ export default async function RecruitWrestlersHome() {
         <section id="states" className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A3E635]">State by state</p>
           <h2 className="mt-2 text-3xl font-extrabold">Opening one state at a time, done right.</h2>
-          <p className="mt-2 max-w-2xl text-white/65">Every state placer gets a profile before a state opens, built from verified results.</p>
+          <p className="mt-2 max-w-2xl text-white/65">Every state placer has a profile waiting before a state opens.</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {RECRUITING_BRAND.states.map((s) => (
               <a

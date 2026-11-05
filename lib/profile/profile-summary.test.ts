@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { stateName } from "@/lib/athlete-state"
 import { accoladePhrases, accoladesFrom, offSeasonEvents, sentenceText, summarySentences, type SummaryRow } from "./profile-summary"
 
 const NOW = new Date("2026-10-11T12:00:00Z")
@@ -127,4 +128,72 @@ describe("a or an before an association", () => {
     const s = summarySentences({ name: "Audrey Naughten", gender: "Female", school: "Rock Hill", accolades: accoladesFrom({ stateRows: [{ event: "SCHSL State", placement: "Champion" }], tournamentRows: [] } as never), scope: "in-state", stateName: "South Carolina", styles: ["folkstyle"], offSeasonEvents: 0 })
     expect(s.map(sentenceText).join(" ")).toContain("an SCHSL state champion who competes in South Carolina")
   })
+})
+
+describe("state association by the wrestler's state", () => {
+  const champ = (event: string) => ({ event, year: 2026, placement: "Champion", bouts: [] }) as unknown as SummaryRow
+
+  it("names Virginia's association, not North Carolina's", () => {
+    const a = accoladesFrom({ stateRows: [champ("2026 VA State Championships 3")], tournamentRows: [], state: "VA" })
+    expect(accoladePhrases(a)).toContain("VHSL state champion")
+    expect(accoladePhrases(a).join(" ")).not.toMatch(/NCHSAA/)
+  })
+
+  it("names an independent-schools title by its own association", () => {
+    const a = accoladesFrom({ stateRows: [champ("2026 VISAA State Championships")], tournamentRows: [], state: "VA" })
+    expect(accoladePhrases(a)).toContain("VISAA state champion")
+  })
+
+  it("keeps NCHSAA for North Carolina", () => {
+    const a = accoladesFrom({ stateRows: [champ("2026 NCHSAA 3A State Championships")], tournamentRows: [], state: "NC" })
+    expect(accoladePhrases(a)).toContain("NCHSAA 3A state champion")
+  })
+})
+
+describe("a wrestler's state names his own championship", () => {
+  const titleRow = (event: string): SummaryRow => row(event, 2026, "1st")
+  it("does not call a Virginia champion an NCHSAA one", () => {
+    /*
+     * Virginia's rows read "Virginia 3A State Championships" and name no association, so the
+     * parsed value is null. It used to fall back to NCHSAA, which told Paden Alyea - a two-time
+     * VHSL champion from Skyline - that he had won a North Carolina title, on RecruitWrestlers.
+     */
+    const a = accoladesFrom({ stateRows: [titleRow("Virginia 3A State Championships"), row("Virginia 3A State Championships", 2025, "1st")], tournamentRows: [] })
+    expect(accoladePhrases(a, "VA")).toEqual(["two-time VHSL 3A state champion"])
+    expect(accoladePhrases(a, "NC")).toEqual(["two-time NCHSAA 3A state champion"])
+  })
+
+  it("names each state's own body", () => {
+    const a = accoladesFrom({ stateRows: [titleRow("Pennsylvania AAA State Championships")], tournamentRows: [] })
+    expect(accoladePhrases(a, "PA")[0]).toBe("PIAA state champion")
+    expect(accoladePhrases(a, "TX")[0]).toBe("UIL state champion")
+    expect(accoladePhrases(a, "MI")[0]).toBe("MHSAA state champion")
+  })
+
+  it("names the state itself where we hold no association", () => {
+    /*
+     * This line has broken three times on branches that changed nothing about the rule - it named
+     * Texas, then Oklahoma, then Michigan, and each got registered as the import chain reached it.
+     * So it no longer names one: it finds a state we genuinely hold no association for, and fails
+     * only when every candidate has been registered, which is a real signal rather than a stale
+     * fixture.
+     */
+    const a = accoladesFrom({ stateRows: [titleRow("Pennsylvania AAA State Championships")], tournamentRows: [] })
+    const candidates = ["WY", "ND", "SD", "MT", "AK", "HI", "NV", "NM"]
+    const held = candidates.find((c) => accoladePhrases(a, c)[0] === `${stateName(c)} state champion`)
+    expect(held, `all of ${candidates.join(", ")} now carry an association - choose new candidates`).toBeDefined()
+    expect(accoladePhrases(a, held!)[0]).toBe(`${stateName(held!)} state champion`)
+  })
+
+  it("lets an association the event named beat the state code", () => {
+    /* The event naming it is the strongest evidence there is; a disagreeing code does not win. */
+    const a = accoladesFrom({ stateRows: [titleRow("SCISA 3A State Championships")], tournamentRows: [] })
+    expect(accoladePhrases(a, "SC")[0]).toBe("SCISA 3A state champion")
+    expect(accoladePhrases(a, "NC")[0]).toBe("SCISA 3A state champion")
+  })
+
+  it("still says NCHSAA for North Carolina", () => {
+    const a = accoladesFrom({ stateRows: [titleRow("NCHSAA 4A State Championships")], tournamentRows: [] })
+    expect(accoladePhrases(a, "NC")[0]).toBe("NCHSAA 4A state champion")
+    expect(accoladePhrases(a)[0]).toBe("NCHSAA 4A state champion")  })
 })

@@ -204,3 +204,36 @@ describe("an event the state does not sanction", () => {
     expect(rows[0]!.event).toBe("WVSSAC Division 1 State Championships")
   })
 })
+
+describe("buildTournamentRows: one row per event", () => {
+  const result = (patch: Record<string, unknown>) =>
+    ({
+      result: { eventKey: "journeymen-fall-classic-2026", eventName: "2026 Journeymen Fall Classic", eventShortName: "Journeymen Fall Classic", eventState: null, eventDate: "2026-10-03", year: 2026, weight: "130B", wins: 2, losses: 1, record: "2-1", placement: null, qualified: false, entrants: 6, club: null, ...patch },
+      bouts: [],
+      strengthOfWins: [],
+      notableWins: [],
+    }) as never
+  const bout = (patch: Record<string, unknown>) =>
+    ({ eventKey: "journeymen-fall-classic-2026", eventName: "2026 Journeymen Fall Classic", year: 2026, weight: "130B", round: "R1", boutOrder: 1, opponentName: "A", opponentClub: null, opponentAthleteId: null, win: true, isBye: false, winType: "DEC", score: "", team: "national", ...patch }) as never
+
+  it("does not print an event again from its bouts when a result row already prints it (Kade Mustin's Journeymen)", () => {
+    const rows = buildTournamentRows({ otherTournamentBlocks: [result({})], attachedEventBouts: [bout({}), bout({ win: false })] })
+    expect(rows.filter((r) => /journeymen/i.test(r.event))).toHaveLength(1)
+  })
+
+  it("prints a family-entered Fargo once, as the bracket's row, keeping the family's placement", () => {
+    const submitted = result({ eventKey: "submitted-16u-fargo-nationals-greco-2026", eventName: "16u Fargo Nationals Greco", eventDate: "2026-07-14", weight: "132", placement: 12, record: "4-2", entrants: null })
+    const rows = buildTournamentRows({
+      otherTournamentBlocks: [submitted],
+      attachedEventBouts: [bout({ eventKey: "fargo-2026-16u-gr", eventName: "2026 Fargo 16U Greco-Roman", weight: "132" })],
+    })
+    const fargo = rows.filter((r) => /fargo/i.test(r.event))
+    expect(fargo).toHaveLength(1)
+    expect(fargo[0]).toMatchObject({ event: "Fargo · Greco-Roman", placement: "12th" })
+  })
+
+  it("keeps a family-entered event we hold no bracket for", () => {
+    const rows = buildTournamentRows({ otherTournamentBlocks: [result({ eventKey: "submitted-ironman-2026", eventName: "Ironman", weight: "132" })] })
+    expect(rows).toHaveLength(1)
+  })
+})

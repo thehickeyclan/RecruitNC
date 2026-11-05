@@ -10,6 +10,7 @@ import { FindExistingStep, type ExistingMatch } from "@/components/profile-wizar
 import { RevealStep } from "@/components/profile-wizard/reveal-step"
 import { ClaimDetails, ClaimExplainer } from "@/components/profile-wizard/claim-explainer"
 import { WhoStep, type Who } from "@/components/profile-wizard/who-step"
+import { trackClaimStarted } from "@/lib/track-claim-started"
 
 /**
  * Creating a profile starts by looking for the one that already exists.
@@ -19,6 +20,11 @@ import { WhoStep, type Who } from "@/components/profile-wizard/who-step"
  * something they do not know is there, and skipping the search is how one boy became both Jacob
  * McCord and Jake McCord.
  */
+const sameName = (a?: string | null, b?: string | null) => {
+  const n = (x?: string | null) => String(x ?? "").toLowerCase().replace(/[^a-z]/g, "")
+  return Boolean(n(a)) && n(a) === n(b)
+}
+
 export default function CreateProfilePage() {
   const { user, profile, isLoading } = useAuth()
   const router = useRouter()
@@ -42,6 +48,7 @@ export default function CreateProfilePage() {
   const knownWho: Who | null = who ?? (role === "parent" ? "parent" : role === "athlete" ? "self" : null)
   const [typedName, setTypedName] = useState("")
   const [matchedId, setMatchedId] = useState<string | null>(null)
+  const [found, setFound] = useState<number | null>(null)
 
   /*
    * Just verified with no wrestler yet (?find=): the search opens already looking for that name.
@@ -100,6 +107,7 @@ export default function CreateProfilePage() {
         <FindExistingStep
           who={knownWho ?? "self"}
           initialName={findName}
+          onResults={setFound}
           onClaim={(match: ExistingMatch) => {
             setMatchedId(match.id)
             setStep("reveal")
@@ -109,7 +117,7 @@ export default function CreateProfilePage() {
             setStep("create")
           }}
         />
-        <ClaimDetails />
+        <ClaimDetails showExample={!found} />
       </div>
     )
   }
@@ -127,6 +135,7 @@ export default function CreateProfilePage() {
              * to find a second button. The confirmation link brings them back to the claim box.
              */
             const as = knownWho ?? "self"
+            trackClaimStarted(reveal.athleteId, "find")
             const claimAt = `/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1&as=${as}`
             router.push(user ? claimAt : `/auth/signup?type=${as === "parent" ? "parent" : "athlete"}&for=${encodeURIComponent(reveal.name)}&returnTo=${encodeURIComponent(claimAt)}`)
           }}
@@ -173,7 +182,12 @@ export default function CreateProfilePage() {
 
   return (
     <AuthGuard>
-      <CreateProfileForm accountEmail={user.email ?? ""} initialName={typedName} />
+      <CreateProfileForm
+        accountEmail={user.email ?? ""}
+        forParent={knownWho === "parent"}
+        // A parent who searched their own name (Gladys Palomino Azurza, 2 Nov 2026) is not the wrestler.
+        initialName={knownWho === "parent" && sameName(typedName, profile?.full_name) ? "" : typedName}
+      />
     </AuthGuard>
   )
 }

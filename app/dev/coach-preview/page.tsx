@@ -3,6 +3,8 @@
  *
  * /dev/coach-preview?coach=coachgarland@virginia.edu
  * /dev/coach-preview?coach=...&gender=Female   the same coach on the women's side, without touching the account
+ * /dev/coach-preview?coach=...&page=my-recruits   My Recruits instead, the board loaded here
+ * /dev/coach-preview?coach=...&page=recently-claimed   the full Recently claimed list
  *
  * Built the morning Virginia's head coach was greeted with Ohio University's logo and nobody
  * could say what he had seen, because seeing it took his password. This runs the same load the
@@ -15,11 +17,17 @@
 import { notFound } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import CoachHomeClient from "@/app/coach-home/coach-home-client"
+import { MyRecruitsHome } from "@/components/coach/my-recruits-home"
 import { loadCoachHome } from "@/app/coach-home/load-coach-home"
+import { RecentlyClaimedList } from "@/components/coach/recently-claimed"
+import { coachInterestScope } from "@/lib/college-programs/interested-for-coach"
+import { loadJustClaimed } from "@/lib/college-programs/just-claimed-for-coach"
+import { loadMyRecruits } from "@/lib/my-recruits"
+import { resolveFitViewer } from "@/lib/program-fit-viewer"
 
 export const dynamic = "force-dynamic"
 
-export default async function CoachPreviewPage({ searchParams }: { searchParams: Promise<{ coach?: string; gender?: string }> }) {
+export default async function CoachPreviewPage({ searchParams }: { searchParams: Promise<{ coach?: string; gender?: string; page?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound()
 
   const params = await searchParams
@@ -35,5 +43,14 @@ export default async function CoachPreviewPage({ searchParams }: { searchParams:
   if (!profile) return <p style={{ padding: 24 }}>No account for {coach}</p>
 
   const loaded = await loadCoachHome(admin, String(profile.user_id), params.gender ?? null)
+  if (params.page === "my-recruits") {
+    const board = await loadMyRecruits(admin, String(profile.user_id)).catch(() => null)
+    return <MyRecruitsHome data={loaded.access === "ok" ? loaded.data : null} board={board ? { ...board, fit: {}, hasStandard: false } : null} />
+  }
+  if (params.page === "recently-claimed") {
+    const scope = await coachInterestScope(admin, String(profile.user_id))
+    const wrestlers = scope.allowed ? await loadJustClaimed(admin, scope.schoolId, scope.gender, new Set(), await resolveFitViewer(admin, String(profile.user_id)).catch(() => null), 200) : []
+    return <RecentlyClaimedList wrestlers={wrestlers} seenAt={null} hasStandard={false} />
+  }
   return <CoachHomeClient access={loaded.access} data={loaded.data} />
 }

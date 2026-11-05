@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { businessGrantFor } from "@/lib/business/view-as-coach"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { classifyViewer } from "@/lib/viewer-role"
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const viewer = classifyViewer(profile ?? null)
   const canAccess = canAccessScoutingReport({
     email: (profile?.email as string) ?? user.email,
-    isCollegeCoach: viewer.isCollegeCoach && viewer.verifiedCoach,
+    isCollegeCoach: (viewer.isCollegeCoach && viewer.verifiedCoach) || (await businessGrantFor(admin, user.id)),
     isAdmin: viewer.kind === "admin" || profile?.is_admin === true,
   })
 

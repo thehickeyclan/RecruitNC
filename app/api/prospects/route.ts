@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { isVisibleState, visibleStates } from "@/lib/recruiting/brand"
+import { isDirectoryState, visibleStates } from "@/lib/recruiting/brand"
 import { previewStatesForUser } from "@/lib/recruiting/state-preview"
 import { HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
@@ -44,14 +44,19 @@ export async function GET(request: NextRequest) {
         /* A coach invited to look at a state before it opens — see lib/recruiting/state-preview.ts. */
         if (!isAdmin) preview = await previewStatesForUser(supabase, auth.user.id)
       }
-      if (!allStates && !isVisibleState(state, isAdmin, onRw, preview)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
+      if (!allStates && !isDirectoryState(state, isAdmin, onRw, preview)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
     }
 
+    const nameQuery = String(searchParams.get("q") ?? "").trim().slice(0, 60)
     const minYear = minYearParam ? Number.parseInt(minYearParam, 10) : null
     const maxYear = maxYearParam ? Number.parseInt(maxYearParam, 10) : null
 
-    // A coach previewing a state before it opens gets it in the "ALL" list too, not only on its own.
-    const withStates = allStates ? visibleStates(isAdmin, onRw, preview).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
+    /*
+     * A coach previewing a state before it opens gets it in the "ALL" list too, not only on its own.
+     * An admin's "All states" is the live ones, as families see it (2 Nov 2026): it used to carry
+     * every unlaunched state as well, doubling the list; each of those is still one pick away.
+     */
+    const withStates = allStates ? visibleStates(false, onRw, preview).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
     const { prospects, hasMore } = await fetchProspectDirectoryPage(supabase, {
       graduationYear,
       gender,
@@ -61,6 +66,9 @@ export async function GET(request: NextRequest) {
       offset,
       state: allStates ? HOME_STATE : state,
       withStates,
+      withClaimedElsewhere: allStates && onRw,
+      // "Find a name anywhere" (prospects-all-client.tsx): RecruitWrestlers lists every state.
+      nameAnyState: allStates && onRw && nameQuery.length >= 3 ? nameQuery : null,
     })
 
     /*
@@ -99,7 +107,7 @@ export async function GET(request: NextRequest) {
       {
         headers: {
           // A state still being checked is answered per person, never from a shared cache.
-          "Cache-Control": isVisibleState(state, false, onRw) ? "public, s-maxage=120, stale-while-revalidate=300" : "private, no-store",
+          "Cache-Control": isDirectoryState(state, false, onRw) ? "public, s-maxage=120, stale-while-revalidate=300" : "private, no-store",
           "Content-Type": "application/json",
         },
       },

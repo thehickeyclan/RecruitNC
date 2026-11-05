@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { inSeasonBoutsOnly } from "@/lib/out-of-season-bouts"
-import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
+import { highSchoolBouts, isVarsitySeason } from "@/lib/high-school-window"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -69,7 +69,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!results || results.length === 0) {
       const { data: athlete, error: athleteError } = await supabase
         .from("athletes")
-        .select("id, name, firstName, lastName, firstname, lastname")
+        /*
+         * Only the columns that exist. `athletes` has firstName/lastName in camelCase and no
+         * lowercase twins, and PostgREST refuses the WHOLE select when one column is missing - so
+         * asking for both spellings did not "try both", it failed every time and killed this
+         * fallback entirely, logging a Postgres error on each attempt. The reads below still check
+         * the lowercase keys, which costs nothing and keeps working if they are ever added.
+         */
+        .select("id, name, firstName, lastName")
         .eq("id", athleteId)
         .single()
 
@@ -122,10 +129,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       }
     }
 
-    // No middle school seasons anywhere (Matt, 1 October 2026).
+    // Varsity seasons from seventh grade (lib/high-school-window.ts, Matt 3 November 2026).
     const { data: gradRow } = await supabase.from("athletes").select("graduationyear").eq("id", athleteId).maybeSingle()
     const grad = (gradRow as { graduationyear?: number | null } | null)?.graduationyear ?? null
-    results = (results || []).filter((row: any) => isHighSchoolSeason(row.season, grad, row.grade))
+    results = (results || []).filter((row: any) => isVarsitySeason(row.season, grad, row.grade))
 
     // Normalize/parse matches column to arrays, and shape the response to what the UI expects
     const processed = (results || []).map((row: any) => ({

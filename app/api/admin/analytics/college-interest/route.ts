@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { hasBusinessGrant } from "@/lib/business/access"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadCollegeInterest } from "@/lib/admin-college-interest"
 import { loadFollowThrough } from "@/lib/admin-follow-through"
@@ -29,7 +30,9 @@ export async function GET(req: Request) {
       .eq("user_id", user.id)
       .single()
 
-    if (!(me?.is_admin === true || me?.role === "admin")) {
+    // Admins, and the business grant (lib/business/access.ts): the page it feeds is on the
+    // business list, and it names programs, never a coach and never a parent.
+    if (!(me?.is_admin === true || me?.role === "admin") && !hasBusinessGrant(user.app_metadata)) {
       return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
     }
 

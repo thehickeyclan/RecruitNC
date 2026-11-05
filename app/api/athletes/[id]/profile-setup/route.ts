@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { filterPayloadToSchema, getAthletesColumnNames } from "@/lib/athletes-schema"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { recordRecruitingReadyIfNew } from "@/lib/funnel/readiness"
 
 /**
  * The one place a free profile is filled in, whether it already existed or was just created.
@@ -108,5 +109,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { error } = await admin.from("athletes").update(filtered).eq("id", id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  await recordRecruitingReadyIfNew(admin, id, user.id)
   return NextResponse.json({ ok: true, saved: Object.keys(filtered).length, dropped })
 }

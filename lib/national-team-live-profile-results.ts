@@ -108,13 +108,35 @@ export async function getNhscaDuals2026LiveProfileResults(
   }
 }
 
+/**
+ * Whether `national_team_event_registrations.athlete_id` exists, learned from the first attempt
+ * and remembered for the life of the process. Null means not yet asked.
+ */
+let athleteIdColumnExists: boolean | null = null
+
 async function registrationStatusForSlug(
   supabase: SupabaseClient,
   eventSlug: string,
   athleteId: string,
   athlete: { name: string; highSchool: string; gradYear: number }
 ): Promise<{ member: boolean; record: string }> {
-  try {
+  /*
+   * `national_team_event_registrations` has no `athlete_id` column. This asked for it anyway, on
+   * the assumption that a failure would be caught and the name match used instead - and the name
+   * match IS used, because PostgREST returns the failure as an `error` value rather than throwing,
+   * so the catch below never ran and the fallback happened silently.
+   *
+   * What did not happen silently was the Postgres log: this is reached from
+   * `load-public-athlete-profile.ts`, so every public profile view fired a query that cannot
+   * succeed. On 5 Nov 2026 that was 632 of the 719 errors in an hour of logs - 88% of them - and a
+   * wasted round trip on every profile load. Worse, it buried the errors that matter: this flood
+   * is what the log looked like while the project was unhealthy.
+   *
+   * The intent was forward-compatibility, so that is kept: the column is probed ONCE per process
+   * and the answer remembered. If it is added later this starts working with no change here, and
+   * until then it costs one failed query per process instead of one per page view.
+   */
+  if (athleteIdColumnExists !== false) {
     const { data: byId, error } = await supabase
       .from("national_team_event_registrations")
       .select("id, record")
@@ -122,12 +144,15 @@ async function registrationStatusForSlug(
       .eq("status", "paid")
       .eq("athlete_id", athleteId)
       .limit(1)
-    if (!error && byId && byId.length > 0) {
-      const r = byId[0] as { record?: string }
-      return { member: true, record: (r.record ?? "").trim() || "0-0" }
+    // 42703 is "column does not exist"; anything else is a transient failure, so do not remember it.
+    if (error?.code === "42703") athleteIdColumnExists = false
+    else if (!error) {
+      athleteIdColumnExists = true
+      if (byId && byId.length > 0) {
+        const r = byId[0] as { record?: string }
+        return { member: true, record: (r.record ?? "").trim() || "0-0" }
+      }
     }
-  } catch {
-    // athlete_id or record column may not exist yet; fall back to name match
   }
 
   const nameVariants = new Set(getNameVariants(athlete.name).map((n) => n.trim().toLowerCase()))

@@ -1,5 +1,7 @@
 "use client"
 
+import { hasBusinessGrant } from "@/lib/business/access"
+import { setViewAsCookie } from "@/lib/view-as/cookie"
 import { BrandLockup } from "@/components/recruiting/brand-frames"
 import { releasedClassYears } from "@/lib/public-rankings-cap"
 import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
@@ -12,6 +14,7 @@ import {
   GitCompareArrows,
   GraduationCap,
   HeartHandshake,
+  UserPlus,
   LogOut,
   Menu,
   MessageSquare,
@@ -23,7 +26,7 @@ import {
   FileText,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { useCoachMessageBadge, useInterestBadge, useNavNew } from "@/hooks/use-nav-badges"
+import { useClaimedBadge, useCoachMessageBadge, useInterestBadge, useNavNew } from "@/hooks/use-nav-badges"
 import { NotificationBell } from "@/components/recruiting/notification-bell"
 import { COACH_PREVIEW_KEY, COMMUNITY_PARTNER_LINKS, RECRUITING_BRAND, hasCommunityAccess, recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { RecruitingFooter } from "@/components/recruiting/recruiting-footer"
@@ -104,6 +107,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   const { user, profile, signOut } = useAuth()
   const messages = useCoachMessageBadge(!!user, pathname)
   const interestNew = useInterestBadge(!!user, pathname)
+  const claimedNew = useClaimedBadge(!!user, pathname)
   const fresh = useNavNew(!!user, pathname)
 
   /**
@@ -111,6 +115,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
    * (calendar, notes, activity) is a link from that page, not a second place called My Recruits.
    */
   const boardHref = "/my-recruits"
+  const businessViewer = !usesRecruitingShell(profile) && profile?.is_admin !== true && profile?.role !== "admin" && hasBusinessGrant(user?.app_metadata)
   const athletes: Item = { href: "/prospects/all", label: "Athletes", icon: Users }
   const recruits: Item = { href: boardHref, label: "My Recruits", icon: Star }
   const inbox: Item = { href: "/inbox", label: "Messages", icon: MessageSquare, badge: messages.unread }
@@ -136,8 +141,11 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
     athletes,
     ...rankings,
     { href: "/interested", label: "Interested", icon: HeartHandshake, badge: interestNew },
+    // Families who just claimed, any state (Matt, 5 Nov 2026); My Recruits shows the first four.
+    { href: "/recently-claimed", label: "Recently Claimed", icon: UserPlus, badge: claimedNew },
     { href: "/coach-reports", label: "Reports", icon: FileText, badge: fresh.reports },
-    inbox,
+    // A business account (Rhett) viewing a coach's portal gets no Messages: they are with families.
+    ...(businessViewer ? [] : [inbox]),
     { href: "/compare?src=nav", label: "Compare", icon: GitCompareArrows },
     { href: "/perfect-recruit", label: "Perfect Recruit", icon: Target },
     { href: "/college-commitments", label: "Commitments", icon: GraduationCap },
@@ -146,7 +154,8 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   const isActive = (link: string) => {
     const href = link.split("?")[0]!
     // Both boards are "My Recruits", whichever one this coach's link points at.
-    if (link === boardHref && ((pathname.startsWith("/my-recruits") && !pathname.startsWith("/my-recruits/needs")) || /^\/schools\/[^/]+\/portal/.test(pathname))) return true
+    // Only My Recruits lights for the board; Recruiting Needs (/my-recruits/needs) has its own item.
+    if (link === boardHref) return (pathname.startsWith("/my-recruits") && !pathname.startsWith("/my-recruits/needs")) || /^\/schools\/[^/]+\/portal/.test(pathname)
     return pathname === href || (href !== "/" && pathname.startsWith(href))
   }
   /** An admin looking at the coach interface (COACH_PREVIEW_KEY), not a coach. */
@@ -154,6 +163,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   const exitPreview = () => {
     try {
       localStorage.removeItem(COACH_PREVIEW_KEY)
+      setViewAsCookie(null)
     } catch {}
     window.location.href = "/"
   }
@@ -226,7 +236,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
       </div>
 
       <nav aria-label="Recruiting navigation" className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-5 border-t border-white/10 bg-[#0A1628] print:hidden md:hidden">
-        {[{ ...recruits, label: "Recruits" }, athletes, { ...rankings[0], label: "Rankings" }, inbox].map((item) => {
+        {[{ ...recruits, label: "Recruits" }, athletes, { ...rankings[0], label: "Rankings" }, ...(businessViewer ? [] : [inbox])].map((item) => {
           const active = isActive(item.href)
           return (
             <a

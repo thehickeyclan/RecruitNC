@@ -24,7 +24,8 @@ import { ProfileRow } from "@/components/profile/profile-row"
 import { CompetingNextBlock } from "@/components/profile/competing-next-block"
 import { RecruitingNeedsBlock } from "@/components/profile/recruiting-needs-block"
 import { ParentContactBlock } from "@/components/profile/parent-contact-block"
-import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, useAppProfile } from "@/components/profile/app-profile-rows"
+import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, stateRankedLabel,
+  useAppProfile } from "@/components/profile/app-profile-rows"
 import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
 import { SearchVisibilityToggle } from "@/components/profile/search-visibility-toggle"
 import { summarySentences, type Accolades } from "@/lib/profile/profile-summary"
@@ -482,7 +483,9 @@ export function AthleteDetail({
   // A linked parent sees the family's own private details (Matt, 14 October 2026); the server sends them on the same rule.
   const canSeePrivateInfo = isViewingOwnProfile || isParentLinkedEditor || isLinkedParentProfile || isAdmin || isVerifiedCoach
   /** The comparison: verified college coaches and admins, never on your own profile. */
-  const mayCompare = mayUseComparison({ isAdmin, profile: viewerProfile, userId: currentUserId }) && !isViewingOwnProfile
+  /** A business account (Rhett): coach tools - Compare, similar wrestlers, ranks, losses - never contact or academics. */
+  const isBusiness = viewerProfile?.business_access === true && !isAdmin && !isVerifiedCoach
+  const mayCompare = mayUseComparison({ isAdmin, profile: viewerProfile, userId: currentUserId, business: isBusiness }) && !isViewingOwnProfile
 
   // Academic fields: support both gpa/sat/act and academic_gpa/academic_sat/academic_act (DB column variants)
   const effectiveGpa = athleteData?.academic_gpa ?? athleteData?.gpa
@@ -666,7 +669,7 @@ export function AthleteDetail({
    * name on every public profile — so the whole board could be read off the roster by anybody.
    * Gated here, at the single place it is computed, so every card that renders it is covered.
    */
-  const maySeeRanking = canSeeRankingOnProfile({ isAdmin, isVerifiedCoach })
+  const maySeeRanking = canSeeRankingOnProfile({ isAdmin, isVerifiedCoach, isBusiness })
   const prospectRanking = maySeeRanking ? publishedRank : null
 
   const getAthletePhoto = () => {
@@ -1412,6 +1415,7 @@ export function AthleteDetail({
   const ranked12 = rankedWinsLast12Months(appData.wins)
   const sentences = summarySentences({
     stateName: stateName(athlete?.state) || null,
+    stateCode: (athlete?.state as string | null | undefined) ?? null,
     name: athleteName,
     gender: (athlete as { gender?: string | null }).gender ?? null,
     school: hasSchool ? highSchool : null,
@@ -1598,7 +1602,7 @@ export function AthleteDetail({
               "…"
             )}
           </dd>
-          <dd className="mt-0.5 text-[11px] text-[#A8BBD1]">{appData.winsLoaded ? `${ranked12.nc} NC-ranked · last 12 months` : "Loading"}</dd>
+          <dd className="mt-0.5 text-[11px] text-[#A8BBD1]">{appData.winsLoaded ? `${stateRankedLabel(ranked12, athlete?.state)} · last 12 months` : "Loading"}</dd>
         </div>
         <div className={cn(FACT, "border-l")}>
           <dt className={FACT_LABEL}>GPA</dt>
@@ -1929,7 +1933,7 @@ export function AthleteDetail({
         <CollegeViewsLanding athleteName={athleteName} signedIn={Boolean(currentUserId)} canSeePanel={canViewProfileStats} />
       </div>
       {canViewProfileStats && athlete.id ? (
-        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} stateCode={typeof athlete.state === "string" ? athlete.state : null} className={ROW_ORDER.views} />
+        <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} stateCode={typeof athlete.state === "string" ? athlete.state : null} complete={completeness.percent === 100} className={ROW_ORDER.views} />
       ) : null}
       <div className={cn("empty:hidden", ROW_ORDER.messages)}>
         <FamilyMessagesPanel athleteId={String(athlete.id)} />
@@ -1965,7 +1969,7 @@ export function AthleteDetail({
               <p className="text-xs text-[#A8BBD1]">
                 <span className="block text-[13px] font-bold text-white">{f.label}</span>
                 {f.key === "rankedWins"
-                  ? `Last 12 months: ${ranked12.national} nationally ranked, ${ranked12.nc} NC-ranked · ${appData.wins.length} significant wins in all`
+                  ? `Last 12 months: ${ranked12.national} nationally ranked, ${stateRankedLabel(ranked12, athlete?.state)} · ${appData.wins.length} significant wins in all`
                   : f.key === "yearRound"
                     ? `${f.detail}, career`
                     : f.detail}
@@ -2008,7 +2012,7 @@ export function AthleteDetail({
       <RecruitingNeedsBlock athleteId={String(athlete.id)} className="order-[4]" />
       {/* Contact is for college coaches, and for the family to keep current. Nobody else sees the
           row at all - not the phone, not the Instagram link (Matt, 11 October 2026). */}
-      {recruiterOrFamily && (contactButtons || mayCompare || canEdit) ? (
+      {recruiterOrFamily && !isBusiness && (contactButtons || mayCompare || canEdit) ? (
         <>
           <ProfileRow
             icon={Phone}
@@ -2166,8 +2170,10 @@ export function AthleteDetail({
               one button to the editors. Each open item is a tap to its own form. */}
           {/* Stacked at every width: the card sits in the narrow side column on desktop, and a row
               layout there squeezed the text to one word per line (Matt, 31 Oct 2026). */}
-          <div className="flex flex-col gap-4">
-            <div className="min-w-0">
+          {/* Complete: one slim row, the editors and the commitment link only - a full card announcing
+              100% is noise on a finished profile (Matt, 3 Nov 2026). */}
+          <div className={cn("flex flex-col gap-4", completeness.percent === 100 && "gap-0")}>
+            <div className={cn("min-w-0", completeness.percent === 100 && "hidden")}>
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-base font-bold text-white">Profile Completeness</p>
                 <p className="text-base font-black text-white">{completeness.percent}%</p>
@@ -2175,22 +2181,29 @@ export function AthleteDetail({
               <div className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/15 bg-[#0A1628]">
                 <div className="h-full rounded-full bg-[#D3B574]" style={{ width: `${completeness.percent}%` }} />
               </div>
-              <p className="mt-2 text-sm text-white/70">
-                {completeness.percent === 100
-                  ? "Your profile is complete. Keep it current: college coaches read this page."
-                  : "Complete your profile to get more views from college coaches."}
-              </p>
-              {/* The family hears the news first: one tap to report it, starting from this profile. */}
-              {!String(athlete.college ?? "").trim() ? (
+              <p className="mt-2 text-sm text-white/70">Complete your profile to get more views from college coaches.</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* The family hears the news first: one tap to report it, starting from this profile. */}
+            {completeness.percent === 100 ? (
+              !String(athlete.college ?? "").trim() ? (
                 <a
                   href={`/submit-commitment?athlete=${encodeURIComponent(String(athlete.id))}&role=${isViewingOwnProfile ? "athlete" : "parent"}`}
-                  className="mt-2 inline-block text-sm font-bold text-[#D3B574] hover:underline"
+                  className="text-sm font-bold text-[#D3B574] hover:underline"
                 >
                   Committed to a college? Tell us →
                 </a>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-4">
+              ) : <span />
+            ) : (
+            <div className="min-w-0">
+            {!String(athlete.college ?? "").trim() ? (
+              <a
+                href={`/submit-commitment?athlete=${encodeURIComponent(String(athlete.id))}&role=${isViewingOwnProfile ? "athlete" : "parent"}`}
+                className="mb-2 inline-block text-sm font-bold text-[#D3B574] hover:underline"
+              >
+                Committed to a college? Tell us →
+              </a>
+            ) : null}
             <ul className="min-w-0 space-y-1.5">
               {completeness.items.map((item) => (
                 <li key={item.label}>
@@ -2217,6 +2230,8 @@ export function AthleteDetail({
                 </li>
               ))}
             </ul>
+            </div>
+            )}
             <button
               type="button"
               onClick={() => setShowEditors((v) => !v)}

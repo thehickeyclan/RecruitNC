@@ -6,8 +6,10 @@ import {
   isHomeState,
   normalizeState,
   invitationalName,
+  isIndependentChampionship,
   stateChampionshipName,
   stateName,
+  championshipKeySlug,
 } from "@/lib/athlete-state"
 
 describe("normalizeState", () => {
@@ -73,9 +75,47 @@ describe("stateChampionshipName", () => {
     expect(stateChampionshipName("SC", "SCISA 3A")).toBe("SCISA")
   })
 
+  it("takes the body from the row's own association where the classification does not print it", () => {
+    /*
+     * Pennsylvania's independent-schools rows are classified "Open", so there is nothing in the
+     * classification to read PAISWT out of - and calling one of those placers a PIAA champion
+     * credits him with a title his school cannot win.
+     */
+    expect(stateChampionshipName("PA", "Open", "PAISWT")).toBe("PAISWT")
+    expect(stateChampionshipName("PA", "AAA", "PIAA")).toBe("PIAA")
+    expect(stateChampionshipName("PA", "Open")).toBe("PIAA")
+  })
+
+  it("ignores an association that is not one this state crowns a separate champion for", () => {
+    expect(stateChampionshipName("NC", "4A", "NCHSAA")).toBe("NCHSAA")
+    expect(stateChampionshipName("NC", "4A", "Some Made Up Body")).toBe("NCHSAA")
+  })
+
   it("names the state itself where we hold no association, rather than inventing one", () => {
-    /* "Georgia State Champion" is unambiguous; a made-up acronym would not be. */
-    expect(stateChampionshipName("TX", "6A")).toBe("Texas")
+    /*
+     * "Wyoming State Champion" is unambiguous; a made-up acronym would not be.
+     *
+     * This assertion has already moved twice - Texas, then Oklahoma - because the example state
+     * keeps getting registered as the import chain reaches it, and each move was a red test on a
+     * branch that had changed nothing about this rule. So it no longer names one: it finds a state
+     * we genuinely hold no association for and asserts the rule there. It fails only when every
+     * candidate has been registered, which is a real signal to pick new ones rather than a stale
+     * fixture.
+     */
+    const candidates = ["WY", "ND", "SD", "MT", "AK", "HI", "NV", "NM"]
+    const held = candidates.find((c) => stateChampionshipName(c, "6A") === stateName(c))
+    expect(held, `all of ${candidates.join(", ")} now carry an association - choose new candidates`).toBeDefined()
+    expect(stateChampionshipName(held!, "6A")).toBe(stateName(held!))
+    /* The point of the rule: a full state name, never an invented acronym. */
+    expect(stateChampionshipName(held!, "6A")).not.toMatch(/^[A-Z]{3,}$/)
+  })
+
+  it("still prefers a registered association, and the row's own one above it", () => {
+    expect(stateChampionshipName("TX", "6A")).toBe("UIL")
+    expect(stateChampionshipName("TX", "Open", "SPC")).toBe("SPC")
+    expect(stateChampionshipName("TX", "Open", "TX Prep State")).toBe("TX Prep State")
+    expect(stateChampionshipName("OK", "6A")).toBe("OSSAA")
+    expect(stateChampionshipName("AR", "1A-4A")).toBe("AAA")
   })
 
   it("both states have a 4A, which is why the state must appear at all", () => {
@@ -119,5 +159,66 @@ describe("states with more than one association, and events that are not champio
     expect(invitationalName("WV", "Girls Invitational")).toBe("WV Girls State Invitational")
     expect(invitationalName("WV", "AAA")).toBeNull()
     expect(invitationalName("NC", "Girls Invitational")).toBeNull()
+  })
+})
+
+describe("a state with a separate girls championship body", () => {
+  it("names the girls' own association, not the boys'", () => {
+    /*
+     * Iowa's boys wrestle the IHSAA and its girls the IGHSAU. Reading the boys' body off the state
+     * would hand every Iowa girls champion a title her association does not award - the same fault
+     * PAISWT exposed in Pennsylvania.
+     */
+    expect(stateChampionshipName("IA", "1A", "IHSAA")).toBe("IHSAA")
+    expect(stateChampionshipName("IA", "1A", "IGHSAU")).toBe("IGHSAU")
+    /* Girls ran a single class in 2024, so those rows carry the classification "Girls". */
+    expect(stateChampionshipName("IA", "Girls", "IGHSAU")).toBe("IGHSAU")
+  })
+
+  it("falls back to the boys' body only where the row names none", () => {
+    expect(stateChampionshipName("IA", "1A")).toBe("IHSAA")
+  })
+
+  it("does not treat the girls' body as an independent one", () => {
+    /*
+     * `isIndependentChampionship` excuses 7th and 8th grade placements, because independent
+     * schools roster middle-schoolers and public ones do not. Putting the IGHSAU in that list
+     * would have named it correctly above and switched the namesake check off for every Iowa girl.
+     */
+    expect(isIndependentChampionship("IA", "IGHSAU")).toBe(false)
+    expect(isIndependentChampionship("IA", "IHSAA")).toBe(false)
+    expect(isIndependentChampionship("PA", "PAISWT")).toBe(true)
+  })
+})
+
+describe("two states can share an association acronym", () => {
+  it("puts the state in front only where the acronym is shared", () => {
+    /*
+     * Indiana and Iowa are both the IHSAA; Mississippi and Michigan are both the MHSAA. Bout event
+     * keys carried no state, so Michigan's import was aimed at Mississippi's 767 rows for 2026.
+     */
+    expect(championshipKeySlug("MI", "MHSAA")).toBe("mi-mhsaa")
+    expect(championshipKeySlug("MS", "MHSAA")).toBe("ms-mhsaa")
+    expect(championshipKeySlug("IA", "IHSAA")).toBe("ia-ihsaa")
+    expect(championshipKeySlug("IN", "IHSAA")).toBe("in-ihsaa")
+  })
+
+  it("leaves an unambiguous acronym exactly as it was", () => {
+    /* 113 of the 115 existing keys are unambiguous and must not need migrating. */
+    for (const [state, assoc, slug] of [
+      ["NC", "NCHSAA", "nchsaa"],
+      ["SC", "SCISA", "scisa"],
+      ["PA", "PAISWT", "paiswt"],
+      ["IA", "IGHSAU", "ighsau"],
+      ["MO", "MSHSAA", "mshsaa"],
+      ["AR", "AAA", "aaa"],
+    ] as Array<[string, string, string]>) {
+      expect(championshipKeySlug(state, assoc)).toBe(slug)
+    }
+  })
+
+  it("still dashes an association that is a phrase", () => {
+    /* Delaware's girls championship is run by the "Girls Wrestling Committee". */
+    expect(championshipKeySlug("DE", "Girls Wrestling Committee")).toBe("girls-wrestling-committee")
   })
 })

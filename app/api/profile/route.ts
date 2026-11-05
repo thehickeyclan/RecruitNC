@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { hasBusinessGrant } from "@/lib/business/access"
 import { createAdminClient, createAdminClientFresh } from "@/lib/supabase/admin"
 import { runGuildLinkForProfile } from "@/lib/guild-auto-link"
 import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
@@ -81,7 +82,8 @@ export async function GET() {
     const viewer = classifyViewer(profileRow as Record<string, unknown>)
     const scoutingReportAccess = canAccessScoutingReport({
       email: (profileRow.email as string) ?? user.email,
-      isCollegeCoach: viewer.isCollegeCoach && viewer.verifiedCoach,
+      // A business account (Rhett) opens it like a coach; the report it gets has no personal data.
+      isCollegeCoach: (viewer.isCollegeCoach && viewer.verifiedCoach) || hasBusinessGrant(user.app_metadata),
       isAdmin: viewer.kind === "admin" || profileRow.is_admin === true,
     })
 
@@ -89,6 +91,8 @@ export async function GET() {
       ...profileRow,
       name: profileRow.full_name ?? profileRow.name ?? "",
       scouting_report_access: scoutingReportAccess,
+      // Coach tools on profiles without contact details or academics (lib/business/access.ts).
+      business_access: hasBusinessGrant(user.app_metadata),
     })
   } catch (error: unknown) {
     console.error("[api/profile] unexpected:", error)

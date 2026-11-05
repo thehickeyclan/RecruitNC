@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { getCachedAdminCheck } from "@/lib/cached-auth-check"
+import { rollUpSites, signupSite } from "@/lib/admin/user-site"
 
 export const dynamic = "force-dynamic"
 
@@ -151,6 +152,8 @@ export async function GET() {
     // Create a map of user profiles for quick lookup
     const profileMap = new Map(userProfiles?.map((p) => [p.user_id, p]) || [])
     const activityByUser = new Map<string, ActivityRollup>()
+    /** Each user's activity rows, newest first, for which site(s) they use. */
+    const siteRowsByUser = new Map<string, Array<{ event_type: string | null; site: unknown }>>()
 
     try {
       const now = new Date()
@@ -162,7 +165,7 @@ export async function GET() {
       for (let pageStart = 0; pageStart < 10000; pageStart += pageSize) {
         const { data: activityRows, error: activityError } = await supabaseAdmin
           .from("user_analytics")
-          .select("user_id, event_type, page_url, created_at")
+          .select("user_id, event_type, page_url, created_at, site:event_data->>site")
           .not("user_id", "is", null)
           .gte("created_at", thirtyDaysAgo.toISOString())
           .order("created_at", { ascending: false })
@@ -180,6 +183,10 @@ export async function GET() {
           const createdAt = String((row as { created_at?: string | null }).created_at ?? "")
           const createdDate = new Date(createdAt)
           if (Number.isNaN(createdDate.getTime())) continue
+
+          const siteRows = siteRowsByUser.get(userId) ?? []
+          siteRows.push({ event_type: (row as { event_type?: string | null }).event_type ?? null, site: (row as { site?: unknown }).site })
+          siteRowsByUser.set(userId, siteRows)
 
           const rollup = activityByUser.get(userId) ?? emptyActivity()
           /*
@@ -271,6 +278,8 @@ export async function GET() {
         has_ties: tiedUserIds.has(user.id) || Boolean(profile?.is_admin),
         last_sign_in_at: user.last_sign_in_at || null,
         ...activity,
+        signup_site: signupSite(user.user_metadata),
+        ...rollUpSites(siteRowsByUser.get(user.id) ?? []),
       }
     })
 

@@ -10,7 +10,8 @@ type Slide = { icon: typeof Compass; title: string; text: string }
 /**
  * The one-minute first-visit tour (Matt, 28 Oct 2026). Five cards, one per step of the path, with
  * Scout on the last. It opens by itself on a family's first Command Center visit, once per browser,
- * and is always a tap away from "Take the tour".
+ * and is always a tap away from "Take the tour". It ends by opening the map on the first job: five
+ * colleges saved.
  */
 export function CommandCenterTour({ firstName, autoOpen }: { firstName: string; autoOpen: boolean }) {
   const [open, setOpen] = useState(false)
@@ -36,7 +37,7 @@ export function CommandCenterTour({ firstName, autoOpen }: { firstName: string; 
 
   const slides: Slide[] = [
     { icon: Compass, title: "Welcome to the Command Center", text: `Everything for ${firstName}'s college recruiting, in five steps. The step to do now is outlined on your home page.` },
-    { icon: ListChecks, title: "1 and 2: Research, then select", text: "Explore every level on the map, then build My List toward 10 schools across levels." },
+    { icon: ListChecks, title: "1 and 2: Research, then select", text: "Explore every level on the map and save the colleges worth a closer look. Start with 5; My List grows toward 10 across levels." },
     { icon: Scale, title: "3: Know the rules", text: `One line tells you what college coaches may do right now for ${firstName}'s class, from the NCAA, NAIA and NJCAA's own rules.` },
     { icon: Send, title: "4: Reach out", text: "Three moves for every school: tell the coaches you're interested, fill out the interest form, and email the coach. Each is one tap." },
     { icon: MessageSquare, title: "5: Monitor and engage", text: "Answer messages, keep the schedule current, plan visits and set reminders so nothing slips." },
@@ -76,10 +77,15 @@ export function CommandCenterTour({ firstName, autoOpen }: { firstName: string; 
               </button>
               <button
                 type="button"
-                onClick={() => (last ? close() : setI(i + 1))}
+                onClick={() => {
+                  if (!last) return setI(i + 1)
+                  // The tour ends on the first job: five colleges, found on the map (Matt, 2 Nov 2026).
+                  close()
+                  window.location.href = "/recruiting/college-map"
+                }}
                 className="inline-flex items-center gap-1 rounded-lg bg-[#D3B574] px-4 py-2 text-sm font-black text-[#0A1628] hover:bg-[#e2c98d]"
               >
-                {last ? "Get started" : "Next"} <ArrowRight className="h-4 w-4" aria-hidden />
+                {last ? "Start: save 5 colleges" : "Next"} <ArrowRight className="h-4 w-4" aria-hidden />
               </button>
             </div>
             {last ? (

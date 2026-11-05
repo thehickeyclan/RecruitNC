@@ -18,6 +18,8 @@ import { execSync } from "child_process"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { HOME_STATE, inState, normalizeStateCode } from "../lib/recruiting/states"
+import { allowsMiddleSchoolVarsity } from "../lib/athlete-state"
+import { namesReferToSamePerson } from "../lib/athlete-name-match"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -107,7 +109,7 @@ async function placementsOf(state: string): Promise<Placement[]> {
   }))
 }
 
-type Link = { athlete_id: string; season: number; source: string; independent: boolean; label: string }
+type Link = { athlete_id: string; season: number; source: string; middleSchoolVarsity: boolean; label: string }
 
 /** Every placement linked to these profiles, from both championship tables. */
 async function linkedPlacements(ids: string[]): Promise<Link[]> {
@@ -116,11 +118,11 @@ async function linkedPlacements(ids: string[]): Promise<Link[]> {
     const chunk = ids.slice(i, i + 200)
     const [nc, other] = await Promise.all([
       sb.from("wrestling_nchsaa_results").select("athlete_id,year,school,classification,place").in("athlete_id", chunk),
-      sb.from("state_tournament_placers").select("athlete_id,season,state,association,school_clean,school_raw,place").in("athlete_id", chunk),
+      sb.from("state_tournament_placers").select("athlete_id,season,state,association,classification,school_clean,school_raw,place").in("athlete_id", chunk),
     ])
-    for (const r of nc.data ?? []) out.push({ athlete_id: r.athlete_id, season: Number(r.year), source: "NC", independent: r.classification === "NCISA", label: `NC ${r.year} ${r.classification ?? ""} #${r.place ?? "?"} ${r.school ?? ""}`.trim() })
+    for (const r of nc.data ?? []) out.push({ athlete_id: r.athlete_id, season: Number(r.year), source: "NC", middleSchoolVarsity: r.classification === "NCISA", label: `NC ${r.year} ${r.classification ?? ""} #${r.place ?? "?"} ${r.school ?? ""}`.trim() })
     for (const r of other.data ?? [])
-      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, independent: /(ISA|VISAA)$/i.test(r.association ?? ""), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
+      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, middleSchoolVarsity: allowsMiddleSchoolVarsity(r.state, r.association, r.classification as string | null), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
   }
   // The same placement can sit in a table twice; report it once.
   return [...new Map(out.map((l) => [`${l.athlete_id}|${l.label}`, l])).values()]
@@ -129,7 +131,12 @@ async function linkedPlacements(ids: string[]): Promise<Link[]> {
 const key = (name: string | null, year: unknown) => `${String(name ?? "").toLowerCase().replace(/\s+/g, " ").trim()}|${year ?? ""}`
 const pct = (n: number, d: number) => (d ? Math.round((n / d) * 1000) / 10 : 100)
 
-type Row = { check: string; kind: "GATE" | "INFO"; value: string; baseline?: string; pass: boolean; detail?: string[] }
+/*
+ * `alwaysList` prints an INFO row's names without --all. For the INFO rows that are volume - 91
+ * champions with no profile - a count is the useful shape and the names are for the Muse report.
+ * For one that is a short worklist somebody has to clear, a count alone is how it gets forgotten.
+ */
+type Row = { check: string; kind: "GATE" | "INFO"; value: string; baseline?: string; pass: boolean; detail?: string[]; alwaysList?: boolean }
 
 /*
  * Every official placer accounted for (Muse's review, 20 Oct 2026): the launch line says "every
@@ -221,14 +228,15 @@ async function measure(state: string) {
   }
 
   // A result before the wrestler's freshman season belongs to someone else, or carries a wrong class
-  // year. Independent schools (NCISA, SCISA) let 7th and 8th graders wrestle varsity, so those two
-  // seasons are a review list there, not a failure; anything earlier fails everywhere.
+  // year. Where 7th and 8th grade varsity is allowed - independent schools (NCISA, SCISA, VISAA) and
+  // whole state associations that permit it (the MSHSL) - those two seasons are a review list, not a
+  // failure; anything earlier fails everywhere.
   const links = await linkedPlacements(current.map((a) => a.id))
   const line = (l: Link) => `${byId.get(l.athlete_id)?.name} (class ${byId.get(l.athlete_id)?.graduationyear}) carries ${l.label} · ${l.athlete_id}`
   const yearsEarly = (l: Link) => Number(byId.get(l.athlete_id)?.graduationyear) - 3 - l.season
   const verifiedEarly = new Set((acct.preFreshmanVerified ?? []).map((v) => v.athleteId))
-  const namesakes = links.filter((l) => yearsEarly(l) > (l.independent ? 2 : 0) && !verifiedEarly.has(l.athlete_id)).map(line)
-  const middleSchool = links.filter((l) => l.independent && yearsEarly(l) > 0 && yearsEarly(l) <= 2).map(line)
+  const namesakes = links.filter((l) => yearsEarly(l) > (l.middleSchoolVarsity ? 2 : 0) && !verifiedEarly.has(l.athlete_id)).map(line)
+  const middleSchool = links.filter((l) => l.middleSchoolVarsity && yearsEarly(l) > 0 && yearsEarly(l) <= 2).map(line)
   // Out of state NC results on a non-NC profile: possible (a move), never assumed.
   const verifiedHomeResults = new Set((acct.homeStateResultsVerified ?? []).map((v) => v.athleteId))
   const crossState =
@@ -319,6 +327,46 @@ async function measure(state: string) {
     })
     .map((p) => `${p.name}, ${p.school ?? "?"}, ${p.weight ?? "?"} #${p.place ?? "?"} - "graduated" with no class year in any source and no note`)
 
+  /*
+   * A placement that reaches no profile although the wrestler HAS one here.
+   *
+   * The gate above asks whether every official PLACER is accounted for; it does not ask whether
+   * every PLACEMENT reached its wrestler. A transfer is the gap between the two: the minter leaves
+   * a name matching a profile at a DIFFERENT school alone on purpose, because out of state there is
+   * no school list to rule out a namesake, and Arkansas proved the caution right - Tripp Price is
+   * two wrestlers at CAC and Pottsville, not one who moved. But leaving it alone is only safe if
+   * somebody is told. Cameron Moats's 2025 state title sat off his profile with nothing in any
+   * report naming it; it survived as a line in a chat message, which is not a system.
+   *
+   * So: every current-class placement with no profile, where a profile of that name exists in this
+   * state, is listed here on every run until it is either linked or ruled a namesake. INFO, not a
+   * gate - the right answer is sometimes "two different wrestlers", and that must not block a
+   * state. An omitted fact becomes an invented one.
+   */
+  /*
+   * Cases adjudication has already settled do not count as open work. A "namesake" never links; a
+   * "hold" waits on evidence nobody here can produce. Both still print, tagged, so nothing is
+   * hidden - but the headline number is the work actually waiting on someone.
+   */
+  type Settled = { state: string; name: string; verdict: string }
+  let settledCases: Settled[] = []
+  try {
+    const f = "docs/state-launch/TRANSFER-ADJUDICATED.json"
+    if (fs.existsSync(f)) settledCases = (JSON.parse(fs.readFileSync(f, "utf8")).cases ?? []) as Settled[]
+  } catch { settledCases = [] }
+  const settledFor = (name: string) =>
+    settledCases.find((c) => c.state.toUpperCase() === state.toUpperCase() && c.name.trim().toLowerCase() === name.trim().toLowerCase())
+  const profilesByName = current.map((a) => ({ id: a.id, name: String(a.name ?? ""), school: a.highschool ?? null }))
+  const transferQueue = placements
+    .filter((p) => !p.athlete_id && p.place != null && p.grad_year != null && CURRENT.includes(Number(p.grad_year)))
+    .flatMap((p) => {
+      const hit = profilesByName.find((a) => namesReferToSamePerson(a.name, p.name))
+      if (!hit) return []
+      const v = settledFor(hit.name)
+      const tag = v ? (v.verdict === "namesake" ? " [SETTLED: namesake, never link]" : " [HELD: awaiting non-RW evidence]") : ""
+      return [`${p.name}, ${p.school ?? "?"} ${p.season} #${p.place} (class of ${p.grad_year}) - profile is at ${hit.school ?? "no school"}${tag} · ${hit.id}`]
+    })
+
   const reasons = new Map<string, number>()
   for (const p of unlinked) {
     const r = accountedPlacer(p)?.reason ?? (graduatedByRegistry(p) ? "graduated" : undefined)
@@ -353,7 +401,16 @@ async function measure(state: string) {
       { check: `${latest} champions and finalists with no profile`, kind: "INFO", value: String(topOfLatest.length), pass: true, detail: topOfLatest },
       { check: "Championship-linked profiles with no state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
       { check: "Unexplained results before freshman year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
-      { check: "Independent-school results from 7th/8th grade (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
+      { check: "7th/8th grade results where varsity allows it (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
+      {
+        check: "Placements reaching no profile though the wrestler has one (transfer or namesake)",
+        kind: "INFO",
+        value: `${transferQueue.filter((d) => !d.includes("[SETTLED") && !d.includes("[HELD")).length} open` +
+          (transferQueue.length ? ` of ${transferQueue.length} (${transferQueue.filter((d) => d.includes("[HELD")).length} held, ${transferQueue.filter((d) => d.includes("[SETTLED")).length} settled)` : ""),
+        pass: true,
+        detail: transferQueue,
+        alwaysList: true,
+      },
       { check: "NC results on this state's profiles (unnamed)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
       { check: "Duplicate profiles (same name and class)", kind: "GATE", value: String(dups.length), pass: dups.length === 0, detail: dups },
       {
@@ -389,7 +446,9 @@ async function main() {
     console.log(`${mark}  ${r.kind}  ${r.check.padEnd(w)}  ${r.value}${nc}`)
   }
   const failed = target.rows.filter((r) => r.kind === "GATE" && !r.pass)
-  const listed = process.argv.includes("--all") ? target.rows.filter((r) => !r.pass || r.detail?.length) : failed
+  const listed = process.argv.includes("--all")
+    ? target.rows.filter((r) => !r.pass || r.detail?.length)
+    : [...failed, ...target.rows.filter((r) => r.alwaysList && r.detail?.length && r.kind === "INFO")]
   for (const r of listed) {
     console.log(`\n${r.check}:`)
     /*

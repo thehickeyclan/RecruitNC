@@ -46,6 +46,7 @@ import { firstThreeActions } from "@/lib/recruiting/whats-changed"
 import { loadWhatsChanged } from "./whats-changed-data"
 import { CoachNeedsList, programCount } from "@/components/recruiting/coach-needs-list"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
+import { loadRecentlyJoined } from "@/lib/college-programs/recently-joined"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: `Recruiting Command Center | ${productName()}` }
@@ -82,7 +83,8 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
   const [lastCompeted, sheet, contacts, following, inbound, starter, needs] = await Promise.all([
     // Every wrestler's last competed weight: a parent of two saw only one son's (Cheryl Shuster, 28 Oct 2026).
     athletes.length ? loadLastCompeted(admin, athletes.map((a) => a.id), new Map(athletes.map((a) => [a.id, a.classYear]))).catch(() => new Map()) : new Map(),
-    blue && first ? buildInfoSheet(admin, first.id).catch(() => null) : null,
+    // The info sheet is the wrestler's contact details and academics: never for a business account.
+    blue && first && !cc.hidePersonal ? buildInfoSheet(admin, first.id).catch(() => null) : null,
     loadCollegeContacts(admin, athletes.map((a) => a.id)),
     // College programs following the wrestler: a count for the "where he competes next" reminder, never names.
     first ? programsFollowing(admin, first.id).catch(() => 0) : 0,
@@ -92,6 +94,8 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
     // Coach-confirmed needs at this wrestler's weight and class (never fails: empty on any error).
     first ? loadNeedsForAthlete(admin, first.id) : [],
   ])
+  // College programs whose coaches just joined, men's or women's to match the wrestler (Matt, 5 Nov 2026). Never fails the page.
+  const joined = await loadRecentlyJoined(admin, focus?.gender ?? null).catch(() => [])
   // What changed for you: the reason to come back each week (lib/recruiting/whats-changed.ts).
   const lastWeight = first ? Number(String((lastCompeted as Map<string, { weight?: string | number | null }>).get(first.id)?.weight ?? "").replace(/[^0-9]/g, "")) || null : null
   const feed = first ? await loadWhatsChanged(admin, cc, first.id, lastWeight, needs).catch(() => null) : null
@@ -246,7 +250,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                 {[first.classYear ? `Class of ${first.classYear}` : null, lastWeight ? `${lastWeight} lbs last wrestled` : null, homeState].filter(Boolean).join(" · ")}
               </p>
               <NextMoves title="Your first three moves" actions={firstThreeActions({ firstName: first.firstName, athleteId: first.id, upcomingEvents: w ? w.events.filter((e) => (e.endDate ?? e.startDate) >= todayET).length : 0, profilePercent: percent })} />
-              {starter.length ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} /> : null}
+              {starter.length ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
             </section>
           ) : null}
           {journey ? <RecruitingPath steps={journey.steps} firstName={first.firstName} /> : null}
@@ -263,7 +267,31 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               </div>
             </section>
           ) : null}
-          {starter.length && !feed?.empty ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} /> : null}
+          {joined.length ? (
+            <section className={`${card} mt-4 p-5`} aria-labelledby="cc-joined">
+              <h2 id="cc-joined" className={title}>
+                Recently joined
+              </h2>
+              <p className="text-xs text-white/55">College coaches from these programs joined in the last 30 days. They can now see {first.firstName}&apos;s profile.</p>
+              <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                {joined.map((p) => (
+                  <li key={p.id}>
+                    <Link href={`/recruiting/schools/${p.id}`} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3 hover:border-[#D3B574]">
+                      <span className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black text-white" style={{ backgroundColor: LEVEL_COLOR[p.level] ?? "#475569" }}>
+                        {p.level}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-bold text-white">{p.name}</span>
+                        <span className="block truncate text-xs text-white/50">{p.place}</span>
+                      </span>
+                      <span className="shrink-0 text-xs font-bold text-[#D3B574]">Learn more →</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {starter.length && !feed?.empty ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
 
           {/* Coming up: visits and the family's own reminders (Matt, 28 Oct 2026). */}
           {upcomingVisits.length || showReminders ? (

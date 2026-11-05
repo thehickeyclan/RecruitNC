@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { loadClaimAccount, relationshipForRole, saveCellIfMissing } from "@/lib/account-claim-role"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { recordClaimConsent } from "@/lib/profile-claim"
 import { notifyProfileClaim } from "@/lib/profile-claim-notify"
@@ -34,14 +35,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!viewerId) return NextResponse.json({ ok: false, error: "Sign in to claim a profile." }, { status: 401 })
 
   const body = (await request.json().catch(() => null)) as
-    | { as?: unknown; graduationYear?: unknown; highSchool?: unknown }
+    | { as?: unknown; graduationYear?: unknown; highSchool?: unknown; cellPhone?: unknown }
     | null
-  const relationship = body?.as === "parent" ? "parent" : body?.as === "self" ? "self" : null
+  const admin = createAdminClient()
+  const claimAccount = await loadClaimAccount(admin, viewerId)
+  const relationship = relationshipForRole(
+    claimAccount,
+    body?.as === "parent" ? "parent" : body?.as === "self" ? "self" : null,
+  )
   if (!relationship) {
     return NextResponse.json({ ok: false, error: 'Say whether this is "self" or "parent".' }, { status: 400 })
   }
-
-  const admin = createAdminClient()
+  await saveCellIfMissing(admin, viewerId, claimAccount, body?.cellPhone)
 
   /* For the alert: who claimed it, in the same shape the website sends. */
   const { data: viewerProfile } = await admin
