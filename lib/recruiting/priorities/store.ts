@@ -127,3 +127,17 @@ export async function completeSet(admin: SupabaseClient, input: { athleteId: str
   if (error) throw error
   return true
 }
+
+/** Whether this login has finished its set for this wrestler at least once (the first-day tick). */
+export async function hasAnsweredPriorities(admin: SupabaseClient, userId: string, athleteId: string): Promise<boolean> {
+  const respondent = await respondentFor(admin, userId, athleteId)
+  if (!respondent) return false
+  const { data, error } = await admin
+    .from("priority_answer_sets")
+    .select("id")
+    .eq("athlete_id", athleteId)
+    .eq("respondent", respondent)
+    .not("completed_at", "is", null)
+    .limit(1)
+  return !error && Boolean(data?.length)
+}

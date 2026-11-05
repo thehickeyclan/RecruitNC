@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { resolveRankingViewer } from "@/lib/ranking-access"
+import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { cleanProfile, EMPTY_PROFILE } from "@/lib/recruiting/family-fit"
 import { gradeForClass } from "@/lib/recruiting/learn/timeline"
@@ -46,14 +47,19 @@ export async function GET(req: NextRequest) {
     const own = c.respondent === "parent" ? sets.parent : sets.athlete
     const view = viewFor(c.respondent, sets)
     const answers = Object.fromEntries(view.own.map((a) => [a.key, a.value]))
+    // A6 shows the weight last competed, never the profile's listed one.
+    const last = await loadLastCompeted(c.admin, [c.athleteId], new Map([[c.athleteId, Number(athlete?.graduationyear) || null]])).then((m) => m.get(c.athleteId) ?? null).catch(() => null)
+    const weight = Number(String(last?.weight ?? "").replace(/[^0-9]/g, "")) || null
+    const firstName = String(athlete?.firstName ?? "").trim() || String(athlete?.name ?? "").split(" ")[0] || null
     const grade = gradeForClass(Number(athlete?.graduationyear) || null, seniorClassYear())
     const fit = account?.user?.user_metadata?.family_fit ? cleanProfile(account.user.user_metadata.family_fit) : EMPTY_PROFILE
     return NextResponse.json({
       available: true,
       respondent: c.respondent,
       athleteId: c.athleteId,
-      firstName: String(athlete?.firstName ?? "").trim() || String(athlete?.name ?? "").split(" ")[0] || null,
-      questions: questionsFor(c.respondent, { grade, answers }).map((q) => ({ ...q, sharingLine: sharingLine(q.sharing, c.respondent) })),
+      firstName,
+      weight,
+      questions: questionsFor(c.respondent, { grade, answers }).map((q) => ({ ...q, sharingLine: sharingLine(q.sharing, c.respondent, firstName) })),
       own: { version: own?.version ?? 0, completedAt: own?.completedAt ?? null, answers: view.own },
       // Whether the other side has finished is not an answer; what they answered privately never shows.
       other: { completed: Boolean((c.respondent === "parent" ? sets.athlete : sets.parent)?.completedAt), answers: view.other },

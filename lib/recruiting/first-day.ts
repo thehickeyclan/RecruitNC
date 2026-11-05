@@ -3,14 +3,15 @@
  * page is one "Start here" card with three moves, always in this order, each ticked once done.
  *
  *   1. Finish the profile: coaches read it first, and it was 20% for Mandi Nelsen's son.
- *   2. Save five colleges, from the shortlist and then the map (the shortlist is often fewer than five).
- *   3. Add the next event, so coaches who follow the wrestler can come watch.
+ *   2. What matters to your family (priorities survey v3): it shapes the suggestions below.
+ *   3. Save five colleges, from the shortlist and then the map (the shortlist is often fewer than five).
+ *   4. Add the next event, so coaches who follow the wrestler can come watch.
  */
 import { FIRST_LIST_GOAL } from "@/lib/recruiting/first-list-goal"
 
-export type FirstDayMove = { key: "profile" | "colleges" | "event"; label: string; why: string; href: string; done: boolean }
+export type FirstDayMove = { key: "profile" | "priorities" | "colleges" | "event"; label: string; why: string; href: string; done: boolean }
 
-export function firstDayMoves(input: { firstName: string; athleteId: string; profilePercent: number; profileTodo: string | null; saved: number; upcomingEvents: number; suggested: number }): FirstDayMove[] {
+export function firstDayMoves(input: { firstName: string; athleteId: string; profilePercent: number; profileTodo: string | null; saved: number; upcomingEvents: number; suggested: number; prioritiesDone: boolean }): FirstDayMove[] {
   const name = input.firstName
   const saved = Math.min(input.saved, FIRST_LIST_GOAL)
   return [
@@ -20,6 +21,13 @@ export function firstDayMoves(input: { firstName: string; athleteId: string; pro
       why: input.profilePercent >= 100 ? "100% done." : `${input.profilePercent}% done. Coaches read it first.`,
       href: `/athletes/${input.athleteId}${input.profileTodo && input.profilePercent < 100 ? `?edit=${input.profileTodo}` : ""}`,
       done: input.profilePercent >= 100,
+    },
+    {
+      key: "priorities",
+      label: "What matters to your family",
+      why: input.prioritiesDone ? "Answered. Change it any time." : "About 3 minutes. Tell us what matters most.",
+      href: "/my-recruiting/priorities",
+      done: input.prioritiesDone,
     },
     {
       key: "colleges",

@@ -214,8 +214,8 @@ export function defaultSharing(respondent: Respondent, key: string): SharingClas
 }
 
 /** The plain line on each question screen saying who sees the answer (spec: shown on the screen itself). */
-export function sharingLine(cls: SharingClass, respondent: Respondent): string {
-  const other = respondent === "parent" ? "your wrestler" : "your parent"
+export function sharingLine(cls: SharingClass, respondent: Respondent, wrestlerName?: string | null): string {
+  const other = respondent === "parent" ? wrestlerName || "your wrestler" : "your parent"
   if (cls === "shared") return `Shared with ${other}. Coaches never see it.`
   if (cls === "constraint") return "Scout can use this without showing the number. Only you see it."
   return "Only you see this."
