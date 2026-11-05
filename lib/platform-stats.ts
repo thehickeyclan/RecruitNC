@@ -56,6 +56,9 @@ export async function loadPlatformStats(admin: SupabaseClient): Promise<Platform
     (p) =>
       p.is_admin !== true &&
       classifyViewer(p as never).isCollegeCoach &&
+      // Approved coaches only: a rejected sign-up is not a coach on the platform (Matt's own
+      // rejected test account was counted on 5 Nov 2026, 122 against 121 real).
+      classifyViewer(p as never).verifiedCoach &&
       !NOT_A_COACH_EMAIL.test(String(p.email ?? "")) &&
       !NOT_A_PROGRAM.test(String(p.institution ?? "").trim()),
   )
