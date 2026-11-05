@@ -14,6 +14,9 @@ import { NATIONAL_BRAND, RECRUITING_BRAND, liveStates } from "@/lib/recruiting/b
 import { inStates } from "@/lib/recruiting/states"
 import { currentClassYears } from "@/lib/class-years"
 import { loadPlatformStats } from "@/lib/platform-stats"
+import { loadProfilesByState } from "@/lib/home-data"
+import { StateCoverageMap } from "@/components/state-coverage-map"
+import { buildCoverage } from "@/lib/recruiting/state-coverage"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { PREVIEW, buildMapPreview } from "@/lib/college-programs/map-preview"
@@ -72,7 +75,7 @@ const OUTLINE = `${BTN} border-2 border-[#A3E635] text-[#A3E635] hover:bg-[#A3E6
 
 export default async function RecruitWrestlersHome() {
   const admin = createAdminClient()
-  const [platform, profileCount] = await Promise.all([
+  const [platform, profileCount, profilesByState] = await Promise.all([
     loadPlatformStats(admin).catch(() => null),
     // Wrestlers with a profile in the open states and current classes, counted, never typed.
     (async () => {
@@ -82,7 +85,10 @@ export default async function RecruitWrestlersHome() {
       )
       return count ?? null
     })().catch(() => null),
+    // Which states are open, built and coming - the coverage map below the college map.
+    loadProfilesByState().catch(() => ({}) as Record<string, number>),
   ])
+  const coverage = buildCoverage(profilesByState)
   const fmt = (n: number | null | undefined) => (n && n > 0 ? n.toLocaleString() : null)
   /*
    * The loop the page exists to explain (Matt, 2 Nov 2026: the page read as two product brochures,
@@ -271,6 +277,10 @@ export default async function RecruitWrestlersHome() {
               ) : null}
             </div>
           </section>
+
+          {/* Where we have wrestlers. The national brand is the one a family in a new state
+              lands on, so the coverage map matters more here than on NC United. */}
+          <StateCoverageMap rows={coverage} backdropUrl={mapPreview?.backdropUrl ?? null} />
 
           {/* Every college, one page: what a family sees when they open a program. */}
           <section className="grid items-center gap-8 lg:grid-cols-[1fr_1.15fr]">
