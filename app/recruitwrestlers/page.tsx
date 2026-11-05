@@ -109,7 +109,8 @@ export default async function RecruitWrestlersHome() {
     }
   })()
   const proof = [
-    { n: mapPreview?.dots.length ?? null, label: "colleges on the map" },
+    // Every college on the map, as NC United counts it; dots leaves out ones off the US picture.
+    { n: mapPreview?.total ?? null, label: "colleges on the map" },
     // Coaches are counted in the band above; here, what they have done (Matt, 2 Nov 2026).
     { n: platform?.programs ?? null, label: "college programs on RecruitWrestlers" },
     { n: platform?.profilesViewed ?? null, label: "wrestlers viewed by coaches" },
