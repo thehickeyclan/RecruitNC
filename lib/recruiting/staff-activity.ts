@@ -19,6 +19,9 @@ export type StaffActivityItem = {
   athleteName: string
   /** The rest of the sentence after the name: "moved Gavin Hickey from Prospect to Contacted". */
   text: string
+  /** What the coach wrote when logging a contact, and the follow-up date they set. */
+  note?: string | null
+  followUp?: string | null
 }
 
 const CONTACT: Record<string, string> = {
@@ -33,7 +36,14 @@ const CONTACT: Record<string, string> = {
   event: "logged an event with",
 }
 
-export async function loadStaffActivity(admin: SupabaseClient, userId: string, limit = 50): Promise<StaffActivityItem[]> {
+/** The text the old portal wrote when a coach left the note empty: not a note. */
+const isDefaultNote = (d: string) => / logged from coach portal$/.test(d)
+
+/**
+ * `athleteId` narrows the list to one wrestler: the staff's whole history with him, shown on his
+ * profile the way a CRM shows a contact's record.
+ */
+export async function loadStaffActivity(admin: SupabaseClient, userId: string, limit = 50, athleteId?: string): Promise<StaffActivityItem[]> {
   const { data: me } = await admin.from("user_profiles").select("school_id").eq("user_id", userId).maybeSingle()
   let staff: Array<{ user_id: string; full_name: string | null }> = [{ user_id: userId, full_name: null }]
   if (me?.school_id) {
@@ -44,12 +54,14 @@ export async function loadStaffActivity(admin: SupabaseClient, userId: string, l
   const who = new Map(staff.map((s) => [String(s.user_id), s.full_name?.trim() || "A coach"]))
   const by = (id: string) => (id === userId ? "You" : (who.get(id) ?? "A coach"))
 
+  // One wrestler, or all of them.
+  const only = <Q extends { eq: (column: string, value: string) => Q }>(q: Q) => (athleteId ? q.eq("athlete_id", athleteId) : q)
   const [stars, events, actions, threads] = await Promise.all([
-    admin.from("college_coach_stars").select("id, athlete_id, coach_user_id, starred_at").in("coach_user_id", staffIds).order("starred_at", { ascending: false }).limit(limit),
+    only(admin.from("college_coach_stars").select("id, athlete_id, coach_user_id, starred_at").in("coach_user_id", staffIds)).order("starred_at", { ascending: false }).limit(limit),
     // Missing until its SQL is run: the list then shows everything else.
-    admin.from(BOARD_EVENTS_TABLE).select("id, actor_user_id, athlete_id, kind, detail, created_at").in("actor_user_id", staffIds).order("created_at", { ascending: false }).limit(limit),
-    admin.from("recruiting_actions").select("id, athlete_id, coach_user_id, action_type, action_date, created_at").in("coach_user_id", staffIds).order("created_at", { ascending: false }).limit(limit),
-    admin.from("coach_threads").select("id, athlete_id, coach_user_id").in("coach_user_id", staffIds),
+    only(admin.from(BOARD_EVENTS_TABLE).select("id, actor_user_id, athlete_id, kind, detail, created_at").in("actor_user_id", staffIds)).order("created_at", { ascending: false }).limit(limit),
+    only(admin.from("recruiting_actions").select("id, athlete_id, coach_user_id, action_type, action_date, created_at, description, follow_up_date").in("coach_user_id", staffIds)).order("created_at", { ascending: false }).limit(limit),
+    only(admin.from("coach_threads").select("id, athlete_id, coach_user_id").in("coach_user_id", staffIds)),
   ])
   const threadOf = new Map((threads.data ?? []).map((t) => [String(t.id), t]))
   const messages = threadOf.size
@@ -80,7 +92,17 @@ export async function loadStaffActivity(admin: SupabaseClient, userId: string, l
   }
   for (const a of actions.data ?? []) {
     const verb = CONTACT[String(a.action_type)] ?? "logged a contact with"
-    drafts.push({ id: `a-${a.id}`, at: String(a.created_at ?? a.action_date), actor: String(a.coach_user_id), kind: "contact", athleteId: String(a.athlete_id), text: `${verb} {name}` })
+    const note = typeof a.description === "string" && a.description.trim() && !isDefaultNote(a.description.trim()) ? a.description.trim() : null
+    drafts.push({
+      id: `a-${a.id}`,
+      at: String(a.created_at ?? a.action_date),
+      actor: String(a.coach_user_id),
+      kind: "contact",
+      athleteId: String(a.athlete_id),
+      text: `${verb} {name}`,
+      note,
+      followUp: a.follow_up_date ? String(a.follow_up_date) : null,
+    })
   }
   for (const m of messages.data ?? []) {
     const t = threadOf.get(String(m.thread_id))
