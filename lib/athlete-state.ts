@@ -139,6 +139,11 @@ const ASSOCIATIONS: Record<
    */
   GA: { public: "GHSA", independent: ["GIAA"] },
   TN: { public: "TSSAA" },
+  NE: { public: "NSAA" },
+  CO: { public: "CHSAA" },
+  UT: { public: "UHSAA" },
+  ID: { public: "IHSAA" },
+  AZ: { public: "AIA" },
   /*
    * FHSAA admits middle schoolers to varsity, so an 8th-grade result is data, not a defect. The
    * readiness gate flagged nine as "results before freshman year" until this was set, and the

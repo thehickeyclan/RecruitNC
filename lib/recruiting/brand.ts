@@ -158,6 +158,17 @@ export const RECRUITING_BRAND = {
     { code: "OH", name: "Ohio", live: false },
     { code: "IL", name: "Illinois", live: false },
     { code: "WI", name: "Wisconsin", live: false },
+    /*
+     * The first two states built tab-first from the start (Muse, 5 November 2026): grades came off
+     * the participants tabs at fetch time rather than from a RankWrestlers queue afterwards, and
+     * both came back essentially complete - Nebraska 995 of 995 placer keys resolved with no RW
+     * pass at all, Colorado 1,025 of 1,026.
+     */
+    { code: "NE", name: "Nebraska", live: false },
+    { code: "CO", name: "Colorado", live: false },
+    { code: "UT", name: "Utah", live: false },
+    { code: "ID", name: "Idaho", live: false },
+    { code: "AZ", name: "Arizona", live: false },
   ],
 } as const
 
