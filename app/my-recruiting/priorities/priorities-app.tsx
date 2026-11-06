@@ -9,6 +9,8 @@ import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Lock } from "lucide-react"
 import type { Answer } from "@/lib/recruiting/priorities/sharing"
 import type { Marker, Option, Question, Respondent, SharingClass } from "@/lib/recruiting/priorities/questions"
 import { MAJOR_OPTIONS, wantsBsnFollowUp } from "@/lib/recruiting/priorities/questions"
+import { PriorityLists } from "@/components/portal/priority-lists"
+import type { PriorityListsView } from "@/app/my-recruiting/priority-lists"
 
 type Q = Question & { sharingLine: string }
 type Data = {
@@ -50,6 +52,8 @@ export function PrioritiesApp({ athleteId, onClose }: { athleteId?: string; onCl
   const [drafts, setDrafts] = useState<Record<string, Draft>>({})
   const [saving, setSaving] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
+  // The survey's last screen: the five colleges to react to (undefined while loading, null if none).
+  const [picks, setPicks] = useState<PriorityListsView | null | undefined>(undefined)
 
   // Whose set: the wrestler the home page was showing (?w=), else the API's default (oldest in school).
   const [who, setWho] = useState<string | null>(null)
@@ -59,6 +63,14 @@ export function PrioritiesApp({ athleteId, onClose }: { athleteId?: string; onCl
       .then((d: Data) => {
         setData(d)
         if (d.own.completedAt) setStep((s) => (s === "intro" ? "summary" : s))
+        // ?end=1 opens the last screen on a finished set, on a developer's machine only (screenshots).
+        if (d.own.completedAt && process.env.NODE_ENV !== "production" && new URLSearchParams(window.location.search).get("end") === "1") {
+          setStep("done")
+          fetch(`/api/recruiting-priorities/lists?athleteId=${encodeURIComponent(d.athleteId)}`, { cache: "no-store" })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((x: { lists?: PriorityListsView | null } | null) => setPicks(x?.lists ?? null))
+            .catch(() => setPicks(null))
+        }
       })
       .catch(() => setFailed(true))
   useEffect(() => {
@@ -146,7 +158,13 @@ export function PrioritiesApp({ athleteId, onClose }: { athleteId?: string; onCl
     setDrafts({})
     await load()
     setSaving(false)
+    setPicks(undefined)
     setStep("done")
+    const athlete = data.athleteId
+    fetch(`/api/recruiting-priorities/lists?athleteId=${encodeURIComponent(athlete)}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { lists?: PriorityListsView | null } | null) => setPicks(d?.lists ?? null))
+      .catch(() => setPicks(null))
   }
 
   if (step === "intro") {
@@ -175,39 +193,47 @@ export function PrioritiesApp({ athleteId, onClose }: { athleteId?: string; onCl
   }
 
   if (step === "done") {
+    const home = () => {
+      // In the pop-up the home page is already open: reload it so the new lists show.
+      if (onClose) window.location.reload()
+      else window.location.href = `/my-recruiting?w=${encodeURIComponent(data.athleteId)}`
+    }
+    const five = picks ? picks.bestFit.length + picks.opportunities.length : 0
     return (
       <Panel>
         <Check className="h-8 w-8 text-emerald-400" aria-hidden />
         <h1 className="mt-2 text-2xl font-black">{saveFailed ? "Some answers didn't save." : "Saved."}</h1>
         {saveFailed ? <p className="mt-2 text-sm text-amber-300">Check your connection, then open My answers and change the ones that are missing.</p> : null}
-        <p className="mt-2 text-white/75">Your answers now shape the colleges on your Command Center. Change any answer whenever you like. Most families do, more than once.</p>
-        {data.respondent === "parent" ? (
-          <p className="mt-3 text-white/75">
-            Next, {name} answers their own set{data.other.completed ? " (already done)" : ""}. Where you agree, great. Where you differ, that&apos;s worth knowing now.
-          </p>
+        {/* Five colleges to react to, then the map (Matt, 6 Nov 2026): the family tells us how each feels, then picks their own. */}
+        {picks === undefined ? <p className="mt-4 text-sm text-white/55">Finding colleges that may fit {name}…</p> : null}
+        {picks && five ? (
+          <>
+            <h2 className="mt-5 text-lg font-black">{Math.min(5, five)} colleges that may fit {name}. How does each one feel?</h2>
+            <p className="mt-1 text-sm text-white/60">Picked from your answers. Worth a closer look saves it to your My List.</p>
+            <PriorityLists picks lists={picks} athleteId={data.athleteId} firstName={name} />
+          </>
         ) : null}
-        <div className="mt-6 flex flex-wrap gap-3">
-          {onClose ? (
-            // In the pop-up the home page is already open: reload it so the new lists show.
-            <button
-              type="button"
-              className={BTN}
-              onClick={() => {
-                window.location.hash = "cc-lists"
-                window.location.reload()
-              }}
-            >
-              See your colleges <ArrowRight className="h-4 w-4" aria-hidden />
-            </button>
-          ) : (
-            <a href="/my-recruiting#cc-lists" className={BTN}>
-              See your colleges <ArrowRight className="h-4 w-4" aria-hidden />
-            </a>
-          )}
-          <button type="button" className={GHOST} onClick={() => setStep("summary")}>
-            See my answers
+        <h2 className="mt-6 text-lg font-black">Now find your own</h2>
+        <p className="mt-1 text-sm text-white/60">The map has every college wrestling program. Start with the ones close to home, or the ones you&apos;ve always wondered about.</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <a href="/recruiting/college-map" className={BTN}>
+            Go to the map <ArrowRight className="h-4 w-4" aria-hidden />
+          </a>
+          <button type="button" className={GHOST} onClick={home}>
+            Back to Command Center
           </button>
         </div>
+        {data.respondent === "parent" ? (
+          <p className="mt-5 text-sm text-white/60">
+            {name} answers a separate set{data.other.completed ? " (already done)" : ""}. Where you agree, great. Where you differ, that&apos;s worth knowing now.
+          </p>
+        ) : null}
+        <p className="mt-3 text-xs text-white/45">
+          Change any answer whenever you like.{" "}
+          <button type="button" className="font-bold text-[#D3B574] hover:underline" onClick={() => setStep("summary")}>
+            See my answers
+          </button>
+        </p>
       </Panel>
     )
   }

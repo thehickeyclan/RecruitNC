@@ -20,7 +20,7 @@
  * never asked and what a family would actually pay is not known.
  */
 import { rankedGoals } from "@/lib/recruiting/priorities/goals"
-import { MAJOR_OPTIONS, PATHWAYS, type Respondent } from "@/lib/recruiting/priorities/questions"
+import { MAJOR_OPTIONS, PATHWAYS, familiesOf, isAcademicPath, type Respondent } from "@/lib/recruiting/priorities/questions"
 import type { Answer, JointInputs, PathwayState, Placement } from "@/lib/recruiting/priorities/sharing"
 import type { FitStatus } from "@/lib/recruiting/family-fit"
 
@@ -56,6 +56,9 @@ export type CollegeFacts = {
   coachNeedWeight: number | null
   /** An announced program that has not wrestled yet ("2027-28"). */
   firstSeason: string | null
+  /** IPEDS: bachelor's degrees finished within six years, and the admit rate, in percent. Null when not reported. */
+  gradRate?: number | null
+  admitRate?: number | null
 }
 
 export type Weights = {
@@ -94,6 +97,8 @@ export type RecommendInput = {
   zipPoint: (zip: string) => [number, number] | null
   /** Colleges this viewer passed on (their own reactions only, reactions.ts passedBy): never re-offered. */
   passed?: ReadonlySet<string>
+  /** What this viewer's own reactions taught (learnFromReactions): never the other side's. */
+  learned?: Learned
 }
 
 const LIST_MAX = 5
@@ -106,8 +111,91 @@ const BUDGET_MAX: Record<string, number> = { lt10: 10_000, "10_20": 20_000, "20_
 /** Each goal (goals.ts) and the dimension it weights. "team" has no college data to rank on yet. */
 const GOAL_DIM: Record<string, Dim | null> = { level: "level", pay: "cost", academics: "academic", compete: "opportunity", career: "major", team: null, experience: "feel" }
 
-type Dim = "athletic" | "level" | "opportunity" | "academic" | "major" | "distance" | "feel" | "cost"
-const DIMS: Dim[] = ["athletic", "level", "opportunity", "academic", "major", "distance", "feel", "cost"]
+type Dim = "athletic" | "level" | "opportunity" | "academic" | "strength" | "major" | "distance" | "feel" | "cost"
+const DIMS: Dim[] = ["athletic", "level", "opportunity", "academic", "strength", "major", "distance", "feel", "cost"]
+
+/**
+ * Learning from reactions (Matt, 6 Nov 2026: "the system should learn from the survey results").
+ * Each reason on a pass and each chip on a keep is a small, capped nudge to what counts in this
+ * viewer's next lists; the levels they keep count a little more; "too small"/"too big" teach a size.
+ * The viewer's own reactions only, like passedBy: the other side's never move this viewer's lists.
+ */
+export type Learned = { weights: Partial<Record<Dim, number>>; sizes: string[]; levels: Partial<Record<Level, number>>; lines: string[] }
+const NUDGE = 0.5
+const CAP = 1.5
+const REASON_DIM: Record<string, Dim> = { too_far: "distance", cost: "cost", no_major: "major" }
+const CHIP_DIM: Record<string, Dim> = { close: "distance", cost: "cost", opening: "opportunity", academics: "strength", level: "level" }
+const LEARN_LINE: Partial<Record<Dim, string>> = { distance: "distance from home", cost: "cost", major: "the major", opportunity: "openings at the weight", strength: "academics", level: "level" }
+
+/**
+ * What the colleges a family saved to its own list teach (Matt, 6 Nov 2026: "as they put schools on
+ * their board we learn"), rather than asking them for a top 3. From three saved colleges up: the
+ * levels they save count a little more, a list of strong schools makes academics count, and a list
+ * that leans one size teaches that size.
+ */
+export function learnFromList(saved: ReadonlyArray<{ level: Level | null; strength: number; undergrads: number | null }>, into: Learned): Learned {
+  if (saved.length < 3) return into
+  const out: Learned = { weights: { ...into.weights }, sizes: into.sizes, levels: { ...into.levels }, lines: [...into.lines] }
+  for (const s of saved) if (s.level) out.levels[s.level] = Math.min(0.6, (out.levels[s.level] ?? 0) + 0.1)
+  const strong = saved.filter((s) => s.strength >= 0.6).length
+  const learned: string[] = []
+  if (strong / saved.length >= 0.6) {
+    out.weights.strength = Math.min(CAP, (out.weights.strength ?? 0) + NUDGE)
+    learned.push("strong academics")
+  }
+  if (!out.sizes.length) {
+    const sizes = saved.filter((s) => s.undergrads != null).map((s) => sizeOf(s.undergrads!))
+    for (const z of ["small", "medium", "large"]) {
+      if (sizes.length >= 3 && sizes.filter((x) => x === z).length / sizes.length >= 0.6) {
+        out.sizes = [z]
+        learned.push(`${z} schools`)
+      }
+    }
+  }
+  if (learned.length) out.lines.push(`Your list leans toward ${learned.join(" and ")}, so these do too.`)
+  return out
+}
+
+export function learnFromReactions(mine: Readonly<Record<string, { reaction: string; reason: string | null; chips: ReadonlyArray<string> }>>, levelOf: (id: string) => Level | null): Learned {
+  const weights: Partial<Record<Dim, number>> = {}
+  const levels: Partial<Record<Level, number>> = {}
+  const bump = (d: Dim) => (weights[d] = Math.min(CAP, (weights[d] ?? 0) + NUDGE))
+  let small = 0
+  let big = 0
+  for (const [id, r] of Object.entries(mine)) {
+    if (r.reaction === "not_for_us" && r.reason) {
+      const d = REASON_DIM[r.reason]
+      if (d) bump(d)
+      if (r.reason === "too_small") small++
+      if (r.reason === "too_big") big++
+    }
+    if (r.reaction === "closer_look") {
+      for (const chip of r.chips) if (CHIP_DIM[chip]) bump(CHIP_DIM[chip])
+      const lv = levelOf(id)
+      if (lv) levels[lv] = Math.min(0.6, (levels[lv] ?? 0) + 0.2)
+    }
+  }
+  const sizes = small > big ? ["medium", "large"] : big > small ? ["small", "medium"] : []
+  const learnedDims = (Object.keys(weights) as Dim[]).map((d) => LEARN_LINE[d]).filter((x): x is string => Boolean(x))
+  const lines: string[] = []
+  if (learnedDims.length) lines.push(`From your reactions, ${learnedDims.join(", ")} now count${learnedDims.length === 1 ? "s" : ""} for more.`)
+  if (sizes.length) lines.push(`From your reactions, ${sizes[0] === "small" ? "smaller" : "bigger"} schools come first.`)
+  return { weights, sizes, levels, lines }
+}
+
+/**
+ * How strong a school is academically, 0 to 1, from federal data: the six-year graduation rate
+ * (50% or lower is 0, 95% or higher is 1), plus a little for admitting a quarter or fewer.
+ * "academic" (can the wrestler get in) is a different thing: a family that wants the strongest
+ * school academically was getting colleges ranked only on whether his grades were enough
+ * (Matt, 6 Nov 2026: "when parent answers are in favor of high academic environments your
+ * recommendations align").
+ */
+export function academicStrength(c: Pick<CollegeFacts, "gradRate" | "admitRate">): number {
+  if (c.gradRate == null) return 0
+  const base = Math.min(1, Math.max(0, (c.gradRate - 50) / 45))
+  return Math.min(1, base + (c.admitRate != null && c.admitRate <= 25 ? 0.2 : 0))
+}
 
 /** The answers this viewer's list may read: the viewer's own (any class) and the other side's Shared ones. */
 function visible(input: RecommendInput): { parent: Answer[]; athlete: Answer[] } {
@@ -147,6 +235,9 @@ export function placementFor(viewer: Respondent, grids: { parent: Record<string,
 /** Each dimension starts at 1. Each respondent's top 3 goals add 3, 2, 1, averaged over those who answered. */
 export function weightsFor(seen: { parent: Answer[]; athlete: Answer[] }): Record<Dim, number> {
   const w = Object.fromEntries(DIMS.map((d) => [d, 1])) as Record<Dim, number>
+  // Strength counts a little for everyone (finishing a degree matters to every family) and a lot
+  // for a family whose goals are academics or a career.
+  w.strength = 0.25
   const tops = [seen.parent, seen.athlete].map((side) => rankedGoals((k) => valueOf(side, k))).filter((t) => t.length > 0)
   for (const top of tops) {
     top.forEach(({ goal, rank: i }) => {
@@ -156,6 +247,8 @@ export function weightsFor(seen: { parent: Answer[]; athlete: Answer[] }): Recor
       // The strongest school academically is about the major too; a career is about academic fit too.
       if (dim === "academic") w.major += (3 - i) / tops.length
       if (dim === "major") w.academic += (3 - i) / (2 * tops.length)
+      if (goal === "academics") w.strength += (1.25 * (3 - i)) / tops.length
+      if (goal === "career") w.strength += (3 - i) / (2 * tops.length)
     })
   }
   // Sets from before 6 Nov: distance was a top-3 factor (it has its own question now, no goal), and
@@ -196,6 +289,7 @@ export function recommend(input: RecommendInput): Lists {
   const MARKER_X: Record<string, number> = { strong: 2, flexible: 0.5 }
   w.distance *= MARKER_X[markerOf(seen.parent, "distance") ?? ""] ?? 1
   w.major *= MARKER_X[markerOf(seen.parent, "academics") ?? ""] ?? 1
+  for (const [d, n] of Object.entries(input.learned?.weights ?? {})) w[d as Dim] += n ?? 0
   const grids = { parent: gridOf(seen.parent), athlete: gridOf(seen.athlete) }
   const name = input.firstName
 
@@ -213,13 +307,17 @@ export function recommend(input: RecommendInput): Lists {
     for (const m of v?.majors ?? []) wanted.add(m)
   }
   const majorMust = markerOf(seen.parent, "academics") === "must" && wanted.size > 0
+  // Pre-med, pre-law and pre-vet ask for a strong school.
+  if ([...wanted].some(isAcademicPath)) w.strength += 1
 
   // Feel: P7 sizes and settings, and A7 read the same way.
   const feel = new Set<string>([
     ...((valueOf(seen.parent, "school_feel") as string[] | undefined) ?? []),
     ...((valueOf(seen.athlete, "experience") as string[] | undefined) ?? []).map((e) => EXPERIENCE_FEEL[e]).filter(Boolean),
   ])
-  const wantSizes = ["small", "medium", "large"].filter((s) => feel.has(s))
+  // A size the family named wins; else one their reactions taught.
+  const named = ["small", "medium", "large"].filter((s) => feel.has(s))
+  const wantSizes = named.length ? named : (input.learned?.sizes ?? [])
   const wantSettings = ["city", "suburb", "town", "rural"].filter((s) => feel.has(s))
 
   const service = valueOf(seen.athlete, "service") as string | undefined
@@ -241,12 +339,13 @@ export function recommend(input: RecommendInput): Lists {
     const miles = origin ? milesBetween(origin, [c.latitude, c.longitude]) : null
     const limit = distance ? DISTANCE_MILES[distance] : undefined
     if (distanceMust && limit != null && miles != null && miles > limit) continue
-    const offers = c.majors ? [...wanted].filter((m) => c.majors!.includes(m)) : null
+    const offers = c.majors ? [...wanted].filter((m) => familiesOf(m).some((f) => c.majors!.includes(f))) : null
     if (majorMust && offers && offers.length === 0) continue
 
     const why: string[] = []
     const mightNot: string[] = []
-    const dim: Record<Dim, number> = { athletic: STATUS[c.athletic], level: 0, opportunity: 0, academic: STATUS[c.academic], major: 0, distance: 0, feel: 0, cost: 0 }
+    const strength = academicStrength(c)
+    const dim: Record<Dim, number> = { athletic: STATUS[c.athletic], level: 0, opportunity: 0, academic: STATUS[c.academic], strength, major: 0, distance: 0, feel: 0, cost: 0 }
 
     if (c.athletic === "fit") why.push(`Results fit ${c.level}`)
     if (c.athletic === "stretch") mightNot.push(`A reach for ${c.level} on results so far`)
@@ -254,6 +353,7 @@ export function recommend(input: RecommendInput): Lists {
     if (c.athletic !== "concern") dim.level = LEVEL_RANK[c.level]
     if (c.academic === "fit") why.push("Academic fit")
     if (c.academic === "concern") mightNot.push("Grades or scores are below the usual range")
+    if (w.strength >= 1 && strength >= 0.6 && c.gradRate != null) why.push(`Strong academics: ${c.gradRate}% graduate`)
 
     const open = c.openWeights.find((x) => targetWeights.includes(x)) ?? null
     if (open != null) {
@@ -292,7 +392,10 @@ export function recommend(input: RecommendInput): Lists {
 
     const price = c.averageNet ?? c.sticker
     if (budgetMax != null && price != null) {
-      dim.cost = price <= budgetMax ? 1 : -1
+      // A budget nudges, never decides (Matt, 6 Nov 2026): published prices are before merit aid and
+      // athletic money, which can move a college well under the family's number. Over budget costs a
+      // college a little; under budget helps a little.
+      dim.cost = price <= budgetMax ? 0.4 : -0.2
       if (price > budgetMax && budgetKind === "limit") {
         mightNot.unshift(c.averageNet != null ? `Affordability unverified: ${money(c.averageNet)} on average after aid, above your limit` : `Affordability unverified: ${money(c.sticker!)} sticker price, above your limit`)
       }
@@ -300,6 +403,7 @@ export function recommend(input: RecommendInput): Lists {
 
     if (c.serviceAcademy && service === "interested") dim.level += 0.5
     if (grids.parent?.[c.level] === "interested" || grids.athlete?.[c.level] === "interested") dim.level += 0.3
+    dim.level += input.learned?.levels[c.level] ?? 0
     if (placement === "explore") mightNot.push(`One of you isn't interested in ${c.level}. Worth a look before you rule it out.`)
     if (c.firstSeason) mightNot.push(`A new program: first season ${c.firstSeason}`)
 
@@ -333,7 +437,8 @@ export function recommend(input: RecommendInput): Lists {
     })
   }
 
-  const order = (a: Scored, b: Scored) => b.score - a.score || a.c.name.localeCompare(b.c.name)
+  // Ties (common: most colleges read the same on a young wrestler's results) go to the stronger school, never the alphabet.
+  const order = (a: Scored, b: Scored) => b.score - a.score || (b.c.gradRate ?? 0) - (a.c.gradRate ?? 0) || a.c.name.localeCompare(b.c.name)
   const take = (pool: Scored[], taken: Set<string>): Card[] => {
     const perLevel = new Map<string, number>()
     const out: Card[] = []
@@ -353,7 +458,7 @@ export function recommend(input: RecommendInput): Lists {
   const bestFit = take(scored.filter((s) => s.placement === "primary" && s.c.athletic !== "concern" && s.score > 0 && s.card.why.length >= 2).sort(order), taken)
   const opportunities = take(scored.filter((s) => s.evidence > 0).sort((a, b) => b.evidence - a.evidence || order(a, b)), taken)
 
-  const notes: string[] = []
+  const notes: string[] = [...(input.learned?.lines ?? [])]
   if (budgetMax != null || budget === "50plus") {
     const flagged = [...bestFit, ...opportunities].some((c) => c.mightNot.some((m) => m.startsWith("Affordability unverified")))
     notes.push(

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { placementFor, recommend, weightsFor, type CollegeFacts, type Lists, type RecommendInput } from "@/lib/recruiting/priorities/recommend"
+import { academicStrength, learnFromList, learnFromReactions, placementFor, recommend, weightsFor, type CollegeFacts, type Lists, type RecommendInput } from "@/lib/recruiting/priorities/recommend"
+import { familiesOf } from "@/lib/recruiting/priorities/questions"
 import type { Respondent, SharingClass } from "@/lib/recruiting/priorities/questions"
 import { jointInputs, ownerOnlyInputs, type Answer, type FamilySets } from "@/lib/recruiting/priorities/sharing"
 
@@ -234,5 +235,72 @@ describe("reactions shape only the reactor's own next lists", () => {
     const first = parent.best[0] ?? parent.opp[0]
     expect(ids(run("parent", sets))).toEqual(parent)
     expect([...ids(run("parent", sets)).best, ...ids(run("parent", sets)).opp]).toContain(first)
+  })
+})
+
+describe("academic strength, career paths and learning (6 Nov 2026)", () => {
+  it("strength reads the graduation rate, with a little for selective admission", () => {
+    expect(academicStrength({ gradRate: 96, admitRate: 7 })).toBe(1)
+    expect(academicStrength({ gradRate: 50, admitRate: 80 })).toBe(0)
+    expect(academicStrength({ gradRate: null, admitRate: 5 })).toBe(0)
+    expect(academicStrength({ gradRate: 77, admitRate: 60 })).toBeCloseTo(0.6, 5)
+  })
+  it("a family whose #1 goal is academics gets the stronger school first", () => {
+    const pool = [
+      college({ id: "weak", level: "D3", majors: ["26"], gradRate: 40, admitRate: 90 }),
+      college({ id: "strong", level: "D3", majors: ["26"], gradRate: 92, admitRate: 20 }),
+    ]
+    const sets = { parent: set("parent", [a("goals", ["academics", "career", "pay"], "shared"), a("academics", { majors: ["26"], text: null, undecided: false }, "shared")]), athlete: null }
+    const out = run("parent", sets, pool)
+    expect(out.bestFit[0]?.id).toBe("strong")
+    expect(out.bestFit[0]?.why.some((w) => /Strong academics: 92% graduate/.test(w))).toBe(true)
+  })
+  it("a career path counts where any of its major families is offered", () => {
+    expect(familiesOf("pre_med")).toEqual(["26", "40"])
+    expect(familiesOf("52")).toEqual(["52"])
+    const pool = [college({ id: "bio", level: "D3", majors: ["26"] }), college({ id: "biz", level: "D3", majors: ["52"] })]
+    const sets = { parent: set("parent", [a("academics", { majors: ["pre_med"], text: null, undecided: false }, "shared", "must")]), athlete: null }
+    const out = run("parent", sets, pool)
+    expect([...out.bestFit, ...out.opportunities].map((c) => c.id)).not.toContain("biz")
+  })
+  it("learns from this viewer's own reactions, capped", () => {
+    const l = learnFromReactions(
+      {
+        a: { reaction: "not_for_us", reason: "too_far", chips: [] },
+        b: { reaction: "not_for_us", reason: "too_far", chips: [] },
+        c: { reaction: "not_for_us", reason: "too_far", chips: [] },
+        d: { reaction: "not_for_us", reason: "too_far", chips: [] },
+        e: { reaction: "not_for_us", reason: "too_small", chips: [] },
+        f: { reaction: "closer_look", reason: null, chips: ["academics"] },
+      },
+      (id) => (id === "f" ? "D3" : null),
+    )
+    expect(l.weights.distance).toBe(1.5)
+    expect(l.weights.strength).toBe(0.5)
+    expect(l.sizes).toEqual(["medium", "large"])
+    expect(l.levels.D3).toBeCloseTo(0.2, 5)
+    expect(l.lines.join(" ")).toMatch(/distance from home, academics now count for more/)
+    expect(l.lines.join(" ")).toMatch(/bigger schools come first/)
+  })
+})
+
+describe("learning from the family's own list", () => {
+  const none = { weights: {}, sizes: [], levels: {}, lines: [] }
+  it("needs three saved colleges", () => {
+    expect(learnFromList([{ level: "D3", strength: 1, undergrads: 2000 }], none)).toEqual(none)
+  })
+  it("a list of strong small schools teaches both", () => {
+    const l = learnFromList(
+      [
+        { level: "D3", strength: 0.9, undergrads: 2000 },
+        { level: "D3", strength: 0.8, undergrads: 1800 },
+        { level: "D2", strength: 0.7, undergrads: 3000 },
+      ],
+      none,
+    )
+    expect(l.weights.strength).toBe(0.5)
+    expect(l.sizes).toEqual(["small"])
+    expect(l.levels.D3).toBeCloseTo(0.2, 5)
+    expect(l.lines[0]).toBe("Your list leans toward strong academics and small schools, so these do too.")
   })
 })

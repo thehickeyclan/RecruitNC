@@ -66,7 +66,32 @@ export const TOP3_FACTORS: Option[] = [
   { key: "coaching", label: "Coaching and the room" },
 ]
 
-export const MAJOR_OPTIONS: Option[] = MAJOR_FAMILIES.map((m) => ({ key: m.code, label: m.label }))
+/**
+ * Career paths families think in (Matt, 6 Nov 2026: "should have premed, law, nursing"). None is a
+ * federal major family, so each maps to the families that lead there: a college "offers" a path when
+ * it offers any of them. Pre-professional paths also count as wanting a strong school (recommend.ts).
+ */
+export const MAJOR_PATHS: Array<Option & { families: string[]; academic?: boolean }> = [
+  { key: "pre_med", label: "Pre-med (doctor, dentist, PA)", families: ["26", "40"], academic: true },
+  { key: "nursing", label: "Nursing", families: ["51"] },
+  { key: "pre_law", label: "Pre-law", families: ["45", "54", "23", "42"], academic: true },
+  { key: "pt_at", label: "Physical therapy or athletic training", families: ["51", "31"] },
+  { key: "pre_vet", label: "Pre-vet", families: ["26", "01"], academic: true },
+  { key: "sports_mgmt", label: "Sports management", families: ["31", "52"] },
+  { key: "finance", label: "Finance and accounting", families: ["52"] },
+]
+/** With Nursing its own choice, the federal family reads as the rest of health care. */
+const FAMILY_LABEL: Record<string, string> = { "51": "Other health professions" }
+
+export const MAJOR_OPTIONS: Option[] = [
+  ...MAJOR_PATHS.map(({ key, label }) => ({ key, label })),
+  ...MAJOR_FAMILIES.map((m) => ({ key: m.code, label: FAMILY_LABEL[m.code] ?? m.label })),
+]
+
+/** The federal major families behind a pick: a path's families, or the family itself. */
+export const familiesOf = (code: string): string[] => MAJOR_PATHS.find((p) => p.key === code)?.families ?? [code]
+/** A pick that asks for a strong school (pre-med, pre-law, pre-vet). */
+export const isAcademicPath = (code: string): boolean => MAJOR_PATHS.some((p) => p.key === code && p.academic)
 
 export const QUESTIONS: Question[] = [
   // ---- Part A: parent. Goals first (goals.ts).
@@ -179,7 +204,7 @@ export function showA9(input: { grade: number | null; answers: Record<string, un
 /** Nursing has structured variants (direct-entry BSN or pre-nursing): one follow-up when it's picked. */
 export function wantsBsnFollowUp(academics: { majors?: string[]; text?: string } | null | undefined): boolean {
   if (!academics) return false
-  return (academics.majors ?? []).includes("51") || /\bnurs/i.test(academics.text ?? "")
+  return (academics.majors ?? []).some((m) => m === "51" || m === "nursing") || /\bnurs/i.test(academics.text ?? "")
 }
 
 export function questionsFor(respondent: Respondent, ctx: { grade: number | null; answers: Record<string, unknown> }): Question[] {

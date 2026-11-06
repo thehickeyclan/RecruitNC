@@ -14,6 +14,7 @@ import { roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/
 import { tuitionForSchool } from "@/lib/college-programs/tuition"
 import { DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { collegeFitFor, loadFamilyFitContext, type FamilyFitContext } from "@/lib/recruiting/college-fit"
+import { fitForSchool } from "@/lib/college-programs/fit"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
 import { alignmentFor, type Alignment } from "@/lib/recruiting/priorities/alignment"
@@ -21,18 +22,20 @@ import { goalsAreLastSeason } from "@/lib/recruiting/priorities/goals"
 import { shortListLine, type ShortListReason } from "@/lib/recruiting/priorities/copy"
 import { passedBy, reactionsFor, type ReactionRow, type ReactionsView } from "@/lib/recruiting/priorities/reactions"
 import type { Respondent } from "@/lib/recruiting/priorities/questions"
-import { recommend, type Card, type CollegeFacts, type Level } from "@/lib/recruiting/priorities/recommend"
+import { academicStrength, learnFromList, learnFromReactions, recommend, type Card, type CollegeFacts, type Level } from "@/lib/recruiting/priorities/recommend"
 import { jointInputs, ownerOnlyInputs } from "@/lib/recruiting/priorities/sharing"
 import { TABLE_MISSING, loadFamilySets, respondentFor } from "@/lib/recruiting/priorities/store"
 import { zipPoint } from "@/lib/recruiting/zip-point"
 
 const ALL = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 const NAME_BY_ID = new Map(ALL.map((s) => [s.id, s.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()]))
+const LEVEL_BY_ID = new Map(ALL.flatMap((s) => (s.programs[0] ? [[s.id, DIVISION_SHORT[s.programs[0].division] as Level] as const] : [])))
 const MAJORS = majorsData.majors as Record<string, string[]>
 /** Bump when the engine's output changes shape or meaning, so stored lists are made again. */
 // 2: distance measures from every US ZIP, not NC ZIPs only (6 Nov 2026).
 // 3: goals first; weights read goals.ts (6 Nov 2026).
-const ENGINE_VERSION = 3
+// 4: academic strength (graduation rate), career paths (pre-med, pre-law, nursing...), and learning from reactions (6 Nov 2026).
+const ENGINE_VERSION = 4
 const REUSE_DAYS = 7
 const spoken = (name: string) => name.replace(/\s*\([^)]*\)\s*/g, " ").trim()
 
@@ -83,9 +86,6 @@ export async function priorityLists(
   if (!sets.parent?.completedAt && !sets.athlete?.completedAt) return null
   const joint = jointInputs(sets)
   const own = ownerOnlyInputs(respondent, sets)
-  const inputs = createHash("sha256")
-    .update(JSON.stringify({ v: ENGINE_VERSION, respondent, joint, own, team: opts.team, views: opts.includeViews }))
-    .digest("hex")
 
   const other = respondent === "parent" ? sets.athlete : sets.parent
   const mine = respondent === "parent" ? sets.parent : sets.athlete
@@ -112,7 +112,25 @@ export async function priorityLists(
     const items = row?.items as Stored | undefined
     return row && items?.inputs === inputs && Date.now() - new Date(String(row.generated_at)).getTime() < REUSE_DAYS * 86_400_000 ? { id: String(row.id), items } : null
   }
-  const [ctx, reactions] = await Promise.all([ctxPromise, reactionsPromise])
+  // The viewer's own list (college_list_items is per login): what they save teaches too.
+  const savedPromise = admin
+    .from("college_list_items")
+    .select("school_id")
+    .eq("user_id", opts.viewerId)
+    .limit(200)
+    .then(({ data }) => (data ?? []).map((r) => String(r.school_id)).sort(), () => [] as string[])
+  const [ctx, reactions, saved] = await Promise.all([ctxPromise, reactionsPromise, savedPromise])
+  // The viewer's own reactions and list teach the next list (recommend.ts), so they are part of the reuse key.
+  const learned = learnFromList(
+    saved.map((id) => {
+      const f = fitForSchool(id)
+      return { level: LEVEL_BY_ID.get(id) ?? null, strength: academicStrength({ gradRate: f?.gradRate ?? null, admitRate: f?.admitRate ?? null }), undergrads: f?.undergrads ?? null }
+    }),
+    learnFromReactions(reactions.mine, (id) => LEVEL_BY_ID.get(id) ?? null),
+  )
+  const inputs = createHash("sha256")
+    .update(JSON.stringify({ v: ENGINE_VERSION, respondent, joint, own, team: opts.team, views: opts.includeViews, mine: reactions.mine, saved }))
+    .digest("hex")
   const name = ctx.first ?? "your wrestler"
   const otherLabel = respondent === "parent" ? (ctx.first ?? "Your wrestler") : "Your parent"
   const alignment =
@@ -144,6 +162,7 @@ export async function priorityLists(
     zipPoint,
     // The viewer's own passes only: the other side's reactions never shape this viewer's lists.
     passed: passedBy(reactions.mine),
+    learned,
   })
   const withLogos = (cards: Card[]) => Promise.all(cards.map(async (c) => ({ ...c, logo: await schoolLogoUrl({ id: c.id, name: c.name }).catch(() => null) })))
   const [best, opp] = await Promise.all([withLogos(lists.bestFit), withLogos(lists.opportunities)])
@@ -227,6 +246,8 @@ export async function collegeFactsFor(
       coachViews: views.get(s.id)?.views ?? 0,
       coachNeedWeight: needAt.get(s.id) ?? null,
       firstSeason: s.firstSeason ?? null,
+      gradRate: fit.fit?.gradRate ?? null,
+      admitRate: fit.fit?.admitRate ?? null,
     })
   }
   const inState = ALL.filter((s) => s.state === ctx.homeState)

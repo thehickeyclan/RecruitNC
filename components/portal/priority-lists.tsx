@@ -28,6 +28,7 @@ export function PriorityLists({
   readOnly,
   savedCount = 0,
   bare = false,
+  picks = false,
 }: {
   lists: PriorityListsView
   athleteId: string
@@ -36,6 +37,8 @@ export function PriorityLists({
   readOnly?: boolean
   savedCount?: number
   bare?: boolean
+  /** The survey's last screen: just five cards to react to (best fit first), nothing else. */
+  picks?: boolean
 }) {
   const [mine, setMine] = useState<Record<string, SeenReaction>>(lists.reactions.mine)
   const [newlySaved, setNewlySaved] = useState(0)
@@ -252,6 +255,10 @@ export function PriorityLists({
       </div>
     ) : null
   if (!lists.bestFit.length && !lists.opportunities.length && !lists.shortLine) return null
+  if (picks) {
+    const five = [...lists.bestFit, ...lists.opportunities].filter((c, i, all) => all.findIndex((x) => x.id === c.id) === i).slice(0, 5)
+    return five.length ? <ul className="mt-4 grid gap-2 sm:grid-cols-2">{five.map(card)}</ul> : null
+  }
   return (
     <section className={bare ? "mt-5 scroll-mt-24" : "mt-4 scroll-mt-24 rounded-xl border border-white/10 bg-[#0f1c2e] p-5"} id="cc-lists" aria-labelledby="cc-lists-h">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3">
