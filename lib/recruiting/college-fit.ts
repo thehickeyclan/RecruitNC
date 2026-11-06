@@ -22,10 +22,9 @@ import { loadAthleteCredentials } from "@/lib/credentials/athlete-credentials"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { DEMO_FAMILY, isDemoFamily } from "@/lib/recruiting/demo-family"
 import { EMPTY_PROFILE, academicFit, athleticFit, cleanProfile, costFit, goalsFit, milesBetween, type FamilyFitProfile, type FitLine } from "@/lib/recruiting/family-fit"
-import ncZips from "@/lib/recruiting/nc-zips.json"
+import { zipPoint } from "@/lib/recruiting/zip-point"
 
 const MAJORS = majorsData.majors as Record<string, string[]>
-const NC_ZIPS = ncZips.zips as Record<string, number[]>
 const spoken = (name: string) => name.replace(/\s*\([^)]*\)\s*/g, " ").trim()
 
 export type FamilyFitContext = {
@@ -59,7 +58,7 @@ export async function loadFamilyFitContext(admin: SupabaseClient, userId: string
     const snapshot = await readWentHereSnapshot().then((snap) => snapshotForState(snap, d.homeState))
     return {
       team, among: team === "womens" ? "women" : team === "mens" ? "men" : "wrestlers", first: d.first, sat: d.sat, act: d.act, weight: d.weight,
-      classYear: d.classYear, profile: d.profile, profileSet: true, home: (NC_ZIPS[d.profile.homeZip] as [number, number] | undefined) ?? null,
+      classYear: d.classYear, profile: d.profile, profileSet: true, home: zipPoint(d.profile.homeZip),
       mine: d.standing, myGpa: d.gpa, snapshot, homeState: d.homeState,
     }
   }
@@ -95,7 +94,7 @@ export async function loadFamilyFitContext(admin: SupabaseClient, userId: string
     classYear: Number(wrestler?.graduationyear) || null,
     profile,
     profileSet: Boolean(profile.majors.length || profile.budget || profile.maxMiles || profile.size || profile.settings.length),
-    home: profile.homeZip ? ((NC_ZIPS[profile.homeZip] as [number, number] | undefined) ?? null) : null,
+    home: zipPoint(profile.homeZip),
     mine,
     myGpa: parseGpa(wrestler?.academic_gpa),
     snapshot,
