@@ -100,7 +100,7 @@ export const RECRUITING_BRAND = {
      * match and nothing below, so unlike Arkansas there are no ties to store - but it is the second
      * state running in a row whose podium is not the assumed six.
      */
-    { code: "OK", name: "Oklahoma", live: false },
+    { code: "OK", name: "Oklahoma", live: true, ranked: false },
     /*
      * Iowa clears the placer bar at 1,108 of 1,109 keys (99.9%), with one named unresolved
      * champion - Koy Davidson, whose Flo print reads 'HS Senior' in two different years and whom
