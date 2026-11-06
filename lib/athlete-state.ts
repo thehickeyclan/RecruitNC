@@ -145,6 +145,20 @@ const ASSOCIATIONS: Record<
   ID: { public: "IHSAA" },
   AZ: { public: "AIA" },
   /*
+   * South Dakota admits seventh and eighth graders to the state tournament and the prints prove
+   * it: 69 placements at grade 8 or below, including a grade-7 champion in 2024 and Cael Vander
+   * Broek winning Class B 113 as a seventh grader in 2026. Without this flag the readiness gate
+   * reads every one of them as a namesake or a wrong class year.
+   */
+  SD: { public: "SDHSAA", middleSchoolVarsity: true },
+  /*
+   * North Dakota the same, on NDHSAA's own eligibility document: participation on a high school
+   * team as a 7th or 8th grader does not count against the eight-semester limit, so middle
+   * schoolers wrestle varsity. The captures print '7th' and '8th' for dozens of entrants a
+   * season, and 85 resolved placer keys imply a grade of 8 or below in a placed season.
+   */
+  ND: { public: "NDHSAA", middleSchoolVarsity: true },
+  /*
    * FHSAA admits middle schoolers to varsity, so an 8th-grade result is data, not a defect. The
    * readiness gate flagged nine as "results before freshman year" until this was set, and the
    * evidence is that they are real young wrestlers rather than namesake collisions: every one is
