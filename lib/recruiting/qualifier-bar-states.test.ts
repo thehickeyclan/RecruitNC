@@ -16,8 +16,7 @@
  * from 16 to 8 per weight for 2025-26. Measure the format before calling a field a podium.
  * The real holds: Maine and Vermont on class years (ME boys 84%), Rhode Island on class years
  * (19% of boys), Pennsylvania the same (76% boys / 64% girls), Wisconsin under-minted at 68.5%
- * with bracket-code school strings in its rows, Maryland on two genuine duplicate profiles, and
- * Illinois held by choice: it passes every gate, but its girls' field is the podium only and a
+ * with bracket-code school strings in its rows, and Illinois held by choice: it passes every gate, but its girls' field is the podium only and a
  * full-field replacement is in flight, so launching it would report girls as complete first.
  * Louisiana passes the bar and is held on the pre-freshman gate: 21 results sit on profiles
  * before that wrestler's freshman year.
@@ -46,9 +45,11 @@ const OPENED = [
   "WA", "UT", "KS", "CO", "OR", "ID", "MT", "NE", "AZ", "WY", "NM", "SD", "ND", "NV", "HI", "CA",
   // and three more once re-measured: AR was held on a bad reading, IN and TX were podium-mints
   "AR", "IN", "TX",
+  // Maryland last, once its two genuine duplicate profiles were merged
+  "MD",
 ] as const
 // Held, and the reason is in the header: podium-only holds, unknown class years, or a data gate.
-const HELD = ["RI", "LA", "MD", "WI", "ME", "VT", "PA", "IL"] as const
+const HELD = ["RI", "LA", "WI", "ME", "VT", "PA", "IL"] as const
 
 const state = (code: string) => {
   const s = RECRUITING_BRAND.states.find((x) => x.code === code)

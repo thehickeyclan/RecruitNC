@@ -35,7 +35,7 @@ export const RECRUITING_BRAND = {
      * product: /api/prospects answers "That state is not open yet" for it, to admins too. So
      * 224 Maryland profiles were unreachable by anybody, including the people checking them.
      */
-    { code: "MD", name: "Maryland", live: false },
+    { code: "MD", name: "Maryland", live: true, ranked: false },
     { code: "WV", name: "West Virginia", live: true, ranked: false },
     { code: "DE", name: "Delaware", live: true, ranked: false },
     /*
