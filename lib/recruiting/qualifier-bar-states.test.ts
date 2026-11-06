@@ -1,10 +1,13 @@
 /**
- * The fifteen states opened on 6 November 2026, and the two things that must stay true of them.
+ * The thirty-one states opened on 6 November 2026, and the two things that must stay true of them.
  *
  * The bar Matt set: a profile for every 2026 state qualifier, men and women, who has a class year,
  * with national results linked. Qualifiers, not placers - the whole field, not the podium. Eight
  * went live first; the gender leg was then measured separately and seven more cleared it
- * (MS KY NJ NY CT MO MI), two of them carrying a single naming row Matt waived explicitly.
+ * (MS KY NJ NY CT MO MI), two of them carrying a single naming row Matt waived explicitly. The
+ * third wave is the sixteen western states, which had been minted from their podiums only and sat
+ * at 20-47% of their qualifier field; `--include-qualifiers` created 8,854 profiles and attached
+ * 32,876 bouts, taking every one of them to 99.4% or better on both genders.
  *
  * What the held states fail on is never naming. Arkansas, Maine, Wisconsin, Vermont and Rhode
  * Island hold the podium only - a median of 8 entrants per bracket where a real field is 16, so
@@ -13,7 +16,7 @@
  * pre-freshman gate: 21 results sit on profiles before that wrestler's freshman year.
  *
  * The trap this file exists to hold shut: `isRankedState` treats a state with no `ranked` key as
- * ranked. Flipping `live` alone would have put fifteen empty ranking boards into the product, since
+ * ranked. Flipping `live` alone would have put thirty-one empty ranking boards into the product, since
  * the board builds its own state list from `rankedStates`. The checklist is explicit - "never show
  * an empty one" - so every state here carries `ranked: false` until it has a published board.
  */
@@ -32,6 +35,8 @@ const OPENED = [
   "DE", "MN", "WV", "AL", "FL", "NH", "IA", "MA",
   // the second, once the bar was measured for men and women separately
   "MS", "KY", "NJ", "NY", "CT", "MO", "MI",
+  // the third: the western wave, minted from the field instead of the podium
+  "WA", "UT", "KS", "CO", "OR", "ID", "MT", "NE", "AZ", "WY", "NM", "SD", "ND", "NV", "HI", "CA",
 ] as const
 // Held, and the reason is in the header: podium-only holds, unknown class years, or a data gate.
 const HELD = ["RI", "LA", "MD", "WI", "AR", "ME", "VT", "PA"] as const

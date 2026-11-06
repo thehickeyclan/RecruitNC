@@ -164,13 +164,13 @@ export const RECRUITING_BRAND = {
      * both came back essentially complete - Nebraska 995 of 995 placer keys resolved with no RW
      * pass at all, Colorado 1,025 of 1,026.
      */
-    { code: "NE", name: "Nebraska", live: false },
-    { code: "CO", name: "Colorado", live: false },
-    { code: "UT", name: "Utah", live: false },
-    { code: "ID", name: "Idaho", live: false },
-    { code: "AZ", name: "Arizona", live: false },
-    { code: "SD", name: "South Dakota", live: false },
-    { code: "ND", name: "North Dakota", live: false },
+    { code: "NE", name: "Nebraska", live: true, ranked: false },
+    { code: "CO", name: "Colorado", live: true, ranked: false },
+    { code: "UT", name: "Utah", live: true, ranked: false },
+    { code: "ID", name: "Idaho", live: true, ranked: false },
+    { code: "AZ", name: "Arizona", live: true, ranked: false },
+    { code: "SD", name: "South Dakota", live: true, ranked: false },
+    { code: "ND", name: "North Dakota", live: true, ranked: false },
     /*
      * The last ten, built in one night (Muse, 5-6 November 2026) and registered together. With
      * these the list covers all fifty states: 38 built before this wave, 12 in it.
@@ -188,16 +188,16 @@ export const RECRUITING_BRAND = {
      * entirely because its December 2025 tournament lives on a mirror source that prints no
      * grades at all. 2024 and 2025 are both around 95%.
      */
-    { code: "WA", name: "Washington", live: false },
-    { code: "KS", name: "Kansas", live: false },
-    { code: "OR", name: "Oregon", live: false },
-    { code: "CA", name: "California", live: false },
-    { code: "MT", name: "Montana", live: false },
-    { code: "WY", name: "Wyoming", live: false },
-    { code: "NV", name: "Nevada", live: false },
-    { code: "NM", name: "New Mexico", live: false },
+    { code: "WA", name: "Washington", live: true, ranked: false },
+    { code: "KS", name: "Kansas", live: true, ranked: false },
+    { code: "OR", name: "Oregon", live: true, ranked: false },
+    { code: "CA", name: "California", live: true, ranked: false },
+    { code: "MT", name: "Montana", live: true, ranked: false },
+    { code: "WY", name: "Wyoming", live: true, ranked: false },
+    { code: "NV", name: "Nevada", live: true, ranked: false },
+    { code: "NM", name: "New Mexico", live: true, ranked: false },
     { code: "AK", name: "Alaska", live: false },
-    { code: "HI", name: "Hawaii", live: false },
+    { code: "HI", name: "Hawaii", live: true, ranked: false },
   ],
 } as const
 
