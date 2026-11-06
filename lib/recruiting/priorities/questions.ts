@@ -107,7 +107,7 @@ export const QUESTIONS: Question[] = [
     ] },
   },
   { id: "P5", key: "divisions", respondent: "parent", title: "Which levels are you open to?", sharing: "shared", kind: { type: "grid", rows: PATHWAYS, options: PATHWAY_STATES } },
-  { id: "P6", key: "academics", respondent: "parent", title: "What should college do for {name} academically?", sharing: "shared", marker: true, kind: { type: "majors" } },
+  { id: "P6", key: "academics", respondent: "parent", title: "What might {name} want to study? Pick any that fit.", sharing: "shared", marker: true, kind: { type: "majors" } },
   {
     id: "P7", key: "school_feel", respondent: "parent", title: "What kind of school feels right?", sharing: "shared",
     kind: { type: "multi", options: [
@@ -133,7 +133,7 @@ export const QUESTIONS: Question[] = [
     id: "A4b", key: "service", respondent: "athlete", title: "Would you consider a service academy or ROTC?", sharing: "shared",
     kind: { type: "single", options: [{ key: "interested", label: "Interested" }, { key: "open", label: "Open to hearing about it" }, { key: "not", label: "Not for me" }] },
   },
-  { id: "A5", key: "academics", respondent: "athlete", title: "What are you interested in studying, or doing after college?", sharing: "shared", kind: { type: "majors" } },
+  { id: "A5", key: "academics", respondent: "athlete", title: "What might you want to study? Pick any that fit.", sharing: "shared", kind: { type: "majors" } },
   {
     id: "A6", key: "college_weight", respondent: "athlete", title: "What weight do you expect to wrestle in college?", sharing: "shared",
     kind: { type: "single", options: [{ key: "current", label: "Current weight" }, { key: "one_up", label: "One class up" }] },
