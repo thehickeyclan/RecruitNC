@@ -61,61 +61,43 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const athleteMatches: any[] = []
     const matchAttempts: any[] = []
     let allMatches: any[] = []
+
+    /*
+     * This wrestler's rows, and nothing else (6 November 2026).
+     *
+     * Both branches below used to read the WHOLE matches table - a count(*), then one page per
+     * thousand rows - and filter it in memory by name. The table links to profiles directly:
+     * 5,576 of its 5,588 rows carry an athlete_id. And 5,588 rows against 24,776 profiles means
+     * most profiles have no row here at all, so nearly every profile view paid seven queries and
+     * about three and a half seconds to find nothing.
+     *
+     * It is paid on nearly every view, too, not rarely: match-data-section-improved.tsx falls
+     * back to this route whenever matches-direct returns no seasons, with cache: "no-store". One
+     * profile view, seven queries over a whole table, uncached - that amplification is the shape
+     * that starves a connection pool, and it got worse with every profile released.
+     */
+    const fetchAthleteMatches = async (): Promise<any[]> => {
+      const { data: own, error: ownError } = await supabase.from("matches").select("*").eq("athlete_id", athleteId)
+      if (ownError) console.error("Error fetching this athlete's matches:", ownError.message)
+      if (own?.length) return own
+      // The dozen rows carrying no athlete_id are reachable only by name - still one scoped query,
+      // and the name matching below runs over the result exactly as it did over the whole table.
+      if (!lastName) return []
+      const { data: byName, error: nameError } = await supabase
+        .from("matches")
+        .select("*")
+        .is("athlete_id", null)
+        .ilike("last_name", lastName)
+      if (nameError) console.error("Error fetching unlinked matches by surname:", nameError.message)
+      return byName ?? []
+    }
     let processedRecords = 0
     let parseErrors = 0
-    let totalCount = 0
 
     if (fullNameLower.includes("jackson rowling")) {
       console.log("🔍 Special matching for Jackson Rowling")
 
-      // Get total count first for debugging
-      const { count, error: countError } = await supabase.from("matches").select("*", { count: "exact", head: true })
-
-      if (countError) {
-        console.error("Error getting match count:", countError)
-      } else {
-        totalCount = count
-        console.log(`Total matches in database: ${totalCount}`)
-      }
-
-      // More efficient query - get matches in batches and with better filtering
-      const batchSize = 1000
-      let from = 0
-      let hasMore = true
-
-      while (hasMore) {
-        console.log(`Fetching matches batch: ${from} to ${from + batchSize - 1}`)
-
-        const { data: batchMatches, error: batchError } = await supabase
-          .from("matches")
-          .select("*")
-          .range(from, from + batchSize - 1)
-          .order("id")
-
-        if (batchError) {
-          console.error("Error fetching batch:", batchError)
-          break
-        }
-
-        if (!batchMatches || batchMatches.length === 0) {
-          hasMore = false
-          break
-        }
-
-        allMatches = allMatches.concat(batchMatches)
-
-        if (batchMatches.length < batchSize) {
-          hasMore = false
-        } else {
-          from += batchSize
-        }
-
-        // Safety limit to prevent infinite loops
-        if (from > 50000) {
-          console.warn("Hit safety limit, stopping batch fetch")
-          break
-        }
-      }
+      allMatches = await fetchAthleteMatches()
 
       console.log(`Total matches fetched: ${allMatches.length}`)
 
@@ -310,54 +292,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         }
       })
     } else {
-      // Get total count first for debugging
-      const { count, error: countError } = await supabase.from("matches").select("*", { count: "exact", head: true })
-
-      if (countError) {
-        console.error("Error getting match count:", countError)
-      } else {
-        totalCount = count
-        console.log(`Total matches in database: ${totalCount}`)
-      }
-
-      // More efficient query - get matches in batches and with better filtering
-      const batchSize = 1000
-      let from = 0
-      let hasMore = true
-
-      while (hasMore) {
-        console.log(`Fetching matches batch: ${from} to ${from + batchSize - 1}`)
-
-        const { data: batchMatches, error: batchError } = await supabase
-          .from("matches")
-          .select("*")
-          .range(from, from + batchSize - 1)
-          .order("id")
-
-        if (batchError) {
-          console.error("Error fetching batch:", batchError)
-          break
-        }
-
-        if (!batchMatches || batchMatches.length === 0) {
-          hasMore = false
-          break
-        }
-
-        allMatches = allMatches.concat(batchMatches)
-
-        if (batchMatches.length < batchSize) {
-          hasMore = false
-        } else {
-          from += batchSize
-        }
-
-        // Safety limit to prevent infinite loops
-        if (from > 50000) {
-          console.warn("Hit safety limit, stopping batch fetch")
-          break
-        }
-      }
+      allMatches = await fetchAthleteMatches()
 
       console.log(`Total matches fetched: ${allMatches.length}`)
 
@@ -530,7 +465,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         matchAttempts: matchAttempts.slice(0, 10), // First 10 potential matches
         matchesFound: uniqueMatches.length,
         seasonsExtracted: uniqueMatches.reduce((total, match) => total + Object.keys(match.wrestler.seasons).length, 0),
-        totalDatabaseRecords: totalCount,
+        rowsConsidered: allMatches.length,
       },
     })
   } catch (error) {

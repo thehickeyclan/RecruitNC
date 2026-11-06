@@ -240,6 +240,7 @@ export async function fetchProspectDirectoryAll(
   filters: Omit<ProspectDirectoryFilters, "offset" | "limit"> = {},
 ): Promise<ProspectDirectoryRow[]> {
   const PAGE = MAX_LIMIT
+  const CAP = 20_000
   const all: ProspectDirectoryRow[] = []
   let offset = 0
 
@@ -252,7 +253,20 @@ export async function fetchProspectDirectoryAll(
     all.push(...prospects)
     if (!hasMore) break
     offset += PAGE
-    if (offset > 20_000) break
+    /*
+     * The stop used to `break` here and return a short list that looked complete (6 November
+     * 2026). Its one caller scopes to a single state and class year, a few hundred rows, so it
+     * has never fired - but the signature defaults `filters` to {}, and an unscoped call would
+     * quietly drop everyone past 20,000 against the 24,776 profiles we already hold. That is the
+     * same silent ceiling the Southeast Open matcher hit at 1,000 rows, waiting at a bigger
+     * number. A truncated directory must be noisy, never plausible.
+     */
+    if (offset > CAP) {
+      throw new Error(
+        `fetchProspectDirectoryAll stopped at ${CAP} rows with more to read (filters: ${JSON.stringify(filters)}). ` +
+          "Scope it to a state and class year, or page it with fetchProspectDirectoryPage.",
+      )
+    }
   }
 
   return all
