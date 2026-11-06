@@ -263,6 +263,14 @@ export function PriorityLists({
         </a>
       </div>
       <p className="text-xs text-white/50">{lists.shapedBy}{canReact ? " React to each one. Worth a closer look saves it to your My List." : ""}</p>
+      {lists.goalsLastSeason && !readOnly ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#D3B574]/30 bg-[#D3B574]/[0.06] p-3">
+          <p className="min-w-0 flex-1 text-xs text-white/75">Your goals are from last season. Goals change as {firstName} grows. Check they still fit.</p>
+          <a href={`/my-recruiting/priorities?w=${athleteId}`} className="shrink-0 rounded-lg bg-[#D3B574] px-3 py-1.5 text-xs font-black text-[#0A1628]">
+            Review my goals
+          </a>
+        </div>
+      ) : null}
       {lists.inviteAthlete && !readOnly ? (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#D3B574]/30 bg-[#D3B574]/[0.06] p-3">
           <p className="min-w-0 flex-1 text-xs text-white/75">

@@ -8,14 +8,17 @@ const set = (respondent: "parent" | "athlete", answers: Answer[]): AnswerSet => 
 const a = (key: string, value: unknown, sharing: Answer["sharing"] = "shared"): Answer => ({ key, value, sharing, marker: null, notSure: false })
 
 describe("question inventory (authoritative numbering)", () => {
-  it("parent is P1–P9", () => {
-    expect(QUESTIONS.filter((q) => q.respondent === "parent").map((q) => q.id)).toEqual(["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"])
+  it("parent: goals first, then P1–P8 without the retired P4", () => {
+    expect(QUESTIONS.filter((q) => q.respondent === "parent").map((q) => q.id)).toEqual(["P0", "P0b", "P1", "P2", "P3", "P5", "P6", "P7", "P8"])
   })
-  it("athlete is A1–A8, A4b, conditional A9 and A10: 10 screens, 11 when A9 shows", () => {
+  it("athlete: goals first, A1–A8 without A3, A4b, conditional A9: 10 screens, 11 when A9 shows", () => {
+    expect(questionsFor("athlete", { grade: 9, answers: {} })[0].key).toBe("goals")
     expect(questionsFor("athlete", { grade: 9, answers: {} })).toHaveLength(10)
     expect(questionsFor("athlete", { grade: 11, answers: {} })).toHaveLength(11)
     expect(questionsFor("athlete", { grade: 9, answers: { first_year: "compete_now" } }).map((q) => q.id)).toContain("A9")
     expect(showA9({ grade: 9, answers: { level_vs_opportunity: "level" } })).toBe(true)
+    expect(showA9({ grade: 9, answers: { goals: ["career", "level"] } })).toBe(true)
+    expect(showA9({ grade: 9, answers: { goals: ["career"] } })).toBe(false)
   })
   it("defaults: budget constraint-only, benefits and dealbreakers private, the rest shared", () => {
     expect(defaultSharing("parent", "budget")).toBe("constraint")
@@ -24,12 +27,14 @@ describe("question inventory (authoritative numbering)", () => {
     expect(defaultSharing("athlete", "dealbreaker")).toBe("private")
     expect(defaultSharing("parent", "home_zip")).toBe("private")
     expect(defaultSharing("parent", "divisions")).toBe("shared")
-    expect(defaultSharing("athlete", "top3")).toBe("shared")
+    expect(defaultSharing("athlete", "goals")).toBe("shared")
+    expect(defaultSharing("parent", "success")).toBe("private")
+    expect(defaultSharing("athlete", "success")).toBe("private")
   })
-  it("the same seven Top-3 factors on both sides", () => {
+  it("the same seven goals on both sides", () => {
     const keys = (id: string) => (QUESTIONS.find((q) => q.id === id)!.kind as { options: Array<{ key: string }> }).options.map((o) => o.key)
-    expect(keys("P9")).toEqual(keys("A10"))
-    expect(keys("P9")).toHaveLength(7)
+    expect(keys("P0")).toEqual(keys("A0"))
+    expect(keys("P0")).toHaveLength(7)
   })
   it("every screen says who sees the answer, and that coaches never do", () => {
     expect(sharingLine("shared", "athlete")).toMatch(/your parent.*Coaches never/)
@@ -62,12 +67,14 @@ describe("cleanAnswer", () => {
     expect(cleanAnswer("parent", { key: "divisions", value: { D1: "not", D3: "open", D9: "interested", NAIA: "maybe" } })!.value).toEqual({ D1: "not", D3: "open" })
   })
   it("top 3: at most three, no repeats, fewer is fine", () => {
-    expect(cleanAnswer("parent", { key: "top3", value: ["cost", "cost", "level", "distance", "campus"] })!.value).toEqual(["cost", "level", "distance"])
-    expect(cleanAnswer("parent", { key: "top3", value: ["cost"] })!.value).toEqual(["cost"])
+    expect(cleanAnswer("parent", { key: "goals", value: ["pay", "pay", "level", "career", "team", "bogus"] })!.value).toEqual(["pay", "level", "career"])
+    expect(cleanAnswer("parent", { key: "goals", value: ["pay", "cost"] })!.value).toEqual(["pay"])
+    // The retired closer is no longer an answer anyone can save.
+    expect(cleanAnswer("parent", { key: "top3", value: ["cost"] })).toBeNull()
   })
   it("marker only where the question takes one", () => {
     expect(cleanAnswer("parent", { key: "distance", value: "5h", marker: "must" })!.marker).toBe("must")
-    expect(cleanAnswer("parent", { key: "top3", value: ["cost"], marker: "must" })!.marker).toBeNull()
+    expect(cleanAnswer("parent", { key: "goals", value: ["pay"], marker: "must" })!.marker).toBeNull()
   })
   it("ZIP: five digits, parent only", () => {
     expect(cleanAnswer("parent", { key: "home_zip", value: "50063" })!.value).toBe("50063")

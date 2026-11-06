@@ -19,7 +19,8 @@
  * Cost is never a filter. Above a limit it is a flag ("affordability unverified"), because income is
  * never asked and what a family would actually pay is not known.
  */
-import { MAJOR_OPTIONS, PATHWAYS, TOP3_FACTORS, type Respondent } from "@/lib/recruiting/priorities/questions"
+import { rankedGoals } from "@/lib/recruiting/priorities/goals"
+import { MAJOR_OPTIONS, PATHWAYS, type Respondent } from "@/lib/recruiting/priorities/questions"
 import type { Answer, JointInputs, PathwayState, Placement } from "@/lib/recruiting/priorities/sharing"
 import type { FitStatus } from "@/lib/recruiting/family-fit"
 
@@ -102,7 +103,8 @@ const STATUS: Record<FitStatus, number> = { fit: 1, stretch: 0.3, unknown: 0, co
 const DISTANCE_MILES: Record<string, number> = { "2h": 110, "5h": 260, day: 500 }
 const DISTANCE_LABEL: Record<string, string> = { "2h": "about 2 hours", "5h": "about 5 hours", day: "a day's drive" }
 const BUDGET_MAX: Record<string, number> = { lt10: 10_000, "10_20": 20_000, "20_35": 35_000, "35_50": 50_000 }
-const FACTOR_DIM: Record<string, Dim | null> = { level: "level", compete_early: "opportunity", cost: "cost", distance: "distance", academics: "academic", campus: "feel", coaching: null }
+/** Each goal (goals.ts) and the dimension it weights. "team" has no college data to rank on yet. */
+const GOAL_DIM: Record<string, Dim | null> = { level: "level", pay: "cost", academics: "academic", compete: "opportunity", career: "major", team: null, experience: "feel" }
 
 type Dim = "athletic" | "level" | "opportunity" | "academic" | "major" | "distance" | "feel" | "cost"
 const DIMS: Dim[] = ["athletic", "level", "opportunity", "academic", "major", "distance", "feel", "cost"]
@@ -142,19 +144,28 @@ export function placementFor(viewer: Respondent, grids: { parent: Record<string,
   return mineSaidNot ? "excluded" : "primary"
 }
 
-/** Each dimension starts at 1. Each respondent's Top 3 adds 3, 2, 1, averaged over those who answered. */
+/** Each dimension starts at 1. Each respondent's top 3 goals add 3, 2, 1, averaged over those who answered. */
 export function weightsFor(seen: { parent: Answer[]; athlete: Answer[] }): Record<Dim, number> {
   const w = Object.fromEntries(DIMS.map((d) => [d, 1])) as Record<Dim, number>
-  const tops = [valueOf(seen.parent, "top3"), valueOf(seen.athlete, "top3")].filter((t): t is string[] => Array.isArray(t) && t.length > 0)
+  const tops = [seen.parent, seen.athlete].map((side) => rankedGoals((k) => valueOf(side, k))).filter((t) => t.length > 0)
   for (const top of tops) {
-    top.slice(0, 3).forEach((factor, i) => {
-      const dim = FACTOR_DIM[factor]
-      if (!dim || !TOP3_FACTORS.some((f) => f.key === factor)) return
+    top.forEach(({ goal, rank: i }) => {
+      const dim = GOAL_DIM[goal]
+      if (!dim) return
       w[dim] += (3 - i) / tops.length
+      // The strongest school academically is about the major too; a career is about academic fit too.
       if (dim === "academic") w.major += (3 - i) / tops.length
+      if (dim === "major") w.academic += (3 - i) / (2 * tops.length)
     })
   }
+  // Sets from before 6 Nov: distance was a top-3 factor (it has its own question now, no goal), and
+  // the retired level-or-opportunity answer added a half alongside the top 3.
   for (const side of [seen.parent, seen.athlete]) {
+    if (valueOf(side, "goals") !== undefined) continue
+    const old = valueOf(side, "top3")
+    if (!Array.isArray(old)) continue
+    const at = old.slice(0, 3).indexOf("distance")
+    if (at >= 0) w.distance += (3 - at) / Math.max(1, tops.length)
     const lvo = valueOf(side, "level_vs_opportunity")
     if (lvo === "level") w.level += 0.5
     if (lvo === "opportunity") w.opportunity += 0.5

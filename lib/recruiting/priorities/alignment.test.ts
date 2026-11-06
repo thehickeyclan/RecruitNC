@@ -28,19 +28,30 @@ const sets = (parentExtra: Answer[] = []): FamilySets => ({ parent: set("parent"
 const texts = (x: ReturnType<typeof run>) => [...(x?.agree ?? []), ...(x?.differ ?? [])].map((l) => l.text)
 
 describe("alignment card", () => {
+  it("goals: agreement, #1, and the level-set when one top 3 is all wrestling", () => {
+    const goals = (p: string[], at: string[]): FamilySets => ({ parent: set("parent", [a("goals", p)]), athlete: set("athlete", [a("goals", at)]) })
+    const p = texts(run("parent", goals(["career", "pay", "level"], ["level", "team", "experience"])))
+    expect(p).toContain("You both have the highest level in your top 3.")
+    expect(p).toContain("Your #1 goal is getting ready for a career. Gavin's is the highest level.")
+    expect(p).toContain("Your top 3 has getting ready for a career. Gavin's top 3 is all wrestling and college life.")
+    const at = texts(run("athlete", goals(["career", "pay", "level"], ["level", "team", "experience"])))
+    expect(at).toContain("Your parent's top 3 has getting ready for a career. Yours is all wrestling and college life.")
+    expect(texts(run("parent", goals(["career"], ["academics"]))).join(" ")).not.toMatch(/all wrestling/)
+  })
+
   it("needs both sides", () => {
     expect(run("parent", { parent: set("parent", PARENT), athlete: null })).toBeNull()
   })
 
   it("names agreement and differences from the viewer's side", () => {
     const p = run("parent", sets())!
-    expect(p.agree.map((l) => l.text)).toEqual(expect.arrayContaining(["You both want D1 and D2.", "You both have academics and the major in your top 3.", "You both picked " + p.agree.find((l) => l.topic === "majors")!.text.slice(16)]))
+    expect(p.agree.map((l) => l.text)).toEqual(expect.arrayContaining(["You both want D1 and D2.", "You both have academics in your top 3.", "You both picked " + p.agree.find((l) => l.topic === "majors")!.text.slice(16)]))
     expect(p.differ.map((l) => l.text)).toEqual(
       expect.arrayContaining([
         "D3: Gavin is interested, you are not. It stays on Opportunities.",
         "Distance: You lean close to home, gavin wants to get farther away.".replace("gavin", "Gavin"),
         "You lean toward the best chance to compete. Gavin leans toward the highest level possible.",
-        "Your #1 is cost. Gavin's #1 is highest level possible.",
+        "Your #1 goal is help paying. Gavin's is the highest level.",
       ]),
     )
     const w = run("athlete", sets())!
