@@ -6,10 +6,17 @@ import { Check, Plus } from "lucide-react"
 import type { StarterSchool } from "@/app/my-recruiting/starter-set"
 import { FIRST_LIST_GOAL, FirstListProgress } from "@/components/portal/first-list-progress"
 
+/** No logo on file (Ellsworth Community College, say): the college's initials, never a blank box. */
+function monogram(name: string): string {
+  const words = name.split(/\s+/).filter((w) => /^[A-Z]/.test(w) && !["Of", "The", "And", "At"].includes(w))
+  return (words.length ? words : [name]).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
+}
+
 const LEVEL_COLOR: Record<string, string> = { D1: "#60a5fa", D2: "#34d399", D3: "#fbbf24", NAIA: "#f472b6", NJCAA: "#a78bfa" }
 
-/** Step 1's starter set: a few colleges at every level to start from, each one tap to save. */
+/** Step 1's starter set: up to one earned college per level, each one tap to save. Often fewer than five. */
 export function StarterSet({
+  bare = false,
   schools,
   firstName,
   levelColors,
@@ -22,6 +29,8 @@ export function StarterSet({
   readOnly?: boolean
   /** Colleges already on My List, so the first-five progress counts them too. */
   savedCount?: number
+  /** Inside another card (the first-day "Start here"): no border of its own. */
+  bare?: boolean
 }) {
   const [saved, setSaved] = useState<Set<string>>(new Set())
   const colors = levelColors ?? LEVEL_COLOR
@@ -32,11 +41,13 @@ export function StarterSet({
   }
   if (!schools.length) return null
   return (
-    <section className="mt-4 rounded-xl border border-white/10 bg-[#0f1c2e] p-5" aria-labelledby="cc-starter">
+    <section className={bare ? "mt-5 scroll-mt-24" : "mt-4 scroll-mt-24 rounded-xl border border-white/10 bg-[#0f1c2e] p-5"} id="cc-starter-set" aria-labelledby="cc-starter">
       <h2 id="cc-starter" className="text-base font-black">
-        A starter set for {firstName}
+        {schools.length === 1 ? "1 college" : `${schools.length} colleges`} to start with
       </h2>
-      <p className="text-xs text-white/50">Two at every level, from roster room at the weight last wrestled, class, academic fit, cost and your state. Save the ones worth a closer look.</p>
+      <p className="text-xs text-white/50">
+        The best fit at each level we can back up, picked for {firstName}&apos;s results, weight, class, grades and state. Tap + to save.
+      </p>
       {savedCount < FIRST_LIST_GOAL ? <FirstListProgress count={savedCount + saved.size} firstName={firstName} className="mt-3" /> : null}
       <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {schools.map((s) => (
@@ -46,7 +57,9 @@ export function StarterSet({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={s.logo} alt="" className="h-9 w-9 shrink-0 rounded bg-white object-contain p-0.5" />
               ) : (
-                <span className="h-9 w-9 shrink-0 rounded bg-white/[0.06]" aria-hidden />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-white/[0.08] text-[11px] font-black text-white/70" aria-hidden>
+                  {monogram(s.name)}
+                </span>
               )}
               <button
                 type="button"
@@ -60,11 +73,11 @@ export function StarterSet({
             </div>
             <a href={`/recruiting/schools/${s.id}`} className="mt-2 min-w-0">
               <span className="line-clamp-2 text-sm font-bold leading-5 hover:underline">{s.name}</span>
-              <span className="mt-1 flex items-center gap-1 text-[11px] text-white/50">
-                <span className="rounded px-1 text-[10px] font-black text-[#071427]" style={{ backgroundColor: colors[s.level] ?? "#94a3b8" }}>
+              <span className="mt-1 flex items-start gap-1 text-[11px] leading-4 text-white/50">
+                <span className="shrink-0 rounded px-1 text-[10px] font-black text-[#071427]" style={{ backgroundColor: colors[s.level] ?? "#94a3b8" }}>
                   {s.level}
                 </span>
-                <span className="truncate">{s.why}</span>
+                <span className="line-clamp-2">{s.why}</span>
               </span>
             </a>
           </li>

@@ -1,3 +1,4 @@
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 /**
  * The Recruiting Command Center home: a dashboard taken in at a glance (Matt's design, 15 Oct
  * 2026). The detail lives behind the menu - Plan (steps and schedule), Colleges (the board and the
@@ -10,7 +11,7 @@ import Link from "next/link"
 import { easternToday } from "@/lib/college-programs/admissions-format"
 import { nextStep, type ActivityAction } from "@/lib/college-programs/board-activities"
 import { loadListInbound } from "@/lib/college-programs/list-signals"
-import { ArrowRight, BookOpenCheck, CalendarDays, DollarSign, HelpCircle, ListChecks, Mail, Plane, Scale } from "lucide-react"
+import { ArrowRight, BookOpenCheck, CalendarDays, Check, DollarSign, HelpCircle, ListChecks, Mail, Plane, Scale } from "lucide-react"
 
 import { InfoSheetCard } from "@/components/portal/info-sheet-card"
 import { StageSelect } from "@/components/portal/stage-select"
@@ -36,13 +37,18 @@ import { BrandName } from "@/components/recruiting/brand-name"
 import { productName } from "@/lib/recruiting/product-name"
 import { CommandCenterTour } from "@/components/portal/command-center-tour"
 import { RecruitingPath } from "@/components/portal/recruiting-path"
+import { RecruitingPathStrip } from "@/components/portal/recruiting-path-strip"
 import { RemindersPanel } from "@/components/portal/reminders-panel"
+import { PriorityLists } from "@/components/portal/priority-lists"
 import { StarterSet } from "@/components/portal/starter-set"
 import { daysUntilText, visitDates, visitPhase, VISIT_GUIDE } from "@/lib/recruiting/visits"
 import { journeyFor, remindersOn } from "./journey-data"
+import { priorityLists } from "./priority-lists"
 import { starterSet } from "./starter-set"
-import { NextMoves, WhatsChanged } from "@/components/portal/whats-changed"
-import { firstThreeActions } from "@/lib/recruiting/whats-changed"
+import { WhatsChanged } from "@/components/portal/whats-changed"
+import { firstDayMoves } from "@/lib/recruiting/first-day"
+import { hasAnsweredPriorities, respondentFor } from "@/lib/recruiting/priorities/store"
+import { WelcomeModal } from "@/components/portal/welcome-modal"
 import { loadWhatsChanged } from "./whats-changed-data"
 import { CoachNeedsList, programCount } from "@/components/recruiting/coach-needs-list"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
@@ -79,8 +85,42 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
   const w = wrestlers.find((x) => x.id === first?.id) ?? wrestlers[0] ?? null
   const journey = first ? journeyFor(cc, first.id) : null
   const researchNow = journey?.steps.find((s) => s.key === "research")?.status === "now"
+  /*
+   * A family's first day: nothing saved yet. The home page is one "Start here" card, the shortlist
+   * and the five steps, and nothing that would show a zero or an empty box (Matt, 5 Nov 2026, from
+   * Mandi Nelsen's first visit: two "Start here"s and a dozen zeros). The full home returns once a
+   * college is saved.
+   */
+  const firstDay = schools.length === 0
+  // The first-visit welcome, by name, for the family's own login (never a preview).
+  const welcome =
+    // ?cc-welcome=1 shows it again on a developer's machine only, for screenshots.
+    (cc.firstVisit || (process.env.NODE_ENV !== "production" && params["cc-welcome"] === "1")) && !cc.previewing && first && cc.viewerId
+      ? await Promise.all([
+          respondentFor(admin, cc.viewerId, first.id).catch(() => null),
+          admin.from("user_profiles").select("first_name, full_name").eq("user_id", cc.viewerId).maybeSingle().then((r) => r.data, () => null),
+        ]).then(([respondent, me]) => ({
+          parent: respondent !== "athlete",
+          name: String(me?.first_name ?? "").trim() || String(me?.full_name ?? "").trim().split(/\s+/)[0] || null,
+        }))
+      : null
+  // The "What matters" move ticks once this login has finished its own set (a preview counts the family's login).
+  const prioritiesDone = firstDay && first && cc.viewerId ? await hasAnsweredPriorities(admin, cc.viewerId, first.id).catch(() => false) : false
+  // The step to do now, when its button opens the map: then the map card below would be a second "Open the map".
+  const nowStep = journey?.steps.find((s) => s.status === "now") ?? null
+  const pathOpensMap = nowStep?.cta.href === "/recruiting/college-map"
+  // "Where does he compete next?" is the one place to add an event on the full home.
+  const askForEvent = !firstDay && blue && Boolean(w) && w!.events.length === 0
 
-  const [lastCompeted, sheet, contacts, following, inbound, starter, needs] = await Promise.all([
+  // Once either side has finished "What matters", its two lists replace the starter set (survey v3, part 3).
+  const lists =
+    first && cc.viewerId && !cc.hidePersonal
+      ? await priorityLists(admin, { viewerId: cc.viewerId, athleteId: first.id, team: focus?.gender ?? null, includeViews: blue, store: !cc.previewing }).catch((e) => {
+          console.error("[my-recruiting] priority lists", e)
+          return null
+        })
+      : null
+  const [lastCompeted, sheet, contacts, following, inbound, starterRaw, needs] = await Promise.all([
     // Every wrestler's last competed weight: a parent of two saw only one son's (Cheryl Shuster, 28 Oct 2026).
     athletes.length ? loadLastCompeted(admin, athletes.map((a) => a.id), new Map(athletes.map((a) => [a.id, a.classYear]))).catch(() => new Map()) : new Map(),
     // The info sheet is the wrestler's contact details and academics: never for a business account.
@@ -90,15 +130,18 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
     first ? programsFollowing(admin, first.id).catch(() => 0) : 0,
     blue ? loadListInbound(admin, viewerId, athletes.map((a) => a.id)).catch(() => new Map()) : new Map(),
     // A family with nothing saved gets the starter shortlist too, at the top (the "what changed" empty state).
-    (researchNow || schools.length === 0) && first ? starterSet(admin, viewerId, focus?.gender ?? null, schools.map((s) => s.id)).catch(() => []) : [],
+    !lists && (researchNow || schools.length === 0) && first ? starterSet(admin, viewerId, focus?.gender ?? null, schools.map((s) => s.id)).catch(() => []) : [],
     // Coach-confirmed needs at this wrestler's weight and class (never fails: empty on any error).
     first ? loadNeedsForAthlete(admin, first.id) : [],
   ])
+  const starter = starterRaw as Awaited<ReturnType<typeof starterSet>>
   // College programs whose coaches just joined, men's or women's to match the wrestler (Matt, 5 Nov 2026). Never fails the page.
   const joined = await loadRecentlyJoined(admin, focus?.gender ?? null).catch(() => [])
   // What changed for you: the reason to come back each week (lib/recruiting/whats-changed.ts).
   const lastWeight = first ? Number(String((lastCompeted as Map<string, { weight?: string | number | null }>).get(first.id)?.weight ?? "").replace(/[^0-9]/g, "")) || null : null
-  const feed = first ? await loadWhatsChanged(admin, cc, first.id, lastWeight, needs).catch(() => null) : null
+  // Each action once (Matt, 5 Nov 2026): the feed leaves out what the page shows elsewhere. Not on the first day.
+  const skip = ["build", "map", ...(askForEvent ? ["event"] : [])]
+  const feed = first && !firstDay ? await loadWhatsChanged(admin, cc, first.id, lastWeight, needs, new Date(), skip).catch(() => null) : null
   // Today's moves: the steps across the whole list that advance it most (lib/college-programs/board-activities.ts).
   const todayET = easternToday()
   const moves = blue
@@ -136,7 +179,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
       {/* Header band: who this is for, over an NC arena. */}
       <section className="relative -mx-4 -mt-6 overflow-hidden border-b border-white/10 px-4 pb-6 pt-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero-banner-nchsaa-2026-arena.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+        <img src={ARENA_PHOTO} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628] via-[#0A1628]/85 to-[#0A1628]/40" aria-hidden />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -155,7 +198,8 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
             ))}
             {first ? (
               <div className="mt-3">
-                <CommandCenterTour firstName={athletes.map((a) => a.firstName).join(" and ")} autoOpen={cc.firstVisit} />
+                <CommandCenterTour firstName={athletes.map((a) => a.firstName).join(" and ")} autoOpen={cc.firstVisit && !welcome} />
+                {welcome ? <WelcomeModal name={welcome.name} wrestler={athletes.map((a) => a.firstName).join(" and ")} athleteId={first.id} parent={welcome.parent} autoOpen /> : null}
               </div>
             ) : null}
           </div>
@@ -176,7 +220,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
             </div>
           ) : null}
         </div>
-        {first ? (
+        {first && !firstDay ? (
           <ul className="relative mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <li className={`${card} bg-[#0f1c2e]/90 p-4`}>
               <p className="text-3xl font-black">{percent}%</p>
@@ -189,14 +233,14 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               <Link href="/my-recruiting/colleges" className={`${card} flex h-full flex-col bg-[#0f1c2e]/90 p-4 hover:border-[#D3B574]/60`}>
                 <span className="text-3xl font-black">{schools.length}</span>
                 <span className="text-sm text-white/70">Colleges on my list</span>
-                <span className={`${more} mt-auto pt-1`}>{schools.length >= target ? "Compare them" : `Build toward ${target}`} →</span>
+                {schools.length >= target ? <span className={`${more} mt-auto pt-1`}>Compare them →</span> : <span className="mt-auto pt-1 text-xs text-white/45">Goal: {target}</span>}
               </Link>
             </li>
             <li>
               <Link href="/my-recruiting/activity" className={`${card} flex h-full flex-col bg-[#0f1c2e]/90 p-4 hover:border-[#D3B574]/60`}>
                 <span className="text-3xl font-black">{familyViews.programs}</span>
                 <span className="text-sm text-white/70">College programs viewed{athletes.length > 1 ? " (all wrestlers)" : ""}</span>
-                <span className={`${more} mt-auto pt-1`}>{familyViews.programs === 0 ? "Keep building" : "See who"} →</span>
+                {familyViews.programs ? <span className={`${more} mt-auto pt-1`}>See who →</span> : null}
               </Link>
             </li>
             <li>
@@ -240,20 +284,59 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
             </div>
           ) : null}
           {feed && !feed.empty ? <WhatsChanged feed={feed} firstName={first.firstName} weight={lastWeight} levelColors={LEVEL_COLOR} /> : null}
-          {feed?.empty ? (
-            // A brand-new family: value in the first five minutes, with nothing to fill in.
+          {firstDay ? (
+            // A brand-new family: three moves, in order, each ticked once done; then the shortlist.
             <section aria-labelledby="cc-start" className="mt-6 rounded-xl border border-[#D3B574]/40 bg-[#0f1c2e] p-5">
               <h2 id="cc-start" className="text-lg font-black text-white sm:text-xl">
                 Start here for {first.firstName}
               </h2>
-              <p className="text-xs text-white/55">
-                {[first.classYear ? `Class of ${first.classYear}` : null, lastWeight ? `${lastWeight} lbs last wrestled` : null, homeState].filter(Boolean).join(" · ")}
+              <ol className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                {firstDayMoves({
+                  firstName: first.firstName,
+                  athleteId: first.id,
+                  profilePercent: percent,
+                  profileTodo: w?.profileTodo?.edit ?? null,
+                  saved: schools.length,
+                  upcomingEvents: w ? w.events.filter((e) => (e.endDate ?? e.startDate) >= todayET).length : 0,
+                  suggested: lists ? lists.bestFit.length + lists.opportunities.length : starter.length,
+                  prioritiesDone,
+                }).map((m, i) => (
+                  <li key={m.key}>
+                    <a href={m.href} className="flex h-full items-start gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3 hover:border-[#D3B574]">
+                      <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-black text-[#0A1628] ${m.done ? "bg-emerald-500" : "bg-[#D3B574]"}`}
+                        aria-label={m.done ? "Done" : `Move ${i + 1}`}
+                      >
+                        {m.done ? <Check className="h-4 w-4" aria-hidden /> : i + 1}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className={`block text-sm font-bold ${m.done ? "text-white/60 line-through" : "text-white"}`}>{m.label}</span>
+                        <span className="block text-xs text-white/55">{m.why}</span>
+                        {m.key === "profile" && !m.done ? (
+                          <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-white/10" aria-hidden>
+                            <span className="block h-full rounded-full bg-[#D3B574]" style={{ width: `${percent}%` }} />
+                          </span>
+                        ) : null}
+                      </span>
+                      <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#D3B574]" aria-hidden />
+                    </a>
+                  </li>
+                ))}
+              </ol>
+              {lists ? (
+                <PriorityLists bare lists={lists} athleteId={first.id} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} />
+              ) : starter.length ? (
+                <StarterSet bare schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} />
+              ) : null}
+              <p className="mt-3 text-xs text-white/50">
+                Want more choices?{" "}
+                <a href="/recruiting/college-map" className="font-bold text-[#D3B574] hover:underline">
+                  Open the college map →
+                </a>
               </p>
-              <NextMoves title="Your first three moves" actions={firstThreeActions({ firstName: first.firstName, athleteId: first.id, upcomingEvents: w ? w.events.filter((e) => (e.endDate ?? e.startDate) >= todayET).length : 0, profilePercent: percent })} />
-              {starter.length ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
             </section>
           ) : null}
-          {journey ? <RecruitingPath steps={journey.steps} firstName={first.firstName} /> : null}
+          {journey ? firstDay ? <RecruitingPathStrip steps={journey.steps} firstName={first.firstName} /> : <RecruitingPath steps={journey.steps} firstName={first.firstName} /> : null}
           {needs.length ? (
             <section className={`${card} mt-4 p-5`} aria-labelledby="cc-needs">
               <div className="flex items-baseline justify-between gap-3">
@@ -291,11 +374,12 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               </ul>
             </section>
           ) : null}
-          {starter.length && !feed?.empty ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
+          {lists && !firstDay ? <PriorityLists lists={lists} athleteId={first.id} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
+          {starter.length && !firstDay ? <StarterSet schools={starter} firstName={first.firstName} levelColors={LEVEL_COLOR} readOnly={cc.viewerId !== cc.authUserId} savedCount={schools.length} /> : null}
 
           {/* Coming up: visits and the family's own reminders (Matt, 28 Oct 2026). */}
-          {upcomingVisits.length || showReminders ? (
-            <div className={`mt-4 grid gap-4 ${upcomingVisits.length && showReminders ? "lg:grid-cols-2" : ""}`}>
+          {upcomingVisits.length || (showReminders && !firstDay) ? (
+            <div className={`mt-4 grid gap-4 ${upcomingVisits.length && showReminders && !firstDay ? "lg:grid-cols-2" : ""}`}>
               {upcomingVisits.length ? (
                 <section className={`${card} p-5`} aria-labelledby="cc-visits">
                   <div className="flex items-baseline justify-between">
@@ -335,7 +419,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                   </ul>
                 </section>
               ) : null}
-              {showReminders ? <RemindersPanel initial={cc.reminders.reminders} available={cc.reminders.available} schoolNames={schoolNames} athleteId={first.id} readOnly={cc.viewerId !== cc.authUserId} limit={3} /> : null}
+              {showReminders && !firstDay ? <RemindersPanel initial={cc.reminders.reminders} available={cc.reminders.available} schoolNames={schoolNames} athleteId={first.id} readOnly={cc.viewerId !== cc.authUserId} limit={3} /> : null}
             </div>
           ) : null}
 
@@ -343,7 +427,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
            * Where he competes next (Matt, 20 Oct 2026): approved coaches following him see it on
            * Coach Home and in a Thursday alert, so the Command Center asks for it whenever none is on.
            */}
-          {blue && w && w.events.length === 0 ? (
+          {askForEvent && w ? (
             <Link href="/my-recruiting/plan#schedule" className={`${card} mt-6 flex items-center gap-4 border-[#D3B574]/40 p-4 hover:border-[#D3B574]`}>
               <CalendarDays className="h-8 w-8 shrink-0 text-[#D3B574]" aria-hidden />
               <span className="min-w-0 flex-1">
@@ -358,7 +442,8 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
             </Link>
           ) : null}
 
-          {/* Who's reaching out: the family's side of the coach funnel (Matt, 16 Oct 2026). */}
+          {/* Who's reaching out: the family's side of the coach funnel (Matt, 16 Oct 2026). Not on the first day: all zeros. */}
+          {!firstDay ? (
           <section className={`${card} mt-6 p-5`} aria-labelledby="cc-reach">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -373,9 +458,9 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                 listIds={schools.map((s) => s.id)}
               />
             </div>
-            <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {/* Programs viewed is the header's number; it is not repeated here. */}
+            <ol className="mt-4 grid grid-cols-3 gap-2">
               {[
-                { n: familyViews.programs, label: "Programs viewed", sub: athletes.length > 1 ? "verified, all wrestlers" : "verified" },
                 { n: reach.reached, label: "Reached out", sub: "colleges" },
                 { n: reach.visits, label: "Visits", sub: "colleges" },
                 { n: reach.offers, label: "Offers", sub: "colleges" },
@@ -414,6 +499,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               <p className="mt-4 text-sm text-white/55">Nothing logged yet. When a coach calls, texts, invites you to camp, or you visit, tap the button.</p>
             )}
           </section>
+          ) : null}
 
           {moves.length ? (
             <section className={`${card} mt-6 p-5`} aria-labelledby="cc-moves">
@@ -453,7 +539,9 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
             </section>
           ) : null}
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          {/* My list and the map: not on the first day, where the shortlist is the list. */}
+          {!firstDay ? (
+          <div className={`mt-6 grid gap-4 ${pathOpensMap ? "" : "lg:grid-cols-2"}`}>
             {/* My college list */}
             <section className={`${card} flex flex-col p-5`} aria-labelledby="cc-list">
               <div className="flex items-baseline justify-between">
@@ -505,12 +593,10 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               ) : (
                 <p className="mt-3 text-sm text-white/60">No colleges yet. Save them from the map; go wide, across levels.</p>
               )}
-              <Link href={schools.length ? "/my-recruiting/colleges" : "/recruiting/college-map"} className={`${more} mt-auto pt-4`}>
-                {schools.length ? "Open your college board" : "Open the map"} →
-              </Link>
             </section>
 
-            {/* The map */}
+            {/* The map, unless the step to do now already opens it. */}
+            {pathOpensMap ? null : (
             <div className="min-w-0 [&>a]:mt-0">
               <MapPreviewCard
                 preview={buildMapPreview(ALL_SCHOOLS, { team: focus?.gender ?? null, savedIds: schools.map((s) => s.id), accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN })}
@@ -519,10 +605,13 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                 savedCount={schools.length}
               />
             </div>
+            )}
           </div>
+          ) : null}
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            {/* Recruiting activity */}
+          <div className={`mt-4 grid gap-4 ${firstDay ? "lg:grid-cols-2" : "lg:grid-cols-3"}`}>
+            {/* Recruiting activity: not on the first day (all zeros). Programs viewed is the header's number. */}
+            {!firstDay ? (
             <section className={`${card} p-5`} aria-labelledby="cc-activity">
               <div className="flex items-baseline justify-between">
                 <h2 id="cc-activity" className={title}>
@@ -532,12 +621,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                   View all →
                 </Link>
               </div>
-              <dl className="mt-4 grid grid-cols-3 gap-3 text-center">
-                <div>
-                  <dt className="sr-only">College programs that viewed</dt>
-                  <dd className="text-3xl font-black text-[#D3B574]">{familyViews.programs}</dd>
-                  <dd className="text-[11px] leading-4 text-white/55">Programs viewed{athletes.length > 1 ? "" : ` ${first.firstName}`}</dd>
-                </div>
+              <dl className="mt-4 grid grid-cols-2 gap-3 text-center">
                 <div>
                   <dt className="sr-only">Total profile views</dt>
                   <dd className="text-3xl font-black">{familyViews.total}</dd>
@@ -550,6 +634,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
                 </div>
               </dl>
             </section>
+            ) : null}
 
             {/* Learn */}
             <section className={`${card} p-5`} aria-labelledby="cc-learn">
@@ -579,7 +664,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
             ) : (
               <section className={`${card} relative overflow-hidden p-5`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/hero-banner-nchsaa-2026-arena.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+                <img src={ARENA_PHOTO} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
                 <p className="relative text-lg font-black leading-7 text-white">Same grind. Higher opportunities.</p>
                 <p className="relative mt-2 text-sm text-white/65">Plan, prepare, compete, succeed.</p>
               </section>

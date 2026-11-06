@@ -6,6 +6,7 @@ import { toast } from "@/hooks/use-toast"
 import { SUPER32_2026, super32NoticeActive } from "@/lib/recruiting/super32-report"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
+import { BOARD_CHANGED_EVENT } from "@/components/coach/recruit-record"
 
 interface WatchListButtonProps {
   athleteId: string
@@ -53,6 +54,9 @@ export function WatchListButton({ athleteId, className, compact = false }: Watch
     }
 
     checkStarred()
+    // The staff's record on the profile can add him too (components/coach/recruit-record.tsx).
+    window.addEventListener(BOARD_CHANGED_EVENT, checkStarred)
+    return () => window.removeEventListener(BOARD_CHANGED_EVENT, checkStarred)
   }, [user, athleteId, isCoach])
 
   const handleToggleStar = async () => {
@@ -77,6 +81,7 @@ export function WatchListButton({ athleteId, className, compact = false }: Watch
       if (res.ok) {
         const data = await res.json()
         setIsStarred(data.action === "added")
+        window.dispatchEvent(new Event(BOARD_CHANGED_EVENT))
       // Tell the coach what a star now gets them, while the Super 32 promise runs.
       if (data.action === "added" && super32NoticeActive()) {
         toast({ title: "Added to My Recruits", description: `You'll get a ${SUPER32_2026.name} report on this wrestler within ${SUPER32_2026.reportWithinHours} hours of the finals.` })

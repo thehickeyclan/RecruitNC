@@ -51,6 +51,7 @@ import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
 import { CoachMessageButton } from "@/components/coach-messages/coach-message-button"
 import { FamilyMessagesPanel } from "@/components/coach-messages/family-messages-panel"
+import { RecruitRecord } from "@/components/coach/recruit-record"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { SignificantWinsSection } from "./significant-wins-section"
@@ -1938,6 +1939,12 @@ export function AthleteDetail({
       <div className={cn("empty:hidden", ROW_ORDER.messages)}>
         <FamilyMessagesPanel athleteId={String(athlete.id)} />
       </div>
+      {/* The coach's side of the same slot: the staff's stage, log and history with him. */}
+      {!isViewingOwnProfile ? (
+        <div className={cn("empty:hidden", ROW_ORDER.messages)}>
+          <RecruitRecord athleteId={String(athlete.id)} athleteName={athleteName} />
+        </div>
+      ) : null}
 
       <AppTournamentResults
         profile={appData.profile}

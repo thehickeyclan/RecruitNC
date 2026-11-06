@@ -1,3 +1,4 @@
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 /**
  * Learn, the heart of the Command Center (Matt, 14 Oct 2026: "the learning portal is critical").
  *
@@ -146,7 +147,7 @@ export default async function CommandCenterLearn() {
         {/* Header band */}
         <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1D3A]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-30" />
+          <img src={ARENA_PHOTO} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-30" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0B1D3A] via-[#0B1D3A]/85 to-[#0B1D3A]/30" aria-hidden />
           <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">

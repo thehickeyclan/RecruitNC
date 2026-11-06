@@ -54,6 +54,11 @@ export type FeedInput = {
   listTarget: number
   /** Events on the schedule from today on. */
   upcomingEvents: number
+  /**
+   * Action keys the page already shows somewhere else ("event", "build", "map"), so each action
+   * is on the home page once (Matt, 5 Nov 2026). The feed still gives two.
+   */
+  skip?: string[]
 }
 
 export type ViewedProgram = { school: string; schoolId: string | null; level: Level | null; onList: boolean; views: number; lastAt: string }
@@ -104,15 +109,17 @@ const composer = (schoolId: string) => `/my-recruiting/colleges?email=${encodeUR
  * Exactly two next actions, in a fixed order: a coach waiting on a reply; a list school that
  * looked and has not been written to; a list school that may need his weight and has not been
  * written to; a visit to confirm; a program that looked and is not on the list; the oldest list
- * school not yet written to; building the list; the next event; and the map, which always fits.
+ * school not yet written to; building the list; the next event; the map; the rules; and Scout,
+ * which always fits. Keys in `skip` are left out (the page shows them elsewhere).
  * Never two for the same school.
  */
 export function nextTwoActions(input: FeedInput, f: Omit<Feed, "actions" | "empty">): [FeedAction, FeedAction] {
   const name = input.firstName
   const picks: FeedAction[] = []
   const usedSchools = new Set<string>()
+  const skip = new Set(input.skip ?? [])
   const add = (a: FeedAction, schoolId?: string | null) => {
-    if (picks.length >= 2 || picks.some((p) => p.key === a.key)) return
+    if (picks.length >= 2 || picks.some((p) => p.key === a.key) || skip.has(a.key)) return
     if (schoolId && usedSchools.has(schoolId)) return
     if (schoolId) usedSchools.add(schoolId)
     picks.push(a)
@@ -141,6 +148,7 @@ export function nextTwoActions(input: FeedInput, f: Omit<Feed, "actions" | "empt
   if (input.upcomingEvents === 0) add({ key: "event", label: `Add where ${name} competes next`, why: `Coaches who follow ${name} see it and can come watch.`, href: "/my-recruiting/plan#schedule" })
   add({ key: "map", label: "Find more colleges on the map", why: "Filter by level, state and cost.", href: "/recruiting/college-map" })
   add({ key: "rules", label: "Check when coaches can contact you", why: `The rules for ${name}'s class, by level.`, href: "/my-recruiting/rules" })
+  add({ key: "scout", label: "Ask Scout what to do next", why: `Scout knows ${name}'s list, class and the rules.`, href: "/my-recruiting/scout" })
   return [picks[0], picks[1]]
 }
 
@@ -163,20 +171,6 @@ export function buildFeed(input: FeedInput): Feed {
     reminders: input.reminders.filter((r) => r.remindAt >= input.now && r.remindAt <= new Date(now + 7 * DAY).toISOString()),
   }
   return { ...base, actions: nextTwoActions(input, base), empty: input.list.length === 0 && viewed.length === 0 && base.threads.length === 0 }
-}
-
-/** A brand-new family's first three moves: save from the starter shortlist, the schedule or the profile, and the rules. */
-export function firstThreeActions(input: { firstName: string; athleteId: string; upcomingEvents: number; profilePercent: number }): FeedAction[] {
-  const name = input.firstName
-  return [
-    { key: "starter", label: "Save colleges from the shortlist", why: `Picked for ${name}'s weight, class and state. One tap each.`, href: "#cc-starter" },
-    input.upcomingEvents === 0
-      ? { key: "event", label: `Add where ${name} competes next`, why: `Coaches who follow ${name} see it and can come watch.`, href: "/my-recruiting/plan#schedule" }
-      : input.profilePercent < 100
-        ? { key: "profile", label: `Finish ${name}'s profile`, why: `${input.profilePercent}% done. Coaches read it first.`, href: `/athletes/${input.athleteId}` }
-        : { key: "map", label: "Find more colleges on the map", why: "Filter by level, state and cost.", href: "/recruiting/college-map" },
-    { key: "rules", label: "Check when coaches can contact you", why: `The rules for ${name}'s class, by level.`, href: "/my-recruiting/rules" },
-  ]
 }
 
 /**

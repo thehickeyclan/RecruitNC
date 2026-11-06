@@ -109,9 +109,10 @@ export default async function RecruitWrestlersHome() {
     }
   })()
   const proof = [
-    { n: mapPreview?.dots.length ?? null, label: "colleges on the map" },
+    // Every college on the map, as NC United counts it; dots leaves out ones off the US picture.
+    { n: mapPreview?.total ?? null, label: "colleges on the map" },
     // Coaches are counted in the band above; here, what they have done (Matt, 2 Nov 2026).
-    { n: platform?.programs ?? null, label: "college programs" },
+    { n: platform?.programs ?? null, label: "college programs on RecruitWrestlers" },
     { n: platform?.profilesViewed ?? null, label: "wrestlers viewed by coaches" },
   ].filter((t) => t.n != null && t.n > 0)
 
@@ -360,7 +361,7 @@ export default async function RecruitWrestlersHome() {
             <a href="/prospects/all" className="hover:text-white">Athletes</a>
             <a href="/rankings" className="hover:text-white">Rankings</a>
             <a href="/recruiting/college-map" className="hover:text-white">Colleges</a>
-            <a href="/for-coaches" className="hover:text-white">For coaches</a>
+            <a href="/for-coaches" className="hover:text-white">College Coaches</a>
             <a href="/privacy" className="hover:text-white">Privacy</a>
             <a href="/terms" className="hover:text-white">Terms</a>
             <a href="mailto:info@recruitwrestlers.com" className="hover:text-white">info@recruitwrestlers.com</a>

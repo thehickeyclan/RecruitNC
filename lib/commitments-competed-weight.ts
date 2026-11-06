@@ -2,6 +2,7 @@ import "server-only"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { topHonor, type HonorFacts } from "@/lib/commitment-top-honor"
+import { loadNationalPodiums } from "@/lib/prospect-achievements"
 
 /**
  * The commitments list shows the weight each wrestler last competed at, never the profile's listed
@@ -65,11 +66,33 @@ async function loadHonorFacts(admin: Admin, ids: string[]): Promise<Map<string, 
               if (place === 1 && Number.isFinite(year)) f.stateTitleYears.push(year)
             }
           } else if (Number.isFinite(place) && place >= 1 && place <= 8) {
-            f.allAmericanFinishes.push(`${table}|${year}`)
+            // Labelled as the brackets label them, so a finish read from both counts once.
+            f.allAmericanFinishes.push(`${table === "nhsca_placements" ? "NHSCA" : "Super 32"} ${year}`)
           }
         }
       }
     }
+
+    /*
+     * Every other state's championships, and every national podium in the brackets (Matt, 5 Nov
+     * 2026: a two-time South Carolina champion and NHSCA All-American showed a dash). Linked by
+     * athlete_id, as the profiles read them.
+     */
+    const batch = ids.slice(i, i + 200)
+    const [{ data: otherStates }, podiums] = await Promise.all([
+      admin.from("state_tournament_placers").select("athlete_id, season, place").in("athlete_id", batch).limit(5000),
+      loadNationalPodiums(admin, batch).catch(() => new Map<string, string[]>()),
+    ])
+    for (const row of otherStates ?? []) {
+      const f = facts(String(row.athlete_id))
+      f.stateQualifier = true
+      const place = Number(row.place)
+      if (Number.isFinite(place) && place >= 1) {
+        f.bestStatePlace = f.bestStatePlace == null ? place : Math.min(f.bestStatePlace, place)
+        if (place === 1 && Number.isFinite(Number(row.season))) f.stateTitleYears.push(Number(row.season))
+      }
+    }
+    for (const [id, labels] of podiums) facts(id).allAmericanFinishes.push(...labels)
   }
   return out
 }

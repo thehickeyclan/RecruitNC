@@ -75,6 +75,8 @@ export async function loadJustClaimed(
   onBoard: Set<string>,
   fitViewer: Awaited<ReturnType<typeof resolveFitViewer>> | null,
   limit = 12,
+  /** "newest": the full page opens on who just arrived (Matt, 5 Nov 2026); the board's panel keeps fits first. */
+  order: "fit" | "newest" = "fit",
 ) {
   const rows = await claimedRows(admin, gender)
   const [fitted, facts] = await Promise.all([
@@ -87,7 +89,7 @@ export async function loadJustClaimed(
     (c.fit?.verdict === "meets" ? 0 : c.fit?.verdict === "possible" ? 1 : c.fit ? 3 : 2) + (c.room?.need === "likely" ? 0 : c.room?.need === "some" ? 0.5 : 0.9)
   return cards
     // Fit, then newest: ranking by honour put a 29-day-old claim above yesterday's, and the point is who just arrived.
-    .sort((a, b) => fitRank(a) - fitRank(b) || b.at.localeCompare(a.at))
+    .sort((a, b) => (order === "newest" ? 0 : fitRank(a) - fitRank(b)) || b.at.localeCompare(a.at))
     .slice(0, limit)
 }
 

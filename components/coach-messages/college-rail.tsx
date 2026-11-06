@@ -1,5 +1,6 @@
 "use client"
 
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 import { useState } from "react"
 import { Bookmark, CalendarDays, ChevronRight, FileText, Map as MapIcon, NotebookPen, School, UserRound } from "lucide-react"
 
@@ -44,7 +45,7 @@ export function CollegeRail({ thread }: { thread: RailThread }) {
     <aside className="flex min-h-0 flex-col overflow-y-auto rounded-xl border border-white/10 bg-white/[0.03]">
       <div className="relative h-24 shrink-0 overflow-hidden rounded-t-xl">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="h-full w-full object-cover opacity-60" />
+        <img src={ARENA_PHOTO} alt="" aria-hidden className="h-full w-full object-cover opacity-60" />
         <span className="absolute inset-0 bg-gradient-to-t from-[#0d1d36] to-transparent" aria-hidden />
       </div>
       <div className="-mt-10 px-4">

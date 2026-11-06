@@ -1,0 +1,222 @@
+/**
+ * "What Matters to Your Family" (priorities survey v3, Matt 5 Nov 2026): the question inventory.
+ *
+ * The numbered questions are authoritative: Parent P1–P9 (9 screens, P3 optional); Athlete A1–A8,
+ * A4b, conditional A9 and the A10 closer (10 screens, 11 when A9 shows). Every question can be
+ * skipped, "not sure" is a real answer, and nothing here filters anything on its own: the
+ * recommendation code reads the answers through lib/recruiting/priorities/sharing.ts.
+ *
+ * Sharing classes (spec, "Sharing & privacy"), with Matt's decision of 5 Nov: only Shared answers
+ * ever reach a joint output. Constraint-only and Private answers shape only their owner's own view.
+ */
+import { MAJOR_FAMILIES } from "@/lib/recruiting/family-fit"
+
+export type Respondent = "parent" | "athlete"
+export type SharingClass = "shared" | "constraint" | "private"
+export type Marker = "must" | "strong" | "flexible"
+
+export type Option = { key: string; label: string }
+
+export type QuestionKind =
+  | { type: "single"; options: Option[] }
+  | { type: "multi"; options: Option[]; max?: number; exclusive?: string[] }
+  | { type: "grid"; rows: Option[]; options: Option[] }
+  | { type: "text" }
+  | { type: "top3"; options: Option[] }
+  | { type: "majors" }
+
+export type Question = {
+  /** P1…P9, A1…A10, A4b. */
+  id: string
+  /** Stable storage key; the same key on both sides where the spec compares them. */
+  key: string
+  respondent: Respondent
+  title: string
+  kind: QuestionKind
+  sharing: SharingClass
+  optional?: boolean
+  /** Must-have / strong / flexible can be set on the answer. */
+  marker?: boolean
+}
+
+export const PATHWAYS: Option[] = [
+  { key: "D1", label: "Division I" },
+  { key: "D2", label: "Division II" },
+  { key: "D3", label: "Division III" },
+  { key: "NAIA", label: "NAIA" },
+  { key: "NJCAA", label: "Junior college (start there, transfer up)" },
+]
+export const PATHWAY_STATES: Option[] = [
+  { key: "interested", label: "Interested" },
+  { key: "open", label: "Open to learning more" },
+  { key: "not", label: "Not interested" },
+]
+
+/** The seven Top-3 factors: identical keys on both sides so the two orders compare directly. */
+export const TOP3_FACTORS: Option[] = [
+  { key: "level", label: "Highest level possible" },
+  { key: "compete_early", label: "Competing early" },
+  { key: "cost", label: "Cost" },
+  { key: "distance", label: "Distance from home" },
+  { key: "academics", label: "Academics and the major" },
+  { key: "campus", label: "Campus size and experience" },
+  { key: "coaching", label: "Coaching and the room" },
+]
+
+export const MAJOR_OPTIONS: Option[] = MAJOR_FAMILIES.map((m) => ({ key: m.code, label: m.label }))
+
+export const QUESTIONS: Question[] = [
+  // ---- Part A: parent
+  {
+    id: "P1", key: "distance", respondent: "parent", title: "How far from home is too far?", sharing: "shared", marker: true,
+    kind: { type: "single", options: [
+      { key: "2h", label: "Within about 2 hours' drive" },
+      { key: "5h", label: "Within about 5 hours" },
+      { key: "day", label: "A day's drive" },
+      { key: "anywhere", label: "Anywhere" },
+      { key: "close_open", label: "Prefer close, but open" },
+    ] },
+  },
+  {
+    id: "P2", key: "budget", respondent: "parent", title: "What yearly cost can your family actually carry, after aid?", sharing: "constraint",
+    kind: { type: "single", options: [
+      { key: "lt10", label: "Under $10k" },
+      { key: "10_20", label: "$10k to $20k" },
+      { key: "20_35", label: "$20k to $35k" },
+      { key: "35_50", label: "$35k to $50k" },
+      { key: "50plus", label: "$50k or more" },
+    ] },
+  },
+  {
+    id: "P3", key: "benefits", respondent: "parent", title: "Does any of this apply to your family?", sharing: "private", optional: true,
+    kind: { type: "multi", exclusive: ["none"], options: [
+      { key: "gi_bill", label: "Transferred GI Bill benefits" },
+      { key: "ch35", label: "Chapter 35 or Fry (dependents of disabled or deceased veterans)" },
+      { key: "state_guard", label: "State Guard or state veteran tuition help" },
+      { key: "remission", label: "A parent works at a college (tuition remission or exchange)" },
+      { key: "need_aid", label: "We expect significant need-based aid" },
+      { key: "state_grant", label: "A state grant tied to grades" },
+      { key: "tribal", label: "Tribal benefits" },
+      { key: "foster", label: "Foster-youth tuition waiver" },
+      { key: "none", label: "None of these" },
+    ] },
+  },
+  {
+    id: "P4", key: "level_vs_opportunity", respondent: "parent", title: "Which matters more right now?", sharing: "shared",
+    kind: { type: "single", options: [
+      { key: "level", label: "Wrestle at the highest level possible" },
+      { key: "balance", label: "A balance" },
+      { key: "opportunity", label: "Best chance to compete and start early" },
+    ] },
+  },
+  { id: "P5", key: "divisions", respondent: "parent", title: "Which levels are you open to?", sharing: "shared", kind: { type: "grid", rows: PATHWAYS, options: PATHWAY_STATES } },
+  { id: "P6", key: "academics", respondent: "parent", title: "What should college do for {name} academically?", sharing: "shared", marker: true, kind: { type: "majors" } },
+  {
+    id: "P7", key: "school_feel", respondent: "parent", title: "What kind of school feels right?", sharing: "shared",
+    kind: { type: "multi", options: [
+      { key: "small", label: "Small" }, { key: "medium", label: "Medium" }, { key: "large", label: "Large" },
+      { key: "city", label: "City" }, { key: "suburb", label: "Suburban" }, { key: "town", label: "College town" }, { key: "rural", label: "Rural" },
+    ] },
+  },
+  { id: "P8", key: "dealbreaker", respondent: "parent", title: "Anything that's an absolute dealbreaker?", sharing: "private", optional: true, kind: { type: "text" } },
+  { id: "P9", key: "top3", respondent: "parent", title: "Last one. If these ever conflict, what wins? Tap your top 3, in order.", sharing: "shared", kind: { type: "top3", options: TOP3_FACTORS } },
+
+  // ---- Part B: athlete
+  {
+    id: "A1", key: "distance", respondent: "athlete", title: "Stay close to home, or get away?", sharing: "shared",
+    kind: { type: "single", options: [{ key: "close", label: "Stay close" }, { key: "dont_care", label: "Don't care" }, { key: "away", label: "Get away and see somewhere new" }] },
+  },
+  {
+    id: "A2", key: "first_year", respondent: "athlete", title: "What do you want your first year to look like?", sharing: "shared",
+    kind: { type: "single", options: [{ key: "compete_now", label: "Compete for the spot right away" }, { key: "redshirt_ok", label: "Happy to redshirt and develop" }, { key: "no_pref", label: "No preference" }] },
+  },
+  {
+    id: "A3", key: "level_vs_opportunity", respondent: "athlete", title: "What does wrestling in college look like to you?", sharing: "shared",
+    kind: { type: "single", options: [
+      { key: "level", label: "Compete at the highest level possible" },
+      { key: "balance", label: "Compete and have a great college experience" },
+      { key: "opportunity", label: "Wrestle if the school is a good fit" },
+    ] },
+  },
+  { id: "A4", key: "divisions", respondent: "athlete", title: "Which levels are you open to?", sharing: "shared", kind: { type: "grid", rows: PATHWAYS, options: PATHWAY_STATES } },
+  {
+    id: "A4b", key: "service", respondent: "athlete", title: "Would you consider a service academy or ROTC?", sharing: "shared",
+    kind: { type: "single", options: [{ key: "interested", label: "Interested" }, { key: "open", label: "Open to hearing about it" }, { key: "not", label: "Not for me" }] },
+  },
+  { id: "A5", key: "academics", respondent: "athlete", title: "What are you interested in studying, or doing after college?", sharing: "shared", kind: { type: "majors" } },
+  {
+    id: "A6", key: "college_weight", respondent: "athlete", title: "What weight do you expect to wrestle in college?", sharing: "shared",
+    kind: { type: "single", options: [{ key: "current", label: "Current weight" }, { key: "one_up", label: "One class up" }] },
+  },
+  {
+    id: "A7", key: "experience", respondent: "athlete", title: "What kind of college experience sounds right? Pick up to two.", sharing: "shared",
+    kind: { type: "multi", max: 2, options: [
+      { key: "spirit", label: "Big school spirit and an active social life" },
+      { key: "close_knit", label: "Small, close-knit campus" },
+      { key: "college_town", label: "Traditional college town" },
+      { key: "city", label: "City, with internships and things to do" },
+      { key: "team", label: "Strong team community above all" },
+    ] },
+  },
+  { id: "A8", key: "dealbreaker", respondent: "athlete", title: "Anything you'd never want?", sharing: "private", optional: true, kind: { type: "text" } },
+  {
+    id: "A9", key: "coaching", respondent: "athlete", title: "What do you want most from a college coach and room? Pick up to two.", sharing: "shared",
+    kind: { type: "multi", max: 2, options: [
+      { key: "development", label: "Individual development and personal attention" },
+      { key: "elite_room", label: "A nationally competitive room with elite partners" },
+      { key: "mentor", label: "A close coaching relationship, a mentor" },
+      { key: "lineup", label: "The clearest path into the lineup" },
+      { key: "develops", label: "A program that develops wrestlers like me" },
+    ] },
+  },
+  { id: "A10", key: "top3", respondent: "athlete", title: "Last one. If these ever conflict, what wins? Tap your top 3, in order.", sharing: "shared", kind: { type: "top3", options: TOP3_FACTORS } },
+]
+
+/** The home ZIP is collected on the P1 screen, used for distance only, shown nowhere. */
+export const HOME_ZIP_KEY = "home_zip"
+export const HOME_ZIP_SHARING: SharingClass = "private"
+
+/**
+ * A9 shows only in the Building or Active stage, or when the athlete said "compete right away"
+ * (A2) or "highest level possible" (A3). Until a stage function exists, the stage is the grade:
+ * 10th grade and up.
+ */
+export function showA9(input: { grade: number | null; answers: Record<string, unknown> }): boolean {
+  if (input.answers.first_year === "compete_now" || input.answers.level_vs_opportunity === "level") return true
+  return input.grade != null && input.grade >= 10
+}
+
+/** Nursing has structured variants (direct-entry BSN or pre-nursing): one follow-up when it's picked. */
+export function wantsBsnFollowUp(academics: { majors?: string[]; text?: string } | null | undefined): boolean {
+  if (!academics) return false
+  return (academics.majors ?? []).includes("51") || /\bnurs/i.test(academics.text ?? "")
+}
+
+export function questionsFor(respondent: Respondent, ctx: { grade: number | null; answers: Record<string, unknown> }): Question[] {
+  return QUESTIONS.filter((q) => q.respondent === respondent && (q.id !== "A9" || showA9(ctx)))
+}
+
+export function questionByKey(respondent: Respondent, key: string): Question | undefined {
+  return QUESTIONS.find((q) => q.respondent === respondent && q.key === key)
+}
+
+/** Every storable key for a respondent: the questions plus the home ZIP on the parent side, and the BSN follow-up. */
+export function storableKeys(respondent: Respondent): string[] {
+  return [...QUESTIONS.filter((q) => q.respondent === respondent).map((q) => q.key), ...(respondent === "parent" ? [HOME_ZIP_KEY, "budget_kind"] : []), "bsn"]
+}
+
+/** The class an answer starts in. The owner may change it at any time. */
+export function defaultSharing(respondent: Respondent, key: string): SharingClass {
+  if (key === HOME_ZIP_KEY) return HOME_ZIP_SHARING
+  if (key === "budget_kind") return "constraint"
+  if (key === "bsn") return "shared"
+  return questionByKey(respondent, key)?.sharing ?? "private"
+}
+
+/** The plain line on each question screen saying who sees the answer (spec: shown on the screen itself). */
+export function sharingLine(cls: SharingClass, respondent: Respondent, wrestlerName?: string | null): string {
+  const other = respondent === "parent" ? wrestlerName || "your wrestler" : "your parent"
+  if (cls === "shared") return `Shared with ${other}. Coaches never see it.`
+  if (cls === "constraint") return "Only you see the number. Scout can use it for your suggestions."
+  return "Only you see this."
+}

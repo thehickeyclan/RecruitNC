@@ -1,3 +1,4 @@
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, History } from "lucide-react"
@@ -17,7 +18,7 @@ export default function WrestlersPage() {
     <main className="min-h-screen bg-[#0A1628]">
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0">
-          <Image src="/hero-banner-nchsaa-2026-arena.png" alt="" fill className="object-cover" priority />
+          <Image src={ARENA_PHOTO} alt="" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/85 to-[#0A1628]/70" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
         </div>

@@ -1,3 +1,4 @@
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 /**
  * The Recruiting Command Center's own sales page (Matt, 15 Oct 2026: "people will want to know more
  * info before they sign up"). What it is, shown rather than described: the plan, the college list,
@@ -34,6 +35,12 @@ import { headers } from "next/headers"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { rankingsCoverage, recruitingCoverage } from "@/lib/recruiting/brand"
 import { shareCardUrl } from "@/lib/share-metadata"
+import { createClient } from "@/lib/supabase/server"
+import { sendCollegeCoachesToTheirPortal } from "@/lib/recruiting/families-only"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { loadFamilyUpgrade } from "@/lib/recruiting/family-upgrade"
+import { FamilyUpgradePage } from "@/components/recruiting/family-upgrade-page"
 
 export const dynamic = "force-dynamic"
 const SHARE_TITLE = "Recruiting Command Center"
@@ -184,6 +191,23 @@ function Feature({
 
 export default async function CommandCenterSalesPage() {
   const admin = createAdminClient()
+  /*
+   * Signed in with no Command Center: a short page about their own wrestler, not this one, which
+   * is written for strangers (Matt, 5 Nov 2026: Mandi Nelsen had claimed Tyde and was still told to
+   * find and claim the profile and to sign up). Coaches are sent to their own portal; a family that
+   * already has the Command Center, and staff, still see this page. Signed out: unchanged.
+   */
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (user) {
+    await sendCollegeCoachesToTheirPortal(admin, user.id)
+    const portal = await resolvePortalViewer({ supabase, admin }).catch(() => null)
+    if (portal && !hasPortalAccess(portal.viewer)) {
+      return <FamilyUpgradePage upgrade={await loadFamilyUpgrade(admin, portal.userId ?? user.id)} />
+    }
+  }
   const [d, opponentResults, examples] = await Promise.all([
     loadSalesData(admin),
     // The denominator behind every opponent credential on a profile. A head count, not a read.
@@ -227,7 +251,7 @@ export default async function CommandCenterSalesPage() {
           under the college map, once a family has seen the record, the coaches and the programs. */}
       <section className="relative overflow-hidden border-b border-white/10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
+        <img src={ARENA_PHOTO} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {/* No state name on the singlet on RecruitWrestlers (Matt, 29 Oct 2026). */}
         {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -1,3 +1,4 @@
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 import { readFile } from "fs/promises"
 import { join } from "path"
 import Image from "next/image"
@@ -38,7 +39,7 @@ export default async function RecruitingTournamentsPage() {
       <header className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0">
           <Image
-            src="/hero-banner-nchsaa-2026-arena.png"
+            src={ARENA_PHOTO}
             alt=""
             fill
             className="object-cover object-center"

@@ -1,3 +1,4 @@
+import { currentClassYears } from "@/lib/class-years"
 /**
  * Server-side data loading for the home page.
  *
@@ -349,8 +350,8 @@ export async function loadProfilesByState(): Promise<Record<string, number>> {
     let q = admin
       .from("athletes")
       .select("id,state,is_nc_athlete")
-      .gte("graduationyear", 2027)
-      .lte("graduationyear", 2030)
+      // The same classes as the "verified profiles" count beside it, so the two never drift apart.
+      .in("graduationyear", currentClassYears())
       .order("id", { ascending: true })
       .limit(1000)
     if (after) q = q.gt("id", after)

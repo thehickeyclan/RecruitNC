@@ -1,5 +1,6 @@
 "use client"
 
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
 import { directoryStates, isRankedState, recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
 import { HOME_STATE } from "@/lib/recruiting/states"
@@ -163,7 +164,7 @@ export default function ProspectsAllClient({
    * directory without the numbers, which is still a useful page.
    */
   const { profile: viewerProfile, user: viewerUser } = useAuth()
-  const { actsAsCoach } = useCoachMode()
+  const { actsAsCoach, isCoach: isCollegeCoach } = useCoachMode()
   /*
    * The ranks are not in the rows. The rows are public and cached; the server sends the ranks
    * separately, and only to an admin, a verified college coach, a Blue family or a subscriber
@@ -280,9 +281,14 @@ export default function ProspectsAllClient({
     }
   }, [viewerId])
   // RecruitWrestlers lists every state, ranked or not; "All states" is still the live ones (lib/recruiting/brand.ts).
+  /*
+   * College coaches recruit nationally: they get every live state and open on all of them, on
+   * either address (Matt, 5 Nov 2026). Everyone else on NC United opens on North Carolina.
+   */
+  const opensOnAll = onRw || isCollegeCoach
   const stateChoices = (onRw ? directoryStates : visibleStates)(
     viewerProfile?.is_admin === true || viewerProfile?.role === "admin",
-    onRw,
+    opensOnAll,
     previewStates,
   )
   /*
@@ -293,13 +299,13 @@ export default function ProspectsAllClient({
    * RecruitWrestlers opens on every live state at once (Matt, 29 Oct 2026: "should show all kids
    * 2027-2030"); NC United stays North Carolina's. One state at a time is still a pick away.
    */
-  const defaultState = onRw && stateChoices.length > 1 ? ALL_STATES : HOME_STATE
+  const defaultState = opensOnAll && stateChoices.length > 1 ? ALL_STATES : HOME_STATE
   const stateFromLink = useRef(false)
   useEffect(() => {
     if (stateFromLink.current) return
     const asked = new URLSearchParams(window.location.search).get("state")?.toUpperCase()
     if (!asked) {
-      if (!onRw) return
+      if (!opensOnAll) return
       stateFromLink.current = true
       if (stateChoices.length > 1) setStateFilter(ALL_STATES)
       return
@@ -841,8 +847,8 @@ export default function ProspectsAllClient({
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0">
           <Image
-            src="/hero-banner-nchsaa-2026-arena.png"
-            alt="NCHSAA Wrestling Championship arena"
+            src={ARENA_PHOTO}
+            alt=""
             fill
             className="object-cover"
             priority

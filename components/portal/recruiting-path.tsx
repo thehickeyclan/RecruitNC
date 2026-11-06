@@ -7,8 +7,8 @@ import { scoutHref, type JourneyStep } from "@/lib/recruiting/journey"
 
 /**
  * "Your recruiting path" (Matt, 28 Oct 2026): the five steps as cards. Each shows a number and a
- * short label, one button and one Scout question; the explanation is behind the ⓘ. The step to do
- * now is outlined and says "Start here".
+ * short label and one Scout question; the explanation is behind the ⓘ. The step to do now is
+ * outlined, says "Start here" and has the one button; the others are a tap to their page.
  */
 export function RecruitingPath({ steps, firstName }: { steps: JourneyStep[]; firstName: string }) {
   const [open, setOpen] = useState<string | null>(null)
@@ -45,16 +45,16 @@ export function RecruitingPath({ steps, firstName }: { steps: JourneyStep[]; fir
                   onClick={() => setOpen((k) => (k === s.key ? null : s.key))}
                   aria-expanded={open === s.key}
                   aria-label={`About ${s.title}`}
-                  className="ml-auto mr-6 rounded-full p-1 text-white/40 hover:text-white sm:mr-0"
+                  className={`ml-auto rounded-full p-1 text-white/40 hover:text-white ${now ? "" : "mr-6"}`}
                 >
                   <Info className="h-4 w-4" aria-hidden />
                 </button>
               </div>
               <p className={`mt-2 text-sm font-black ${isDone ? "text-white/70" : "text-white"}`}>{s.title}</p>
               <p className={`mt-0.5 text-sm leading-5 ${s.key === "rules" ? "text-white/70" : "font-semibold text-white"}`}>{s.label}</p>
-              {/* On a phone only the step to do now is open; the others are one tap to their page. */}
+              {/* Only the step to do now is open; the others are one tap to their page. */}
               {!now ? (
-                <a href={s.cta.href} aria-label={s.cta.label} className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/40 sm:hidden">
+                <a href={s.cta.href} aria-label={s.cta.label} className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/40 hover:text-white">
                   <ChevronRight className="h-5 w-5" aria-hidden />
                 </a>
               ) : null}
@@ -80,7 +80,8 @@ export function RecruitingPath({ steps, firstName }: { steps: JourneyStep[]; fir
                   </p>
                 </div>
               ))}
-              <div className={`mt-auto pt-3 ${now ? "" : "hidden sm:block"}`}>
+              {/* One button, on the step to do now (Matt, 5 Nov 2026: "Build My List" was on the page five times). */}
+              <div className={`mt-auto pt-3 ${now ? "" : "hidden"}`}>
                 <a
                   href={s.cta.href}
                   className={`flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-black ${now ? "bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]" : "border border-white/20 text-white hover:border-[#D3B574]"}`}

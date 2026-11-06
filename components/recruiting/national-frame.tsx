@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import type { FamilyNextStep } from "@/lib/recruiting/family-next-step"
 import { usePathname } from "next/navigation"
 import { LogOut, Menu, Users, X } from "lucide-react"
@@ -36,13 +36,14 @@ const FREE = [
   // Public to everyone, signed in or not (Matt, 28 Oct 2026).
   { href: "/college-commitments", label: "Commitments" },
 ]
+const COACHES_HREF = "/for-coaches"
 const PRODUCTS = [
   { href: "/rankings", label: "Insider" },
   { href: "/command-center", label: "Command Center" },
-  { href: "/for-coaches", label: "For coaches" },
+  { href: "/for-coaches", label: "College Coaches" },
 ]
 const LINKS = [...FREE, ...PRODUCTS]
-const FOOTER = [...FREE, { href: "/membership", label: "Plans" }, { href: "/command-center", label: "Command Center" }, { href: "/for-coaches", label: "For coaches" }, { href: "/about", label: "About" }, { href: "/contact", label: "Contact" }, { href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" }]
+const FOOTER = [...FREE, { href: "/membership", label: "Plans" }, { href: "/command-center", label: "Command Center" }, { href: "/for-coaches", label: "College Coaches" }, { href: "/about", label: "About" }, { href: "/contact", label: "Contact" }, { href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" }]
 
 export function NationalLockup({ className = "" }: { className?: string }) {
   return (
@@ -93,10 +94,14 @@ export function NationalHeader() {
         </a>
         <nav className="hidden items-center gap-6 text-sm font-semibold text-white/75 lg:flex">
           {links.map((l) => (
-            <a key={l.label} href={l.href} className="inline-flex items-center hover:text-white">
-              {l.label}
-              {user ? <NavMark {...marks[l.href]} /> : null}
-            </a>
+            <Fragment key={l.label}>
+              {/* College Coaches is a different audience from everything before it (Matt, 5 Nov 2026). */}
+              {l.href === COACHES_HREF ? <span className="h-5 w-px bg-white/25" aria-hidden /> : null}
+              <a href={l.href} className="inline-flex items-center hover:text-white">
+                {l.label}
+                {user ? <NavMark {...marks[l.href]} /> : null}
+              </a>
+            </Fragment>
           ))}
         </nav>
         <div className="flex items-center gap-2">
@@ -147,7 +152,7 @@ export function NationalHeader() {
             </a>
           ) : null}
           {[...links, ...(coachView ? [coachView] : []), ...(user ? [{ href: "/profile", label: "My account" }] : [{ href: "/auth/signin", label: "Sign in" }])].map((l) => (
-            <a key={l.label} href={l.href} className="flex items-center rounded-lg px-2 py-2.5 text-base font-semibold text-white/85 hover:bg-white/5">
+            <a key={l.label} href={l.href} className={`flex items-center rounded-lg px-2 py-2.5 text-base font-semibold text-white/85 hover:bg-white/5${l.href === COACHES_HREF ? " mt-2 border-t border-white/15 pt-3.5" : ""}`}>
               {l.label}
               {user ? <NavMark {...marks[l.href]} /> : null}
             </a>

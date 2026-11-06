@@ -1,3 +1,4 @@
+import { ARENA_PHOTO } from "@/lib/arena-photo"
 /**
  * A college's page in the Recruiting Portal (13 Oct 2026; redesigned 15 Oct 2026 from the
  * Command Center mock-up Matt had ChatGPT draw).
@@ -247,7 +248,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
       {/* Header band */}
       <section id="overview" className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1D3A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-25" />
+        <img src={ARENA_PHOTO} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-25" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0B1D3A] via-[#0B1D3A]/90 to-[#0B1D3A]/40" aria-hidden />
         <div className="relative flex flex-col gap-6 p-5 sm:p-8 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
