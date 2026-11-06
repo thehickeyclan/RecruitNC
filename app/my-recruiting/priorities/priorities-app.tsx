@@ -40,7 +40,11 @@ const choice = (on: boolean) =>
 /** One draft answer on screen, before Next saves it. */
 type Draft = { value: unknown; marker: Marker | null; notSure: boolean; extra: Record<string, unknown> }
 
-export function PrioritiesApp() {
+/**
+ * The survey. On its own page it reads ?w= for the wrestler; the Command Center pop-up passes the
+ * wrestler the home page is showing and an onClose, and then never touches the home page's URL.
+ */
+export function PrioritiesApp({ athleteId, onClose }: { athleteId?: string; onClose?: () => void } = {}) {
   const [data, setData] = useState<Data | null>(null)
   const [failed, setFailed] = useState(false)
   const [step, setStep] = useState<number | "intro" | "done" | "summary">("intro")
@@ -59,7 +63,7 @@ export function PrioritiesApp() {
       })
       .catch(() => setFailed(true))
   useEffect(() => {
-    const w = new URLSearchParams(window.location.search).get("w")
+    const w = athleteId ?? new URLSearchParams(window.location.search).get("w")
     setWho(w)
     load(w)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -69,7 +73,7 @@ export function PrioritiesApp() {
     setData(null)
     setDrafts({})
     setStep("intro")
-    window.history.replaceState(null, "", `?w=${encodeURIComponent(id)}`)
+    if (!onClose) window.history.replaceState(null, "", `?w=${encodeURIComponent(id)}`)
     load(id)
   }
 
@@ -184,9 +188,23 @@ export function PrioritiesApp() {
           </p>
         ) : null}
         <div className="mt-6 flex flex-wrap gap-3">
-          <a href="/my-recruiting#cc-lists" className={BTN}>
-            See your colleges <ArrowRight className="h-4 w-4" aria-hidden />
-          </a>
+          {onClose ? (
+            // In the pop-up the home page is already open: reload it so the new lists show.
+            <button
+              type="button"
+              className={BTN}
+              onClick={() => {
+                window.location.hash = "cc-lists"
+                window.location.reload()
+              }}
+            >
+              See your colleges <ArrowRight className="h-4 w-4" aria-hidden />
+            </button>
+          ) : (
+            <a href="/my-recruiting#cc-lists" className={BTN}>
+              See your colleges <ArrowRight className="h-4 w-4" aria-hidden />
+            </a>
+          )}
           <button type="button" className={GHOST} onClick={() => setStep("summary")}>
             See my answers
           </button>

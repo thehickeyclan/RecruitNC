@@ -40,6 +40,7 @@ import { RecruitingPath } from "@/components/portal/recruiting-path"
 import { RecruitingPathStrip } from "@/components/portal/recruiting-path-strip"
 import { RemindersPanel } from "@/components/portal/reminders-panel"
 import { PriorityLists } from "@/components/portal/priority-lists"
+import { SurveyPopup } from "@/components/portal/survey-popup"
 import { StarterSet } from "@/components/portal/starter-set"
 import { daysUntilText, visitDates, visitPhase, VISIT_GUIDE } from "@/lib/recruiting/visits"
 import { journeyFor, remindersOn } from "./journey-data"
@@ -105,7 +106,13 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
         }))
       : null
   // The "What matters" move ticks once this login has finished its own set (a preview counts the family's login).
-  const prioritiesDone = firstDay && first && cc.viewerId ? await hasAnsweredPriorities(admin, cc.viewerId, first.id).catch(() => false) : false
+  const answered = first && cc.viewerId ? await hasAnsweredPriorities(admin, cc.viewerId, first.id).catch(() => null) : false
+  const prioritiesDone = answered === true
+  // Until it's finished, the survey opens by itself: the family's own login only, never a preview or a business account.
+  const surveyPopup =
+    first && cc.viewerId && cc.viewerId === cc.authUserId && !cc.previewing && !cc.hidePersonal && answered === false
+      ? Boolean(await respondentFor(admin, cc.viewerId, first.id).catch(() => null))
+      : false
   // The step to do now, when its button opens the map: then the map card below would be a second "Open the map".
   const nowStep = journey?.steps.find((s) => s.status === "now") ?? null
   const pathOpensMap = nowStep?.cta.href === "/recruiting/college-map"
@@ -176,6 +183,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
   const showReminders = remindersOn()
   return (
     <PortalShell active="home">
+      {surveyPopup && first ? <SurveyPopup athleteId={first.id} /> : null}
       {/* Header band: who this is for, over an NC arena. */}
       <section className="relative -mx-4 -mt-6 overflow-hidden border-b border-white/10 px-4 pb-6 pt-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
