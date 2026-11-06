@@ -15,7 +15,6 @@ import { tuitionForSchool } from "@/lib/college-programs/tuition"
 import { DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { collegeFitFor, loadFamilyFitContext, type FamilyFitContext } from "@/lib/recruiting/college-fit"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
-import ncZips from "@/lib/recruiting/nc-zips.json"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
 import { alignmentFor, type Alignment } from "@/lib/recruiting/priorities/alignment"
 import { shortListLine, type ShortListReason } from "@/lib/recruiting/priorities/copy"
@@ -24,13 +23,14 @@ import type { Respondent } from "@/lib/recruiting/priorities/questions"
 import { recommend, type Card, type CollegeFacts, type Level } from "@/lib/recruiting/priorities/recommend"
 import { jointInputs, ownerOnlyInputs } from "@/lib/recruiting/priorities/sharing"
 import { TABLE_MISSING, loadFamilySets, respondentFor } from "@/lib/recruiting/priorities/store"
+import { zipPoint } from "@/lib/recruiting/zip-point"
 
 const ALL = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 const NAME_BY_ID = new Map(ALL.map((s) => [s.id, s.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()]))
-const NC_ZIPS = ncZips.zips as Record<string, number[]>
 const MAJORS = majorsData.majors as Record<string, string[]>
 /** Bump when the engine's output changes shape or meaning, so stored lists are made again. */
-const ENGINE_VERSION = 1
+// 2: distance measures from every US ZIP, not NC ZIPs only (6 Nov 2026).
+const ENGINE_VERSION = 2
 const REUSE_DAYS = 7
 const spoken = (name: string) => name.replace(/\s*\([^)]*\)\s*/g, " ").trim()
 
@@ -137,7 +137,7 @@ export async function priorityLists(
     ...facts,
     firstName: name,
     homeState: ctx.homeState,
-    zipPoint: (z) => (NC_ZIPS[z] as [number, number] | undefined) ?? null,
+    zipPoint,
     // The viewer's own passes only: the other side's reactions never shape this viewer's lists.
     passed: passedBy(reactions.mine),
   })
