@@ -3,13 +3,15 @@ import { isVisibleState, liveStates, recruitingCoverage } from "@/lib/recruiting
 
 describe("states per address", () => {
   it("RecruitWrestlers carries every live state in registration order", () => {
-    // Eight opened at once on 6 November 2026, on the qualifier bar: a profile for every 2026
-    // state qualifier who has a class year, with national results linked.
+    // Two waves on 6 November 2026, both on the qualifier bar: a profile for every 2026 state
+    // qualifier, men and women, with a class year and national results linked. Eight first
+    // (DE MN WV AL FL NH IA MA), then seven once the bar was read for both genders
+    // (MS KY NJ NY CT MO MI).
     expect(liveStates(true).map((s) => s.code)).toEqual(
-      ["NC", "SC", "VA", "TN", "WV", "DE", "GA", "FL", "AL", "MA", "NH", "IA", "MN"],
+      ["NC", "SC", "VA", "TN", "WV", "DE", "GA", "FL", "AL", "MS", "KY", "NJ", "NY", "CT", "MA", "NH", "IA", "MO", "MI", "MN"],
     )
     // Past six states the names stop fitting in a sentence; see COVERAGE_NAMES_UP_TO.
-    expect(recruitingCoverage(true)).toBe("13 states")
+    expect(recruitingCoverage(true)).toBe("20 states")
     expect(isVisibleState("SC", false, true)).toBe(true)
     expect(isVisibleState("TN", false, true)).toBe(true)
     expect(isVisibleState("GA", false, true)).toBe(true)
