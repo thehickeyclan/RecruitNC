@@ -7,7 +7,8 @@
  * the respondent confirms it.
  */
 import type { FamilyFitProfile } from "@/lib/recruiting/family-fit"
-import { HOME_ZIP_KEY, MAJOR_OPTIONS, PATHWAYS, PATHWAY_STATES, TOP3_FACTORS, questionByKey, storableKeys, type Marker, type Respondent } from "@/lib/recruiting/priorities/questions"
+import { GOALS_KEY, goalsOf } from "@/lib/recruiting/priorities/goals"
+import { HOME_ZIP_KEY, MAJOR_OPTIONS, PATHWAYS, PATHWAY_STATES, questionByKey, storableKeys, type Marker, type Respondent } from "@/lib/recruiting/priorities/questions"
 
 const MARKERS: Marker[] = ["must", "strong", "flexible"]
 const TEXT_MAX = 500
@@ -54,7 +55,7 @@ function cleanValue(respondent: Respondent, key: string, v: unknown): unknown {
     }
     case "top3": {
       if (!Array.isArray(v)) return undefined
-      return [...new Set(v.map(String))].filter((x) => TOP3_FACTORS.some((f) => f.key === x)).slice(0, 3)
+      return [...new Set(v.map(String))].filter((x) => k.options.some((f) => f.key === x)).slice(0, 3)
     }
     case "majors": {
       const r = (v ?? {}) as { majors?: unknown; text?: unknown; undecided?: unknown }
@@ -125,4 +126,11 @@ export function withSiblingPrefill(prefill: Prefill, sibling: { firstName: strin
     out[a.key] = { value: a.value, from: `your answers for ${sibling.firstName}` }
   }
   return out
+}
+
+/** Sets answered before goals came first (6 Nov 2026): their old top 3 suggests the goals answer. */
+export function withLegacyGoals(prefill: Prefill, own: Array<{ key: string; value: unknown; notSure?: boolean }>): Prefill {
+  if (own.some((a) => a.key === GOALS_KEY)) return prefill
+  const goals = goalsOf((k) => own.find((a) => a.key === k && !a.notSure)?.value)
+  return goals.length ? { ...prefill, [GOALS_KEY]: { value: goals, from: "your earlier answers" } } : prefill
 }

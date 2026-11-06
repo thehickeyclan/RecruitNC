@@ -6,7 +6,8 @@
  *
  * Written from the viewer's side: "You" and the other person's name. No question marks.
  */
-import { MAJOR_OPTIONS, PATHWAYS, TOP3_FACTORS, type Respondent } from "./questions"
+import { GOAL_SHORT, goalsOf } from "./goals"
+import { MAJOR_OPTIONS, PATHWAYS, type Respondent } from "./questions"
 import { DONT_KNOW, reasonLabel, type ReactionsView } from "./reactions"
 import { answerOf, type JointInputs, type SharedAnswers } from "./sharing"
 
@@ -15,7 +16,6 @@ export type Alignment = { agree: AlignmentLine[]; differ: AlignmentLine[] }
 
 const MAX_EACH = 4
 const LEVEL_SHORT: Record<string, string> = { D1: "D1", D2: "D2", D3: "D3", NAIA: "NAIA", NJCAA: "junior college" }
-const FACTOR = Object.fromEntries(TOP3_FACTORS.map((f) => [f.key, f.label.toLowerCase()]))
 const MAJOR = Object.fromEntries(MAJOR_OPTIONS.map((m) => [m.key, m.label]))
 const LEVEL_VS: Record<string, string> = { level: "the highest level possible", balance: "a balance of level and college experience", opportunity: "the best chance to compete" }
 
@@ -83,7 +83,7 @@ export function alignmentFor(input: {
     }
   }
 
-  // Level or opportunity: the same three keys on both sides.
+  // Level or opportunity (retired 6 Nov; sets from before then): the same three keys on both sides.
   const lm = sure(mine, "level_vs_opportunity") as string | undefined
   const lt = sure(theirs, "level_vs_opportunity") as string | undefined
   if (lm && lt && LEVEL_VS[lm] && LEVEL_VS[lt]) {
@@ -92,13 +92,19 @@ export function alignmentFor(input: {
       differ.push({ topic: "level", text: `You lean toward ${LEVEL_VS[lm]}. ${Other} leans toward ${LEVEL_VS[lt]}.` })
   }
 
-  // Top 3.
-  const tm = (sure(mine, "top3") as string[] | undefined)?.filter((k) => FACTOR[k]) ?? []
-  const tt = (sure(theirs, "top3") as string[] | undefined)?.filter((k) => FACTOR[k]) ?? []
+  // Goals (goals.ts; sets from before 6 Nov read their old top 3).
+  const tm = goalsOf((k) => sure(mine, k))
+  const tt = goalsOf((k) => sure(theirs, k))
   if (tm.length && tt.length) {
     const shared = tm.filter((k) => tt.includes(k))
-    if (shared.length) agree.push({ topic: "top3", text: shared.length === 1 ? `You both have ${FACTOR[shared[0]]} in your top 3.` : `You both have these in your top 3: ${shared.map((k) => FACTOR[k]).join("; ")}.` })
-    if (tm[0] !== tt[0]) differ.push({ topic: "top3", text: `Your #1 is ${FACTOR[tm[0]]}. ${Other}'s #1 is ${FACTOR[tt[0]]}.` })
+    if (shared.length) agree.push({ topic: "goals", text: shared.length === 1 ? `You both have ${GOAL_SHORT[shared[0]]} in your top 3.` : `You both have these in your top 3: ${shared.map((k) => GOAL_SHORT[k]).join("; ")}.` })
+    if (tm[0] !== tt[0]) differ.push({ topic: "goals", text: `Your #1 goal is ${GOAL_SHORT[tm[0]]}. ${Other}'s is ${GOAL_SHORT[tt[0]]}.` })
+    // The level-set: one side's top 3 is all wrestling, the other's has school or what comes after.
+    const life = (g: string[]) => g.filter((k) => k === "academics" || k === "career" || k === "pay")
+    const lifeM = life(tm)
+    const lifeT = life(tt)
+    if (lifeM.length && !lifeT.length) differ.push({ topic: "goals", text: `Your top 3 has ${GOAL_SHORT[lifeM[0]]}. ${Other}'s top 3 is all wrestling and college life.` })
+    if (lifeT.length && !lifeM.length) differ.push({ topic: "goals", text: `${Other}'s top 3 has ${GOAL_SHORT[lifeT[0]]}. Yours is all wrestling and college life.` })
   }
 
   // Majors.

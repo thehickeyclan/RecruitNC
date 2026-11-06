@@ -17,6 +17,7 @@ import { collegeFitFor, loadFamilyFitContext, type FamilyFitContext } from "@/li
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
 import { alignmentFor, type Alignment } from "@/lib/recruiting/priorities/alignment"
+import { goalsAreLastSeason } from "@/lib/recruiting/priorities/goals"
 import { shortListLine, type ShortListReason } from "@/lib/recruiting/priorities/copy"
 import { passedBy, reactionsFor, type ReactionRow, type ReactionsView } from "@/lib/recruiting/priorities/reactions"
 import type { Respondent } from "@/lib/recruiting/priorities/questions"
@@ -30,7 +31,8 @@ const NAME_BY_ID = new Map(ALL.map((s) => [s.id, s.name.replace(/\s*\([^)]*\)\s*
 const MAJORS = majorsData.majors as Record<string, string[]>
 /** Bump when the engine's output changes shape or meaning, so stored lists are made again. */
 // 2: distance measures from every US ZIP, not NC ZIPs only (6 Nov 2026).
-const ENGINE_VERSION = 2
+// 3: goals first; weights read goals.ts (6 Nov 2026).
+const ENGINE_VERSION = 3
 const REUSE_DAYS = 7
 const spoken = (name: string) => name.replace(/\s*\([^)]*\)\s*/g, " ").trim()
 
@@ -52,6 +54,8 @@ export type PriorityListsView = {
   alignment: Alignment | null
   /** A parent whose wrestler hasn't finished their own set: offer the invite. */
   inviteAthlete: boolean
+  /** This viewer's own answers are from last season (goals.ts goalsAreLastSeason): ask once a year. */
+  goalsLastSeason: boolean
 }
 
 type Stored = { inputs: string; cards: ListCard[]; notes?: string[] }
@@ -126,7 +130,7 @@ export async function priorityLists(
   const reuseBest = fresh("best_fit")
   const reuseOpp = fresh("opportunity")
   if (reuseBest && reuseOpp) {
-    return { ...view(respondent, reuseBest.items.cards, reuseOpp.items.cards, reuseBest.items.notes ?? [], shapedBy, shortReason, name, { bestFit: reuseBest.id, opportunities: reuseOpp.id }), reactions, otherLabel, alignment, inviteAthlete: respondent === "parent" && !sets.athlete?.completedAt }
+    return { ...view(respondent, reuseBest.items.cards, reuseOpp.items.cards, reuseBest.items.notes ?? [], shapedBy, shortReason, name, { bestFit: reuseBest.id, opportunities: reuseOpp.id }), reactions, otherLabel, alignment, inviteAthlete: respondent === "parent" && !sets.athlete?.completedAt, goalsLastSeason: goalsAreLastSeason(mine?.completedAt) }
   }
 
   const facts = await collegeFactsFor(admin, ctx, { athleteId: opts.athleteId, team: opts.team, includeViews: opts.includeViews })
@@ -159,7 +163,7 @@ export async function priorityLists(
       opportunities: rows?.find((r) => r.list_kind === "opportunity")?.id ?? null,
     }
   }
-  return { ...view(respondent, best, opp, lists.notes, shapedBy, shortReason, name, batchIds), reactions, otherLabel, alignment, inviteAthlete: respondent === "parent" && !sets.athlete?.completedAt }
+  return { ...view(respondent, best, opp, lists.notes, shapedBy, shortReason, name, batchIds), reactions, otherLabel, alignment, inviteAthlete: respondent === "parent" && !sets.athlete?.completedAt, goalsLastSeason: goalsAreLastSeason(mine?.completedAt) }
 }
 
 /** Every college's facts for this wrestler, from data we hold; nothing from survey answers. */
@@ -240,7 +244,7 @@ function view(
   shortReason: ShortListReason | null,
   name: string,
   batchIds: PriorityListsView["batchIds"],
-): Omit<PriorityListsView, "reactions" | "otherLabel" | "alignment" | "inviteAthlete"> {
+): Omit<PriorityListsView, "reactions" | "otherLabel" | "alignment" | "inviteAthlete" | "goalsLastSeason"> {
   const short = bestFit.length + opportunities.length < 6 && shortReason ? shortListLine(shortReason, name) : null
   return { respondent, bestFit, opportunities, notes, shapedBy, shortLine: short, batchIds }
 }

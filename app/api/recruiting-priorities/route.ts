@@ -7,7 +7,7 @@ import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { cleanProfile, EMPTY_PROFILE } from "@/lib/recruiting/family-fit"
 import { gradeForClass } from "@/lib/recruiting/learn/timeline"
-import { cleanAnswer, prefillFor, withSiblingPrefill } from "@/lib/recruiting/priorities/answers"
+import { cleanAnswer, prefillFor, withLegacyGoals, withSiblingPrefill } from "@/lib/recruiting/priorities/answers"
 import { questionsFor, sharingLine, storableKeys, type SharingClass } from "@/lib/recruiting/priorities/questions"
 import { viewFor } from "@/lib/recruiting/priorities/sharing"
 import { completeSet, loadFamilySets, respondentFor, saveAnswer, setSharing, TABLE_MISSING } from "@/lib/recruiting/priorities/store"
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
       own: { version: own?.version ?? 0, completedAt: own?.completedAt ?? null, answers: view.own },
       // Whether the other side has finished is not an answer; what they answered privately never shows.
       other: { completed: Boolean((c.respondent === "parent" ? sets.athlete : sets.parent)?.completedAt), answers: view.other },
-      prefill: withSiblingPrefill(prefillFor(c.respondent, fit, { academicInterest: (athlete?.academic_interest as string | null) ?? null }), sibling),
+      prefill: withLegacyGoals(withSiblingPrefill(prefillFor(c.respondent, fit, { academicInterest: (athlete?.academic_interest as string | null) ?? null }), sibling), view.own),
     })
   } catch (e) {
     if (missing(e)) return NextResponse.json({ available: false })

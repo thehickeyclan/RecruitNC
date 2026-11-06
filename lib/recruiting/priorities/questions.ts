@@ -1,8 +1,10 @@
 /**
  * "What Matters to Your Family" (priorities survey v3, Matt 5 Nov 2026): the question inventory.
  *
- * The numbered questions are authoritative: Parent P1–P9 (9 screens, P3 optional); Athlete A1–A8,
- * A4b, conditional A9 and the A10 closer (10 screens, 11 when A9 shows). Every question can be
+ * The numbered questions are authoritative: goals first on both sides (P0/A0, goals.ts) and the
+ * optional "what would success look like" (P0b/A0b, Private), then Parent P1–P8 and Athlete A1–A9.
+ * P4/A3 (level or opportunity) and the P9/A10 closer (top3) were retired on 6 Nov 2026: the goals
+ * cover both, and goalsOf still reads sets answered before then. Every question can be
  * skipped, "not sure" is a real answer, and nothing here filters anything on its own: the
  * recommendation code reads the answers through lib/recruiting/priorities/sharing.ts.
  *
@@ -10,6 +12,7 @@
  * ever reach a joint output. Constraint-only and Private answers shape only their owner's own view.
  */
 import { MAJOR_FAMILIES } from "@/lib/recruiting/family-fit"
+import { GOALS, GOALS_FACTS, GOALS_KEY, PARENT_GOAL_LABELS, SUCCESS_KEY } from "./goals"
 
 export type Respondent = "parent" | "athlete"
 export type SharingClass = "shared" | "constraint" | "private"
@@ -37,6 +40,8 @@ export type Question = {
   optional?: boolean
   /** Must-have / strong / flexible can be set on the answer. */
   marker?: boolean
+  /** Plain lines shown above the choices (goals.ts GOALS_FACTS). */
+  intro?: string[]
 }
 
 export const PATHWAYS: Option[] = [
@@ -66,7 +71,9 @@ export const TOP3_FACTORS: Option[] = [
 export const MAJOR_OPTIONS: Option[] = MAJOR_FAMILIES.map((m) => ({ key: m.code, label: m.label }))
 
 export const QUESTIONS: Question[] = [
-  // ---- Part A: parent
+  // ---- Part A: parent. Goals first (goals.ts).
+  { id: "P0", key: GOALS_KEY, respondent: "parent", title: "What are your goals for {name}'s college wrestling? Tap your top 3, in order.", sharing: "shared", intro: GOALS_FACTS, kind: { type: "top3", options: GOALS.map((g) => ({ key: g.key, label: PARENT_GOAL_LABELS[g.key] ?? g.label })) } },
+  { id: "P0b", key: SUCCESS_KEY, respondent: "parent", title: "In a sentence: what would make this a success for your family?", sharing: "private", optional: true, kind: { type: "text" } },
   {
     id: "P1", key: "distance", respondent: "parent", title: "How far from home is too far?", sharing: "shared", marker: true,
     kind: { type: "single", options: [
@@ -101,14 +108,6 @@ export const QUESTIONS: Question[] = [
       { key: "none", label: "None of these" },
     ] },
   },
-  {
-    id: "P4", key: "level_vs_opportunity", respondent: "parent", title: "Which matters more right now?", sharing: "shared",
-    kind: { type: "single", options: [
-      { key: "level", label: "Wrestle at the highest level possible" },
-      { key: "balance", label: "A balance" },
-      { key: "opportunity", label: "Best chance to compete and start early" },
-    ] },
-  },
   { id: "P5", key: "divisions", respondent: "parent", title: "Which levels are you open to?", sharing: "shared", kind: { type: "grid", rows: PATHWAYS, options: PATHWAY_STATES } },
   { id: "P6", key: "academics", respondent: "parent", title: "What should college do for {name} academically?", sharing: "shared", marker: true, kind: { type: "majors" } },
   {
@@ -119,9 +118,10 @@ export const QUESTIONS: Question[] = [
     ] },
   },
   { id: "P8", key: "dealbreaker", respondent: "parent", title: "Anything that's an absolute dealbreaker?", sharing: "private", optional: true, kind: { type: "text" } },
-  { id: "P9", key: "top3", respondent: "parent", title: "Last one. If these ever conflict, what wins? Tap your top 3, in order.", sharing: "shared", kind: { type: "top3", options: TOP3_FACTORS } },
 
-  // ---- Part B: athlete
+  // ---- Part B: athlete. Goals first (goals.ts).
+  { id: "A0", key: GOALS_KEY, respondent: "athlete", title: "What are your goals for college wrestling? Tap your top 3, in order.", sharing: "shared", intro: GOALS_FACTS, kind: { type: "top3", options: GOALS } },
+  { id: "A0b", key: SUCCESS_KEY, respondent: "athlete", title: "In a sentence: what would make college a success for you?", sharing: "private", optional: true, kind: { type: "text" } },
   {
     id: "A1", key: "distance", respondent: "athlete", title: "Stay close to home, or get away?", sharing: "shared",
     kind: { type: "single", options: [{ key: "close", label: "Stay close" }, { key: "dont_care", label: "Don't care" }, { key: "away", label: "Get away and see somewhere new" }] },
@@ -129,14 +129,6 @@ export const QUESTIONS: Question[] = [
   {
     id: "A2", key: "first_year", respondent: "athlete", title: "What do you want your first year to look like?", sharing: "shared",
     kind: { type: "single", options: [{ key: "compete_now", label: "Compete for the spot right away" }, { key: "redshirt_ok", label: "Happy to redshirt and develop" }, { key: "no_pref", label: "No preference" }] },
-  },
-  {
-    id: "A3", key: "level_vs_opportunity", respondent: "athlete", title: "What does wrestling in college look like to you?", sharing: "shared",
-    kind: { type: "single", options: [
-      { key: "level", label: "Compete at the highest level possible" },
-      { key: "balance", label: "Compete and have a great college experience" },
-      { key: "opportunity", label: "Wrestle if the school is a good fit" },
-    ] },
   },
   { id: "A4", key: "divisions", respondent: "athlete", title: "Which levels are you open to?", sharing: "shared", kind: { type: "grid", rows: PATHWAYS, options: PATHWAY_STATES } },
   {
@@ -169,7 +161,6 @@ export const QUESTIONS: Question[] = [
       { key: "develops", label: "A program that develops wrestlers like me" },
     ] },
   },
-  { id: "A10", key: "top3", respondent: "athlete", title: "Last one. If these ever conflict, what wins? Tap your top 3, in order.", sharing: "shared", kind: { type: "top3", options: TOP3_FACTORS } },
 ]
 
 /** The home ZIP is collected on the P1 screen, used for distance only, shown nowhere. */
@@ -178,11 +169,12 @@ export const HOME_ZIP_SHARING: SharingClass = "private"
 
 /**
  * A9 shows only in the Building or Active stage, or when the athlete said "compete right away"
- * (A2) or "highest level possible" (A3). Until a stage function exists, the stage is the grade:
+ * (A2) or put the highest level in their goals (A0; A3 on sets from before 6 Nov). Until a stage function exists, the stage is the grade:
  * 10th grade and up.
  */
 export function showA9(input: { grade: number | null; answers: Record<string, unknown> }): boolean {
-  if (input.answers.first_year === "compete_now" || input.answers.level_vs_opportunity === "level") return true
+  const goals = input.answers[GOALS_KEY]
+  if (input.answers.first_year === "compete_now" || (Array.isArray(goals) && goals.includes("level")) || input.answers.level_vs_opportunity === "level") return true
   return input.grade != null && input.grade >= 10
 }
 
