@@ -18,6 +18,7 @@ import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import ncZips from "@/lib/recruiting/nc-zips.json"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
 import { shortListLine, type ShortListReason } from "@/lib/recruiting/priorities/copy"
+import { passedBy, reactionsFor, type ReactionRow, type ReactionsView } from "@/lib/recruiting/priorities/reactions"
 import type { Respondent } from "@/lib/recruiting/priorities/questions"
 import { recommend, type Card, type CollegeFacts, type Level } from "@/lib/recruiting/priorities/recommend"
 import { jointInputs, ownerOnlyInputs } from "@/lib/recruiting/priorities/sharing"
@@ -41,6 +42,10 @@ export type PriorityListsView = {
   shapedBy: string
   shortLine: string | null
   batchIds: { bestFit: string | null; opportunities: string | null }
+  /** This viewer's own reactions, and what they may see of the other side's (reactions.ts). */
+  reactions: ReactionsView
+  /** How the other side is named on a card: the wrestler's first name, or "Your parent". */
+  otherLabel: string
 }
 
 type Stored = { inputs: string; cards: ListCard[]; notes?: string[] }
@@ -75,6 +80,14 @@ export async function priorityLists(
   const other = respondent === "parent" ? sets.athlete : sets.parent
   const mine = respondent === "parent" ? sets.parent : sets.athlete
   const ctxPromise = loadFamilyFitContext(admin, opts.viewerId, opts.team, opts.athleteId)
+  // Both sides' reactions on this wrestler; reactionsFor strips what this viewer may not see.
+  const reactionsPromise = admin
+    .from("suggestion_reactions")
+    .select("school_id, respondent, reaction, reason, chips, sharing, created_at")
+    .eq("athlete_id", opts.athleteId)
+    .order("created_at", { ascending: true })
+    .limit(1000)
+    .then(({ data }) => reactionsFor(respondent, (data ?? []) as ReactionRow[]), () => reactionsFor(respondent, []))
 
   const { data: prior } = await admin
     .from("suggestion_batches")
@@ -89,8 +102,9 @@ export async function priorityLists(
     const items = row?.items as Stored | undefined
     return row && items?.inputs === inputs && Date.now() - new Date(String(row.generated_at)).getTime() < REUSE_DAYS * 86_400_000 ? { id: String(row.id), items } : null
   }
-  const ctx = await ctxPromise
+  const [ctx, reactions] = await Promise.all([ctxPromise, reactionsPromise])
   const name = ctx.first ?? "your wrestler"
+  const otherLabel = respondent === "parent" ? (ctx.first ?? "Your wrestler") : "Your parent"
   const otherName = respondent === "parent" ? name : "your parent"
   const shapedBy = !mine?.completedAt
     ? `From ${respondent === "parent" ? `${name}'s` : "your parent's"} shared answers. Finish yours to shape them too.`
@@ -102,7 +116,7 @@ export async function priorityLists(
   const reuseBest = fresh("best_fit")
   const reuseOpp = fresh("opportunity")
   if (reuseBest && reuseOpp) {
-    return view(respondent, reuseBest.items.cards, reuseOpp.items.cards, reuseBest.items.notes ?? [], shapedBy, shortReason, name, { bestFit: reuseBest.id, opportunities: reuseOpp.id })
+    return { ...view(respondent, reuseBest.items.cards, reuseOpp.items.cards, reuseBest.items.notes ?? [], shapedBy, shortReason, name, { bestFit: reuseBest.id, opportunities: reuseOpp.id }), reactions, otherLabel }
   }
 
   const facts = await collegeFactsFor(admin, ctx, { athleteId: opts.athleteId, team: opts.team, includeViews: opts.includeViews })
@@ -114,6 +128,8 @@ export async function priorityLists(
     firstName: name,
     homeState: ctx.homeState,
     zipPoint: (z) => (NC_ZIPS[z] as [number, number] | undefined) ?? null,
+    // The viewer's own passes only: the other side's reactions never shape this viewer's lists.
+    passed: passedBy(reactions.mine),
   })
   const withLogos = (cards: Card[]) => Promise.all(cards.map(async (c) => ({ ...c, logo: await schoolLogoUrl({ id: c.id, name: c.name }).catch(() => null) })))
   const [best, opp] = await Promise.all([withLogos(lists.bestFit), withLogos(lists.opportunities)])
@@ -133,7 +149,7 @@ export async function priorityLists(
       opportunities: rows?.find((r) => r.list_kind === "opportunity")?.id ?? null,
     }
   }
-  return view(respondent, best, opp, lists.notes, shapedBy, shortReason, name, batchIds)
+  return { ...view(respondent, best, opp, lists.notes, shapedBy, shortReason, name, batchIds), reactions, otherLabel }
 }
 
 /** Every college's facts for this wrestler, from data we hold; nothing from survey answers. */
@@ -214,7 +230,7 @@ function view(
   shortReason: ShortListReason | null,
   name: string,
   batchIds: PriorityListsView["batchIds"],
-): PriorityListsView {
+): Omit<PriorityListsView, "reactions" | "otherLabel"> {
   const short = bestFit.length + opportunities.length < 6 && shortReason ? shortListLine(shortReason, name) : null
   return { respondent, bestFit, opportunities, notes, shapedBy, shortLine: short, batchIds }
 }

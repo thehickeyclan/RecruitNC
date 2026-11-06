@@ -91,6 +91,8 @@ export type RecommendInput = {
   /** The middle of the family's state, for distance when no home ZIP is visible to this viewer. */
   centre: [number, number] | null
   zipPoint: (zip: string) => [number, number] | null
+  /** Colleges this viewer passed on (their own reactions only, reactions.ts passedBy): never re-offered. */
+  passed?: ReadonlySet<string>
 }
 
 const LIST_MAX = 5
@@ -223,6 +225,7 @@ export function recommend(input: RecommendInput): Lists {
   for (const c of input.colleges) {
     const placement = placementFor(input.viewer, grids, c.level)
     if (placement === "excluded") continue
+    if (input.passed?.has(c.id)) continue
     if (c.serviceAcademy && service === "not") continue
     const miles = origin ? milesBetween(origin, [c.latitude, c.longitude]) : null
     const limit = distance ? DISTANCE_MILES[distance] : undefined
