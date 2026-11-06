@@ -1,0 +1,3475 @@
+{
+ "state": "CA",
+ "association": "CIF",
+ "generated": "2026-11-05",
+ "generated_by": "Muse (from the CA build files: final-qualifiers/, CA-grad-years.csv, CA-mint-list.csv)",
+ "purpose": "Every CA placer key that reaches no profile, named with its reason - the accounted file for the state-readiness gate.",
+ "placers": [
+  {
+   "name": "Aaron Silva",
+   "school": "Corona Del Mar (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Abbi Cooper",
+   "school": "Clayton Valley (NC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Clayton Valley (NC)': absorbed Abbi Cooper @ 'Clayton Valley' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Abram Cline",
+   "school": "Granite Hills",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Adam Farha",
+   "school": "Poway",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Adelaida Fernandez",
+   "school": "Birmingham (LA)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Adelena Martinez",
+   "school": "Hemet (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 5; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Adeliada Fernandez",
+   "school": "Birmingham",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Adelieda Fernandez",
+   "school": "Birmingham (LA)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 6; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Adrien Reyes",
+   "school": "Clovis (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Aiden Simmons",
+   "school": "Bakersfield",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Aila Duus",
+   "school": "Fremont (Sunnyvale) (CC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Fremont (Sunnyvale) (CC)': absorbed Aila Duus @ 'Fremont (CC)' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Aiyanna Beane",
+   "school": "American Canyon (NC)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 3; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Ajalynn Jimenez",
+   "school": "Hillcrest",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Alanna Harwell",
+   "school": "St. Mary`S (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 3; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Alec Dansby",
+   "school": "Buchanan",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Alejandra Valdiviezo",
+   "school": "Poway",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Alek VanBebber",
+   "school": "Kingsburg",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Alex Maday",
+   "school": "Whitney",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Alexandria Perez",
+   "school": "La Costa Canyon",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Aliah Bertalotto",
+   "school": "Turlock (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Aliaksandr Kikiniou",
+   "school": "Poway",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Alias Raby",
+   "school": "Anderson (NS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 2; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Alicia Espinoza",
+   "school": "Central Valley (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Alicia Serratos",
+   "school": "Santa Ana",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Alyssa Guzman",
+   "school": "Orange Vista (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Orange Vista (SS)': absorbed Alyssa Guzman @ 'Orange Vista' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Alyssa Prado",
+   "school": "Mayfair (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Amber Spencer",
+   "school": "Santana",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Ames-Michael Hoevker",
+   "school": "Granite Hills (SD)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 6; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Anabelle Serratos",
+   "school": "Santa Ana",
+   "gender": "girls",
+   "class_year": 2027,
+   "status": "no_recent_placement",
+   "reason": "class of 2027 but placed only in 2024 - mint requires a 2025/2026 placement",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Freshman -> 2027 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Anakarla Hernandez",
+   "school": "St Helena (NC)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 4; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Anaya Falcon",
+   "school": "Walnut",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Andrew Barbosa",
+   "school": "Palm Desert",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Angel Hill",
+   "school": "Mira Mesa (SD)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Angela Salazar",
+   "school": "Santa Ana (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 3; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Angelina Borelli",
+   "school": "Los Banos (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 2; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Angelina Jiang",
+   "school": "Gunn (CC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Gunn (CC)': absorbed Angelina Jiang @ 'Gunn' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Angelinah De Leon",
+   "school": "Santa Clara (CC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Santa Clara (CC)': absorbed Angelinah De Leon @ 'Santa Clara' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Angelo Posada",
+   "school": "Poway (SD)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Poway (SD)': absorbed Angelo Posada @ 'Poway' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Anna Bozanic",
+   "school": "Liberty",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Anthony Berg",
+   "school": "Whitney",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Anthony Lucio",
+   "school": "Fountain Valley",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Anthony Manno",
+   "school": "Newport Harbor (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Anthony Vargas",
+   "school": "Central (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Antonio Rodriguez",
+   "school": "Los Gatos (CC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 5; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | PROPAGATED school form 'Los Gatos (CC)': absorbed Antonio Rodriguez @ 'Los Gatos' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Arjun Nagra",
+   "school": "Vacaville",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Arno Vardanyan",
+   "school": "Birmingham (LA)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 3; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Arvin Khosravy",
+   "school": "Chaminade",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Ashley Wafer",
+   "school": "Lakewood (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Lakewood (SS)': absorbed Ashley Wafer @ 'Lakewood' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Ashton Besmer",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Buchanan (CS)': absorbed Ashton Besmer @ 'Buchanan' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Ashton Lassig",
+   "school": "Temecula Valley (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 6; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Audrey Segura",
+   "school": "Redwood -Visalia (CS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Redwood -Visalia (CS)': absorbed Audrey Segura @ 'Redwood (CS)' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Ava Ebrahimi",
+   "school": "Poway (SD)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 2; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Ava Fodera",
+   "school": "Poway (SD)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 2; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Avangeline Turner",
+   "school": "Davis",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Avy Perez",
+   "school": "Birmingham (LA)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Birmingham (LA)': absorbed Avy Perez @ 'Birmingham' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Axel Esparza",
+   "school": "Lakeside (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Ayana Contreras",
+   "school": "Orange Vista (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Bailey Hoard",
+   "school": "Monache (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 6; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Beau Priest",
+   "school": "Bakersfield (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 3; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Bakersfield (CS)': absorbed Beau Priest @ 'Bakersfield' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Berlyn Davis",
+   "school": "San Clemente",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Berlynn Solia-Tago",
+   "school": "Poly/Long Beach (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Billy Townson",
+   "school": "Poway (SD)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Poway (SD)': absorbed Billy Townson @ 'Poway' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Birta McCaskill",
+   "school": "Mira Mesa",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Bk Martinez",
+   "school": "Ayala",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Blake Woodward",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2026; best place 3; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Buchanan (CS)': absorbed Blake Woodward @ 'Buchanan' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Braden Priest",
+   "school": "Bakersfield (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Bakersfield (CS)': absorbed Braden Priest @ 'Bakersfield' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Brady Wight",
+   "school": "Vacaville (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Branson John",
+   "school": "Buchanan",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Braya Cruz",
+   "school": "Clovis North (CS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Brian Leon",
+   "school": "Eleanor Roosevelt",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Briana Alvarado",
+   "school": "Highland (Bakersfield) (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Highland (Bakersfield) (CS)': absorbed Briana Alvarado @ 'Highland (CS)' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Briana Ross",
+   "school": "San Marcos (SD)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Brianna Alvarado",
+   "school": "Highland (Bakersfield) (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Brianna Espinoza",
+   "school": "Central Valley (SJ)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Central Valley (SJ)': absorbed Brianna Espinoza @ 'Central Valley' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Brock Mantanona",
+   "school": "Palm Desert",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Brock Rios",
+   "school": "Frontier (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Brodie Johnson",
+   "school": "Pitman",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Brokton Borelli",
+   "school": "Los Banos (SJ)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Los Banos (SJ)': absorbed Brokton Borelli @ 'Los Banos' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Brooklyn Bittner",
+   "school": "Rio Mesa (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 5; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Bryson Harrington",
+   "school": "Buchanan",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Caleb Rivas",
+   "school": "Mission Oaks (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Carlos Melgoza",
+   "school": "Kingsburg (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Carlos Sutton",
+   "school": "Etiwanda (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Carlos Valdiviezo",
+   "school": "Poway (SD)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Caroline Collins",
+   "school": "Carlsbad (SD)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Carter Vannest",
+   "school": "Pitman (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 4; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Chad Troxler",
+   "school": "Liberty Bakersfield (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Charlene Smith",
+   "school": "San Dimas (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Chloe Overgaag",
+   "school": "Palm Desert",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Chris Creason",
+   "school": "El Diamante (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | PROPAGATED school form 'El Diamante (CS)': absorbed Christopher Creason @ 'El Diamante' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Christian Garcia",
+   "school": "Walnut (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Walnut (SS)': absorbed Christian Garcia @ 'Walnut' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Christian Herrera",
+   "school": "Bakersfield",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Christina Osorio",
+   "school": "Downey",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Chrystina Ballejos",
+   "school": "Sheldon (SJ)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Cj Huerta",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2026; best place 2; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Buchanan (CS)': absorbed Cj Huerta @ 'Buchanan' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Coby Merrill",
+   "school": "JW North (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'JW North (SS)': absorbed Coby Merrill @ 'Jw North' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Cody Merrill",
+   "school": "Gilroy",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Collin Guffey",
+   "school": "Granite Hills",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Cross Rodriguez",
+   "school": "Calvary Chapel/SA (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Cynthia Meza",
+   "school": "Calaveras (SJ)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Damian Montoya",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Danica Kelley",
+   "school": "Scotts Valley",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Daniel Mendoza",
+   "school": "Victor Valley (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Daniel Reza",
+   "school": "South (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Daniel Zepeda",
+   "school": "Gilroy (CC)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Gilroy (CC)': absorbed Daniel Zepeda @ 'Gilroy' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Danny Frailey",
+   "school": "Trabuco Hills (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "David Alonso",
+   "school": "Palm Desert",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "David Calkins Jr.",
+   "school": "Liberty (NC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "David Calkins jr.",
+   "school": "Liberty (NC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 1; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Deandra Meza",
+   "school": "Walnut",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Delarie Juarez",
+   "school": "Brawley",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Delarie Juarez",
+   "school": "Northview (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Destiny Huitron",
+   "school": "Arroyo (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Devin Alarcon",
+   "school": "Clovis North (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Devin Silva",
+   "school": "Bullard (CS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Diara Pomares",
+   "school": "Hemet (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Diego Costa",
+   "school": "Palm Desert",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Diego Morales",
+   "school": "Palm Desert",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Dom Dotson",
+   "school": "Poway (SD)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 3; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Dominic Bozanic",
+   "school": "Gilroy (CC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Dominic Wilson",
+   "school": "Tulare Union (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Tulare Union (CS)': absorbed Dominic Wilson @ 'Tulare Union' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Duda Rodrigues",
+   "school": "Newport Harbor",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Dylan Pile",
+   "school": "Los Gatos (CC)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 3; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Eden Hernandez",
+   "school": "Poway",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Edward Sheeran",
+   "school": "Pitman (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Edwin Sierra",
+   "school": "Poway",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Edwin Sierra",
+   "school": "Poway (SD)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Eliana Garcia",
+   "school": "Walnut",
+   "gender": "girls",
+   "class_year": 2027,
+   "status": "no_recent_placement",
+   "reason": "class of 2027 but placed only in 2024 - mint requires a 2025/2026 placement",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Freshman -> 2027 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Elias Corona",
+   "school": "Oakdale",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Elijah Almarinez",
+   "school": "Vacaville (SJ)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Elijah Cortez",
+   "school": "Gilroy (CC)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Gilroy (CC)': absorbed Elijah Cortez @ 'Gilroy' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Elijah Valencia",
+   "school": "Merced",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Ella Cohen",
+   "school": "Palo Alto (CC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Ella Myers",
+   "school": "Monterey (CC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Emilio Ayala",
+   "school": "Kingsburg (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Emily Marlowe",
+   "school": "Lincoln (Stockton) (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 6; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Emma Mallen",
+   "school": "Marysville (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Estrella Vasquez-gutierrez",
+   "school": "Greenfield",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Ethan Parco",
+   "school": "Los Gatos",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Eva Bhattacharya",
+   "school": "Saint Francis (CC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Eva Garcia",
+   "school": "Newport Harbor",
+   "gender": "girls",
+   "class_year": 2027,
+   "status": "no_recent_placement",
+   "reason": "class of 2027 but placed only in 2024 - mint requires a 2025/2026 placement",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Freshman -> 2027 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Evan Manzo",
+   "school": "Etiwanda",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Evelyn Vargas",
+   "school": "Merced (SJ)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Merced (SJ)': absorbed Evelyn Vargas @ 'Merced' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Faith Bartoszek",
+   "school": "Northview",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Fernanda Canedo",
+   "school": "Ridgeview",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "G. Elias Navida",
+   "school": "Poway",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Gabriel Barragan",
+   "school": "Esperanza (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 6; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Gavin Bauder",
+   "school": "Buchanan",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Gemma Templeman",
+   "school": "Rocklin",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Giada Tanahara",
+   "school": "Martin Luther King (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Gianna DiBenedetto",
+   "school": "Bella Vista",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Giselle Solano",
+   "school": "Franklin (Elk Grove) (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Golda Demby",
+   "school": "Hollister (CC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 3; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Hollister (CC)': absorbed Golda Demby @ 'Hollister' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Grigor Cholakyan",
+   "school": "St John Bosco",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Hailey Liu",
+   "school": "Northgate (NC)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Henry Aslikyan",
+   "school": "Birmingham (LA)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Birmingham (LA)': absorbed Henry Aslikyan @ 'Birmingham' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Hercules Windrath",
+   "school": "Fountain Valley",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Hunter Jauregui",
+   "school": "Fountain Valley (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Isabel Navarro",
+   "school": "Shadow Hills (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Isabella Lorenzana",
+   "school": "Marina (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Isabella Marie Gonzales",
+   "school": "Clovis East (CS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Clovis East (CS)': absorbed Isabella Marie Gonzales @ 'Clovis East' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Isabella Serma\u00f1a",
+   "school": "Cerritos (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Isabella Sosa",
+   "school": "Schurr",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Isaiah Cortez",
+   "school": "Gilroy (CC)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Gilroy (CC)': absorbed Isaiah Cortez @ 'Gilroy' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Isaiah Quintero",
+   "school": "El Dorado (SS)",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Isaiah Rangel",
+   "school": "Palma (CC)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Issac Torres",
+   "school": "Fountain Valley (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Itzel Herrera",
+   "school": "Corona (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 5; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Itzel Padilla",
+   "school": "Excelsior Charter (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Ivan Arias",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 2; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Izel Padilla",
+   "school": "Excelsior Charter (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Jaala Degannes",
+   "school": "San Marcos (SD)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Jackson Naven",
+   "school": "Frontier (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Jacob Honey",
+   "school": "Bakersfield",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jacob Perez",
+   "school": "Everett Alvarez (CC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 3; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Jacob Perez",
+   "school": "Monache",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jaelyn Unpingco",
+   "school": "Clovis East (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | PROPAGATED school form 'Clovis East (CS)': absorbed Jaelyn Unpingco @ 'Clovis East' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jagger French",
+   "school": "Del Oro",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jamie Micallef",
+   "school": "Half Moon Bay",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jasmine Macias",
+   "school": "Walnut",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jaxon Smith",
+   "school": "Chaparral (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Jaxtyn Frost",
+   "school": "Buchanan",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jazmine Turner",
+   "school": "Grace M Davis (SJ)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 3; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Grace M Davis (SJ)': absorbed Jazmine Turner @ 'Grace Davis' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jeff Lopez",
+   "school": "Clovis West",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jenniyah Duarte",
+   "school": "Sanger (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Jeremiah Bertalotto",
+   "school": "Turlock",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jillian Wells",
+   "school": "Central Catholic",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jillian Wells",
+   "school": "Lakeside (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Jj Deleon",
+   "school": "Oak Ridge (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Jocelynn Mendoza",
+   "school": "Gilroy (CC)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 5; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Junior -> 2027 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Joey Chacon",
+   "school": "Clovis West",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Jonathan Rocha",
+   "school": "Clovis North (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Jordan Deleon",
+   "school": "Oak Ridge (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Joseph Antonio",
+   "school": "St. John Bosco (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'St. John Bosco (SS)': absorbed Joseph Antonio @ 'St John Bosco' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Joseph Buck",
+   "school": "Clovis",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Joseph Pavlov-Ramirez",
+   "school": "Los Gatos (CC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Joseph Toscano",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 2; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Buchanan (CS)': absorbed Joseph Toscano @ 'Buchanan' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Joshua Requena",
+   "school": "Camarillo (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2026; best place 5; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Camarillo (SS)': absorbed Joshua Requena @ 'Camarillo' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Josiah Sandoval",
+   "school": "Elk Grove",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Josie Benitez",
+   "school": "Kingsburg (CS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Kingsburg (CS)': absorbed Josie Benitez @ 'Kingsburg' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Julia Gomez",
+   "school": "East Nicolaus",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Juliana Marquez",
+   "school": "Gabrielino (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Gabrielino (SS)': absorbed Juliana Marquez @ 'Gabrielino' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Junior Bumanglag",
+   "school": "Granite Hills (SD)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Justice El Sayad",
+   "school": "Temecula Valley",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kaden Cryer",
+   "school": "Moreno Valley (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 6; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Kai Ford",
+   "school": "Ponderosa (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Kailee Cadena",
+   "school": "Bakersfield Christian (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Kailey Salazar",
+   "school": "Selma",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kaiya Maggini",
+   "school": "Del Oro (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 2; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Del Oro (SJ)': absorbed Kaiya Maggini @ 'Del Oro' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kaleo Garcia",
+   "school": "Gilroy (CC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Kameelah Hameed",
+   "school": "James Logan",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Karma Pugh",
+   "school": "Buchanan",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Katherine Hernandez",
+   "school": "Bell Gardens",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Katherine Luna",
+   "school": "Downey (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Kathryn Hingano",
+   "school": "Rio Linda",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Katianna Martinez",
+   "school": "Evergreen Valley (CC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Kauilani Garcia",
+   "school": "Gilroy",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kayden Cartee",
+   "school": "Mayfair (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Kayla Edwards",
+   "school": "Rancho Buena Vista",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kayleen Tuavao",
+   "school": "Tokay (SJ)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Tokay (SJ)': absorbed Kayleen Tuavao @ 'Tokay' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kaylin Montano",
+   "school": "Shadow Hills",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kelan Stever",
+   "school": "San Clemente (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Kelly Meehan",
+   "school": "Tokay (SJ)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Kendrick Salcido",
+   "school": "Armijo",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kevin Rodriguez",
+   "school": "St. John Bosco (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Keyona Mae Simmons",
+   "school": "San Diego (SD)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Khale McDonnell",
+   "school": "Fountain Valley (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Fountain Valley (SS)': absorbed Khale McDonnell @ 'Fountain Valley' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kingston Cruzat",
+   "school": "Folsom (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Kinsey Konrad",
+   "school": "Redondo Union",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kirin Smith",
+   "school": "Clovis West (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 6; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Kylee Golz",
+   "school": "Trabuco Hills (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Trabuco Hills (SS)': absorbed Kylee Golz @ 'Trabuco Hills' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kyli Stanley",
+   "school": "Granite Hills",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Kyree Rubio",
+   "school": "Canyon Springs",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Laird Root",
+   "school": "Poway",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Lana Nguyen",
+   "school": "Dublin",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Laruren Aguilar",
+   "school": "Burlingame (CC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Lauren Nguyen",
+   "school": "Granada",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Lauren Zaragoza",
+   "school": "Brawley",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Lauren Zaragoza",
+   "school": "Brawley (SD)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 1; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Leah Lopez",
+   "school": "San Marino (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Leila Witzerman",
+   "school": "Peninsula (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Leilani Lemus",
+   "school": "Clovis (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Clovis (CS)': absorbed Leilani Lemus @ 'Clovis' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Leo Contino",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Buchanan (CS)': absorbed Leo Contino @ 'Buchanan' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Leo Macias",
+   "school": "Kingsburg (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Leo Maestas",
+   "school": "Clovis North (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 3; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Levi Bussey",
+   "school": "Granite Bay (SJ)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Granite Bay (SJ)': absorbed Levi Bussey @ 'Granite Bay' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Lila Tsao",
+   "school": "Homestead (CC)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Lilyana Balderas",
+   "school": "Anaheim (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Anaheim (SS)': absorbed Lilyana Balderas @ 'Anaheim' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Logan Bruce",
+   "school": "Maria Carrillo (NC)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Maria Carrillo (NC)': absorbed Logan Bruce @ 'Maria Carrillo' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Luana Stathopoulos",
+   "school": "Redwood (NC)",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Lucia Ledezma",
+   "school": "Granite Hills",
+   "gender": "girls",
+   "class_year": 2027,
+   "status": "no_recent_placement",
+   "reason": "class of 2027 but placed only in 2024 - mint requires a 2025/2026 placement",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Freshman -> 2027 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Lucia Ledezma",
+   "school": "Granite Hills (SD)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Maci Stemmons",
+   "school": "Monte Vista (NC)",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Mackenzie Muniz",
+   "school": "Hillcrest",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Maddison Heinzer",
+   "school": "Gilroy",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Madeline Merideth",
+   "school": "Cerritos (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Madison Black",
+   "school": "Newbury Park (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Maggie Cornish",
+   "school": "Tesoro (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 5; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Tesoro (SS)': absorbed Maggie Cornish @ 'Tesoro' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Maile Nguyen",
+   "school": "Granada (NC)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 5; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Makynna Loepp",
+   "school": "Montclair",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Mariana Gonzalez",
+   "school": "Buchanan (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Mark Del Bosque",
+   "school": "Clovis North (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Mark Marin",
+   "school": "Clovis (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Marlee Solomon",
+   "school": "Newport Harbor",
+   "gender": "girls",
+   "class_year": 2027,
+   "status": "no_recent_placement",
+   "reason": "class of 2027 but placed only in 2024 - mint requires a 2025/2026 placement",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Freshman -> 2027 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Mary Jane Porter",
+   "school": "Gilroy",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Mary Snider",
+   "school": "Rancho Bernardo (SD)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 2; resolver status resolved-override; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Mason Harsch",
+   "school": "Monte Vista (NC)",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Mason Ontiveros",
+   "school": "Pitman (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 2; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Pitman (SJ)': absorbed Mason Ontiveros @ 'Pitman' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Matthew Luna",
+   "school": "Saint Francis (CC)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Max Del Bosque",
+   "school": "Clovis North",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Me`Kala James",
+   "school": "Central East (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 1; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Central East (CS)': absorbed Me`Kala James @ 'Central' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab) ; absorbed Me`Kala James @ 'Central (CS)' (seasons 2025): 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Megan Morales",
+   "school": "Central (CS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Central (CS)': absorbed Megan Morales @ 'Central' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Mia Hooper",
+   "school": "Northview (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Michael Murillo",
+   "school": "Bakersfield",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Miguel Estrada",
+   "school": "Frontier",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Mikayla Garcia",
+   "school": "James Logan",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Mikayla Lancaster",
+   "school": "Gregori",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Monee Cordero",
+   "school": "Highland (CS)",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Moses Mendoza",
+   "school": "Gilroy (CC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Gilroy (CC)': absorbed Moses Mendoza @ 'Gilroy' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Moses Mirabal",
+   "school": "Gilroy",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Myra Pressnell",
+   "school": "Fremont (CC)",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Nathan Carrillo",
+   "school": "St. John Bosco (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 2; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'St. John Bosco (SS)': absorbed Nathan Carrillo @ 'St John Bosco' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Nathaniel Espericueta",
+   "school": "Frontier (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Nathaniel Granados",
+   "school": "Merced (SJ)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Merced (SJ)': absorbed Nathaniel Granados @ 'Merced' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Nicholas Sahakian",
+   "school": "St John Bosco",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Nikade Zinkin",
+   "school": "Clovis (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Clovis (CS)': absorbed Nikade Zinkin @ 'Clovis' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Niko Valenzuela",
+   "school": "Fountain Valley (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Nisa Rogers",
+   "school": "Righetti",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Noah Daniels",
+   "school": "Sheldon (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 5; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Noah Huss",
+   "school": "Moorpark (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Noah Reynolds",
+   "school": "Clovis",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Noelle Alexander",
+   "school": "Maria Carrillo",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Noemi Cordero",
+   "school": "Poway (SD)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Olivia Davis",
+   "school": "Esperanza (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Olivia Davis",
+   "school": "Monte Vista (SD)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Olivia Lopez",
+   "school": "Hamilton",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Olivia Ruacho",
+   "school": "Central (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Paris Ruiz",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Buchanan (CS)': absorbed Paris Ruiz @ 'Buchanan' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Patrick Roberts",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Paul Kelly",
+   "school": "Poway",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Paulo Valdez",
+   "school": "Hesperia (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Hesperia (SS)': absorbed Paulo Valdez @ 'Hesperia' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Primo Catalano",
+   "school": "Chaminade",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Primo Catalano",
+   "school": "Fountain Valley (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Raymond Rivera",
+   "school": "Clovis (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 4; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Reanna Chavez",
+   "school": "Mayfair (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Reese Hart",
+   "school": "Tehachapi",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Renice Gonzalez",
+   "school": "Colony (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 3; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Colony (SS)': absorbed Renice Gonzalez @ 'Colony' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Riana Bernal",
+   "school": "Lemoore",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Rianna Bernal",
+   "school": "Lemoore (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Rianna Bernal",
+   "school": "Marina (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Ricardo Ortiz",
+   "school": "Brawley (SD)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Richard Murillo",
+   "school": "Canyon Springs",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Robert Jones",
+   "school": "Poway",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Robert Platt",
+   "school": "Poway",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Rocco Godinez",
+   "school": "Centennial (Corona) (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Rocklin Zinkin",
+   "school": "Buchanan (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Buchanan (CS)': absorbed Rocklin Zinkin @ 'Buchanan' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Roman Arakelyan",
+   "school": "Birmingham (LA)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 4; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Ronnie Ramirez",
+   "school": "Walnut (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Walnut (SS)': absorbed Ronnie Ramirez @ 'Walnut' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Rosalynn Diaz",
+   "school": "Liberty (NC)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 5; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Roxanne Raab",
+   "school": "Clairemont (SD)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Clairemont (SD)': absorbed Roxanne Raab @ 'Clairemont' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Ruby Julien-Newsom",
+   "school": "Torrey Pines (SD)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Ryan Clink",
+   "school": "Chico",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Ryan Espiritu",
+   "school": "Vacaville (SJ)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 3; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Ryland Whitworth",
+   "school": "Fountain Valley",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Samantha Arce",
+   "school": "Mater Dei",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Samantha Sachs",
+   "school": "Glendora (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | PROPAGATED school form 'Glendora (SS)': absorbed Samantha Sachs @ 'Glendora' (seasons 2024): 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Samatha Rivera",
+   "school": "Northview",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Santiago Benitez",
+   "school": "Villa Park",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Sarah Harthorn",
+   "school": "Golden Valley (Bakersfield) (CS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Sarai Cortez",
+   "school": "Gilroy (CC)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 8; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Sophomore -> 2028 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Savannah Talmadge",
+   "school": "Clayton Valley (NC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Scott Beadles",
+   "school": "Calaveras",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Sean Willcox",
+   "school": "St. John Bosco (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'St. John Bosco (SS)': absorbed Sean Willcox @ 'St John Bosco' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Selieni Paseka",
+   "school": "Poly/Long Beach (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 6; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Shayna Ward",
+   "school": "Oakland Tech",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Shayna Ward",
+   "school": "Oakland Tech Senior (NC)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 2; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Shayna Ward",
+   "school": "Oakland Tech Senior H S (NC)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 1; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Shyra Randle",
+   "school": "Natomas (SJ)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 7; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Siraj Sidhu",
+   "school": "Clovis North (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 2; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Siraj Sidhu",
+   "school": "Del Oro",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Siraj Sidhu",
+   "school": "Del Oro (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 4; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Sj Martin",
+   "school": "Granada (NC)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 1; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Skye Schneider",
+   "school": "Elk Grove (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 2; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Elk Grove (SJ)': absorbed Skye Schneider @ 'Elk Grove' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Skyler Gassel",
+   "school": "Newport Harbor",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Slava Shahbazyan",
+   "school": "Birmingham (LA)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Slava Shahbazyan",
+   "school": "Chaminade",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Sonny Acuna",
+   "school": "Northview",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Sonny Kling",
+   "school": "Canyon Springs",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Sophia Cornish",
+   "school": "Tesoro",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 4; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Sophia Hejnal",
+   "school": "Grace Davis",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 5; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Sumaya Lazaro",
+   "school": "Northview (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Symone Jewell",
+   "school": "Northgate",
+   "gender": "girls",
+   "class_year": 2027,
+   "status": "no_recent_placement",
+   "reason": "class of 2027 but placed only in 2024 - mint requires a 2025/2026 placement",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Freshman -> 2027 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Symone Jewell",
+   "school": "Northgate (NC)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 3; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Junior -> 2027 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Tamara Grace",
+   "school": "Gilroy",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 2; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Tamara Grace",
+   "school": "Gilroy (CC)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 2; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Thomas Sandoval",
+   "school": "Vacaville",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Thunder Lewis",
+   "school": "Clovis",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Thunder Lewis",
+   "school": "Clovis (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Thunder Lewis",
+   "school": "Del Norte (Cresent City) (NC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 3; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Tigran Greyan",
+   "school": "St. John Bosco (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Tigran Greyan",
+   "school": "Valencia/Valencia (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Tilly Kakuk",
+   "school": "Chino (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Tommy Holguin",
+   "school": "Bellarmine (CC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 3; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Tommy Thongseng",
+   "school": "Exeter Union",
+   "gender": "boys",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 6; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Travis Grace",
+   "school": "Gilroy (CC)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025,2026; best place 3; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab) | PROPAGATED school form 'Gilroy (CC)': absorbed Travis Grace @ 'Gilroy' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Treyton Sheets",
+   "school": "Frontier (CS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Trinity Tipton",
+   "school": "Camarillo (SS)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Troy Ceja",
+   "school": "Pitman (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 8; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Troy Montero",
+   "school": "La Mirada (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 8; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Tyler Eise",
+   "school": "Gilroy (CC)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 1; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Vania Victoria",
+   "school": "Olympian (SD)",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 5; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Victor-alexander Gutierrez",
+   "school": "Central Catholic (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024,2025; best place 4; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | PROPAGATED school form 'Central Catholic (SJ)': absorbed Victor-Alexander Gutierrez @ 'Central Catholic' (seasons 2024): 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Victoria Espinoza",
+   "school": "Palm Desert (SS)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 7; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Wes Burford",
+   "school": "Oakdale (SJ)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 2; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Wyatt Lewis",
+   "school": "Clovis",
+   "gender": "boys",
+   "class_year": 2027,
+   "status": "no_recent_placement",
+   "reason": "class of 2027 but placed only in 2024 - mint requires a 2025/2026 placement",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Freshman -> 2027 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Xander Firm",
+   "school": "Sultana (SS)",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 6; resolver status resolved; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Xiomara Gallego",
+   "school": "Poway",
+   "gender": "girls",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 3; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Yvette Garcia",
+   "school": "Sanger",
+   "gender": "girls",
+   "class_year": 2024,
+   "status": "graduated_class",
+   "reason": "class of 2024 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Senior -> 2024 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Yzabella Austin",
+   "school": "Hughson (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2026; best place 1; resolver status resolved; evidence: 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Yzabella Austin",
+   "school": "Pitman",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 1; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Yzabella Austin",
+   "school": "Pitman (SJ)",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025; best place 1; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab)"
+  },
+  {
+   "name": "Zachary Hoover",
+   "school": "Laguna Creek",
+   "gender": "boys",
+   "class_year": 2025,
+   "status": "graduated_class",
+   "reason": "class of 2025 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 8; resolver status resolved; evidence: 2024: HS Junior -> 2025 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Zahra Stewart",
+   "school": "Orange Vista (SS)",
+   "gender": "girls",
+   "class_year": null,
+   "status": "year_conflict_held_blank",
+   "reason": "grade prints imply different class years - held blank (Seay rule)",
+   "detail": "seasons placed 2025,2026; best place 1; resolver status conflict; evidence: 2025: HS Senior -> 2025 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  },
+  {
+   "name": "Zahra Stewart",
+   "school": "Yucaipa",
+   "gender": "girls",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2024; best place 7; resolver status resolved; evidence: 2024: HS Sophomore -> 2026 (CIF 12160381, payload+tab)"
+  },
+  {
+   "name": "Zaydrein Hernandez",
+   "school": "St. John Bosco (SS)",
+   "gender": "boys",
+   "class_year": 2026,
+   "status": "graduated_class",
+   "reason": "class of 2026 - outside the current-class mint window (2027-2030)",
+   "detail": "seasons placed 2025,2026; best place 6; resolver status resolved; evidence: 2025: HS Junior -> 2026 (CIF 13811124, payload+tab) | 2026: HS Senior -> 2026 (CIF 15173100, payload+tab)"
+  }
+ ],
+ "notes": "Mint-eligible keys (CA-mint-list.csv, mint_eligible=yes) are excluded - they reach profiles. Entrant-row year application does not change mint eligibility."
+}

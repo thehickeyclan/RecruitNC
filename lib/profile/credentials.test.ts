@@ -100,17 +100,21 @@ describe("the state names the championship", () => {
 
   it("names a state we hold no association for by the state itself", () => {
     /*
-     * Alaska, because each state that loads gains an association and takes this case with it -
-     * Georgia's GHSA, then Alabama's AHSAA. Pick a state that is not on the roadmap, and when
-     * Alaska ever loads, move this to another one rather than deleting the case: the fallback is
-     * what every state we have not reached yet relies on. The map is in lib/athlete-state.ts.
+     * This case has walked the roadmap ahead of the import chain - Georgia's GHSA took it, then
+     * Alabama's AHSAA, then Alaska. Alaska loaded on 5 November 2026 with the last ten states,
+     * and ASAA took it too, so there is no state left to move it to: all fifty are registered.
+     *
+     * The District of Columbia is where it stops. We hold DC profiles and no DC association, and
+     * it cannot be registered out from under this test the way a state can, because DC crowns no
+     * state championship. The fallback itself still matters: it is what any jurisdiction whose
+     * association we do not hold relies on. The map is in lib/athlete-state.ts.
      */
     const labels = profileCredentials({
-      stateRows: [row("Alaska 6A State Championships", "3rd")],
+      stateRows: [row("District of Columbia State Championships", "3rd")],
       tocRows: [],
       tournamentRows: [],
-      state: "AK",
+      state: "DC",
     }).map((c) => c.label)
-    expect(labels).toEqual(["Alaska 6A State 3rd · ’26"])
+    expect(labels).toEqual(["District of Columbia State 3rd · ’26"])
   })
 })

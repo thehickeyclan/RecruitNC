@@ -111,15 +111,58 @@ const DATES: Record<string, string> = {
   "TX|2025": "2025-05-03",
   "TX|2026": "2026-05-23",
   "WI|2025": "2025-05-03",
+  /*
+   * Wave 3's remaining dates, 5 Nov 2026, each read off the USAW schedule listing that carries
+   * that posting's own Results link (Florida's is Flo's).
+   *
+   * Illinois is why the key can carry a style and a gender. One state-year is not one date there:
+   * 2025 ran freestyle on 24 May and Greco on 25 April, a month apart, and 2026 ran three
+   * postings - boys freestyle 9 May, girls freestyle 19 April, Greco 25 April. Stamping all of a
+   * state's rows with one date would put a Greco bout a month from where it happened, and the
+   * whole reason this table refuses to guess is that a wrong date silently moves a bout in or out
+   * of the 12-month head-to-head window. Wisconsin needs it too: its Greco runs the Sunday of the
+   * combined weekend, a day after the freestyle.
+   */
+  "AR|2026": "2026-04-18",
+  "IL|2025|fs": "2025-05-24",
+  "IL|2025|gr": "2025-04-25",
+  "IL|2026|fs|boys": "2026-05-09",
+  "IL|2026|fs|girls": "2026-04-19",
+  "IL|2026|gr": "2026-04-25",
+  "MI|2025": "2025-05-31",
+  "MI|2026": "2026-05-30",
+  "MN|2026": "2026-05-02",
+  "MO|2025": "2025-05-10",
+  "MO|2026": "2026-05-01",
+  "NJ|2025": "2025-05-18",
+  "NJ|2026": "2026-05-17",
+  "NY|2025": "2025-05-04",
+  "OH|2025": "2025-05-29",
+  "OH|2026": "2026-05-28",
+  "OK|2026": "2026-05-14",
+  "WI|2026": "2026-05-02",
+  "WI|2025|gr": "2025-05-04",
+  "WI|2026|gr": "2026-05-03",
   // Both styles the same day and venue, Walker HS (FloArena 13956434 freestyle, 14143294 Greco).
   "LA|2025": "2025-05-03",
 }
 /** Dates whose day is not established by the delivery note. Printed on every run. */
 const APPROX_DATES = new Set(["KY|2025"])
-const dateFor = (year: string) => {
-  const d = DATES[`${STATE}|${year}`]
-  if (!d) throw new Error(`No event date recorded for ${STATE} ${year} - add it to DATES`)
-  return d
+/**
+ * Most-specific date wins: state|year|style|gender, then state|year|style, then state|year. Nearly
+ * every state needs only the last; Illinois and Wisconsin ran their styles on different days.
+ */
+const dateFor = (year: string, style?: string, gender?: string) => {
+  const st = style ? styleSlug(style) : null
+  const g = gender ? gSlug(gender) : null
+  for (const key of [
+    st && g ? `${STATE}|${year}|${st}|${g}` : null,
+    st ? `${STATE}|${year}|${st}` : null,
+    `${STATE}|${year}`,
+  ]) {
+    if (key && DATES[key]) return DATES[key]!
+  }
+  throw new Error(`No event date recorded for ${STATE} ${year}${style ? ` ${style}` : ""} - add it to DATES`)
 }
 
 /**
@@ -254,7 +297,7 @@ async function main() {
         round: roundLabel.get(b) ?? b.round, bout_order: i, athlete_name: name, athlete_id: l.id, athlete_club: b[`${side}_team`] || null,
         opponent_name: b[other] || null, opponent_id: opponent.id, opponent_club: b[`${other}_team`] || null,
         win: side === "winner", is_bye: false, win_type: winType, score, source_file: SOURCE,
-        source_round: b.round, event_date: dateFor(b.year), gender: /girl/i.test(b.gender) ? "F" : "M",
+        source_round: b.round, event_date: dateFor(b.year, b.style, b.gender), gender: /girl/i.test(b.gender) ? "F" : "M",
       })
     }
   })
@@ -273,7 +316,7 @@ async function main() {
       event_key: eventKey(r), event_name: eventName(r),
       event_short_name: `${STATE} Freestyle & Greco State Championships`, event_state: STATE,
       // Home-state profiles carry no state code, and the 2026 NC rows already stored null here.
-      event_date: dateFor(r.year), year: Number(r.year), athlete_name: name, athlete_id: l.id, club,
+      event_date: dateFor(r.year, r.style, r.gender), year: Number(r.year), athlete_name: name, athlete_id: l.id, club,
       high_school: null, state: STATE === HOME_STATE ? null : STATE,
       gender: /girl/i.test(r.gender) ? "F" : "M", weight_class: r.weight, wins: 0, losses: 0, byes: 0, record: "0-0", placement: null,
       qualified: false, entrants: entrants.get(div(r))?.size ?? null, source_file: SOURCE, verification_status: "verified",
@@ -308,28 +351,37 @@ async function main() {
   // Never twice by accident - scoped to the YEARS in this package, so a state that already holds
   // another year is not refused (NC held 2026 when its 2025 package arrived). --reload is the
   // deliberate replacement, for a package rebuilt or re-parsed after the first load.
+  /*
+   * The guard is per EVENT KEY, not per year, because a Greco supplement is additive. Florida's
+   * 2026 Greco arrived separately from its freestyle, and a year-wide guard refused it while a
+   * year-wide --reload would have deleted the freestyle to insert the Greco. Checking only the
+   * keys this package actually writes lets a supplement land beside what is already there, and
+   * still refuses to silently rewrite a key we hold.
+   */
+  const packageKeys = [...new Set(boutRows.map((r) => String(r.event_key)))]
   const held: string[] = []
-  for (const y of years) {
+  for (const key of packageKeys) {
     const { count, error } = await admin
       .from("other_tournament_bouts")
       .select("id", { count: "exact", head: true })
-      .like("event_key", `${STATE.toLowerCase()}-usaw-states-${y}-%`)
+      .eq("event_key", key)
     if (error) throw error
-    if (count) held.push(`${y} (${count} bout rows)`)
+    if (count) held.push(`${key} (${count} rows)`)
   }
   if (held.length && !reload) {
     console.log(`${STATE} already loaded: ${held.join(", ")} - nothing written. Re-run with --reload to replace it.`)
     return
   }
-  console.log(`years in this package: ${years.join(", ")}${held.length ? ` | --reload replacing ${held.join(", ")}` : ""}`)
+  console.log(`years in this package: ${years.join(", ")} | ${packageKeys.length} key(s)${held.length ? ` | --reload replacing ${held.length}` : ""}`)
   if (!write) return console.log("dry run - nothing written")
 
   if (held.length) {
-    for (const y of years) {
-      const { error } = await admin.from("other_tournament_bouts").delete().like("event_key", `${STATE.toLowerCase()}-usaw-states-${y}-%`)
+    // Only the keys this package rewrites; never a whole year, which would take neighbours with it.
+    for (const key of packageKeys) {
+      const { error } = await admin.from("other_tournament_bouts").delete().eq("event_key", key)
       if (error) throw error
     }
-    console.log(`deleted the held bout rows for ${years.join(", ")}`)
+    console.log(`deleted the held rows for ${packageKeys.length} key(s) this package rewrites`)
   }
   for (let i = 0; i < boutRows.length; i += 500) { const { error } = await admin.from("other_tournament_bouts").insert(boutRows.slice(i, i + 500)); if (error) throw error }
 

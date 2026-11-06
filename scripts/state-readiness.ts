@@ -176,7 +176,19 @@ function accountedFor(state: string): Accounted {
   // The repo this script lives in, then the working folder: the same answer wherever it is run.
   for (const root of [path.resolve(__dirname, ".."), process.cwd()]) {
     try {
-      return JSON.parse(fs.readFileSync(path.join(root, "docs", "state-launch", `${state}-accounted.json`), "utf8")) as Accounted
+      const raw = JSON.parse(
+        fs.readFileSync(path.join(root, "docs", "state-launch", `${state}-accounted.json`), "utf8"),
+      ) as Accounted & { entries?: Accounted["placers"] }
+      /*
+       * Half the builds call this array `entries` and half call it `placers`. The gate only ever
+       * read `placers`, so Arizona, Utah, Colorado and Nebraska's files were being ignored whole -
+       * each one failed on a single wrestler its own file names, with a reason and the evidence:
+       * Alexander Bermudez on a repeat print, Abigail Turner print-less in every source, Isabella
+       * Ortiz on prints that skip a grade. Reading both names is not a softer gate. The file still
+       * has to name the wrestler and give a reason; it just has to be read first.
+       */
+      if (!raw.placers && raw.entries) raw.placers = raw.entries
+      return raw
     } catch {}
   }
   return {}

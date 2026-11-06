@@ -1,0 +1,61 @@
+{
+ "state": "CO",
+ "association": "CHSAA",
+ "generated": "2026-11-05",
+ "generated_by": "Muse (accounted fix, 2026-11-05: reconstructed from the CO build files: CO-grad-years.csv, CO-mint-list.csv, CO-IMPORT-NOTE.md, final-qualifiers/, tab-raw/)",
+ "purpose": "Every CO placer key that reaches no profile, named with its reason \u2014 the accounted file for the state-readiness gate.",
+ "placers": [
+  {
+   "name": "Isabella Ortiz",
+   "school": "La Junta Girls",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "status": "held_conflict",
+   "reason": "grade prints imply different class years \u2014 held blank (accuracy over completeness). Evidence: 2025: HS Sophomore -> 2027 (CHSAA 12908029, payload+tab) | 2026: HS Senior -> 2026 (CHSAA 14829511, payload+tab). A grade-skip chain (the Seay shape): exactly one print is wrong and neither year ships; her placed rows carry no grad year and she is not mint-eligible."
+  },
+  {
+   "name": "Jason Soto",
+   "school": "Pueblo Centennial",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only). Disclosure (CO-IMPORT-NOTE named adjudications): this key and 'Jason Soto @ Pueblo East' (2026) are flagged CONFLICT as a pair \u2014 one athlete cannot hold both years (namesakes or a transfer-with-repeat); each key rests on its own tier-1 print chain (HS Junior 2024 / HS Senior 2025 -> 2025) and ships separately so the platform does not fold them silently."
+  },
+  {
+   "name": "Jason Soto",
+   "school": "Pueblo East",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "class of 2026; placed 2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only). Disclosure (CO-IMPORT-NOTE named adjudications): pair-flagged CONFLICT with 'Jason Soto @ Pueblo Centennial' (2025); this key ships on its own tier-1 print (HS Senior 2026 -> 2026, CHSAA 14829511, payload+tab)."
+  },
+  {
+   "name": "Lily Torres",
+   "school": "Sedgwick County/Fleming Girls Girls",
+   "gender": "girls",
+   "class_year": 2028,
+   "seasons_placed": "2025",
+   "best_place": 6,
+   "status": "resolved",
+   "reason": "Class year RESOLVED 2028 in the build \u2014 tier-1 grade prints on both surfaces in both seasons under one Flo personId (0DQd5h0ZxmMcI2oNg): 2025 'HS Freshman' -> 2028 (CHSAA 12908029, payload+tab; placed 6th, 4A girls 100 lb) and 2026 'HS Sophomore' -> 2028 (CHSAA 14829511, payload+tab; entrant at 105 lb, did not place). Payload and tab agree in both seasons \u2014 not a print conflict, not a no-print, not a tab-vs-payload disagreement. She is mint-eligible (CO-mint-list.csv, canonical CO-0637). The only blank attached to her name in the shipped import package was her 2026 entrant row: that vintage applied grad years to placed rows only; the qualifier-years vintage carries 2028 on both of her rows. Entry added so the gate has her name and the evidence."
+  },
+  {
+   "name": "Matthew Garduno",
+   "school": "Trinidad",
+   "gender": "boys",
+   "reason": "print conflict, year held blank",
+   "evidence": "Entrant-only, found by the entrant-year pass: Sophomore 2025 -> Senior 2026, the same skip shape. No external discriminator has been run."
+  }
+ ],
+ "notes": [
+  "RECONSTRUCTION DISCLOSURE: no CO-accounted.json was present in the shipped CO import package (the full zip listing contains no JSON file) or anywhere in the build directory \u2014 verified 2026-11-05. This file is built new in the canonical shape; the three pre-existing entries (Ortiz; Soto @ Centennial; Soto @ East) are restated verbatim-in-substance from CO-grad-years.csv and the CO-IMPORT-NOTE disclosures, and the Torres entry is the 2026-11-05 fix. If the platform's copy carries different wording for the three, only the Torres entry is new substance.",
+  "CO placer keys: 1026 \u2014 1025 resolved from tier-1 grade prints, 1 conflict held blank (Ortiz); 318 keys mint-eligible (312 distinct athletes). Routine graduated-class and outside-window keys are reconciled platform-side from CO-grad-years.csv / CO-mint-list.csv.",
+  "Matthew Garduno was carried over from the platform's own CO-accounted.json: the 5 Nov reconstruction restated Isabella Ortiz and the two Jason Soto keys but not him, and his disclosure (entrant-only, Sophomore 2025 -> Senior 2026, the same grade-skip shape, no external discriminator run) is still true and still the only thing naming him."
+ ]
+}

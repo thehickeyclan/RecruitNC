@@ -1,0 +1,3369 @@
+{
+ "state": "ND",
+ "association": "NDHSAA",
+ "generated": "2026-11-05",
+ "generated_by": "Muse (from the ND build files: final-qualifiers/, ND-grad-years.csv, ND-mint-list.csv, ND-entrant-years.csv)",
+ "purpose": "Every ND placer key that reaches no profile, named with its reason \u2014 the accounted file for the state-readiness gate.",
+ "placers": [
+  {
+   "name": "Acaila Olson",
+   "school": "Hettinger/Scranton",
+   "gender": "girls",
+   "class_year": 2028,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "outside_mint_window",
+   "reason": "Class of 2028; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Adali Simmons",
+   "school": "Killdeer",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Adin Jones",
+   "school": "Mondak Thunder",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Aidan Dahmus",
+   "school": "Dickinson",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Aiden Hinkle",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Alec Mutschelknaus",
+   "school": "Mandan",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Aleiya Cullinan",
+   "school": "Bismarck Legacy",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Alexis Schneider",
+   "school": "Napoleon G-S",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Alvy Henderson",
+   "school": "Northern Lights",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Alyssa Hoyles",
+   "school": "Drayton",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Alyssa Hoyles",
+   "school": "Grafton",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Amaree Williams",
+   "school": "West Fargo",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Amiya Russell",
+   "school": "West Fargo United",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Annalesia Bishop",
+   "school": "Williams County",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ashley Lindberg",
+   "school": "Carrington",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ashton Weathersby",
+   "school": "Williams County",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Aubrie Overson",
+   "school": "Bismarck",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Audrey Fuher",
+   "school": "Ellendale-Edgeley-Kulm",
+   "gender": "girls",
+   "class_year": 2028,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "outside_mint_window",
+   "reason": "Class of 2028; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Aulani Long",
+   "school": "Grand Forks",
+   "gender": "girls",
+   "class_year": 2031,
+   "seasons_placed": "2026",
+   "best_place": 8,
+   "status": "outside_mint_window",
+   "reason": "Class of 2031; placed only in 2026, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Autumn Huber",
+   "school": "New Salem - Almont",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ava Carlblom",
+   "school": "Lisbon",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ava Gulleson",
+   "school": "Central Cass",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ava Moser",
+   "school": "Napoleon G-S",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ayden Schlafman",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "BEN WAGNER",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "BRYNLEE HARTSOCH",
+   "school": "West Fargo United",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Bailey Ferderer",
+   "school": "Bismarck Century",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Bailey Zachmeier",
+   "school": "Rugby",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Belinda Perry",
+   "school": "Bismarck Century",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ben DeForest",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ben Roundy",
+   "school": "Killdeer",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Birch Bang",
+   "school": "Killdeer",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Blaze Reinke",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Braden Jundt",
+   "school": "Deslacs-Burlington",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brady Peterson",
+   "school": "Central Cass",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Braeden Halverson",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Braxton Rance",
+   "school": "Devils Lake",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brayden Chenault",
+   "school": "Hillsboro-Central Valley",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brayden Morris",
+   "school": "Bismarck Century",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brendan Winn-Kelley",
+   "school": "Grand Forks Central",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brett Tastad",
+   "school": "Northern Lights",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brianna Mayer",
+   "school": "Central Cass",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Bridger Owens",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brier Arnegard",
+   "school": "Watford City",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brinley Buechler",
+   "school": "Bismarck",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brock Lyons",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brock Norton",
+   "school": "New Salem-Almont",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brody Hoffman",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brody Michaelsohn",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Brody Weisenburger",
+   "school": "Carrington",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Bryn Larson",
+   "school": "Grand Forks",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "CL Weinberger",
+   "school": "New Salem-Almont",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cade Nieuwsma",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cade Okeson",
+   "school": "Bishop Ryan",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cade Okeson",
+   "school": "Velva",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cade Olson-Tingelstad",
+   "school": "Central Cass",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cadence Cook",
+   "school": "Bismarck Century",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cael Hebl",
+   "school": "LaMoure-Litchville/Marion",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Caleb Hosfield",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Caleb Paetz",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Callen Garber",
+   "school": "Carrington",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Carson Glaesman",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Carson Hildre",
+   "school": "Velva",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Carson Kozojed",
+   "school": "Hillsboro-Central Valley",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Carson Lardy",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Carson Mosset",
+   "school": "Bismarck St Mary`s",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Carter Engebretson",
+   "school": "Harvey-Wells County",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Carter Johnson",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Carter Zink",
+   "school": "Sheyenne",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Case Awender",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cassidy Azure",
+   "school": "Turtle Mountain Community High School",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "status": "held_conflict",
+   "reason": "Grade prints imply different class years \u2014 held blank (Seay rule). Evidence: 2025: HS Junior -> 2026 (NDHSAA 12644937 [payload|tab]) | 2026: HS Junior -> 2027 (NDHSAA 14613179 [payload|tab])"
+  },
+  {
+   "name": "Cayne Rudolph",
+   "school": "Stanley",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cesar Cruz",
+   "school": "Grand Forks Central",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cesar Cruz Jr.",
+   "school": "Grand Forks Central",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Charlie Irwin",
+   "school": "New Salem-Almont",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cheyenne Helland",
+   "school": "Central Cass",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Christina Dohrmann",
+   "school": "Dickinson",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Claire Fegley",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Clark Thompson",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Clayton Grove",
+   "school": "Williams County",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Clayton Hinker",
+   "school": "Beulah-Hazen",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cohen Bell",
+   "school": "Stanley",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cole Henderson",
+   "school": "Northern Lights",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cole Mogren",
+   "school": "Kenmare-Bowbells",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cole Nitschke",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cole Stock",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Coltan Ireland",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Colton King",
+   "school": "Dickinson",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Connor Manske",
+   "school": "Sheyenne",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Connor Melin",
+   "school": "Kenmare-Bowbells",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Cora Oster",
+   "school": "Lisbon",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Corban Sorenson",
+   "school": "Watford City",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Corbin Clifton",
+   "school": "Carrington",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Coy Okeson",
+   "school": "Bishop Ryan",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Crystal Magnuson",
+   "school": "Hillsboro/CV",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Dalton Feist",
+   "school": "Napoleon G-S",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Daniel Charboneau",
+   "school": "Devils Lake",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Daniel Schumacher",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Danijah Moore",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Darion Bitz",
+   "school": "Bismarck Century",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "David Erlandson",
+   "school": "Breckenridge/Wahpeton",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "David Llamas",
+   "school": "Minot",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "DeJarius Jones",
+   "school": "Minot",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Deegan Kirschenmann",
+   "school": "Valley City",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Deja Ireland",
+   "school": "Bismarck",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Devin Halverson",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Deysi Krisher",
+   "school": "Des-Lacs Burlington",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Drew Zwak",
+   "school": "Bishop Ryan",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Dru Carr",
+   "school": "Carrington",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Easton Egeberg",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ebony Ulmer",
+   "school": "South Border",
+   "gender": "girls",
+   "class_year": 2031,
+   "seasons_placed": "2026",
+   "best_place": 2,
+   "status": "outside_mint_window",
+   "reason": "Class of 2031; placed only in 2026, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Eli Lyons",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Eliah Rogers",
+   "school": "Minot",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Eliana Guillory",
+   "school": "Standing Rock",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Elijah Ramos",
+   "school": "Killdeer",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Elizabeth Hook",
+   "school": "Mandan",
+   "gender": "girls",
+   "class_year": 2027,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "outside_mint_window",
+   "reason": "Class of 2027; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Elizabeth Youboty",
+   "school": "Bismarck Legacy",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ella Sad",
+   "school": "Lisbon",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ella Wald",
+   "school": "Bismarck Century",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ellie Roseland",
+   "school": "Hettinger/Scranton",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "held_not_found",
+   "reason": "No grade print on the Arena registration record (bracket payload and participants tab agree: grade is null) in any placed season; no dated external print found. Ships blank. Evidence: 2024: no print (NDHSAA 13698257 [none])"
+  },
+  {
+   "name": "Emerson Faleide",
+   "school": "Central Cass",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Emersyn Schwab",
+   "school": "Lisbon",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Emery Noll",
+   "school": "Bowman County/Beach",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Emery Slater",
+   "school": "Mandan",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Emily Novak",
+   "school": "Grand Forks",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Emily Youboty",
+   "school": "Bismarck Legacy",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Eric Stouder",
+   "school": "Grand Forks Central",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ethan Dennis",
+   "school": "Watford City",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ethan Halvorson",
+   "school": "Dickinson",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ethan Maier",
+   "school": "New Salem-Almont",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ethan Miller",
+   "school": "Valley City",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Evan Berg",
+   "school": "Minot",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Gabby Hannig",
+   "school": "Valley City",
+   "gender": "girls",
+   "class_year": 2028,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "outside_mint_window",
+   "reason": "Class of 2028; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Gabby Romans",
+   "school": "Jamestown",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Gabriel Parisien",
+   "school": "Turtle Mountain",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Gage Glaser",
+   "school": "Dickinson",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Gavin Engwicht",
+   "school": "New Salem-Almont",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Gavin Guinn",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Giorgia Carli",
+   "school": "Watford City",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "held_not_found",
+   "reason": "No grade print on the Arena registration record (bracket payload and participants tab agree: grade is null) in any placed season; no dated external print found. Ships blank. Evidence: 2024: no print (NDHSAA 13698257 [none])"
+  },
+  {
+   "name": "Grace Bercier",
+   "school": "Jamestown",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Grace Lemar",
+   "school": "Central Cass",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Grady Anderson",
+   "school": "Jamestown",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Grady Iverson",
+   "school": "Bismarck Century",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Grant Carlson",
+   "school": "Bismarck Century",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Greyson Lyons",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Griffin Greenley",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Griffin Wilhelmi",
+   "school": "Stanley",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Griffin Wilhemi",
+   "school": "Stanley",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Gus Bohmbach",
+   "school": "Killdeer",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Gus Werremeyer",
+   "school": "Davies",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Hailyann Turner",
+   "school": "Bismarck",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Haleigh Carr",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Hallie Nash",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Harper Schultz",
+   "school": "Fargo North",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Harrison Grad",
+   "school": "Bismarck St Mary`s",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Harrison Schwartz",
+   "school": "Deslacs-Burlington",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Havlin Delong",
+   "school": "Northern Lights",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Hayden Barth",
+   "school": "Beulah-Hazen",
+   "gender": "girls",
+   "class_year": 2031,
+   "seasons_placed": "2026",
+   "best_place": 8,
+   "status": "outside_mint_window",
+   "reason": "Class of 2031; placed only in 2026, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Henry Slettedahl",
+   "school": "Breckenridge/Wahpeton",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Hudson Egeberg",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Hugh Meyer",
+   "school": "Dickinson",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Hunter Helgeson",
+   "school": "Bismarck Century",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Hunter Olson",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Hunter Parisien",
+   "school": "Central Cass",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Isabelle Berg",
+   "school": "Devils Lake",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Isaiah Kwandt",
+   "school": "Bismarck Century",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ivan Carruth",
+   "school": "Ellendale-Edgeley-Kulm",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ivan Jolley",
+   "school": "Williston",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jace Nitschke",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jack Combs",
+   "school": "Minot",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jack Schauer",
+   "school": "Jamestown",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "outside_mint_window",
+   "reason": "Class of 2027; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Jackson Alexander",
+   "school": "Sheyenne",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jacob Kingzett",
+   "school": "Davies",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jaeger Sand",
+   "school": "Ellendale-Edgeley-Kulm",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "outside_mint_window",
+   "reason": "Class of 2028; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Jaelyn Forrey",
+   "school": "Pembina County North",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jake Glaser",
+   "school": "Dickinson",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "James Marks",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jamia Cunningham",
+   "school": "Dickinson",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jayden Foss",
+   "school": "Velva",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jazlyn Weigel",
+   "school": "Napoleon G-S",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jazmyn Ybarra",
+   "school": "Carrington",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jennifer Verdin",
+   "school": "Hettinger/Scranton",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "held_not_found",
+   "reason": "No grade print on the Arena registration record (bracket payload and participants tab agree: grade is null) in any placed season; no dated external print found. Ships blank. Evidence: 2024: no print (NDHSAA 13698257 [none])"
+  },
+  {
+   "name": "Jermaine Gisi",
+   "school": "Beulah-Hazen",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jimmy Shar",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Joey Enzminger",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Joey Heyd",
+   "school": "LaMoure-Litchville/Marion",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "John Kahl",
+   "school": "Central Cass",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Johnathan Smith",
+   "school": "Deslacs-Burlington",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jonathan Klitzke",
+   "school": "Dickinson",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Jordyn Radasa",
+   "school": "Williston",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Joryn Richter",
+   "school": "Bismarck St Mary`s",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Joseph Keller",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Josh Meehl",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Justin Hudson",
+   "school": "Northern Lights",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Justin Torroll",
+   "school": "Hillsboro-Central Valley",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2026",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2026 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "K`yonna Castine",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2028,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "outside_mint_window",
+   "reason": "Class of 2028; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Kaden Kraft",
+   "school": "Minot",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kadyn Schuman",
+   "school": "Grand Forks",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kaleb Minton",
+   "school": "Williston",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Karissa Mann",
+   "school": "Napoleon G-S",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Karyssa Meidinger",
+   "school": "LaMoure-Litchville/Marion",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kashden Wadeson",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kashtyn Bredahl",
+   "school": "Des-Lacs Burlington",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kassidi Monroe",
+   "school": "Bismarck",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Katelyn Vetter",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kathryn Sullivan",
+   "school": "Grand Forks",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kaullen Hegney",
+   "school": "Mandan",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kayden Rose",
+   "school": "Pembina County North",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kayden Williams",
+   "school": "Northern Cass",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Keeley Kainoa",
+   "school": "Mandan",
+   "gender": "girls",
+   "class_year": 2028,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "outside_mint_window",
+   "reason": "Class of 2028; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Keenan Gores",
+   "school": "Northern Lights",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Keisha Tomac",
+   "school": "New Salem - Almont",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kellan Larson",
+   "school": "Williston",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kenley Hamley",
+   "school": "Turtle Mountain Community High School",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2025",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kenny Smith",
+   "school": "Deslacs-Burlington",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Khendra Garcia",
+   "school": "Carrington",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Khylie Schlotz",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kiarah Charfauros",
+   "school": "Bismarck Legacy",
+   "gender": "girls",
+   "class_year": 2027,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "outside_mint_window",
+   "reason": "Class of 2027; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Kiera Aguilar",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Koiline Govergo",
+   "school": "Fargo",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kolbi McElwain",
+   "school": "Dickinson",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Koltyn Grebel",
+   "school": "Valley City",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Konnor Johnson",
+   "school": "Davies",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Konnor Johnson",
+   "school": "Fargo North",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kruiser Burns",
+   "school": "Grafton",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Kyler Schalesky",
+   "school": "Hettinger/Scranton",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "LJ Araujo",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Landon McMahen",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Landon Petron",
+   "school": "Grand Forks Central",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Landon Riely",
+   "school": "Williston",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Landon Wallette",
+   "school": "Turtle Mountain",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Lexi Beckler",
+   "school": "Bismarck",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Lincoln Brooks",
+   "school": "Minot",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Lincoln Lemar",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Logan Vorhies",
+   "school": "Grand Forks Central",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Logan Werner",
+   "school": "Pembina County North",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Lois Schneider",
+   "school": "Central Cass",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Louden Haugen",
+   "school": "Stanley",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Lucas Schlepuetz",
+   "school": "Jamestown",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "MAX CLINE",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025,2026",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025,2026 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "MYA SANCHEZ",
+   "school": "West Fargo United",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Maci Puppe",
+   "school": "Pembina County North",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2026",
+   "best_place": 8,
+   "status": "held_not_found",
+   "reason": "No grade print on the Arena registration record (bracket payload and participants tab agree: grade is null) in any placed season; no dated external print found. Ships blank. Evidence: 2026: no print (NDHSAA 14613179 [none])"
+  },
+  {
+   "name": "Mackenzie Stoddart",
+   "school": "Jamestown",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Maddie Look",
+   "school": "Grand Forks",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Maddox Campbell",
+   "school": "Velva",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Maddox Weigel",
+   "school": "Sheyenne",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Maddux Shockman",
+   "school": "LaMoure-Litchville/Marion",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Malachi Werremeyer",
+   "school": "Davies",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Mallory DeVries",
+   "school": "Central Cass",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Marlie Stremick",
+   "school": "Pembina County North",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Marquis Richter",
+   "school": "Mandan",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Mason Johnson",
+   "school": "Sheyenne",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Mason Weigel",
+   "school": "Napoleon G-S",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Mathias Dahlstrom",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "outside_mint_window",
+   "reason": "Class of 2027; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Matthew Jacobs",
+   "school": "Williams County",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Max Glaser",
+   "school": "Dickinson",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Michael Norman",
+   "school": "Grand Forks Central",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Michaela Moch",
+   "school": "Hillsboro/CV",
+   "gender": "girls",
+   "class_year": 2031,
+   "seasons_placed": "2026",
+   "best_place": 4,
+   "status": "outside_mint_window",
+   "reason": "Class of 2031; placed only in 2026, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Mike Nelson",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Monica Boakye",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Morgan Harvey",
+   "school": "Bismarck Century",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Mylee Christianson",
+   "school": "Valley City",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Natalie Meyer",
+   "school": "Dickinson",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2024,2026",
+   "best_place": 3,
+   "status": "held_conflict",
+   "reason": "Grade prints imply different class years \u2014 held blank (Seay rule). Evidence: 2024: 8th -> 2028 (NDHSAA 13698257 [payload|tab]) | 2026: HS Junior -> 2027 (NDHSAA 14613179 [payload|tab])"
+  },
+  {
+   "name": "Nevaeh Buffett",
+   "school": "Lisbon",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Nicolas Enzminger",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Noah Anderson",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Noah Bledsoe",
+   "school": "Minot",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Noah Werner",
+   "school": "Velva",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ole Taylor",
+   "school": "Bismarck Century",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Owen Lindstrom",
+   "school": "Devils Lake",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Owen Magnell",
+   "school": "West Fargo",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Paige Baumgartner",
+   "school": "Bismarck",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Paige spomer",
+   "school": "Bismarck Century",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "held_not_found",
+   "reason": "No grade print on the Arena registration record (bracket payload and participants tab agree: grade is null) in any placed season; no dated external print found. Ships blank. Evidence: 2024: no print (NDHSAA 13698257 [none])"
+  },
+  {
+   "name": "Paul Melin",
+   "school": "Kenmare-Bowbells",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Payton Russell",
+   "school": "Minot",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Phoenix Lindseth",
+   "school": "Bismarck Legacy",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Pitch Hager",
+   "school": "Velva",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Porter Johnson",
+   "school": "Harvey-Wells County",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ray Trottier",
+   "school": "Turtle Mountain",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Reagan Ulmer",
+   "school": "South Border",
+   "gender": "girls",
+   "class_year": 2028,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "outside_mint_window",
+   "reason": "Class of 2028; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Regan Gustafson",
+   "school": "Stanley",
+   "gender": "boys",
+   "class_year": 2029,
+   "seasons_placed": "2024",
+   "best_place": 6,
+   "status": "outside_mint_window",
+   "reason": "Class of 2029; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Riley Hasbrouck",
+   "school": "Hettinger/Scranton",
+   "gender": "boys",
+   "class_year": null,
+   "seasons_placed": "2024,2025",
+   "best_place": 5,
+   "status": "held_conflict",
+   "reason": "Grade prints imply different class years \u2014 held blank (Seay rule). Evidence: 2024: HS Sophomore -> 2026 (NDHSAA 13698257 [payload|tab]) | 2025: HS Senior -> 2025 (NDHSAA 12644939 [payload|tab])"
+  },
+  {
+   "name": "Rocker Aguilar",
+   "school": "Williams County",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Rodney Wolf",
+   "school": "Kindred",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ryan Enge",
+   "school": "Lisbon",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ryer Muske",
+   "school": "Valley City",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ryker Vetter",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Samantha Hotten",
+   "school": "West Fargo United",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "held_not_found",
+   "reason": "No grade print on the Arena registration record (bracket payload and participants tab agree: grade is null) in any placed season; no dated external print found. Ships blank. Evidence: 2024: no print (NDHSAA 13698257 [none])"
+  },
+  {
+   "name": "Sawyer Carr",
+   "school": "Sheyenne",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Sawyer Owens",
+   "school": "Hillsboro-Central Valley",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Sean Peterschick",
+   "school": "Bismarck Legacy",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Shane Nitschke",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Shayla DeBlaere",
+   "school": "West Fargo United",
+   "gender": "girls",
+   "class_year": null,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "held_not_found",
+   "reason": "No grade print on the Arena registration record (bracket payload and participants tab agree: grade is null) in any placed season; no dated external print found. Ships blank. Evidence: 2024: no print (NDHSAA 13698257 [none])"
+  },
+  {
+   "name": "Sky Kopp",
+   "school": "Grand Forks",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Sofia Meyer",
+   "school": "Bismarck Legacy",
+   "gender": "girls",
+   "class_year": 2027,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "outside_mint_window",
+   "reason": "Class of 2027; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Solly Jonas",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Stetson Gisselbeck",
+   "school": "Sheyenne",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Stone Thornton",
+   "school": "Central Cass",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Tanner Thoreson",
+   "school": "West Fargo",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Taryn Gores",
+   "school": "Northern Lights",
+   "gender": "girls",
+   "class_year": 2027,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "outside_mint_window",
+   "reason": "Class of 2027; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Tate Estenson",
+   "school": "Devils Lake",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Tate Thorpe",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Tiernan Glass",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Timothee Ford",
+   "school": "Kenmare-Bowbells",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Trenton Klatt",
+   "school": "New Salem-Almont",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Trey Bohmbach",
+   "school": "Stanley",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Tristen Lepp",
+   "school": "South Border",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Tucker Nelson",
+   "school": "Minot",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Ty Wiedrich",
+   "school": "Williston",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Tyler Heen",
+   "school": "Bismarck St Mary`s",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Tyrus Jangula",
+   "school": "Bismarck",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Tyson Rice",
+   "school": "Williston",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Tyson Taylor",
+   "school": "Williston",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Vernon Copenhaver",
+   "school": "Williston",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Victor Christian",
+   "school": "Mondak Thunder",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Victoria Pasterz",
+   "school": "Des-Lacs Burlington",
+   "gender": "girls",
+   "class_year": 2027,
+   "seasons_placed": "2024",
+   "best_place": 2,
+   "status": "outside_mint_window",
+   "reason": "Class of 2027; placed only in 2024, outside the last-two-seasons (2025/2026) mint window. Placement stored and linked."
+  },
+  {
+   "name": "Victoria Sanchez",
+   "school": "Valley City",
+   "gender": "girls",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Violet Hehn",
+   "school": "Lisbon",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2026",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2026 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Webeline Naklen",
+   "school": "Fargo",
+   "gender": "girls",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Wesley Fisk",
+   "school": "Devils Lake",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Weston Jensen",
+   "school": "Breckenridge/Wahpeton",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Will Mosbrucker",
+   "school": "New Salem-Almont",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "William Cook",
+   "school": "Kenmare-Bowbells",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024,2025",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024,2025 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "William Roundy",
+   "school": "Killdeer",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 3,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 3). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "William Ward",
+   "school": "Fargo North",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Wyatt Killgore",
+   "school": "Williston",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Wyatt Kosidowski",
+   "school": "Davies",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 1). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "ZADE HEIER",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "ZANE AWENDER",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 5,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 5). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Zach Dockter",
+   "school": "Linton-HMB",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2025",
+   "best_place": 6,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Zach Lilly",
+   "school": "Davies",
+   "gender": "boys",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 4,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 4). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Zach Richter",
+   "school": "Bismarck St Mary`s",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024,2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Zade Heier",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Zane Awender",
+   "school": "Oakes",
+   "gender": "boys",
+   "class_year": 2025,
+   "seasons_placed": "2024",
+   "best_place": 7,
+   "status": "graduated_class",
+   "reason": "Class of 2025; placed 2024 (best 7). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Zane Wagoner",
+   "school": "Watford City",
+   "gender": "boys",
+   "class_year": 2026,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "status": "graduated_class",
+   "reason": "Class of 2026; placed 2025,2026 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "lucy Czarnowski",
+   "school": "Fargo",
+   "gender": "girls",
+   "class_year": 2024,
+   "seasons_placed": "2024",
+   "best_place": 8,
+   "status": "graduated_class",
+   "reason": "Class of 2024; placed 2024 (best 8). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  }
+ ]
+}

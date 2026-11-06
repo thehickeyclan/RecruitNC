@@ -95,19 +95,20 @@ describe("stateChampionshipName", () => {
     /*
      * "Wyoming State Champion" is unambiguous; a made-up acronym would not be.
      *
-     * This assertion has already moved twice - Texas, then Oklahoma - because the example state
-     * keeps getting registered as the import chain reaches it, and each move was a red test on a
-     * branch that had changed nothing about this rule. So it no longer names one: it finds a state
-     * we genuinely hold no association for and asserts the rule there. It fails only when every
-     * candidate has been registered, which is a real signal to pick new ones rather than a stale
-     * fixture.
+     * This assertion moved three times - Texas, then Oklahoma, then a search over the states the
+     * import chain had not yet reached - because the example kept getting registered underneath
+     * it, each time as a red test on a branch that had changed nothing about this rule.
+     *
+     * On 5 November 2026 the search ran out: the last ten states were registered that night and
+     * every one of the fifty now carries an association, which was the signal the search was
+     * built to give. The District of Columbia is what is left and it is not a stopgap - we hold
+     * 14 DC profiles and no DC association, so this is the real case the rule exists for, and it
+     * cannot be registered away by the import chain because DC crowns no state championship.
      */
-    const candidates = ["WY", "ND", "SD", "MT", "AK", "HI", "NV", "NM"]
-    const held = candidates.find((c) => stateChampionshipName(c, "6A") === stateName(c))
-    expect(held, `all of ${candidates.join(", ")} now carry an association - choose new candidates`).toBeDefined()
-    expect(stateChampionshipName(held!, "6A")).toBe(stateName(held!))
-    /* The point of the rule: a full state name, never an invented acronym. */
-    expect(stateChampionshipName(held!, "6A")).not.toMatch(/^[A-Z]{3,}$/)
+    expect(stateChampionshipName("DC", "6A")).toBe(stateName("DC"))
+    expect(stateChampionshipName("DC", "6A")).toBe("District of Columbia")
+    /* The point of the rule: a full name, never an invented acronym. */
+    expect(stateChampionshipName("DC", "6A")).not.toMatch(/^[A-Z]{3,}$/)
   })
 
   it("still prefers a registered association, and the row's own one above it", () => {

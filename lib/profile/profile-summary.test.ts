@@ -172,17 +172,18 @@ describe("a wrestler's state names his own championship", () => {
 
   it("names the state itself where we hold no association", () => {
     /*
-     * This line has broken three times on branches that changed nothing about the rule - it named
-     * Texas, then Oklahoma, then Michigan, and each got registered as the import chain reached it.
-     * So it no longer names one: it finds a state we genuinely hold no association for, and fails
-     * only when every candidate has been registered, which is a real signal rather than a stale
-     * fixture.
+     * This line has broken four times on branches that changed nothing about the rule - it named
+     * Texas, then Oklahoma, then Michigan, then searched the states the import chain had not yet
+     * reached. On 5 November 2026 the search ran out: the last ten states were registered that
+     * night, so all fifty now carry an association.
+     *
+     * The District of Columbia is the case that remains, and it is the honest one. We hold DC
+     * profiles and no DC association, and unlike a state it cannot be registered away later,
+     * because DC crowns no state championship for us to name.
      */
     const a = accoladesFrom({ stateRows: [titleRow("Pennsylvania AAA State Championships")], tournamentRows: [] })
-    const candidates = ["WY", "ND", "SD", "MT", "AK", "HI", "NV", "NM"]
-    const held = candidates.find((c) => accoladePhrases(a, c)[0] === `${stateName(c)} state champion`)
-    expect(held, `all of ${candidates.join(", ")} now carry an association - choose new candidates`).toBeDefined()
-    expect(accoladePhrases(a, held!)[0]).toBe(`${stateName(held!)} state champion`)
+    expect(accoladePhrases(a, "DC")[0]).toBe(`${stateName("DC")} state champion`)
+    expect(accoladePhrases(a, "DC")[0]).toBe("District of Columbia state champion")
   })
 
   it("lets an association the event named beat the state code", () => {
