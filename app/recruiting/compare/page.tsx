@@ -19,6 +19,7 @@ import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { fitScore, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { NEED_LABEL } from "@/lib/college-programs/roster-room"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
+import { withSurveyProfile } from "@/app/my-recruiting/priority-lists"
 import { isDemoFamily } from "@/lib/recruiting/demo-family"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { familyAthleteIds } from "@/lib/coach-messages"
@@ -100,7 +101,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
 
   // The wrestler being compared and the family's own fit profile (the previewed family's, on a developer's machine).
   const team = focus?.gender ?? null
-  const ctx = await loadFamilyFitContext(admin, userId, team)
+  const ctx = await withSurveyProfile(admin, userId, await loadFamilyFitContext(admin, userId, team))
   // Logos for the picking step only: the list can be long.
   const savedLogos = askedStep === "colleges" || (!askedStep && chosen.length < 2) ? await Promise.all(saved.map((sc) => schoolLogoUrl(sc).catch(() => null))) : []
   const { first, sat, act, profile, profileSet, weight } = ctx

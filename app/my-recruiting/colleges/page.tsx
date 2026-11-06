@@ -22,6 +22,7 @@ import { fitForSchool, netPriceFor } from "@/lib/college-programs/fit"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
+import { withSurveyProfile } from "@/app/my-recruiting/priority-lists"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { CONTACT_LABEL, summarizeContacts } from "@/lib/college-programs/contacts"
 import { loadCollegeContacts } from "@/lib/college-programs/contacts-server"
@@ -48,7 +49,7 @@ const academicMark = (l: FitLine): FitMark =>
   l.status === "fit" ? { label: "Good fit", tone: "good", why: l.text } : l.status === "stretch" ? { label: "Stretch", tone: "close", why: l.text } : l.status === "concern" ? { label: "Reach", tone: "low", why: l.text } : { label: "—", tone: "none", why: l.text }
 /** Athletic fit is a target to build toward, never a verdict. */
 const athleticMark = (l: FitLine): FitMark =>
-  l.status === "fit" ? { label: "In line", tone: "good", why: l.text } : l.status === "stretch" ? { label: "Close", tone: "close", why: l.text } : l.status === "concern" ? { label: "Building", tone: "low", why: l.text } : { label: "—", tone: "none", why: l.text }
+  l.status === "fit" ? { label: "In line", tone: "good", why: l.text } : l.status === "stretch" ? { label: "Close", tone: "close", why: l.text } : l.status === "concern" ? { label: "Stretch", tone: "low", why: l.text } : { label: "—", tone: "none", why: l.text }
 
 export default async function CommandCenterColleges({ searchParams }: { searchParams?: Promise<Record<string, string | undefined>> }) {
   const params = (await searchParams) ?? {}
@@ -92,7 +93,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
   // inbound signals (views, coach messages, logged contacts) as the list.
   const ids = athletes.map((a) => a.id)
   const [ctx, views, threads, contacts] = await Promise.all([
-    board ? null : loadFamilyFitContext(admin, viewerId, focus?.gender ?? null).catch(() => null),
+    board ? null : loadFamilyFitContext(admin, viewerId, focus?.gender ?? null).then((c) => withSurveyProfile(admin, viewerId, c)).catch(() => null),
     collegeViewsFor(admin, ids).catch(() => new Map()),
     listThreads(admin, viewerId).catch(() => []),
     loadCollegeContacts(admin, ids),

@@ -67,7 +67,7 @@ import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/col
 import { readWentHereSnapshot, snapshotForState } from "@/lib/college-programs/went-here-snapshot"
 import { familyState } from "@/lib/recruiting/family-state"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
-import { surveyFitForSchool } from "@/app/my-recruiting/priority-lists"
+import { surveyFitForSchool, withSurveyProfile } from "@/app/my-recruiting/priority-lists"
 import type { SurveyLine } from "@/lib/recruiting/priorities/recommend"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { familyAthleteIds } from "@/lib/coach-messages"
@@ -93,13 +93,16 @@ const GOLD = "var(--recruit-accent)"
 const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]"
 const cardTitle = "text-base font-bold text-white"
 
-/** Athletic fit is a target to build toward, so it is never called a "concern". */
+/**
+ * Athletic fit is never called a "concern", but a reach is said plainly and in orange (Matt, 6 Nov
+ * 2026: a sophomore state qualifier at UNC read lime "Building toward it", which looked on track).
+ */
 const FIT_LABEL: Record<"athletic" | "other", Record<FitStatus, string>> = {
-  athletic: { fit: "In line", stretch: "Close", concern: "Building toward it", unknown: "Not enough to say" },
+  athletic: { fit: "In line", stretch: "Close", concern: "Stretch", unknown: "Not enough to say" },
   other: { fit: "Good fit", stretch: "Stretch", concern: "Concern", unknown: "Not enough to say" },
 }
 const DOT: Record<FitStatus, string> = { fit: "bg-emerald-400", stretch: "bg-amber-300", concern: "bg-red-400", unknown: "bg-white/30" }
-const DOT_ATHLETIC: Record<FitStatus, string> = { ...DOT, concern: "bg-sky-300" }
+const DOT_ATHLETIC: Record<FitStatus, string> = { ...DOT, concern: "bg-orange-400" }
 
 type Params = { params: Promise<{ id: string }>; searchParams?: Promise<{ fall?: string }> }
 
@@ -198,7 +201,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
           .then((map) => map.schools.find((s) => s.id === id)?.onRecruitNC === true)
           .catch(() => false)
       : Promise.resolve(false),
-    familySide && userId ? loadFamilyFitContext(admin, userId, theirs).catch(() => null) : Promise.resolve(null),
+    familySide && userId ? loadFamilyFitContext(admin, userId, theirs).then((c) => withSurveyProfile(admin, userId, c)).catch(() => null) : Promise.resolve(null),
     full ? readWentHereSnapshot().then((s) => snapshotForState(s, homeState)).catch(() => null) : Promise.resolve(null),
   ])
   // The "On RecruitNC" mark stays a portal feature.
@@ -605,7 +608,10 @@ export default async function SchoolPage({ params, searchParams }: Params) {
           <p className="mt-2 text-sm text-white/55">Not reported.</p>
         )}
         {majorLabels.length > 0 ? (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <>
+          {/* Labeled: unlabeled, these read as the family's own majors (Matt, 6 Nov 2026). */}
+          <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-white/45">Fields of study offered here</p>
+          <div className="mt-2 flex flex-wrap gap-2">
             {majorLabels.slice(0, 8).map((m) => (
               <span key={m} className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/75">
                 {m}
@@ -613,6 +619,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
             ))}
             {majorLabels.length > 8 ? <span className="px-1 py-1 text-xs text-white/45">+{majorLabels.length - 8} more fields of study</span> : null}
           </div>
+          </>
         ) : null}
         <p className="mt-4 text-xs text-white/40">US Department of Education.</p>
       </section>
@@ -627,7 +634,8 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               </span>
             ) : null}
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          {/* As many as fit: a fixed seven across overlapped the chips in a narrow column (6 Nov 2026). */}
+          <div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
             {NICHE_CATEGORIES.filter((c) => c.key !== "overall" && niche.grades[c.key]).map((c) => (
               <div key={c.key} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
                 <span className="text-xs text-white/65">{c.label}</span>
