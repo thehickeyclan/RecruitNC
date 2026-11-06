@@ -22,7 +22,7 @@ import { goalsAreLastSeason } from "@/lib/recruiting/priorities/goals"
 import { shortListLine, type ShortListReason } from "@/lib/recruiting/priorities/copy"
 import { passedBy, reactionsFor, type ReactionRow, type ReactionsView } from "@/lib/recruiting/priorities/reactions"
 import type { Respondent } from "@/lib/recruiting/priorities/questions"
-import { academicStrength, learnFromList, learnFromReactions, recommend, type Card, type CollegeFacts, type Level } from "@/lib/recruiting/priorities/recommend"
+import { academicStrength, learnFromList, learnFromReactions, recommend, surveyFitFor, type Card, type CollegeFacts, type Level, type SurveyLine } from "@/lib/recruiting/priorities/recommend"
 import { jointInputs, ownerOnlyInputs } from "@/lib/recruiting/priorities/sharing"
 import { TABLE_MISSING, loadFamilySets, respondentFor } from "@/lib/recruiting/priorities/store"
 import { zipPoint } from "@/lib/recruiting/zip-point"
@@ -189,7 +189,7 @@ export async function priorityLists(
 export async function collegeFactsFor(
   admin: SupabaseClient,
   ctx: FamilyFitContext,
-  opts: { athleteId: string; team: "mens" | "womens" | null; includeViews: boolean },
+  opts: { athleteId: string; team: "mens" | "womens" | null; includeViews: boolean; /** One college only (its page); the state's middle still reads every college. */ only?: string },
 ): Promise<{ colleges: CollegeFacts[]; weights: { near: number[]; up: number | null }; arrivalFall: number; centre: [number, number] | null }> {
   const team = opts.team
   const arrival = ctx.classYear ?? seniorClassYear()
@@ -209,7 +209,7 @@ export async function collegeFactsFor(
     const classes: readonly number[] = COLLEGE_WEIGHTS[t]
     return at != null ? (classes.find((c) => c > at) ?? null) : null
   }
-  for (const s of ALL) {
+  for (const s of opts.only ? ALL.filter((x) => x.id === opts.only) : ALL) {
     const program = team ? s.programs.find((p) => p[team]) : s.programs[0]
     if (!program) continue
     const rosterTeam = team ?? (s.programs.some((p) => p.mens) ? "mens" : "womens")
@@ -254,6 +254,33 @@ export async function collegeFactsFor(
   const centre: [number, number] | null = inState.length ? [inState.reduce((n, s) => n + s.latitude, 0) / inState.length, inState.reduce((n, s) => n + s.longitude, 0) / inState.length] : null
   const team0 = team ?? "mens"
   return { colleges, weights: { near: nearFor(team0), up: upFor(team0) }, arrivalFall: arrival, centre }
+}
+
+/**
+ * One college against this login's own view of the family's survey answers, for the college's page
+ * (recommend.ts surveyFitFor). Null until either side has finished the survey, or for anyone who is
+ * not the wrestler or a linked parent.
+ */
+export async function surveyFitForSchool(
+  admin: SupabaseClient,
+  opts: { viewerId: string; ctx: FamilyFitContext; team: "mens" | "womens" | null; schoolId: string },
+): Promise<SurveyLine[] | null> {
+  const athleteId = opts.ctx.athleteId
+  if (!athleteId) return null
+  const respondent = await respondentFor(admin, opts.viewerId, athleteId)
+  if (!respondent) return null
+  let sets
+  try {
+    sets = await loadFamilySets(admin, athleteId)
+  } catch (e) {
+    if ((e as { code?: string } | null)?.code === TABLE_MISSING) return null
+    throw e
+  }
+  if (!sets.parent?.completedAt && !sets.athlete?.completedAt) return null
+  const facts = await collegeFactsFor(admin, opts.ctx, { athleteId, team: opts.team, includeViews: false, only: opts.schoolId })
+  const college = facts.colleges[0]
+  if (!college) return null
+  return surveyFitFor({ viewer: respondent, joint: jointInputs(sets), own: ownerOnlyInputs(respondent, sets), centre: facts.centre, zipPoint }, college)
 }
 
 function view(
