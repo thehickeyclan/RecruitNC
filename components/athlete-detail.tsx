@@ -1445,7 +1445,15 @@ export function AthleteDetail({
             "Competes",
             competition.scope === "national"
               ? `Nationally${competition.nationalEvents.length ? `: ${competition.nationalEvents.slice(0, 5).join(", ")}` : ""}`
-              : "North Carolina only on file",
+              : /*
+                 * The wrestler's own state, not ours. This read "North Carolina only on file" for
+                 * everybody, which was merely redundant while the platform was North Carolina and
+                 * became a plain falsehood the night the last ten states landed: Hunter Shirley,
+                 * a 2026 WIAA 1A champion from La Center, Washington, had a profile that said he
+                 * competes in North Carolina only. The line above it already names the right
+                 * state; this one did not.
+                 */
+                `${stateName(athlete?.state) || "North Carolina"} only on file`,
           ],
           ["Styles", styleWords.length ? styleWords.join(", ") : "None on file"],
         ] as Array<[string, string]>)
@@ -2959,7 +2967,7 @@ export function AthleteDetail({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Award className="h-6 w-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">Other Honours</h2>
+              <h2 className="text-2xl font-bold text-white">Other Honors</h2>
             </div>
             {canEdit && !editingSection && (
               <Button
@@ -2995,7 +3003,7 @@ export function AthleteDetail({
                   })()}
                   {otherHonours.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground mb-1">Other honours</h3>
+                      <h3 className="text-lg font-semibold text-foreground mb-1">Other honors</h3>
                       {/* Said plainly, because the tournament sections above are verified and
                           this is not. Leaving both unlabelled is what let a self-typed line
                           read as a state title. */}
@@ -3016,7 +3024,7 @@ export function AthleteDetail({
                     <p className="profile-text-muted text-muted-foreground italic">
                       {canEdit
                         ? "Conference and regional finishes, invitationals, career records — anything not covered by official results. Click Edit to add."
-                        : "No additional honours listed."}
+                        : "No additional honors listed."}
                     </p>
                   )}
                 </>
