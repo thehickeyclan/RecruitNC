@@ -33,7 +33,7 @@ const PLANS: Array<{ kind: Kind; name: string; cents: number; lines: string[]; f
     kind: "command_center",
     name: "Recruiting Command Center",
     cents: SCOUTING_REPORT_PRICES.command_center,
-    lines: ["Which colleges view your profile, and when", "Everything in Insider where we rank", "Your plan, 8th grade to signing", "Every college: coaches, cost, roster", "Your college list, compare and coach messages", "Scout, your recruiting assistant"],
+    lines: ["Everything in Insider, in every state we rank", "What matters to your family, checked on every college page", "Your plan, 8th grade to signing", "Every college: coaches, full cost, room at your weight", "Your college board, Compare and coach messages", "Scout, your recruiting assistant"],
     featured: true,
   },
 ]
@@ -70,7 +70,7 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     if (q.get("purchased") === "1") setPurchased(true)
-    if (q.get("canceled") === "1") setMessage("Checkout was cancelled. Nothing was charged.")
+    if (q.get("canceled") === "1") setMessage("Checkout was canceled. Nothing was charged.")
   }, [])
 
   const start = async (plan: Kind) => {

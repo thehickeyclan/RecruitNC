@@ -149,10 +149,10 @@ describe("must-haves and the service academies", () => {
     const far = [...out.bestFit, ...out.opportunities].find((c) => c.id === "d1-far")
     if (far) expect(far.mightNot.join(" ")).toMatch(/Farther than about 2 hours/)
   })
-  it("a must-have major filters only where we know the school's majors", () => {
+  it("majors never filter, even marked a must-have (Matt, 6 Nov 2026: majors don't count)", () => {
     const out = run("parent", { parent: set("parent", [a("academics", { majors: ["52"], text: null, undecided: false }, "shared", "must")]), athlete: null })
     const all = [...out.bestFit, ...out.opportunities].map((c) => c.id)
-    expect(all).not.toContain("d3-b")
+    expect(all).toContain("d3-b")
     expect(all).toContain("d3-a")
   })
   it("'Not for me' on a service academy takes the academies out", () => {
@@ -255,13 +255,13 @@ describe("academic strength, career paths and learning (6 Nov 2026)", () => {
     expect(out.bestFit[0]?.id).toBe("strong")
     expect(out.bestFit[0]?.why.some((w) => /Strong academics: 92% graduate/.test(w))).toBe(true)
   })
-  it("a career path counts where any of its major families is offered", () => {
+  it("a career path maps to its major families, but does not filter colleges", () => {
     expect(familiesOf("pre_med")).toEqual(["26", "40"])
     expect(familiesOf("52")).toEqual(["52"])
     const pool = [college({ id: "bio", level: "D3", majors: ["26"] }), college({ id: "biz", level: "D3", majors: ["52"] })]
     const sets = { parent: set("parent", [a("academics", { majors: ["pre_med"], text: null, undecided: false }, "shared", "must")]), athlete: null }
     const out = run("parent", sets, pool)
-    expect([...out.bestFit, ...out.opportunities].map((c) => c.id)).not.toContain("biz")
+    expect([...out.bestFit, ...out.opportunities].map((c) => c.id)).toContain("biz")
   })
   it("learns from this viewer's own reactions, capped", () => {
     const l = learnFromReactions(

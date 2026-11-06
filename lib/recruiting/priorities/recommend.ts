@@ -300,12 +300,8 @@ export function recommend(input: RecommendInput): Lists {
   const distanceMust = markerOf(seen.parent, "distance") === "must"
   const athleteDistance = valueOf(seen.athlete, "distance") as string | undefined
 
-  // Majors wanted by either side (Shared, or the viewer's own); a parent's must-have filters where we know the majors.
+  // Majors do not count toward fit (Matt, 6 Nov 2026): the answer is kept, never scored or filtered on.
   const wanted = new Set<string>()
-  for (const side of [seen.parent, seen.athlete]) {
-    const v = valueOf(side, "academics") as { majors?: string[] } | undefined
-    for (const m of v?.majors ?? []) wanted.add(m)
-  }
   const majorMust = markerOf(seen.parent, "academics") === "must" && wanted.size > 0
   // Pre-med, pre-law and pre-vet ask for a strong school.
   if ([...wanted].some(isAcademicPath)) w.strength += 1
@@ -469,7 +465,7 @@ export function recommend(input: RecommendInput): Lists {
   return { bestFit, opportunities, notes }
 }
 
-export type SurveyLine = { key: "level" | "distance" | "major" | "feel" | "cost"; label: string; status: FitStatus; text: string }
+export type SurveyLine = { key: "level" | "distance" | "feel" | "cost"; label: string; status: FitStatus; text: string }
 
 const LEVEL_NAME: Record<Level, string> = { D1: "Division I", D2: "Division II", D3: "Division III", NAIA: "NAIA", NJCAA: "Junior college" }
 const roundMiles = (m: number) => (m < 20 ? Math.round(m) : Math.round(m / 10) * 10)
@@ -521,17 +517,6 @@ export function surveyFitFor(input: Pick<RecommendInput, "viewer" | "joint" | "o
           : { key: "distance", label: "Distance", status: must ? "concern" : "stretch", text: `${where}, farther than ${DISTANCE_LABEL[distance]}.` },
       )
     else out.push({ key: "distance", label: "Distance", status: miles <= 250 ? "fit" : "stretch", text: miles <= 250 ? `${where}, close to home.` : `${where}. Farther than you'd prefer, but you said you're open.` })
-  }
-
-  const wanted = new Set<string>()
-  for (const side of [seen.parent, seen.athlete]) for (const m of (valueOf(side, "academics") as { majors?: string[] } | undefined)?.majors ?? []) wanted.add(m)
-  if (wanted.size) {
-    const label = (k: string) => MAJOR_OPTIONS.find((m) => m.key === k)?.label ?? "the major you picked"
-    const offers = c.majors ? [...wanted].filter((m) => familiesOf(m).some((f) => c.majors!.includes(f))) : null
-    const must = markerOf(seen.parent, "academics") === "must"
-    if (!offers) out.push({ key: "major", label: "Major", status: "unknown", text: "Not enough to say: we don't have this college's list of majors." })
-    else if (offers.length) out.push({ key: "major", label: "Major", status: "fit", text: `Offers ${offers.map(label).join(", ")}.` })
-    else out.push({ key: "major", label: "Major", status: must ? "concern" : "stretch", text: `Doesn't list ${[...wanted].map(label).join(" or ")}.` })
   }
 
   const feel = new Set<string>([

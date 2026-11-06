@@ -18,12 +18,12 @@ const SETTINGS = ["city", "suburb", "town", "rural"] as const
 export function fitProfileFromAnswers(answers: ReadonlyArray<Answer>): FamilyFitProfile {
   const first = new Map<string, unknown>()
   for (const a of answers) if (!first.has(a.key) && a.value != null) first.set(a.key, a.value)
-  const academics = first.get("academics") as { majors?: unknown } | undefined
   const feel = Array.isArray(first.get("school_feel")) ? (first.get("school_feel") as unknown[]).map(String) : []
   const sizes = SIZES.filter((s) => feel.includes(s))
   const settings = SETTINGS.filter((s) => feel.includes(s))
   return cleanProfile({
-    majors: Array.isArray(academics?.majors) ? academics.majors : [],
+    // Majors do not count toward fit (Matt, 6 Nov 2026).
+    majors: [],
     budget: BUDGET[String(first.get("budget"))] ?? null,
     homeZip: first.get("home_zip") ?? null,
     maxMiles: MILES[String(first.get("distance"))] ?? null,

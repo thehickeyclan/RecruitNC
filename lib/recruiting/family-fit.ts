@@ -247,19 +247,11 @@ export function costFit(input: { netPrice: number | null; netNote: string; publi
 const sizeOf = (undergrads: number) => (undergrads < 5_000 ? "small" : undergrads <= 15_000 ? "medium" : "large")
 const settingOf = (setting: string | null) => (!setting ? null : /city/i.test(setting) ? "city" : /suburb/i.test(setting) ? "suburb" : /town/i.test(setting) ? "town" : /rural/i.test(setting) ? "rural" : null)
 
-/** Major, distance, size and setting against what the family said. */
+/** Distance, size and setting against what the family said. */
 export function goalsFit(profile: FamilyFitProfile, college: { majors: string[] | null; miles: number | null; undergrads: number | null; setting: string | null }): FitLine {
   const ok: string[] = []
   const no: string[] = []
-  if (profile.majors.length) {
-    if (!college.majors) no.push("majors not published")
-    else {
-      const has = profile.majors.filter((m) => college.majors!.includes(m))
-      const missing = profile.majors.filter((m) => !college.majors!.includes(m))
-      if (has.length) ok.push(`offers ${has.map((m) => LABEL.get(m)!.toLowerCase()).join(" and ")}`)
-      if (missing.length) no.push(`no ${missing.map((m) => LABEL.get(m)!.toLowerCase()).join(" or ")} degree`)
-    }
-  }
+  // Majors do not count toward fit (Matt, 6 Nov 2026), even when Compare's old goals hold some.
   if (profile.maxMiles != null && college.miles != null) {
     ;(college.miles <= profile.maxMiles ? ok : no).push(`${college.miles.toLocaleString("en-US")} miles from home`)
   }
@@ -271,7 +263,7 @@ export function goalsFit(profile: FamilyFitProfile, college: { majors: string[] 
     const s = settingOf(college.setting)
     ;(s && profile.settings.includes(s) ? ok : no).push(college.setting.toLowerCase())
   }
-  if (!ok.length && !no.length) return { status: "unknown", text: "Tell us your intended major, distance, size and setting to compare." }
+  if (!ok.length && !no.length) return { status: "unknown", text: "Tell us the distance, size and setting you want to compare." }
   const text = [ok.length ? `Fits: ${ok.join(", ")}` : null, no.length ? `Doesn't: ${no.join(", ")}` : null].filter(Boolean).join(". ") + "."
   return { status: no.length === 0 ? "fit" : ok.length === 0 ? "concern" : "stretch", text }
 }
