@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { GOALS, GOALS_FACTS, PARENT_GOAL_LABELS, goalsAreLastSeason, goalsNudge, goalsOf, rankedGoals } from "./goals"
+import { GOALS, PARENT_GOAL_LABELS, goalsAreLastSeason, goalsOf, rankedGoals } from "./goals"
 
 const from = (o: Record<string, unknown>) => (k: string) => o[k]
 
@@ -14,12 +14,6 @@ describe("goals first", () => {
     expect(goalsOf(from({ goals: ["career"], top3: ["level"] }))).toEqual(["career"])
     expect(goalsOf(from({}))).toEqual([])
   })
-  it("nudges a top 3 with nothing about school or after wrestling, and only that", () => {
-    expect(goalsNudge(["level", "compete", "team"])).toMatch(/what comes after wrestling/)
-    expect(goalsNudge(["level", "compete", "career"])).toBeNull()
-    expect(goalsNudge(["level", "pay", "team"])).toBeNull()
-    expect(goalsNudge([])).toBeNull()
-  })
   it("asks again once a season", () => {
     const nov = new Date("2026-11-06T12:00:00Z")
     expect(goalsAreLastSeason("2026-10-01T00:00:00Z", nov)).toBe(false)
@@ -29,7 +23,7 @@ describe("goals first", () => {
     expect(goalsAreLastSeason(null, nov)).toBe(false)
   })
   it("copy: plain, no questions, no room or spot, no income, no singular they", () => {
-    const all = JSON.stringify([GOALS, PARENT_GOAL_LABELS, GOALS_FACTS])
+    const all = JSON.stringify([GOALS, PARENT_GOAL_LABELS])
     expect(all).not.toContain("?")
     expect(all).not.toMatch(/\broom\b|\bspot\b|income|\bthey\b|\btheir\b/i)
     expect(Object.keys(PARENT_GOAL_LABELS)).toEqual(GOALS.map((g) => g.key))
