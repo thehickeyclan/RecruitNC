@@ -71,7 +71,7 @@ export const MAJOR_OPTIONS: Option[] = MAJOR_FAMILIES.map((m) => ({ key: m.code,
 export const QUESTIONS: Question[] = [
   // ---- Part A: parent. Goals first (goals.ts).
   { id: "P0", key: GOALS_KEY, respondent: "parent", title: "What are your goals for {name}'s college wrestling? Tap your top 3, in order.", sharing: "shared", kind: { type: "top3", options: GOALS.map((g) => ({ key: g.key, label: PARENT_GOAL_LABELS[g.key] ?? g.label })) } },
-  { id: "P0b", key: SUCCESS_KEY, respondent: "parent", title: "In a sentence: what would make this a success for your family?", sharing: "private", optional: true, kind: { type: "text" } },
+  { id: "P0b", key: SUCCESS_KEY, respondent: "parent", title: "When {name} finishes college, what would make it a success?", sharing: "private", optional: true, kind: { type: "text" } },
   {
     id: "P1", key: "distance", respondent: "parent", title: "How far from home is too far?", sharing: "shared", marker: true,
     kind: { type: "single", options: [
@@ -119,7 +119,7 @@ export const QUESTIONS: Question[] = [
 
   // ---- Part B: athlete. Goals first (goals.ts).
   { id: "A0", key: GOALS_KEY, respondent: "athlete", title: "What are your goals for college wrestling? Tap your top 3, in order.", sharing: "shared", kind: { type: "top3", options: GOALS } },
-  { id: "A0b", key: SUCCESS_KEY, respondent: "athlete", title: "In a sentence: what would make college a success for you?", sharing: "private", optional: true, kind: { type: "text" } },
+  { id: "A0b", key: SUCCESS_KEY, respondent: "athlete", title: "When you finish college, what would make it a success?", sharing: "private", optional: true, kind: { type: "text" } },
   {
     id: "A1", key: "distance", respondent: "athlete", title: "Stay close to home, or get away?", sharing: "shared",
     kind: { type: "single", options: [{ key: "close", label: "Stay close" }, { key: "dont_care", label: "Don't care" }, { key: "away", label: "Get away and see somewhere new" }] },
