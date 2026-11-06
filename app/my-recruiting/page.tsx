@@ -41,6 +41,8 @@ import { RecruitingPathStrip } from "@/components/portal/recruiting-path-strip"
 import { RemindersPanel } from "@/components/portal/reminders-panel"
 import { PriorityLists } from "@/components/portal/priority-lists"
 import { SurveyPopup } from "@/components/portal/survey-popup"
+import { AcademicCheckin } from "@/components/portal/academic-checkin"
+import { loadAcademicItems } from "./academics"
 import { StarterSet } from "@/components/portal/starter-set"
 import { daysUntilText, visitDates, visitPhase, VISIT_GUIDE } from "@/lib/recruiting/visits"
 import { journeyFor, remindersOn } from "./journey-data"
@@ -108,6 +110,14 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
   // The "What matters" move ticks once this login has finished its own set (a preview counts the family's login).
   const answered = first && cc.viewerId ? await hasAnsweredPriorities(admin, cc.viewerId, first.id).catch(() => null) : false
   const prioritiesDone = answered === true
+  // GPA and test-score check-ins (academic-checkin.ts): the family's own login only, as private as the GPA.
+  const academics =
+    first && cc.viewerId && cc.viewerId === cc.authUserId && !cc.previewing && !cc.hidePersonal
+      ? await loadAcademicItems(admin, cc.viewerId, first.id).catch((e) => {
+          console.error("[my-recruiting] academics", e)
+          return null
+        })
+      : null
   // Until it's finished, the survey opens by itself: the family's own login only, never a preview or a business account.
   const surveyPopup =
     first && cc.viewerId && cc.viewerId === cc.authUserId && !cc.previewing && !cc.hidePersonal && answered === false
@@ -291,6 +301,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
               ))}
             </div>
           ) : null}
+          {academics?.items.length ? <AcademicCheckin athleteId={first.id} firstName={first.firstName} self={academics.self} items={academics.items} /> : null}
           {feed && !feed.empty ? <WhatsChanged feed={feed} firstName={first.firstName} weight={lastWeight} levelColors={LEVEL_COLOR} /> : null}
           {firstDay ? (
             // A brand-new family: three moves, in order, each ticked once done; then the shortlist.
