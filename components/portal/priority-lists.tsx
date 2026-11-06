@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowRight, Check, Plus } from "lucide-react"
+import { ArrowRight, Check, Undo2 } from "lucide-react"
 
 import type { ListCard, PriorityListsView } from "@/app/my-recruiting/priority-lists"
 import { FIRST_LIST_GOAL, FirstListProgress } from "@/components/portal/first-list-progress"
+import { DONT_KNOW, KEEP_CHIPS, PASS_REASONS, REACTIONS, reasonLabel, theirLine, type SeenReaction } from "@/lib/recruiting/priorities/reactions"
+import type { ReactionKind } from "@/lib/recruiting/priorities/sharing"
 
 const LEVEL_COLOR: Record<string, string> = { D1: "#60a5fa", D2: "#34d399", D3: "#fbbf24", NAIA: "#f472b6", NJCAA: "#a78bfa" }
 
@@ -35,14 +37,140 @@ export function PriorityLists({
   savedCount?: number
   bare?: boolean
 }) {
-  const [saved, setSaved] = useState<Set<string>>(new Set())
+  const [mine, setMine] = useState<Record<string, SeenReaction>>(lists.reactions.mine)
+  const [newlySaved, setNewlySaved] = useState(0)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [failed, setFailed] = useState<string | null>(null)
   const colors = levelColors ?? LEVEL_COLOR
-  const save = async (id: string) => {
-    if (readOnly) return
-    const res = await fetch("/api/college-list", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schoolId: id, status: "interested" }) }).catch(() => null)
-    if (res?.ok) setSaved((s) => new Set(s).add(id))
+  const theirs = lists.reactions.theirs
+  const batchOf = (id: string) => (lists.bestFit.some((c) => c.id === id) ? lists.batchIds.bestFit : lists.batchIds.opportunities)
+  const canReact = !readOnly && Boolean(lists.batchIds.bestFit || lists.batchIds.opportunities)
+
+  const react = async (id: string, reaction: ReactionKind, extra: { reason?: string | null; chips?: string[] } = {}) => {
+    const batchId = batchOf(id)
+    if (!canReact || !batchId) return
+    const before = mine[id]
+    const next: SeenReaction = { reaction, reason: extra.reason ?? null, chips: extra.chips ?? [] }
+    setMine((m) => ({ ...m, [id]: next }))
+    setBusy(id)
+    setFailed(null)
+    const res = await fetch("/api/recruiting-priorities/reactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ athleteId, batchId, schoolId: id, reaction, reason: next.reason, chips: next.chips }),
+    }).catch(() => null)
+    setBusy(null)
+    if (!res?.ok) {
+      setMine((m) => {
+        const copy = { ...m }
+        if (before) copy[id] = before
+        else delete copy[id]
+        return copy
+      })
+      setFailed(id)
+      return
+    }
+    const out = (await res.json().catch(() => null)) as { saved?: boolean } | null
+    if (out?.saved) setNewlySaved((n) => n + 1)
   }
-  const card = (c: ListCard) => (
+  const undo = async (id: string) => {
+    const before = mine[id]
+    setMine((m) => {
+      const copy = { ...m }
+      delete copy[id]
+      return copy
+    })
+    const res = await fetch(`/api/recruiting-priorities/reactions?athleteId=${encodeURIComponent(athleteId)}&schoolId=${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => null)
+    if (!res?.ok && before) {
+      setMine((m) => ({ ...m, [id]: before }))
+      setFailed(id)
+    }
+  }
+
+  const chip = (on: boolean, label: string, onClick: () => void, key: string) => (
+    <button
+      key={key}
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${on ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]" : "border-white/20 text-white/70 hover:border-white/40"}`}
+    >
+      {label}
+    </button>
+  )
+
+  /** The three one-tap reactions, then what each one opens. */
+  const reactions = (c: ListCard) => {
+    const r = mine[c.id]
+    const other = theirs[c.id]
+    const otherLine = other ? <p className="mt-2 text-[11px] font-bold text-white/55">{theirLine(lists.otherLabel, other)}</p> : null
+    if (!canReact) return otherLine
+    const pass = r?.reaction === "not_for_us" && r.reason !== DONT_KNOW
+    return (
+      <>
+        {otherLine}
+        {!r || r.reason === DONT_KNOW ? (
+          <div className="mt-2.5 grid grid-cols-3 gap-1.5" role="group" aria-label={`Your reaction to ${c.name}`}>
+            {REACTIONS.map((x) => (
+              <button
+                key={x.key}
+                type="button"
+                disabled={busy === c.id}
+                onClick={() => react(c.id, x.key)}
+                className="rounded-lg border border-white/20 px-1.5 py-1.5 text-[11px] font-bold leading-tight text-white hover:border-[#D3B574]"
+              >
+                {x.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-2.5 rounded-lg bg-white/[0.04] p-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className={`text-xs font-black ${r.reaction === "closer_look" ? "text-emerald-300" : r.reaction === "maybe" ? "text-amber-200" : "text-white/70"}`}>
+                {r.reaction === "closer_look" ? "Worth a closer look · on your My List" : r.reaction === "maybe" ? "Maybe · on your To check list" : `Not for us${r.reason ? ` · ${reasonLabel(r.reason)?.toLowerCase()}` : ""}`}
+              </span>
+              <button type="button" onClick={() => undo(c.id)} className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-white/50 hover:text-white">
+                <Undo2 className="h-3 w-3" aria-hidden /> Undo
+              </button>
+            </div>
+            {r.reaction === "closer_look" ? (
+              <div className="mt-1.5">
+                <p className="text-[11px] text-white/45">What stood out (optional)</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {KEEP_CHIPS.map((k) => chip(r.chips.includes(k.key), k.label, () => react(c.id, "closer_look", { chips: r.chips.includes(k.key) ? r.chips.filter((x) => x !== k.key) : [...r.chips, k.key] }), k.key))}
+                </div>
+              </div>
+            ) : null}
+            {pass && !r.reason ? (
+              <div className="mt-1.5">
+                <p className="text-[11px] text-white/45">Why (optional)</p>
+                <div className="mt-1 flex flex-wrap gap-1">{PASS_REASONS.map((p) => chip(false, p.label, () => react(c.id, "not_for_us", { reason: p.key }), p.key))}</div>
+              </div>
+            ) : null}
+          </div>
+        )}
+        {failed === c.id ? <p className="mt-1 text-[11px] text-red-300">Could not save that. Try again.</p> : null}
+      </>
+    )
+  }
+
+  const card = (c: ListCard) => {
+    const r = mine[c.id]
+    const passed = r?.reaction === "not_for_us" && r.reason !== DONT_KNOW && Boolean(r.reason)
+    // A pass with its reason picked folds to one line; Undo brings the card back.
+    if (passed && canReact)
+      return (
+        <li key={c.id} className="flex items-center justify-between gap-2 self-start rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+          <span className="min-w-0 truncate text-xs text-white/50">
+            <span className="font-bold text-white/70">{c.name}</span> · Not for us · {reasonLabel(r.reason)?.toLowerCase()}
+          </span>
+          <button type="button" onClick={() => undo(c.id)} className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-white/50 hover:text-white">
+            <Undo2 className="h-3 w-3" aria-hidden /> Undo
+          </button>
+        </li>
+      )
+    const unknown = r?.reaction === "not_for_us" && r.reason === DONT_KNOW
+    return (
     <li key={c.id} className="flex flex-col rounded-lg border border-white/10 bg-white/[0.03] p-3">
       <div className="flex items-start gap-2.5">
         {c.logo ? (
@@ -62,16 +190,12 @@ export function PriorityLists({
             <span className="truncate">{c.place}</span>
           </span>
         </a>
-        <button
-          type="button"
-          onClick={() => save(c.id)}
-          disabled={saved.has(c.id) || readOnly}
-          aria-label={saved.has(c.id) ? `${c.name} saved` : `Save ${c.name} to My List`}
-          className={`shrink-0 rounded-lg p-1.5 ${saved.has(c.id) ? "bg-emerald-500 text-[#0A1628]" : "border border-white/20 text-white hover:border-[#D3B574]"}`}
-        >
-          {saved.has(c.id) ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-        </button>
       </div>
+      {unknown ? (
+        <a href={`/recruiting/schools/${c.id}`} className="mt-2 block rounded-lg bg-sky-400/10 px-2 py-1.5 text-[11px] font-bold text-sky-200 hover:underline">
+          New to you. Learn about {c.name} →
+        </a>
+      ) : null}
       <ul className="mt-2.5 space-y-1 text-xs leading-4">
         {c.why.map((w) => (
           <li key={w} className="flex gap-1.5 text-white/80">
@@ -92,8 +216,11 @@ export function PriorityLists({
       <a href={c.next.href} className="mt-auto flex items-center gap-1 pt-2.5 text-xs font-bold text-[#D3B574] hover:underline" {...(c.next.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}>
         {c.next.label} <ArrowRight className="h-3.5 w-3.5" aria-hidden />
       </a>
+      {reactions(c)}
     </li>
-  )
+    )
+  }
+  const toCheck = [...lists.bestFit, ...lists.opportunities].filter((c, i, all) => mine[c.id]?.reaction === "maybe" && all.findIndex((x) => x.id === c.id) === i)
   const list = (id: string, title: string, sub: string, cards: ListCard[]) =>
     cards.length ? (
       <div className="mt-4">
@@ -117,10 +244,25 @@ export function PriorityLists({
           Change answers →
         </a>
       </div>
-      <p className="text-xs text-white/50">{lists.shapedBy} Tap + to save.</p>
-      {savedCount < FIRST_LIST_GOAL ? <FirstListProgress count={savedCount + saved.size} firstName={firstName} className="mt-3" /> : null}
+      <p className="text-xs text-white/50">{lists.shapedBy}{canReact ? " React to each one. Worth a closer look saves it to your My List." : ""}</p>
+      {savedCount < FIRST_LIST_GOAL ? <FirstListProgress count={savedCount + newlySaved} firstName={firstName} className="mt-3" /> : null}
       {list("cc-best", "Best fit", `Levels you're open to, ranked by what you said matters most, where ${firstName}'s results fit.`, lists.bestFit)}
       {list("cc-opps", "Opportunities worth pursuing", `Where there's evidence a program could use ${firstName}: a projected opening at the weight, a coach-posted need, or coaches viewing the profile.`, lists.opportunities)}
+      {toCheck.length ? (
+        <div className="mt-4 rounded-lg border border-amber-200/20 bg-amber-200/[0.04] p-3">
+          <h3 className="text-sm font-black">To check · {toCheck.length}</h3>
+          <ul className="mt-1.5 space-y-1">
+            {toCheck.map((c) => (
+              <li key={c.id} className="text-xs">
+                <span className="font-bold">{c.name}:</span>{" "}
+                <a href={c.next.href} className="font-bold text-[#D3B574] hover:underline" {...(c.next.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}>
+                  {c.next.label} →
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {lists.shortLine ? <p className="mt-3 text-xs text-white/55">{lists.shortLine}</p> : null}
       {lists.notes.map((n) => (
         <p key={n} className="mt-2 text-[11px] text-white/45">

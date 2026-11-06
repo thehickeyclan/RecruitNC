@@ -45,7 +45,7 @@ const COLLEGES: CollegeFacts[] = [
 const a = (key: string, value: unknown, sharing: SharingClass = "shared", marker: Answer["marker"] = null): Answer => ({ key, value, sharing, marker })
 const set = (respondent: Respondent, answers: Answer[]) => ({ id: `${respondent}-1`, respondent, version: 1, completedAt: "2026-11-05", answers })
 
-function run(viewer: Respondent, sets: FamilySets, colleges = COLLEGES): Lists {
+function run(viewer: Respondent, sets: FamilySets, colleges = COLLEGES, passed?: Set<string>): Lists {
   const input: RecommendInput = {
     viewer,
     joint: jointInputs(sets),
@@ -57,6 +57,7 @@ function run(viewer: Respondent, sets: FamilySets, colleges = COLLEGES): Lists {
     homeState: "NC",
     centre: [35.5, -79.5],
     zipPoint: (z) => (z === "27601" ? [35.77, -78.64] : null),
+    passed,
   }
   return recommend(input)
 }
@@ -216,5 +217,22 @@ describe("weights and copy", () => {
     const all = [...out.bestFit, ...out.opportunities]
     expect(all.find((c) => c.id === "x")!.why[0]).toBe("Projected opportunity at 174 in fall 2028")
     expect(all.find((c) => c.id === "y")?.why.join(" ") ?? "").not.toMatch(/Projected opportunity/)
+  })
+})
+
+describe("reactions shape only the reactor's own next lists", () => {
+  const sets: FamilySets = { parent: set("parent", PARENT_SHARED), athlete: set("athlete", ATHLETE_SHARED) }
+  it("a college the viewer passed is never re-offered to them", () => {
+    const before = ids(run("athlete", sets))
+    const first = before.best[0] ?? before.opp[0]
+    expect(first).toBeTruthy()
+    const after = ids(run("athlete", sets, COLLEGES, new Set([first!])))
+    expect([...after.best, ...after.opp]).not.toContain(first)
+  })
+  it("the other side's view is untouched by this viewer's passes (the engine never reads them)", () => {
+    const parent = ids(run("parent", sets))
+    const first = parent.best[0] ?? parent.opp[0]
+    expect(ids(run("parent", sets))).toEqual(parent)
+    expect([...ids(run("parent", sets)).best, ...ids(run("parent", sets)).opp]).toContain(first)
   })
 })
