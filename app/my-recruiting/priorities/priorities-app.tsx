@@ -9,7 +9,6 @@ import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Lock } from "lucide-react"
 import type { Answer } from "@/lib/recruiting/priorities/sharing"
 import type { Marker, Option, Question, Respondent, SharingClass } from "@/lib/recruiting/priorities/questions"
 import { MAJOR_OPTIONS, wantsBsnFollowUp } from "@/lib/recruiting/priorities/questions"
-import { GOALS_KEY, goalsNudge } from "@/lib/recruiting/priorities/goals"
 
 type Q = Question & { sharingLine: string }
 type Data = {
@@ -236,13 +235,6 @@ export function PrioritiesApp({ athleteId, onClose }: { athleteId?: string; onCl
         <div className="h-full rounded-full bg-[#D3B574]" style={{ width: `${((i + 1) / screens.length) * 100}%` }} />
       </div>
       <h1 className="mt-5 text-xl font-black sm:text-2xl">{isBsn ? "Does a direct-entry nursing (BSN) program matter, or is pre-nursing fine?" : s.title.replace("{name}", name)}</h1>
-      {!isBsn && s.intro?.length ? (
-        <ul className="mt-3 space-y-1.5 rounded-xl border border-white/10 bg-white/[0.04] p-3 text-sm text-white/75">
-          {s.intro.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      ) : null}
       {fromPrefill ? <p className="mt-1 text-sm text-white/55">Filled in from {data.prefill[key].from}. Change anything that&apos;s changed.</p> : null}
       {!isBsn && s.key === "college_weight" && data.weight ? <p className="mt-1 text-sm text-white/55">{name} last competed at {data.weight}.</p> : null}
 
@@ -253,10 +245,6 @@ export function PrioritiesApp({ athleteId, onClose }: { athleteId?: string; onCl
           <Field q={s} d={d} set={(p) => setDraft(key, p)} respondent={data.respondent} zip={(drafts.distance?.extra.zip as string | undefined) ?? (own.get("home_zip")?.value as string | undefined) ?? (data.prefill.home_zip?.value as string | undefined) ?? ""} />
         )}
       </div>
-
-      {!isBsn && s.key === GOALS_KEY && Array.isArray(d.value) && d.value.length === 3 && goalsNudge(d.value as string[]) ? (
-        <p className="mt-3 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-3 text-sm font-semibold text-white/85">{goalsNudge(d.value as string[])}</p>
-      ) : null}
 
       {!isBsn && s.marker && d.value != null && !d.notSure ? (
         <div className="mt-4">

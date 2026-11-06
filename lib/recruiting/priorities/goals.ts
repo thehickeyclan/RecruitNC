@@ -3,10 +3,8 @@
  * sides, before distance, money or levels. It replaces the old closer ("If these ever conflict, what
  * wins?", key top3) and the level-or-opportunity question (P4/A3), which goals 1 and 4 now cover.
  *
- * The point is to level-set. Many families start from "D1 or bust" and never say what college is for
- * after wrestling ends. So the screen carries a few plain facts from the Learn library (paying-for-
- * college), and when a top 3 holds nothing about school or career, one line asks them to look again.
- * Facts only from the library: no invented percentages.
+ * The question is the level-set: putting school, money and career next to "the highest level" makes a
+ * family rank them. No facts box and no nudge on top (Matt, 6 Nov: "the question itself is the check").
  *
  * Sets answered before 6 Nov hold top3 (and maybe level_vs_opportunity). goalsOf maps them, so their
  * lists, weights and alignment keep working without a re-ask.
@@ -49,13 +47,6 @@ export const GOAL_SHORT: Record<string, string> = {
   experience: "the all-around experience",
 }
 
-/** Above the choices: why this comes first. From lib/recruiting/learn/content.ts, paying-for-college. */
-export const GOALS_FACTS: string[] = [
-  "College wrestling lasts four or five years. The degree lasts a lifetime.",
-  "Full wrestling scholarships are rare. Division II shares 9 full grants (10 for women) across a whole team, and Division III gives no athletic money at all.",
-  "A 25% wrestling scholarship at one college can cost more than no wrestling money at another.",
-]
-
 /** Legacy top3 factor → goal. "distance" has no goal: it has its own question. */
 const FROM_TOP3: Record<string, string | null> = { level: "level", compete_early: "compete", cost: "pay", academics: "academics", campus: "experience", coaching: "team", distance: null }
 
@@ -86,13 +77,6 @@ export function rankedGoals(value: (key: string) => unknown): Array<{ goal: stri
 
 /** The goals in order, for copy and comparisons. */
 export const goalsOf = (value: (key: string) => unknown): string[] => rankedGoals(value).map((g) => g.goal)
-
-/** The one nudge: a top 3 with nothing about school or what comes after. */
-export function goalsNudge(goals: string[]): string | null {
-  if (!goals.length) return null
-  if (goals.some((g) => g === "academics" || g === "career" || g === "pay")) return null
-  return "Nothing in this top 3 is about school or what comes after wrestling. Worth a second look before you go on."
-}
 
 /**
  * The yearly re-ask: goals change between 9th grade and senior year. A set finished before this

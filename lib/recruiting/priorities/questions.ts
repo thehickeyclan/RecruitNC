@@ -12,7 +12,7 @@
  * ever reach a joint output. Constraint-only and Private answers shape only their owner's own view.
  */
 import { MAJOR_FAMILIES } from "@/lib/recruiting/family-fit"
-import { GOALS, GOALS_FACTS, GOALS_KEY, PARENT_GOAL_LABELS, SUCCESS_KEY } from "./goals"
+import { GOALS, GOALS_KEY, PARENT_GOAL_LABELS, SUCCESS_KEY } from "./goals"
 
 export type Respondent = "parent" | "athlete"
 export type SharingClass = "shared" | "constraint" | "private"
@@ -40,8 +40,6 @@ export type Question = {
   optional?: boolean
   /** Must-have / strong / flexible can be set on the answer. */
   marker?: boolean
-  /** Plain lines shown above the choices (goals.ts GOALS_FACTS). */
-  intro?: string[]
 }
 
 export const PATHWAYS: Option[] = [
@@ -72,7 +70,7 @@ export const MAJOR_OPTIONS: Option[] = MAJOR_FAMILIES.map((m) => ({ key: m.code,
 
 export const QUESTIONS: Question[] = [
   // ---- Part A: parent. Goals first (goals.ts).
-  { id: "P0", key: GOALS_KEY, respondent: "parent", title: "What are your goals for {name}'s college wrestling? Tap your top 3, in order.", sharing: "shared", intro: GOALS_FACTS, kind: { type: "top3", options: GOALS.map((g) => ({ key: g.key, label: PARENT_GOAL_LABELS[g.key] ?? g.label })) } },
+  { id: "P0", key: GOALS_KEY, respondent: "parent", title: "What are your goals for {name}'s college wrestling? Tap your top 3, in order.", sharing: "shared", kind: { type: "top3", options: GOALS.map((g) => ({ key: g.key, label: PARENT_GOAL_LABELS[g.key] ?? g.label })) } },
   { id: "P0b", key: SUCCESS_KEY, respondent: "parent", title: "In a sentence: what would make this a success for your family?", sharing: "private", optional: true, kind: { type: "text" } },
   {
     id: "P1", key: "distance", respondent: "parent", title: "How far from home is too far?", sharing: "shared", marker: true,
@@ -120,7 +118,7 @@ export const QUESTIONS: Question[] = [
   { id: "P8", key: "dealbreaker", respondent: "parent", title: "Anything that's an absolute dealbreaker?", sharing: "private", optional: true, kind: { type: "text" } },
 
   // ---- Part B: athlete. Goals first (goals.ts).
-  { id: "A0", key: GOALS_KEY, respondent: "athlete", title: "What are your goals for college wrestling? Tap your top 3, in order.", sharing: "shared", intro: GOALS_FACTS, kind: { type: "top3", options: GOALS } },
+  { id: "A0", key: GOALS_KEY, respondent: "athlete", title: "What are your goals for college wrestling? Tap your top 3, in order.", sharing: "shared", kind: { type: "top3", options: GOALS } },
   { id: "A0b", key: SUCCESS_KEY, respondent: "athlete", title: "In a sentence: what would make college a success for you?", sharing: "private", optional: true, kind: { type: "text" } },
   {
     id: "A1", key: "distance", respondent: "athlete", title: "Stay close to home, or get away?", sharing: "shared",
