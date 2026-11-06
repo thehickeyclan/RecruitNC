@@ -42,5 +42,14 @@
       "reason": "approved",
       "note": "No class year, so no profile under the current-classes rule. Oklahoma resolved 926 of 932 placer keys (99.4%) from the payloads' own grade prints; these six are the whole residue and they are one pocket - the single part of the 2024 payload that carries no grade prints at all. The RankWrestlers micro-pass proved RW does cover Oklahoma (health control Aiden Jalajel, Coweta, dated Fr 2024 and So 2025 both deriving 2028), so each of these is an individual coverage gap rather than a missing source. No RW footprint at all, across full-name with and without state, surname, and season-archive searches, each retried. No champion is affected: the highest unresolved finish in the state is 2nd. Held blank and never forced (3 Nov 2026)."
     }
+  ],
+  "sameNameVerified": [
+    {
+      "athleteIds": [
+        "2af6551a-9d24-4ab8-b4ff-c58ec073a314",
+        "9e50482e-7cb4-41ad-ac57-b32eda1a52c0"
+      ],
+      "note": "Braxton Jones, class of 2028, two wrestlers: Carl Albert (Midwest City) and Collinsville - different schools on opposite sides of the state, each with its own placer rows. Not a duplicate."
+    }
   ]
 }
