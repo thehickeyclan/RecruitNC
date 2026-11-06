@@ -131,7 +131,13 @@ const ASSOCIATIONS: Record<
   VA: { public: "VHSL", independent: ["VISAA"] },
   MD: { public: "MPSSAA", independent: ["MIS", "MIAA"] },
   WV: { public: "WVSSAC" },
-  DE: { public: "DIAA" },
+  /*
+   * Delaware admits EIGHTH graders only: DIAA 2.4.5 allows limited participation by 8th graders
+   * and 2.4.6 bars 7th graders outright. The flag is a boolean, so it reads "pre-freshman results
+   * can be real here" - but a Delaware row implying SEVENTH grade is a defect to chase, not data.
+   * (Muse's six-state eligibility memo, 6 Nov 2026, quoting the rule.)
+   */
+  DE: { public: "DIAA", middleSchoolVarsity: true },
   /*
    * Georgia's private association is GIAA, not GISA: it renamed in 2022, and every 2024-26 event
    * we hold ran under the new name (Muse, 24 Oct 2026). Using the old one would mislabel every
@@ -231,15 +237,37 @@ const ASSOCIATIONS: Record<
    * a namesake does not.
    */
   FL: { public: "FHSAA", middleSchoolVarsity: true },
-  AL: { public: "AHSAA" },
+  /*
+   * AHSAA admits 7th and 8th graders from the feeder/zoned middle school under a combination-
+   * program agreement. 57 Alabama qualifier rows read as pre-freshman once their class years
+   * were filled on 6 Nov 2026, and they are legitimate.
+   */
+  AL: { public: "AHSAA", middleSchoolVarsity: true },
   LA: { public: "LHSAA" },
-  MS: { public: "MHSAA" },
-  KY: { public: "KHSAA" },
+  /* MHSAA Handbook 2.12 sets the academic conditions for 7th and 8th graders playing up. */
+  MS: { public: "MHSAA", middleSchoolVarsity: true },
+  /*
+   * KHSAA Bylaw 4 Sec. 2: a pupil in grades 7-8 in a member school's feeder pattern under the
+   * same local Board of Education may play on the high school team at any level, and the time
+   * does not count against the eight-semester limit. Below grade 9 is barred from VARSITY in
+   * football and soccer only - wrestling is unrestricted.
+   */
+  KY: { public: "KHSAA", middleSchoolVarsity: true },
   IN: { public: "IHSAA" },
   NJ: { public: "NJSIAA" },
-  NY: { public: "NYSPHSAA" },
+  /*
+   * New York admits 7th and 8th graders through the Athletic Placement Process, a district
+   * opt-in under the Regulations of the Commissioner of Education. 58 NY qualifier rows depend
+   * on it. The qualifier files are 100% NYSPHSAA, so this says nothing about PSAL or NYCHSAA.
+   */
+  NY: { public: "NYSPHSAA", middleSchoolVarsity: true },
   CT: { public: "CIAC" },
-  MA: { public: "MIAA" },
+  /*
+   * MIAA admits them conditionally: where the high school itself includes those grades under the
+   * high school principal, or under a Rule 53 Middle Level Waiver. Conditional is still admitted,
+   * so a Massachusetts pre-freshman result is data rather than an automatic namesake flag.
+   */
+  MA: { public: "MIAA", middleSchoolVarsity: true },
   RI: { public: "RIIL" },
   NH: { public: "NHIAA" },
   VT: { public: "VPA" },
