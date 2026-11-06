@@ -41,6 +41,7 @@ export function PriorityLists({
   const [newlySaved, setNewlySaved] = useState(0)
   const [busy, setBusy] = useState<string | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
+  const [inviteNote, setInviteNote] = useState<string | null>(null)
   const colors = levelColors ?? LEVEL_COLOR
   const theirs = lists.reactions.theirs
   const batchOf = (id: string) => (lists.bestFit.some((c) => c.id === id) ? lists.batchIds.bestFit : lists.batchIds.opportunities)
@@ -220,6 +221,23 @@ export function PriorityLists({
     </li>
     )
   }
+  const invite = async () => {
+    setInviteNote(null)
+    const res = await fetch("/api/recruiting-priorities/invite", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ athleteId }) }).catch(() => null)
+    const out = (await res?.json().catch(() => null)) as { text?: string } | null
+    if (!res?.ok || !out?.text) return setInviteNote("Could not make the link. Try again.")
+    const nav = navigator as Navigator & { share?: (d: { text: string }) => Promise<void> }
+    if (nav.share) {
+      try {
+        await nav.share({ text: out.text })
+        return setInviteNote(`Sent. ${firstName}'s answers will shape the lists once ${firstName} finishes.`)
+      } catch {
+        /* closed the share sheet: fall through to copy */
+      }
+    }
+    await navigator.clipboard?.writeText(out.text).catch(() => null)
+    setInviteNote(`Copied. Paste it in a text to ${firstName}.`)
+  }
   const toCheck = [...lists.bestFit, ...lists.opportunities].filter((c, i, all) => mine[c.id]?.reaction === "maybe" && all.findIndex((x) => x.id === c.id) === i)
   const list = (id: string, title: string, sub: string, cards: ListCard[]) =>
     cards.length ? (
@@ -245,6 +263,53 @@ export function PriorityLists({
         </a>
       </div>
       <p className="text-xs text-white/50">{lists.shapedBy}{canReact ? " React to each one. Worth a closer look saves it to your My List." : ""}</p>
+      {lists.inviteAthlete && !readOnly ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#D3B574]/30 bg-[#D3B574]/[0.06] p-3">
+          <p className="min-w-0 flex-1 text-xs text-white/75">
+            {firstName} has a short set to answer too. {firstName}&apos;s answers make these lists better, and {firstName} chooses what you see.
+          </p>
+          <button type="button" onClick={invite} className="shrink-0 rounded-lg bg-[#D3B574] px-3 py-1.5 text-xs font-black text-[#0A1628]">
+            Send {firstName} the link
+          </button>
+          {inviteNote ? <p className="w-full text-[11px] text-white/60">{inviteNote}</p> : null}
+        </div>
+      ) : null}
+      {lists.alignment ? (
+        <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] p-3" id="cc-alignment">
+          <h3 className="text-sm font-black">Where you and {lists.otherLabel === "Your parent" ? "your parent" : lists.otherLabel} line up</h3>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            {lists.alignment.agree.length ? (
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-wide text-emerald-300/80">You agree</p>
+                <ul className="mt-1 space-y-1 text-xs leading-4">
+                  {lists.alignment.agree.map((l) => (
+                    <li key={l.text} className="flex gap-1.5 text-white/80">
+                      <Check className="mt-px h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden />
+                      {l.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {lists.alignment.differ.length ? (
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-wide text-amber-200/80">Worth talking through</p>
+                <ul className="mt-1 space-y-1 text-xs leading-4">
+                  {lists.alignment.differ.map((l) => (
+                    <li key={l.text} className="flex gap-1.5 text-amber-100/85">
+                      <span className="mt-px w-3.5 shrink-0 text-center font-black" aria-hidden>
+                        ≠
+                      </span>
+                      {l.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+          <p className="mt-2 text-[11px] text-white/40">From answers you each shared. Coaches never see any of this.</p>
+        </div>
+      ) : null}
       {savedCount < FIRST_LIST_GOAL ? <FirstListProgress count={savedCount + newlySaved} firstName={firstName} className="mt-3" /> : null}
       {list("cc-best", "Best fit", `Levels you're open to, ranked by what you said matters most, where ${firstName}'s results fit.`, lists.bestFit)}
       {list("cc-opps", "Opportunities worth pursuing", `Where there's evidence a program could use ${firstName}: a projected opening at the weight, a coach-posted need, or coaches viewing the profile.`, lists.opportunities)}
