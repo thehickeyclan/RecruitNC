@@ -138,7 +138,13 @@ const ASSOCIATIONS: Record<
    * Georgia private-school title.
    */
   GA: { public: "GHSA", independent: ["GIAA"] },
-  TN: { public: "TSSAA" },
+  /*
+   * Tennessee was declared twice in this object - a bare `TN: { public: "TSSAA" }` here and the
+   * full entry further down - and the build warned about it on every run. The later one wins in
+   * JavaScript, so Tennessee's DII handling was live and correct, but only by position: moving
+   * either line would have silently dropped independentClassifications from a LIVE state and
+   * turned its DII results before freshman year back into namesake flags. The dead one is gone.
+   */
   NE: { public: "NSAA" },
   CO: { public: "CHSAA" },
   UT: { public: "UHSAA" },
@@ -158,6 +164,62 @@ const ASSOCIATIONS: Record<
    * season, and 85 resolved placer keys imply a grade of 8 or below in a placed season.
    */
   ND: { public: "NDHSAA", middleSchoolVarsity: true },
+  /*
+   * Washington's association is WIAA, the same initials Wisconsin's uses. Nothing here
+   * disambiguates them, so event keys carry the state: wa-wiaa-states-2026, wi-wiaa-states-2026.
+   * IHSAA is worse - Idaho, Indiana and Iowa all three.
+   *
+   * WIAA rule 18.21.0 admits eighth graders at the varsity level through feeder-school
+   * participation. Eleven print in the 2024 tabs alone and twelve resolved placer keys imply a
+   * pre-freshman season, so they are data.
+   */
+  WA: { public: "WIAA", middleSchoolVarsity: true },
+  KS: { public: "KSHSAA" },
+  OR: { public: "OSAA" },
+  CA: { public: "CIF" },
+  /*
+   * MHSA by-laws allow eighth-grade participation at the high-school level on a school request
+   * authorized by the Executive Director, and Montana does not treat it as a formality: the 2026
+   * meet crowned eighth-grade champions in two divisions (Scarlett Hoiness, Laurel, girls 235;
+   * Crew O'Connor, Butte, AA 103). 47 resolved placer keys imply a placing at grade 8 or below.
+   */
+  MT: { public: "MHSA", middleSchoolVarsity: true },
+  WY: { public: "WHSAA" },
+  /*
+   * Nevada is the opposite case and worth stating so nobody adds the flag later: NAC 385B.706
+   * does NOT admit eighth graders to varsity, so an '8th' print in a Nevada file is a defect to
+   * chase, not data to keep.
+   */
+  NV: { public: "NIAA" },
+  /*
+   * NMAA bylaw 6.4.1 permits eighth-grade participation at the high-school level, and up to two
+   * of the ten consecutive eligibility semesters may be spent in grade 8. 21 resolved placer keys
+   * imply a placing at grade 8 or below.
+   */
+  NM: { public: "NMAA", middleSchoolVarsity: true },
+  AK: { public: "ASAA" },
+  HI: { public: "HHSAA" },
+  /*
+   * Ohio, Illinois and Wisconsin were built on 2 November and registered in brand.ts on the 5th,
+   * but never given an association here - so every key they wrote was whatever their files
+   * spelled, with nothing in the code to disambiguate it.
+   *
+   * Wisconsin is the one that mattered. Its association is WIAA, the same as Washington's, and
+   * championshipKeySlug only prefixes the state when two registered states share the acronym.
+   * With Wisconsin absent, Washington's import would have written bare `wiaa-states-2024/25/26`
+   * - the keys Wisconsin's own bouts already occupy - and that importer deletes by event_key
+   * before it inserts. Washington would have taken Wisconsin's championships with it.
+   *
+   * Registering Wisconsin makes both keys state-prefixed before either state writes a bout.
+   * Checked at the time: `other_tournament_bouts` holds no `wiaa` key at all, so Wisconsin's
+   * championship bouts have never been imported and nothing needed re-keying - the collision was
+   * ahead of us, not behind.
+   *
+   * Illinois is IHSA with one A, distinct from the IHSAA that Idaho, Indiana and Iowa share.
+   */
+  OH: { public: "OHSAA" },
+  IL: { public: "IHSA" },
+  WI: { public: "WIAA" },
   /*
    * FHSAA admits middle schoolers to varsity, so an 8th-grade result is data, not a defect. The
    * readiness gate flagged nine as "results before freshman year" until this was set, and the

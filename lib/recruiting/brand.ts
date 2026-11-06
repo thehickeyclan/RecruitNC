@@ -171,6 +171,33 @@ export const RECRUITING_BRAND = {
     { code: "AZ", name: "Arizona", live: false },
     { code: "SD", name: "South Dakota", live: false },
     { code: "ND", name: "North Dakota", live: false },
+    /*
+     * The last ten, built in one night (Muse, 5-6 November 2026) and registered together. With
+     * these the list covers all fifty states: 38 built before this wave, 12 in it.
+     *
+     * Washington is the largest of the ten and the reason every event key is now state-prefixed:
+     * its association is WIAA, the same initials as Wisconsin's, and IHSAA is Idaho, Indiana and
+     * Iowa all three. Keys read <state>-<association>-states-<year> from here on.
+     *
+     * California is the one to read before trusting: 3,008 entrants but only 125 mint athletes,
+     * because the CIF state meet is an invitational on top of ten section tournaments and its
+     * girls grade prints disagree between the 2025 and 2026 registrations for ~70 wrestlers.
+     * Those keys ship blank and named rather than guessed.
+     *
+     * Alaska is the only one of the ten that does not meet the entrant-year standard: 77.5%,
+     * entirely because its December 2025 tournament lives on a mirror source that prints no
+     * grades at all. 2024 and 2025 are both around 95%.
+     */
+    { code: "WA", name: "Washington", live: false },
+    { code: "KS", name: "Kansas", live: false },
+    { code: "OR", name: "Oregon", live: false },
+    { code: "CA", name: "California", live: false },
+    { code: "MT", name: "Montana", live: false },
+    { code: "WY", name: "Wyoming", live: false },
+    { code: "NV", name: "Nevada", live: false },
+    { code: "NM", name: "New Mexico", live: false },
+    { code: "AK", name: "Alaska", live: false },
+    { code: "HI", name: "Hawaii", live: false },
   ],
 } as const
 

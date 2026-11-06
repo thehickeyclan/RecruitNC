@@ -56,17 +56,36 @@ fi
 echo; echo "--- $STATE: qualifiers ---"
 npx tsx scripts/import-state-qualifiers.ts "$QUAL"/*.csv $WRITE_FLAG
 
+# The build's own grouping of keys into real athletes, where the container ships one. Without it
+# the mint falls back to our matcher, and the matcher has already lost: Colorado minted five
+# wrestlers twice (Ayla Hampton, Connor Simonds, Drake VomBaur, JR Ortega, Oz Nowick, Renee
+# Hudson) because the first five containers were run without this flag. A canonical id only ever
+# joins keys, so passing it cannot merge two different wrestlers.
+CANON_FLAG=()
+MINTLIST="$(find "$WORK/unzipped" -maxdepth 2 -type f -name "${STATE}-mint-list.csv" | head -1)"
+if [[ -n "$MINTLIST" ]] && head -1 "$MINTLIST" | grep -q canonical_athlete_id; then
+  CANON_FLAG=(--canonical "$MINTLIST")
+  echo "  canonical grouping: $(basename "$MINTLIST")"
+else
+  echo "  canonical grouping: NONE SHIPPED (matcher is the only guard)"
+fi
+
 for SEASON in 2026 2025 2024; do
   echo; echo "--- $STATE: mint $SEASON ---"
-  npx tsx scripts/mint-state-placer-profiles.ts --state "$STATE" --season "$SEASON" --only-with-class-year $WRITE_FLAG
+  # bash 3.2 ships on macOS and treats an empty array as unset under `set -u`, so the expansion
+  # below is the only form that survives both an empty and a populated CANON_FLAG.
+  npx tsx scripts/mint-state-placer-profiles.ts --state "$STATE" --season "$SEASON" --only-with-class-year ${CANON_FLAG[@]+"${CANON_FLAG[@]}"} $WRITE_FLAG
 done
 
 echo; echo "--- $STATE: bouts ---"
 npx tsx scripts/import-state-championship-bouts.ts --state "$STATE" --dir "$WORK/bouts" $WRITE_FLAG
 
 if [[ -n "$WRITE_FLAG" ]]; then
-  echo; echo "--- $STATE: readiness ---"
-  npx tsx scripts/state-readiness.ts --state "$STATE" --all | grep -E "GATE|INFO" || true
+  # The accounted file goes in BEFORE the gate reads it. Run the other way round and the gate
+  # judges the state against the previous file, or against none: Alaska read 93 of 170 placers
+  # accounted and Montana's would have read the same, when both in fact name every one.
   ACC="$(find "$WORK/unzipped" -maxdepth 2 -type f -name "${STATE}-accounted.json" | head -1)"
   if [[ -n "$ACC" ]]; then cp "$ACC" "docs/state-launch/${STATE}-accounted.json"; echo "  accounted file copied in"; fi
+  echo; echo "--- $STATE: readiness ---"
+  npx tsx scripts/state-readiness.ts --state "$STATE" --all | grep -E "GATE|INFO" || true
 fi
