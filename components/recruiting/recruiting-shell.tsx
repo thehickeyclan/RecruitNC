@@ -188,7 +188,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
             </span>
           )}
           <BrandLockup />
-          <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">{recruitingCoverage(onRw)} wrestling</span>
+          <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">Wrestling in {recruitingCoverage(onRw)}</span>
         </a>
         <RecruitingSearch className="hidden min-w-0 max-w-md flex-1 md:block" />
         <div className="ml-auto flex items-center gap-1">

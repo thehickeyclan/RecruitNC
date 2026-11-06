@@ -35,7 +35,7 @@ export default async function CoachReportsIndex({ searchParams }: { searchParams
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
       <h1 className="text-2xl font-black text-white md:text-3xl">Reports</h1>
-      <p className="mt-1 text-sm text-white/60">Tournament reports on every {recruitingCoverage(onRw)} wrestler. Your recruits (wrestlers you or your staff starred) are marked with a {onRw ? "lime" : "gold"} star.</p>
+      <p className="mt-1 text-sm text-white/60">Tournament reports on every wrestler in {recruitingCoverage(onRw)}. Your recruits (wrestlers you or your staff starred) are marked with a {onRw ? "lime" : "gold"} star.</p>
       <div className="mt-5 grid gap-3">
         {reports.map((def) => {
           const file = loadCoachReportFile(def)

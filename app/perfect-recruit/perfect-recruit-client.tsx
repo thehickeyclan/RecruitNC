@@ -39,7 +39,7 @@ function AccessPanel({ signedOut }: { signedOut: boolean }) {
         </div>
         <h1 className="text-xl font-black">{signedOut ? "Sign in to set your perfect recruit" : "The perfect recruit is for college coaches"}</h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/60">
-          Tell us what your program needs and every {recruitingCoverage(onRw)} wrestler is flagged against it. Free for verified college coaching staff.
+          Tell us what your program needs and every wrestler in {recruitingCoverage(onRw)} is flagged against it. Free for verified college coaching staff.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {signedOut ? (
@@ -181,7 +181,7 @@ export default function PerfectRecruitClient({
             ) : (
               <>
                 <p className="mt-2 text-sm text-white/60">
-                  Checked {checked.toLocaleString()} {recruitingCoverage(onRw)} wrestlers in the current classes.
+                  Checked {checked.toLocaleString()} wrestlers in the current classes, across {recruitingCoverage(onRw)}.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(
