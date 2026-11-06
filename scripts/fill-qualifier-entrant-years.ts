@@ -13,9 +13,16 @@
  * its own guard refuses the write for exactly that reason ("WOULD LOSE ENRICHMENT"), which is how
  * Colorado's 446 linked rows survived this script's first attempt. So this fills in place instead:
  *
- *   - Rows are matched on the Flo participant id (`source_athlete_id`), not on a name. The same id
- *     space runs through the brackets, the tabs and the rebuilt file, so a match is the same
- *     registration rather than a name that looks alike.
+ *   - Rows are matched on the Flo participant id (`source_athlete_id`) wherever the live row has
+ *     one. The same id space runs through the brackets, the tabs and the rebuilt file, so a match
+ *     is the same registration rather than a name that looks alike.
+ *   - Where the live row has NO id, a second pass matches on season + weight + name. Whole slices
+ *     were imported before we stored participant ids and no amount of evidence could reach them:
+ *     Indiana's 2025 girls and both 2026 slices carry zero ids between them, so a container that
+ *     filled Indiana perfectly landed 112 rows out of 448 and the state sat at 62.5%. Ohio's 2026,
+ *     Wisconsin's 2026 and Illinois' girls are all the same shape - about 1,140 rows that the id
+ *     match can never see. The fallback is fenced: the key must be unique on BOTH sides within the
+ *     one season, so a weight with two wrestlers of the same name fills neither.
  *   - FILL ONLY. A row that already carries a year is never changed, and a file that disagrees
  *     with a year we hold is printed as a disagreement and left alone. Re-issued files have been
  *     older than the database before (SC's 31 Oct addendum would have blanked 916 years).
@@ -47,6 +54,22 @@ if (!STATE || !DIR || !fs.existsSync(DIR)) {
   process.exit(1)
 }
 
+/**
+ * The fallback key. Deliberately narrow: one season, one weight, one name. Not a fuzzy match -
+ * the name must agree once apostrophes and punctuation are folded, and Flo mangles apostrophes
+ * ("D?Ettore") so those are folded the way the rest of the platform folds them.
+ */
+const nameKey = (season: unknown, weight: unknown, name: string) =>
+  [
+    String(season ?? "").trim(),
+    String(weight ?? "").trim(),
+    String(name ?? "")
+      .replace(/(?<=\p{L})[?\uFFFD](?=\p{L})/gu, "'")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim(),
+  ].join("|")
+
 function parseCsv(text: string): string[][] {
   const rows: string[][] = []
   let row: string[] = [], cur = "", q = false
@@ -68,6 +91,8 @@ async function main() {
 
   /** The rebuilt file's year for each Flo participant id, with the name for the printout. */
   const fileYear = new Map<string, { year: number; name: string }>()
+  /** The same years keyed by season+weight+name, for live rows that carry no participant id. */
+  const fileByName = new Map<string, { year: number; name: string } | null>()
   const files = fs.readdirSync(DIR).filter((f) => f.endsWith(".csv")).sort()
   for (const f of files) {
     const rows = parseCsv(fs.readFileSync(path.join(DIR, f), "utf8"))
@@ -75,12 +100,20 @@ async function main() {
     const iId = head.indexOf("source_wrestler_id")
     const iYear = head.indexOf("grad_year") >= 0 ? head.indexOf("grad_year") : head.indexOf("class_year")
     const iFirst = head.indexOf("first_name"), iLast = head.indexOf("last_name")
-    if (iId < 0 || iYear < 0) { console.log(`  ${f}: no source_wrestler_id or grad_year column, skipped`); continue }
+    const iSeason = head.indexOf("season"), iWeight = head.indexOf("weight")
+    if (iYear < 0) { console.log(`  ${f}: no grad_year column, skipped`); continue }
     for (const r of rows.slice(1)) {
       const id = (r[iId] ?? "").trim()
       const year = Number((r[iYear] ?? "").trim())
-      if (!id || !year) continue
-      fileYear.set(id, { year, name: `${r[iFirst] ?? ""} ${r[iLast] ?? ""}`.trim() })
+      if (!year) continue
+      const name = `${r[iFirst] ?? ""} ${r[iLast] ?? ""}`.trim()
+      if (id) fileYear.set(id, { year, name })
+      if (iSeason >= 0 && iWeight >= 0 && name) {
+        const k = nameKey(r[iSeason], r[iWeight], name)
+        // A key two different wrestlers answer to is poisoned, not resolved.
+        if (!fileByName.has(k)) fileByName.set(k, { year, name })
+        else if (fileByName.get(k)!.year !== year) fileByName.set(k, null)
+      }
     }
   }
   console.log(`${files.length} files · ${fileYear.size} participant ids carry a year in the rebuilt set`)
@@ -90,7 +123,7 @@ async function main() {
   for (let page = 0; page < 60; page++) {
     let q = sb
       .from("state_tournament_placers")
-      .select("id, season, wrestler_name, grad_year, source_athlete_id, athlete_id")
+      .select("id, season, weight, wrestler_name, grad_year, source_athlete_id, athlete_id")
       .eq("state", STATE)
       .order("id")
       .limit(1000)
@@ -104,13 +137,29 @@ async function main() {
   const held = live.filter((r) => r.grad_year).length
   console.log(`${live.length} live rows · ${held} already carry a year · ${live.filter((r) => r.athlete_id).length} linked to a profile\n`)
 
+  /* How many live rows answer to each name key: a key two of ours share is refused too. */
+  const liveKeyCount = new Map<string, number>()
+  for (const r of live) {
+    if (r.source_athlete_id) continue
+    const k = nameKey(r.season, r.weight, String(r.wrestler_name ?? ""))
+    liveKeyCount.set(k, (liveKeyCount.get(k) ?? 0) + 1)
+  }
+
   const toFill: Array<{ id: string; year: number }> = []
   const disagree: string[] = []
-  let noId = 0, noFileYear = 0
+  let noId = 0, noFileYear = 0, byName = 0, ambiguous = 0
   for (const r of live) {
     const sid = r.source_athlete_id ? String(r.source_athlete_id) : ""
-    if (!sid) { noId++; continue }
-    const hit = fileYear.get(sid)
+    let hit = sid ? fileYear.get(sid) : undefined
+    if (!sid) {
+      // No id on our row: the id match can never see it. Fall back to season + weight + name.
+      const k = nameKey(r.season, r.weight, String(r.wrestler_name ?? ""))
+      const byNameHit = fileByName.get(k)
+      if (byNameHit === null || (liveKeyCount.get(k) ?? 0) > 1) { ambiguous++; noId++; continue }
+      if (!byNameHit) { noId++; continue }
+      hit = byNameHit
+      if (!r.grad_year) byName++
+    }
     if (!hit) { noFileYear++; continue }
     if (r.grad_year) {
       // Never overwrite. A file that contradicts a year we hold is a disagreement for a human.
@@ -120,7 +169,8 @@ async function main() {
     toFill.push({ id: String(r.id), year: hit.year })
   }
 
-  console.log(`would fill           : ${toFill.length}`)
+  console.log(`would fill           : ${toFill.length}${byName ? ` (${byName} of them by season+weight+name, the row having no id)` : ""}`)
+  if (ambiguous) console.log(`refused as ambiguous : ${ambiguous} (two wrestlers answer to one season+weight+name)`)
   console.log(`already held, agreed : ${live.length - toFill.length - disagree.length - noId - noFileYear}`)
   console.log(`DISAGREEMENTS (left alone, for a human): ${disagree.length}`)
   if (disagree.length) console.log(`   ${disagree.slice(0, 40).join("\n   ")}`)
