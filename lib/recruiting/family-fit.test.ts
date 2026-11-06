@@ -84,11 +84,11 @@ describe("best fit for a family", () => {
     expect(costFit({ netPrice: 20_000, netNote: "", published: 27_000, budget: null }).status).toBe("unknown")
   })
 
-  it("checks major, distance, size and setting against what the family said", () => {
+  it("checks distance, size and setting against what the family said; majors never count", () => {
     const profile = { ...EMPTY_PROFILE, majors: ["52", "14"], maxMiles: 300, size: "medium" as const, settings: ["town" as const] }
     const line = goalsFit(profile, { majors: ["52", "26"], miles: 120, undergrads: 8_000, setting: "Town" })
-    expect(line.status).toBe("stretch")
-    expect(line.text).toBe("Fits: offers business, 120 miles from home, medium (8,000 undergraduates), town. Doesn't: no engineering degree.")
+    expect(line.status).toBe("fit")
+    expect(line.text).toBe("Fits: 120 miles from home, medium (8,000 undergraduates), town.")
     expect(goalsFit(EMPTY_PROFILE, { majors: null, miles: null, undergrads: null, setting: null }).status).toBe("unknown")
   })
 

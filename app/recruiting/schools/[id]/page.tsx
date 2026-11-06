@@ -136,7 +136,7 @@ function SnapshotRow({ icon: Icon, label, value, sub }: { icon: LucideIcon; labe
   )
 }
 
-const SURVEY_ICON: Record<SurveyLine["key"], LucideIcon> = { level: Trophy, distance: MapPin, major: BookOpen, feel: Building2, cost: DollarSign }
+const SURVEY_ICON: Record<SurveyLine["key"], LucideIcon> = { level: Trophy, distance: MapPin, feel: Building2, cost: DollarSign }
 
 function FitRow({ icon: Icon, label, line, athletic }: { icon: LucideIcon; label: string; line: FitLine; athletic?: boolean }) {
   const status = FIT_LABEL[athletic ? "athletic" : "other"][line.status]
