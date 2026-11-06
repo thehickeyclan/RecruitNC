@@ -11,11 +11,11 @@ import type { PublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { buildCompetitionGrade, type CompetitionGrade } from "@/lib/competition-grade"
 import { accoladesFrom, offSeasonEvents, type Accolades } from "@/lib/profile/profile-summary"
 import { buildNchsaaStateRows, buildTournamentRows, type TournamentRow } from "@/lib/profile/tournament-rows"
-import { isNationalEvent, summarizeCompetition } from "@/lib/wrestling-style"
+import { countNationalEventYears, isNationalEvent, summarizeCompetition } from "@/lib/wrestling-style"
 
 type NchsaaResult = { year: number; place: number | null; classification: string; weight_class: string }
 
-export type ProfileSummaryFacts = { accolades: Accolades; offSeasonEvents: number; offSeasonCareer: number }
+export type ProfileSummaryFacts = { accolades: Accolades; offSeasonEvents: number; offSeasonCareer: number; nationalEventYears?: number }
 
 export type ProfileRecord = {
   nchsaaResults: NchsaaResult[]
@@ -73,6 +73,8 @@ export function buildProfileRecord(athlete: PublicAthleteProfile): ProfileRecord
     offSeasonCareer: new Set(
       profileTournamentRows.filter((r) => isNationalEvent(r.event)).map((r) => `${r.event.replace(/^\d{4}\s+/, "")}|${r.year}`),
     ).size,
+    // Fargo every summer is national every year: counted by event-year, not by event name.
+    nationalEventYears: countNationalEventYears(profileTournamentRows),
   }
 
   return { nchsaaResults, profileTournamentRows, stateTournamentRows, competition, summaryFacts }
@@ -86,11 +88,11 @@ export function buildProfileRecord(athlete: PublicAthleteProfile): ProfileRecord
 export function profileStrengthOfCompetition(input: {
   significantWins: number
   competition: { nationalEvents: readonly unknown[] } | null | undefined
-  summaryFacts: { offSeasonCareer: number } | null | undefined
+  summaryFacts: { offSeasonCareer: number; nationalEventYears?: number } | null | undefined
 }): CompetitionGrade {
   return buildCompetitionGrade({
     rankedWins: input.significantWins,
-    nationalEvents: input.competition?.nationalEvents.length ?? 0,
+    nationalEvents: input.summaryFacts?.nationalEventYears ?? input.competition?.nationalEvents.length ?? 0,
     offSeasonEvents: input.summaryFacts?.offSeasonCareer ?? 0,
   })
 }

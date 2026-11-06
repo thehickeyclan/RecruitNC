@@ -21,6 +21,7 @@
 
 import type { SeasonStrength } from "@/lib/competition-strength"
 import { buildCompetitionGrade, type CompetitionGrade } from "@/lib/competition-grade"
+import { nationalEventName } from "@/lib/wrestling-style"
 
 /** Events ingested regardless of which team a wrestler travelled with. */
 const TEAM_BLIND_EVENTS = [
@@ -126,7 +127,8 @@ export function buildStrengthOfCompetition(input: {
     offSeasonEvents: offSeason,
     grade: buildCompetitionGrade({
       rankedWins: rankedWins.total,
-      nationalEvents: nationalEvents.length,
+      // Event-years, like the profile: Fargo two summers running is two national events.
+      nationalEvents: new Set(input.results.filter((r) => isTeamBlindEvent(r.event)).map((r) => `${nationalEventName(r.event)}|${r.year}`)).size,
       offSeasonEvents: offSeason,
     }),
     credentialedLosses: input.significantLosses.length,
