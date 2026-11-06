@@ -5061,6 +5061,446 @@
    "best_place": 3,
    "reason_class": "graduated_class",
    "reason": "Class of 2026 - graduated, outside the 2027-2030 current-class mint window, so no profile was minted; placement stored by design. Placed 2024,2025,2026 (best place 3). Year resolved from tournament grade prints (evidence: 2024: [2026]; 2025: [2026]; 2026: [2026])."
+  },
+  {
+   "name": "Braden Johnson",
+   "school": "Cumberland",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Carson Neubert",
+   "school": "Luxemburg-Casco",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Nathan Henderson",
+   "school": "Holmen",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 3,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 3). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Camden Rugg",
+   "school": "Union Grove",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Liam Carey",
+   "school": "Mineral Point",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Niko Kleinschmidt",
+   "school": "D.C. Everest",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Joseph Jeanquart",
+   "school": "Luxemburg-Casco",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 4). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Bryston Scoles",
+   "school": "Kewaskum",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Tucker Athey",
+   "school": "Bay Port",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Landen Bogard",
+   "school": "East Troy",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Landen Sheppard",
+   "school": "Neenah",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 3,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 3). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Gavin Slark",
+   "school": "Markesan",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Carson Weiler",
+   "school": "Auburndale",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 5,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 5). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Jordan Lisiecki",
+   "school": "Lomira",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 4). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Bryson Busler",
+   "school": "Watertown",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Kolten Bollig",
+   "school": "Evansville",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Max Gonzalez",
+   "school": "East Troy",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2026",
+   "best_place": 3,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2026 (best place 3). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Aidan Peters",
+   "school": "Seymour",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Bently Nowak",
+   "school": "Coleman",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 3,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 3). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Westin Ingham",
+   "school": "Amery",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Shane Rochon",
+   "school": "Dodgeville",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Elliot Havlish",
+   "school": "Osceola",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 5,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 5). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Rex Lancaster",
+   "school": "Holmen",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Deangelo Clay",
+   "school": "Monona Grove/McFarland",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Holdyn Volkman",
+   "school": "Shiocton",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 6,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 6). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Reed Falk",
+   "school": "Middleton",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Collin Frey",
+   "school": "Evansville",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Martez Sheard",
+   "school": "Aquinas",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Cade Aaberg",
+   "school": "Oregon",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Jack Falk",
+   "school": "Pulaski",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Jaydon LeNoble",
+   "school": "Weyauwega-Fremont",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2026",
+   "best_place": 3,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2026 (best place 3). Year resolved from tournament grade prints (evidence: 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Preston Krueger",
+   "school": "New London",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 3,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 3). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Eli Maier",
+   "school": "Mount Horeb/Barneveld",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Owen Schacht",
+   "school": "Mishicot",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Aidan Aure",
+   "school": "Menomonie",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Easton Felchlin",
+   "school": "Wrightstown",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 4). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Oliver Larson",
+   "school": "River Falls",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 5,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 5). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Memphis Burkhalter",
+   "school": "Mineral Point",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 4). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Parker Spierings",
+   "school": "Brillion",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2024, 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2024: [2027]; 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Taylor Underwood",
+   "school": "Marathon",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Cristian Rodriguez Salgado",
+   "school": "Xavier",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2026",
+   "best_place": 4,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2026 (best place 4). Year resolved from tournament grade prints (evidence: 2026: [2027]). NAME FORM: this entry is filed under 'Cristian Rodriguez Salgado', the platform gate's name form. The build ledger key 'Cristian Rodríguez sa' is a truncation artifact of the WIAA PDF / USA Bracketing reprint text extraction behind the WI 2026 build - the name cell garbled to 'Rodríguez' plus two stray glyphs, leaving the fragment 'sa'. Independent prints give the full name: Flo bracket prints read 'Cristian Rodriguez-Salgado' (Xavier, HS Sophomore), and in-season records read 'Cristian Rodriguez Salgado' / 'Cristian Rodríguez salgado' (Xavier). Identity is concordant on school (Xavier), weight (106), season (2026), place (4th) and class (2027) - one athlete; the name form is documented here so it is not mistaken for a guess. CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Trig White",
+   "school": "Chetek-Weyer./Prairie Farm",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 4,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 4). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Murphy Beyer",
+   "school": "Freedom Wrestling",
+   "gender": "boys",
+   "class_year": 2027,
+   "seasons_placed": "2025,2026",
+   "best_place": 2,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2027 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 2). Year resolved from tournament grade prints (evidence: 2025: [2027]; 2026: [2027]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
+  },
+  {
+   "name": "Zahn Beal",
+   "school": "Arrowhead",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2025,2026",
+   "best_place": 1,
+   "reason_class": "eligible_flag_no_mint_receipt",
+   "reason": "Class of 2028 (current class) - excluded from WI-accounted.json on the build's mint_eligible flag alone; no mint receipt (no canonical_athlete_id or profile id) exists in the build artifacts for this key. Placed 2025, 2026 (best place 1). Year resolved from tournament grade prints (evidence: 2025: [2028]; 2026: [2028]). CONFIRMED by the platform gate 2026-11-06: no profile exists for this placer (Wisconsin placer-accounting gate 95/147; this key is one of the 44 eligible_flag_no_mint_receipt keys the gate named as unaccounted). Appended 2026-11-06 from the 2026-11-06 exclusion-basis audit draft, its draft status superseded by that confirmation."
   }
  ]
 }
