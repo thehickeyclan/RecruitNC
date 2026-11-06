@@ -139,7 +139,17 @@ const ASSOCIATIONS: Record<
    */
   GA: { public: "GHSA", independent: ["GIAA"] },
   TN: { public: "TSSAA" },
-  FL: { public: "FHSAA" },
+  /*
+   * FHSAA admits middle schoolers to varsity, so an 8th-grade result is data, not a defect. The
+   * readiness gate flagged nine as "results before freshman year" until this was set, and the
+   * evidence is that they are real young wrestlers rather than namesake collisions: every one is
+   * at a lightest weight (100-113 and two girls at 135/140), every one is a qualifier who did not
+   * place, their schools are K-12 academies - Admiral Farragut, SLAM, Mater Lakes, Bell Creek,
+   * Bolles, North Bay Haven, Lincoln Park - and Andrew Makeev appears in both 2025 at 106 and
+   * 2026 at 113 for The Bolles School, moving up a weight the way a continuing wrestler does and
+   * a namesake does not.
+   */
+  FL: { public: "FHSAA", middleSchoolVarsity: true },
   AL: { public: "AHSAA" },
   LA: { public: "LHSAA" },
   MS: { public: "MHSAA" },
