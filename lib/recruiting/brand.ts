@@ -36,8 +36,8 @@ export const RECRUITING_BRAND = {
      * 224 Maryland profiles were unreachable by anybody, including the people checking them.
      */
     { code: "MD", name: "Maryland", live: false },
-    { code: "WV", name: "West Virginia", live: false },
-    { code: "DE", name: "Delaware", live: false },
+    { code: "WV", name: "West Virginia", live: true, ranked: false },
+    { code: "DE", name: "Delaware", live: true, ranked: false },
     /*
      * Live 5 Nov 2026, the same day as Tennessee and the largest state we have opened: 1,244
      * profiles against South Carolina's 875 and Virginia's 825. Open, not ranked - no Georgia
@@ -48,8 +48,8 @@ export const RECRUITING_BRAND = {
      * placers are accounted for and no current-class profile is missing a school or a gender.
      */
     { code: "GA", name: "Georgia", live: true, ranked: false },
-    { code: "FL", name: "Florida", live: false },
-    { code: "AL", name: "Alabama", live: false },
+    { code: "FL", name: "Florida", live: true, ranked: false },
+    { code: "AL", name: "Alabama", live: true, ranked: false },
     { code: "LA", name: "Louisiana", live: false },
     { code: "MS", name: "Mississippi", live: false },
     { code: "KY", name: "Kentucky", live: false },
@@ -57,9 +57,9 @@ export const RECRUITING_BRAND = {
     { code: "NJ", name: "New Jersey", live: false },
     { code: "NY", name: "New York", live: false },
     { code: "CT", name: "Connecticut", live: false },
-    { code: "MA", name: "Massachusetts", live: false },
+    { code: "MA", name: "Massachusetts", live: true, ranked: false },
     { code: "RI", name: "Rhode Island", live: false },
-    { code: "NH", name: "New Hampshire", live: false },
+    { code: "NH", name: "New Hampshire", live: true, ranked: false },
     { code: "VT", name: "Vermont", live: false },
     { code: "ME", name: "Maine", live: false },
     /*
@@ -111,7 +111,7 @@ export const RECRUITING_BRAND = {
      * for 2025, so their 2024 placements carry the classification "Girls". Top 8 in all 196
      * brackets, and every figure lands exactly on the scoping ceiling in all three years.
      */
-    { code: "IA", name: "Iowa", live: false },
+    { code: "IA", name: "Iowa", live: true, ranked: false },
     /*
      * Missouri is the first state in the lineage to resolve every placer key from the payloads'
      * own grade prints: 1,054 of 1,054, no conflicts and nothing not found. All 192 champion keys
@@ -145,7 +145,7 @@ export const RECRUITING_BRAND = {
      * Trackwrestling for 2024/2025 and USA Bracketing for 2026, against The Guillotine's official
      * results. One association, MSHSL. Top 6, three classes plus girls.
      */
-    { code: "MN", name: "Minnesota", live: false },
+    { code: "MN", name: "Minnesota", live: true, ranked: false },
     /*
      * Ohio, Illinois and Wisconsin were built on 2 Nov and their packages sat in Downloads
      * unregistered, so every tool that reads this list treated them as states we had never
@@ -335,9 +335,23 @@ export function rankingsCoverage(onRecruitWrestlers = false): string {
   return new Intl.ListFormat("en-US", { style: "long", type: "conjunction" }).format(names)
 }
 
-/** "North Carolina", "North Carolina and South Carolina", "North Carolina, South Carolina, and Virginia". */
+/**
+ * "North Carolina", "North Carolina and South Carolina", and past six states, "13 states".
+ *
+ * Naming them all stopped working the moment eight states opened at once (6 November 2026). The
+ * string is read in two kinds of sentence - a list ("which states are covered?") and a count of
+ * what a coach is looking at - and a thirteen-item conjunction fits neither. Coach Home's lines
+ * now put it after a preposition for the same reason, so "across 13 states" and "across North
+ * Carolina" both read.
+ *
+ * The ceiling is six because today's five stay spelled out: North Carolina and South Carolina are
+ * what families know the product by, and collapsing them to "5 states" would have been a quiet
+ * downgrade of the two states that carry the brand.
+ */
+export const COVERAGE_NAMES_UP_TO = 6
 export function recruitingCoverage(onRecruitWrestlers = false): string {
   const names = liveStates(onRecruitWrestlers).map((s) => s.name)
+  if (names.length > COVERAGE_NAMES_UP_TO) return `${names.length} states`
   return new Intl.ListFormat("en-US", { style: "long", type: "conjunction" }).format(names)
 }
 

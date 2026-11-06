@@ -152,7 +152,7 @@ export function CollegeCommitmentsClient({
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
-      <CommitsHero icon={GraduationCap} title="College Commitments" subtitle={`Where ${coverage} wrestlers are wrestling next.`} />
+      <CommitsHero icon={GraduationCap} title="College Commitments" subtitle={`Where wrestlers in ${coverage} are wrestling next.`} />
 
       <div className="container mx-auto space-y-6 px-4 py-8">
         {/* The division breakdown is the division filter: tap a number to see who it counts. */}

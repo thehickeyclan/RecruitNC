@@ -43,7 +43,7 @@ export default async function AboutRecruitWrestlers() {
   const stats = await loadNationalStats().catch(() => null)
   const figures = stats
     ? [
-        { value: stats.wrestlers.toLocaleString(), label: `${recruitingCoverage(true)} wrestlers in the current classes` },
+        { value: stats.wrestlers.toLocaleString(), label: `wrestlers in the current classes, across ${recruitingCoverage(true)}` },
         { value: stats.programs.toLocaleString(), label: "college programs with coaches on RecruitWrestlers" },
         { value: stats.collegePrograms.toLocaleString(), label: "college wrestling programs on the map" },
       ]

@@ -214,7 +214,7 @@ export default async function ForCoaches({ searchParams }: { searchParams: Promi
           <p className="text-xs font-black uppercase tracking-[0.3em] text-[#A3E635]">For college coaches · free</p>
           <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Find, evaluate and recruit high school wrestlers.</h1>
           <p className="mt-5 max-w-2xl text-lg text-[#A8B3C5]">
-            Every {recruitingCoverage(true)} wrestler in the current classes, on the same platform as their families, with their results, the wins that matter, AI-written scouting summaries and a way to reach the family. Free for college coaching staff.
+            Every wrestler in the current classes across {recruitingCoverage(true)}, on the same platform as their families, with their results, the wins that matter, AI-written scouting summaries and a way to reach the family. Free for college coaching staff.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href={signup} className="rounded-xl bg-[#A3E635] px-6 py-3.5 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">

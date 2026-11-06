@@ -276,14 +276,14 @@ function WrestlerSearch({ athletes }: { athletes: CoachHomeData["athletes"] }) {
           </ul>
         ) : (
           <p className="mt-3 text-sm text-white/50">
-            No {recruitingCoverage(onRw)} wrestler in the current classes matches that.{" "}
+            No wrestler in the current classes matches that.{" "}
             <Link href="/prospects/all" className={`${GOLD} hover:underline`}>
               Browse all profiles
             </Link>
           </p>
         )
       ) : (
-        <p className="mt-2 text-xs text-white/40">{athletes.length.toLocaleString()} {recruitingCoverage(onRw)} wrestlers in the current classes.</p>
+        <p className="mt-2 text-xs text-white/40">{athletes.length.toLocaleString()} wrestlers in the current classes, across {recruitingCoverage(onRw)}.</p>
       )}
     </div>
   )
@@ -364,7 +364,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}><BrandName /> · Coach Home</p>
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">{data.coachName ? `Welcome, Coach ${data.coachName}` : "Welcome, Coach"}</h1>
             <p className="mt-1 text-sm text-white/55">
-              {data.program ? `${data.program} · ` : ""}Everything you use to recruit {recruitingCoverage(onRw)}, in one place.
+              {data.program ? `${data.program} · ` : ""}Everything you use to recruit across {recruitingCoverage(onRw)}, in one place.
             </p>
           </div>
           <BoardSwitch value={data.viewGender} className="hidden shrink-0 self-start sm:inline-flex" />
@@ -546,7 +546,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             href={profilesHref}
             icon={Users}
             title={womens ? "All women's profiles" : "All athlete profiles"}
-            body={`Every ${recruitingCoverage(onRw)} ${womens ? "women's " : ""}profile, with filters for class, weight and last competed.`}
+            body={`Every ${womens ? "women's " : ""}profile in ${recruitingCoverage(onRw)}, with filters for class, weight and last competed.`}
           />
           <Tool href="/college-commitments" icon={Users} title="College commitments" body="Who has committed where, this class and last." />
           <Tool
