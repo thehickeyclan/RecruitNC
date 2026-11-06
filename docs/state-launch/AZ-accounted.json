@@ -1,0 +1,16 @@
+{
+ "state": "AZ",
+ "association": "AIA",
+ "generated": "2026-11-05",
+ "generated_by": "Claude, from Muse's import note and the state-readiness gate output",
+ "purpose": "Every AZ placer key that reaches no profile or carries no year, named with its reason. Entrant-level years are still outstanding (1,590 of 3,808, 41.8%) - Muse's AZ year pass had not landed when this state was imported.",
+ "entries": [
+  {
+   "name": "Alexander Bermudez",
+   "school": "Desert Ridge High School",
+   "gender": "boys",
+   "reason": "repeat-print conflict, year held blank",
+   "evidence": "'HS Sophomore' printed on both surfaces in BOTH 2025 and 2026 - a repeat print, so one is wrong. He is a 2026 D1 finalist, so this one matters; it stays open until a discriminator exists. Named by Muse in the AZ import note."
+  }
+ ]
+}

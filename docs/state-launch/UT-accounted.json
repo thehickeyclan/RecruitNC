@@ -1,0 +1,37 @@
+{
+ "state": "UT",
+ "association": "UHSAA",
+ "generated": "2026-11-05",
+ "generated_by": "Claude, from Muse's import note and the state-readiness gate output",
+ "purpose": "Every UT placer key that reaches no profile or carries no year, named with its reason. Qualifiers imported from Muse's year-complete set: 6,215 of 6,260 rows carry a grad year (99.3%).",
+ "entries": [
+  {
+   "name": "Abigail Turner",
+   "school": "Uintah",
+   "gender": "girls",
+   "reason": "no print in any source, year blank",
+   "evidence": "One of three genuinely print-less keys in the UT build (Turner, Sanders, Fertig). No grade on either surface in any season; the six-key RankWrestlers probe returned nothing usable. 2026 placer, 130 #4. Not mint-eligible."
+  },
+  {
+   "name": "Kacey Stewart",
+   "school": "Milford",
+   "gender": "boys",
+   "reason": "print-chain conflict, year held blank",
+   "evidence": "A 2026 1A champion whose Jr -> Jr -> Sr prints derive {2025, 2026}. Exactly one print is wrong; neither year ships."
+  },
+  {
+   "name": "Coleman Thorson",
+   "school": "",
+   "gender": "boys",
+   "reason": "print-chain conflict, year held blank",
+   "evidence": "'HS Senior' printed in both 2025 and 2026 - a repeat print, so one of the two is wrong."
+  },
+  {
+   "name": "Tyler Rodriguez",
+   "school": "",
+   "gender": "boys",
+   "reason": "print-chain conflict, year held blank",
+   "evidence": "'HS Senior' printed in both 2025 and 2026, same repeat-print shape as Thorson."
+  }
+ ]
+}
