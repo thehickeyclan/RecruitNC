@@ -40,7 +40,7 @@ export function InlineAchievementsEditor({ otherHonours, onSave, onCancel }: Inl
         .filter(Boolean)
         .join("\n")
       await onSave({ other_honours: cleaned || null })
-      toast({ title: "Saved", description: "Your honours were updated." })
+      toast({ title: "Saved", description: "Your honors were updated." })
     } catch (error: any) {
       toast({
         title: "Could not save",
@@ -55,7 +55,7 @@ export function InlineAchievementsEditor({ otherHonours, onSave, onCancel }: Inl
   return (
     <div className="space-y-4 rounded-lg border border-border bg-muted p-4">
       <div>
-        <Label htmlFor="otherHonours">Other honours</Label>
+        <Label htmlFor="otherHonours">Other honors</Label>
         <p className="mb-2 mt-1 text-xs leading-5 text-muted-foreground">
           Conference and regional finishes, invitationals, career milestones, team titles — anything not covered by
           official results. Your state, NHSCA, Super 32 and Fargo results are added automatically and shown separately,
