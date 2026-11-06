@@ -159,7 +159,12 @@ export function ConditionalAuthGuard({
    * signed in. Only the page is public: the comparison itself comes from /api/compare, which still
    * refuses anyone without access, and the wrestler list is the one /prospects already shows.
    */
-  const publicExactRoutes = new Set(["/blue", "/create-profile", "/sample-scouting-report", "/compare"])
+  /*
+   * `/my-recruiting/priorities/join` is where a parent's invite lands for a wrestler with no account
+   * yet; it has to say whose it is and offer the sign-up. It shows a first name only, and only for a
+   * signed link; linking the profile still needs the wrestler's own account (lib/recruiting/priorities/invite-link.ts).
+   */
+  const publicExactRoutes = new Set(["/blue", "/create-profile", "/sample-scouting-report", "/compare", "/my-recruiting/priorities/join"])
   const isAuthRoute = path.startsWith("/auth/")
   const isPublicPrefix = publicRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
   const isPublicExact = publicExactRoutes.has(path)

@@ -17,6 +17,7 @@ import { collegeFitFor, loadFamilyFitContext, type FamilyFitContext } from "@/li
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import ncZips from "@/lib/recruiting/nc-zips.json"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
+import { alignmentFor, type Alignment } from "@/lib/recruiting/priorities/alignment"
 import { shortListLine, type ShortListReason } from "@/lib/recruiting/priorities/copy"
 import { passedBy, reactionsFor, type ReactionRow, type ReactionsView } from "@/lib/recruiting/priorities/reactions"
 import type { Respondent } from "@/lib/recruiting/priorities/questions"
@@ -25,6 +26,7 @@ import { jointInputs, ownerOnlyInputs } from "@/lib/recruiting/priorities/sharin
 import { TABLE_MISSING, loadFamilySets, respondentFor } from "@/lib/recruiting/priorities/store"
 
 const ALL = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
+const NAME_BY_ID = new Map(ALL.map((s) => [s.id, s.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()]))
 const NC_ZIPS = ncZips.zips as Record<string, number[]>
 const MAJORS = majorsData.majors as Record<string, string[]>
 /** Bump when the engine's output changes shape or meaning, so stored lists are made again. */
@@ -46,6 +48,10 @@ export type PriorityListsView = {
   reactions: ReactionsView
   /** How the other side is named on a card: the wrestler's first name, or "Your parent". */
   otherLabel: string
+  /** Where the two sides line up, once both have finished (Shared answers only). */
+  alignment: Alignment | null
+  /** A parent whose wrestler hasn't finished their own set: offer the invite. */
+  inviteAthlete: boolean
 }
 
 type Stored = { inputs: string; cards: ListCard[]; notes?: string[] }
@@ -105,6 +111,10 @@ export async function priorityLists(
   const [ctx, reactions] = await Promise.all([ctxPromise, reactionsPromise])
   const name = ctx.first ?? "your wrestler"
   const otherLabel = respondent === "parent" ? (ctx.first ?? "Your wrestler") : "Your parent"
+  const alignment =
+    sets.parent?.completedAt && sets.athlete?.completedAt
+      ? alignmentFor({ viewer: respondent, joint, reactions, other: respondent === "parent" ? (ctx.first ?? "your wrestler") : "your parent", schoolName: (id) => NAME_BY_ID.get(id) ?? null })
+      : null
   const otherName = respondent === "parent" ? name : "your parent"
   const shapedBy = !mine?.completedAt
     ? `From ${respondent === "parent" ? `${name}'s` : "your parent's"} shared answers. Finish yours to shape them too.`
@@ -116,7 +126,7 @@ export async function priorityLists(
   const reuseBest = fresh("best_fit")
   const reuseOpp = fresh("opportunity")
   if (reuseBest && reuseOpp) {
-    return { ...view(respondent, reuseBest.items.cards, reuseOpp.items.cards, reuseBest.items.notes ?? [], shapedBy, shortReason, name, { bestFit: reuseBest.id, opportunities: reuseOpp.id }), reactions, otherLabel }
+    return { ...view(respondent, reuseBest.items.cards, reuseOpp.items.cards, reuseBest.items.notes ?? [], shapedBy, shortReason, name, { bestFit: reuseBest.id, opportunities: reuseOpp.id }), reactions, otherLabel, alignment, inviteAthlete: respondent === "parent" && !sets.athlete?.completedAt }
   }
 
   const facts = await collegeFactsFor(admin, ctx, { athleteId: opts.athleteId, team: opts.team, includeViews: opts.includeViews })
@@ -149,7 +159,7 @@ export async function priorityLists(
       opportunities: rows?.find((r) => r.list_kind === "opportunity")?.id ?? null,
     }
   }
-  return { ...view(respondent, best, opp, lists.notes, shapedBy, shortReason, name, batchIds), reactions, otherLabel }
+  return { ...view(respondent, best, opp, lists.notes, shapedBy, shortReason, name, batchIds), reactions, otherLabel, alignment, inviteAthlete: respondent === "parent" && !sets.athlete?.completedAt }
 }
 
 /** Every college's facts for this wrestler, from data we hold; nothing from survey answers. */
@@ -230,7 +240,7 @@ function view(
   shortReason: ShortListReason | null,
   name: string,
   batchIds: PriorityListsView["batchIds"],
-): Omit<PriorityListsView, "reactions" | "otherLabel"> {
+): Omit<PriorityListsView, "reactions" | "otherLabel" | "alignment" | "inviteAthlete"> {
   const short = bestFit.length + opportunities.length < 6 && shortReason ? shortListLine(shortReason, name) : null
   return { respondent, bestFit, opportunities, notes, shapedBy, shortLine: short, batchIds }
 }
