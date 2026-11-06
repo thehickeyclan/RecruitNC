@@ -1,15 +1,19 @@
 /**
- * The eight states opened on 6 November 2026, and the two things that must stay true of them.
+ * The fifteen states opened on 6 November 2026, and the two things that must stay true of them.
  *
- * The bar Matt set: a profile for every 2026 state qualifier who has a class year, with national
- * results linked. Qualifiers, not placers - the whole field, not the podium. Measured that day,
- * twelve states had a profile for 100% of their 2026 qualifiers carrying a class year; Georgia and
- * Tennessee were already live, Louisiana was still red on the pre-freshman gate, and Rhode Island
- * was held back because its 100% was 88 wrestlers out of a 344-wrestler field - it passes the bar
- * by the letter while we do not know three-quarters of its class years.
+ * The bar Matt set: a profile for every 2026 state qualifier, men and women, who has a class year,
+ * with national results linked. Qualifiers, not placers - the whole field, not the podium. Eight
+ * went live first; the gender leg was then measured separately and seven more cleared it
+ * (MS KY NJ NY CT MO MI), two of them carrying a single naming row Matt waived explicitly.
+ *
+ * What the held states fail on is never naming. Arkansas, Maine, Wisconsin, Vermont and Rhode
+ * Island hold the podium only - a median of 8 entrants per bracket where a real field is 16, so
+ * the qualifiers are not in the table at all. Pennsylvania has the field but we know the class
+ * year for only 76% of the boys and 64% of the girls. Louisiana has both and is held on the
+ * pre-freshman gate: 21 results sit on profiles before that wrestler's freshman year.
  *
  * The trap this file exists to hold shut: `isRankedState` treats a state with no `ranked` key as
- * ranked. Flipping `live` alone would have put eight empty ranking boards into the product, since
+ * ranked. Flipping `live` alone would have put fifteen empty ranking boards into the product, since
  * the board builds its own state list from `rankedStates`. The checklist is explicit - "never show
  * an empty one" - so every state here carries `ranked: false` until it has a published board.
  */
@@ -23,8 +27,14 @@ import {
   recruitingCoverage,
 } from "@/lib/recruiting/brand"
 
-const OPENED = ["DE", "MN", "WV", "AL", "FL", "NH", "IA", "MA"] as const
-const HELD = ["RI", "LA", "MD", "MS", "WI"] as const
+const OPENED = [
+  // the first wave, 6 November 2026
+  "DE", "MN", "WV", "AL", "FL", "NH", "IA", "MA",
+  // the second, once the bar was measured for men and women separately
+  "MS", "KY", "NJ", "NY", "CT", "MO", "MI",
+] as const
+// Held, and the reason is in the header: podium-only holds, unknown class years, or a data gate.
+const HELD = ["RI", "LA", "MD", "WI", "AR", "ME", "VT", "PA"] as const
 
 const state = (code: string) => {
   const s = RECRUITING_BRAND.states.find((x) => x.code === code)
@@ -32,7 +42,7 @@ const state = (code: string) => {
   return s
 }
 
-describe("the eight states opened on the qualifier bar", () => {
+describe("the states opened on the qualifier bar", () => {
   it("are live on RecruitWrestlers", () => {
     const live = new Set(liveStates(true).map((s) => s.code))
     for (const code of OPENED) expect(live.has(code), `${code} should be live`).toBe(true)
