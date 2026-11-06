@@ -12,11 +12,11 @@ describe("states per address", () => {
     // Indiana and Texas joined on the same pass: AR had been held on a bad reading (its 8-man
     // brackets are the full field by design, verified at source), IN and TX were podium-mints.
     expect(liveStates(true).map((s) => s.code)).toEqual(
-      ["NC", "SC", "VA", "TN", "MD", "WV", "DE", "GA", "FL", "AL", "MS", "KY", "IN", "NJ", "NY", "CT", "MA", "NH", "TX", "AR",
+      ["NC", "SC", "VA", "TN", "MD", "WV", "DE", "GA", "FL", "AL", "MS", "KY", "IN", "NJ", "NY", "CT", "MA", "NH", "TX", "AR", "OK",
        "IA", "MO", "MI", "MN", "NE", "CO", "UT", "ID", "AZ", "SD", "ND", "WA", "KS", "OR", "CA", "MT", "WY", "NV", "NM", "HI"],
     )
     // Past six states the names stop fitting in a sentence; see COVERAGE_NAMES_UP_TO.
-    expect(recruitingCoverage(true)).toBe("40 states")
+    expect(recruitingCoverage(true)).toBe("41 states")
     expect(isVisibleState("SC", false, true)).toBe(true)
     expect(isVisibleState("TN", false, true)).toBe(true)
     expect(isVisibleState("GA", false, true)).toBe(true)

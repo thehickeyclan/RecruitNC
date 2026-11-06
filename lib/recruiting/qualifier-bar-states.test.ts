@@ -45,8 +45,9 @@ const OPENED = [
   "WA", "UT", "KS", "CO", "OR", "ID", "MT", "NE", "AZ", "WY", "NM", "SD", "ND", "NV", "HI", "CA",
   // and three more once re-measured: AR was held on a bad reading, IN and TX were podium-mints
   "AR", "IN", "TX",
-  // Maryland last, once its two genuine duplicate profiles were merged
-  "MD",
+  // Maryland once its two genuine duplicate profiles were merged, then Oklahoma, which a
+  // full 49-state sweep caught: it had cleared the bar and nobody had looked at it.
+  "MD", "OK",
 ] as const
 // Held, and the reason is in the header: podium-only holds, unknown class years, or a data gate.
 const HELD = ["RI", "LA", "WI", "ME", "VT", "PA", "IL"] as const
