@@ -20,6 +20,7 @@ import { createClient } from "@supabase/supabase-js"
 import { HOME_STATE, inState, normalizeStateCode } from "../lib/recruiting/states"
 import { allowsMiddleSchoolVarsity } from "../lib/athlete-state"
 import { namesReferToSamePerson } from "../lib/athlete-name-match"
+import { clearsSameNameGroup } from "../lib/state-launch/same-name"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -171,6 +172,25 @@ type Accounted = {
    * of leaving Connecticut permanently NO-GO on a fact about one transfer.
    */
   homeStateResultsVerified?: Array<{ athleteId: string; note?: string }>
+  /**
+   * Two wrestlers who really do share a name and a class.
+   *
+   * The duplicate gate below is right by default - two profiles for one kid split his views, his
+   * messages and his claim - but it reads only name and class, so it cannot tell one kid entered
+   * twice from two kids called the same thing. On 6 November 2026 four states failed it and three
+   * of those four were namesakes: Gavin Floyd (WV) at East Fairmont and North Marion, 120lb and
+   * 285lb, both 2027; Braxton Jones (OK) at Carl Albert and Collinsville; Jesse James (MO) at
+   * Lathrop and Cassville. Only Maryland's two pairs were genuine, one school spelled two ways
+   * ("Saint Mary`s Annapolis" and "St. Mary`s Anapolis"). With no exception here the only way to
+   * pass was to merge two real wrestlers into one profile, which is data destruction dressed as a
+   * green gate - so three states would have stayed NO-GO forever, or lost a kid each.
+   *
+   * `athleteIds` names every profile in the group, so clearing one pair never clears a later
+   * namesake of the same name, and `note` must say what distinguishes them - an entry without one
+   * is ignored, the same discipline `apply-adjudicated-grad-years.ts` applies to a class-year
+   * overwrite. Different schools are evidence; a hunch is not.
+   */
+  sameNameVerified?: Array<{ athleteIds: string[]; note?: string }>
 }
 function accountedFor(state: string): Accounted {
   // The repo this script lives in, then the working folder: the same answer wherever it is run.
@@ -260,7 +280,15 @@ async function measure(state: string) {
 
   const dupCount = new Map<string, Athlete[]>()
   for (const a of current) dupCount.set(key(a.name, a.graduationyear), [...(dupCount.get(key(a.name, a.graduationyear)) ?? []), a])
-  const dups = [...dupCount.values()].filter((v) => v.length > 1).map((v) => `${v[0].name} (${v[0].graduationyear}) × ${v.length}: ${v.map((a) => a.id).join(", ")}`)
+  // A group clears only when one entry names every profile in it and says why they differ:
+  // lib/state-launch/same-name.ts, where both refusals are tested.
+  const dupGroups = [...dupCount.values()].filter((v) => v.length > 1)
+  const verifiedDistinct = (group: Athlete[]) =>
+    clearsSameNameGroup(acct.sameNameVerified, group.map((a) => a.id))
+  const dups = dupGroups
+    .filter((v) => !verifiedDistinct(v))
+    .map((v) => `${v[0].name} (${v[0].graduationyear}) × ${v.length}: ${v.map((a) => a.id).join(", ")}`)
+  const dupsNamedDistinct = dupGroups.filter(verifiedDistinct).map((v) => `${v[0].name} (${v[0].graduationyear}) × ${v.length} - verified as different wrestlers`)
 
   const recentNoClass = athletes.filter((a) => recentIds.has(a.id) && !a.graduationyear)
   const namedUnresolved = new Set((acct.classYearUnresolved ?? []).map((u) => u.athleteId))
@@ -425,6 +453,9 @@ async function measure(state: string) {
       },
       { check: "NC results on this state's profiles (unnamed)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
       { check: "Duplicate profiles (same name and class)", kind: "GATE", value: String(dups.length), pass: dups.length === 0, detail: dups },
+      // An exception stays on the report. A cleared pair that nobody can see is a cleared pair
+      // nobody re-checks when one of the two later claims his profile.
+      { check: "Same name and class, verified as different wrestlers", kind: "INFO", value: String(dupsNamedDistinct.length), pass: true, detail: dupsNamedDistinct },
       {
         check: "Current-class profiles with a school",
         kind: "GATE",
