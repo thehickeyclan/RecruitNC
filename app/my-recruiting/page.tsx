@@ -52,6 +52,7 @@ import { WhatsChanged } from "@/components/portal/whats-changed"
 import { firstDayMoves } from "@/lib/recruiting/first-day"
 import { hasAnsweredPriorities, respondentFor } from "@/lib/recruiting/priorities/store"
 import { WelcomeModal } from "@/components/portal/welcome-modal"
+import { FamilyFeedback } from "@/components/portal/family-feedback"
 import { loadWhatsChanged } from "./whats-changed-data"
 import { CoachNeedsList, programCount } from "@/components/recruiting/coach-needs-list"
 import { loadNeedsForAthlete } from "@/lib/recruiting/needs-server"
@@ -697,6 +698,7 @@ export default async function CommandCenterHome({ searchParams }: { searchParams
           ) : null}
         </>
       )}
+      {first && !cc.previewing && cc.viewerId === cc.authUserId ? <FamilyFeedback athleteId={first.id} /> : null}
     </PortalShell>
   )
 }
