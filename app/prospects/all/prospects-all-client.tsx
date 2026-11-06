@@ -2,7 +2,7 @@
 
 import { ARENA_PHOTO } from "@/lib/arena-photo"
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
-import { directoryStates, isRankedState, recruitingCoverage, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
+import { directoryStates, recruitingCoverage, stateChoiceLabel, usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
 import { HOME_STATE } from "@/lib/recruiting/states"
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
@@ -1013,8 +1013,7 @@ export default function ProspectsAllClient({
                   {onRw ? <option value={ALL_STATES}>All states</option> : null}
                   {stateChoices.map((st) => (
                     <option key={st.code} value={st.code}>
-                      {brandHost ? st.name : `Recruit${st.code} · ${st.name}`}
-                      {st.live && isRankedState(st) ? "" : st.live || onRw ? " · not ranked yet" : " (staff only)"}
+                      {stateChoiceLabel(st, { brandHost, onRecruitWrestlers: onRw })}
                     </option>
                   ))}
                 </select>

@@ -129,6 +129,25 @@ const SHORT_NAMES: Array<[RegExp, string]> = [
   [/ultimate club/i, "Ultimate Club Duals"],
 ]
 
+/** A national event by its short name: "Fargo · Greco-Roman" and "2025 Fargo Freestyle" are both "Fargo". */
+export function nationalEventName(event: string): string {
+  return SHORT_NAMES.find(([re]) => re.test(event))?.[1] ?? event
+}
+
+/**
+ * National event-years: Fargo in 2024 and Fargo in 2025 are two. A wrestler who goes to Fargo every
+ * summer competes nationally every year, and counting the event once called him a one-event
+ * national wrestler (Matt, 6 Nov 2026). Both styles at one Fargo are one trip.
+ */
+export function countNationalEventYears(rows: ReadonlyArray<{ event: string | null | undefined; year: number | null | undefined }>): number {
+  const seen = new Set<string>()
+  for (const r of rows) {
+    if (!r.event || !isNationalEvent(r.event)) continue
+    seen.add(`${nationalEventName(r.event)}|${r.year ?? ""}`)
+  }
+  return seen.size
+}
+
 /**
  * A wrestler's reach and styles from the events on their record. `hasSeason` says whether they
  * have a North Carolina season on file, which is folkstyle whatever else they wrestle.
@@ -150,7 +169,7 @@ export function summarizeCompetition(
     if (!event) continue
     styles.add(styleOfEventForAthlete(event, null, gender))
     if (isNationalEvent(event)) {
-      const short = SHORT_NAMES.find(([re]) => re.test(event))?.[1] ?? event
+      const short = nationalEventName(event)
       national.add(short)
     }
   }

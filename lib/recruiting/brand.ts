@@ -304,6 +304,27 @@ export function isRankedState(state: RecruitingState): boolean {
   return !("ranked" in state) || (state as { ranked?: boolean }).ranked !== false
 }
 
+/**
+ * How one state reads in a state picker.
+ *
+ * Whether the state has a ranking board is deliberately absent (Matt, 6 November 2026). A picker is
+ * where someone chooses whose wrestlers to look at, and " · not ranked yet" beside the name both
+ * answered a question nobody asked there and labelled the state by what it lacks - Virginia,
+ * Tennessee and Georgia all read as second-class next to the Carolinas.
+ *
+ * Saying it plainly still happens, where it bears on what the person sees: the ranking board builds
+ * its own state list from `rankedStates`, so an unranked state is never offered an empty board, and
+ * Command Center's coverage line names the ranked states outright. "(staff only)" stays here,
+ * because that one changes what the person is looking at rather than describing the state.
+ */
+export function stateChoiceLabel(
+  state: RecruitingState,
+  opts: { brandHost?: boolean; onRecruitWrestlers?: boolean } = {},
+): string {
+  const name = opts.brandHost ? state.name : `${stateBrand(state.code)} · ${state.name}`
+  return state.live || opts.onRecruitWrestlers ? name : `${name} (staff only)`
+}
+
 export function rankedStates(onRecruitWrestlers = false): RecruitingState[] {
   return liveStates(onRecruitWrestlers).filter(isRankedState)
 }
