@@ -67,6 +67,8 @@ import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/col
 import { readWentHereSnapshot, snapshotForState } from "@/lib/college-programs/went-here-snapshot"
 import { familyState } from "@/lib/recruiting/family-state"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
+import { surveyFitForSchool } from "@/app/my-recruiting/priority-lists"
+import type { SurveyLine } from "@/lib/recruiting/priorities/recommend"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { MAJOR_FAMILIES, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
@@ -130,6 +132,8 @@ function SnapshotRow({ icon: Icon, label, value, sub }: { icon: LucideIcon; labe
     </li>
   )
 }
+
+const SURVEY_ICON: Record<SurveyLine["key"], LucideIcon> = { level: Trophy, distance: MapPin, major: BookOpen, feel: Building2, cost: DollarSign }
 
 function FitRow({ icon: Icon, label, line, athletic }: { icon: LucideIcon; label: string; line: FitLine; athletic?: boolean }) {
   const status = FIT_LABEL[athletic ? "athletic" : "other"][line.status]
@@ -221,6 +225,9 @@ export default async function SchoolPage({ params, searchParams }: Params) {
     .sort((a, b) => (b.classYear ?? 0) - (a.classYear ?? 0))
   // The family's own fit only once there is a wrestler to fit; a coach or a family without one sees none.
   const fitResult = ctx && ctx.first ? collegeFitFor(ctx, school, null) : null
+  // The family's own survey answers against this college, a line per answer (Matt, 6 Nov 2026), once either side has finished it.
+  const surveyLines = fitResult && ctx && userId && familySide ? await surveyFitForSchool(admin, { viewerId: userId, ctx, team: theirs, schoolId: school.id }).catch(() => null) : null
+  const surveyCost = Boolean(surveyLines?.some((l) => l.key === "cost"))
   // This college's coaches looking at the family's wrestler: the reason RecruitNC exists.
   const viewed =
     familySide && userId && !(await isDemoFamily())
@@ -382,16 +389,37 @@ export default async function SchoolPage({ params, searchParams }: Params) {
             <section className={card}>
               <div className="flex items-baseline justify-between">
                 <h2 className={cardTitle}>A good fit for {ctx.first}?</h2>
-                <a href={`/recruiting/compare?s=${school.id}&step=matters`} className="text-xs font-semibold" style={{ color: GOLD }}>
-                  {ctx.profileSet ? "Edit goals" : "Add goals"}
+                <a href={surveyLines ? "/my-recruiting/priorities" : ctx.profileSet ? `/recruiting/compare?s=${school.id}&step=matters` : "/my-recruiting/priorities"} className="text-xs font-semibold" style={{ color: GOLD }}>
+                  {surveyLines ? "Edit your answers" : ctx.profileSet ? "Edit goals" : "Take the survey"}
                 </a>
               </div>
               <div className="mt-2">
                 <FitRow icon={Target} label="Athletic" line={fitResult.lines.athletic} athletic />
                 <FitRow icon={GraduationCap} label="Academic" line={fitResult.lines.academic} />
-                <FitRow icon={DollarSign} label="Financial" line={fitResult.lines.cost} />
-                <FitRow icon={MapPin} label="Your goals" line={fitResult.lines.goals} />
+                {surveyLines ? (
+                  <>
+                    {surveyCost ? null : <FitRow icon={DollarSign} label="Financial" line={fitResult.lines.cost} />}
+                    {surveyLines.map((l) => (
+                      <FitRow key={l.key} icon={SURVEY_ICON[l.key]} label={l.label} line={l} />
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <FitRow icon={DollarSign} label="Financial" line={fitResult.lines.cost} />
+                    {ctx.profileSet ? (
+                      <FitRow icon={MapPin} label="Your goals" line={fitResult.lines.goals} />
+                    ) : (
+                      <p className="border-t border-white/10 py-3 text-xs leading-5 text-white/60">
+                        <a href="/my-recruiting/priorities" className="font-semibold underline" style={{ color: GOLD }}>
+                          Answer What matters to your family
+                        </a>{" "}
+                        and this card checks the level, distance, major, campus and cost against your answers.
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
+              {surveyLines ? <p className="mt-1 text-[11px] text-white/40">From your answers to What matters to your family.</p> : null}
             </section>
           ) : null}
 

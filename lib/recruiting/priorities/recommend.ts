@@ -198,7 +198,7 @@ export function academicStrength(c: Pick<CollegeFacts, "gradRate" | "admitRate">
 }
 
 /** The answers this viewer's list may read: the viewer's own (any class) and the other side's Shared ones. */
-function visible(input: RecommendInput): { parent: Answer[]; athlete: Answer[] } {
+function visible(input: Pick<RecommendInput, "viewer" | "joint" | "own">): { parent: Answer[]; athlete: Answer[] } {
   const ownShared = (input.viewer === "parent" ? input.joint.parent : input.joint.athlete)?.answers ?? []
   const otherShared = (input.viewer === "parent" ? input.joint.athlete : input.joint.parent)?.answers ?? []
   const mine = [...ownShared, ...input.own]
@@ -467,6 +467,117 @@ export function recommend(input: RecommendInput): Lists {
   }
   if (benefits.some((b) => b !== "none")) notes.push("The benefits you marked aren't in these prices yet. Ask each aid office how they apply.")
   return { bestFit, opportunities, notes }
+}
+
+export type SurveyLine = { key: "level" | "distance" | "major" | "feel" | "cost"; label: string; status: FitStatus; text: string }
+
+const LEVEL_NAME: Record<Level, string> = { D1: "Division I", D2: "Division II", D3: "Division III", NAIA: "NAIA", NJCAA: "Junior college" }
+const roundMiles = (m: number) => (m < 20 ? Math.round(m) : Math.round(m / 10) * 10)
+
+/**
+ * One college against the family's own survey answers, a line per answer (Matt, 6 Nov 2026: on a
+ * college page, "something that tells them if this aligns to their responses"). Never one score:
+ * each line says what we compared, so a family can see why. Same reading of the answers as
+ * recommend() above (the same visible answers, distance origin, majors and budget), so the page and
+ * the suggestions agree. A question not answered has no line; an answer we have no data to check
+ * reads "Not enough to say", never a guess.
+ */
+export function surveyFitFor(input: Pick<RecommendInput, "viewer" | "joint" | "own" | "centre" | "zipPoint">, c: CollegeFacts): SurveyLine[] {
+  const seen = visible(input)
+  const out: SurveyLine[] = []
+
+  const grids = { parent: gridOf(seen.parent), athlete: gridOf(seen.athlete) }
+  if (grids.parent || grids.athlete) {
+    const placement = placementFor(input.viewer, grids, c.level)
+    const keen = grids.parent?.[c.level] === "interested" || grids.athlete?.[c.level] === "interested"
+    out.push({
+      key: "level",
+      label: "Level",
+      status: placement === "excluded" ? "concern" : placement === "explore" ? "stretch" : "fit",
+      text:
+        placement === "excluded"
+          ? `${LEVEL_NAME[c.level]}: a level you said no to.`
+          : placement === "explore"
+            ? `${LEVEL_NAME[c.level]}: one of you isn't interested in this level.`
+            : `${LEVEL_NAME[c.level]}: a level you're ${keen ? "interested in" : "open to"}.`,
+    })
+  }
+
+  const distance = (valueOf(seen.parent, "distance") as string | undefined) ?? (valueOf(seen.athlete, "distance") === "close" ? "close_open" : undefined)
+  if (distance) {
+    const zip = valueOf(seen.parent, "home_zip")
+    const fromZip = typeof zip === "string" ? input.zipPoint(zip) : null
+    const origin = fromZip ?? input.centre
+    const miles = origin ? milesBetween(origin, [c.latitude, c.longitude]) : null
+    const where = miles != null && miles < 10 ? `Under 10 miles from ${fromZip ? "home" : "the middle of your state"}` : `About ${miles != null ? roundMiles(miles) : 0} miles from ${fromZip ? "home" : "the middle of your state"}`
+    const limit = DISTANCE_MILES[distance]
+    const must = markerOf(seen.parent, "distance") === "must"
+    if (miles == null) out.push({ key: "distance", label: "Distance", status: "unknown", text: "Not enough to say: we don't know where home is." })
+    else if (distance === "anywhere") out.push({ key: "distance", label: "Distance", status: "fit", text: `${where}. You said anywhere.` })
+    else if (limit != null)
+      out.push(
+        miles <= limit
+          ? { key: "distance", label: "Distance", status: "fit", text: `${where}, within ${DISTANCE_LABEL[distance]}.` }
+          : { key: "distance", label: "Distance", status: must ? "concern" : "stretch", text: `${where}, farther than ${DISTANCE_LABEL[distance]}.` },
+      )
+    else out.push({ key: "distance", label: "Distance", status: miles <= 250 ? "fit" : "stretch", text: miles <= 250 ? `${where}, close to home.` : `${where}. Farther than you'd prefer, but you said you're open.` })
+  }
+
+  const wanted = new Set<string>()
+  for (const side of [seen.parent, seen.athlete]) for (const m of (valueOf(side, "academics") as { majors?: string[] } | undefined)?.majors ?? []) wanted.add(m)
+  if (wanted.size) {
+    const label = (k: string) => MAJOR_OPTIONS.find((m) => m.key === k)?.label ?? "the major you picked"
+    const offers = c.majors ? [...wanted].filter((m) => familiesOf(m).some((f) => c.majors!.includes(f))) : null
+    const must = markerOf(seen.parent, "academics") === "must"
+    if (!offers) out.push({ key: "major", label: "Major", status: "unknown", text: "Not enough to say: we don't have this college's list of majors." })
+    else if (offers.length) out.push({ key: "major", label: "Major", status: "fit", text: `Offers ${offers.map(label).join(", ")}.` })
+    else out.push({ key: "major", label: "Major", status: must ? "concern" : "stretch", text: `Doesn't list ${[...wanted].map(label).join(" or ")}.` })
+  }
+
+  const feel = new Set<string>([
+    ...((valueOf(seen.parent, "school_feel") as string[] | undefined) ?? []),
+    ...((valueOf(seen.athlete, "experience") as string[] | undefined) ?? []).map((e) => EXPERIENCE_FEEL[e]).filter(Boolean),
+  ])
+  const wantSizes = ["small", "medium", "large"].filter((x) => feel.has(x))
+  const wantSettings = ["city", "suburb", "town", "rural"].filter((x) => feel.has(x))
+  if (wantSizes.length || wantSettings.length) {
+    const size = c.undergrads != null ? sizeOf(c.undergrads) : null
+    const set = settingOf(c.setting)
+    const parts: string[] = []
+    const checks: boolean[] = []
+    if (wantSizes.length && size) {
+      parts.push(`A ${size} school (${c.undergrads!.toLocaleString("en-US")} undergrads)`)
+      checks.push(wantSizes.includes(size))
+    }
+    if (wantSettings.length && set) {
+      parts.push(set === "town" ? "in a college town" : set === "suburb" ? "on a suburban campus" : `on a ${set} campus`)
+      checks.push(wantSettings.includes(set))
+    }
+    if (!checks.length) out.push({ key: "feel", label: "Campus", status: "unknown", text: "Not enough to say: we don't have this college's size or setting." })
+    else {
+      const met = checks.filter(Boolean).length
+      const joined = parts.join(" ")
+      const text = joined.charAt(0).toUpperCase() + joined.slice(1)
+      out.push({ key: "feel", label: "Campus", status: met === checks.length ? "fit" : "stretch", text: `${text}. ${met === checks.length ? "What you said feels right." : met ? "Partly what you described." : "Not what you described."}` })
+    }
+  }
+
+  const budget = valueOf(seen.parent, "budget") as string | undefined
+  if (budget) {
+    const price = c.averageNet ?? c.sticker
+    const basis = c.averageNet != null ? "on average after aid" : "published price, before aid"
+    const max = BUDGET_MAX[budget] ?? null
+    if (price == null) out.push({ key: "cost", label: "Cost", status: "unknown", text: "Not enough to say: this college's price isn't published in the federal data." })
+    else if (max == null || price <= max) out.push({ key: "cost", label: "Cost", status: "fit", text: `About ${money(price)} a year (${basis}), within your budget.` })
+    else
+      out.push({
+        key: "cost",
+        label: "Cost",
+        status: "stretch",
+        text: `About ${money(price)} a year (${basis}), above your budget. Merit aid and athletic money can bring it down; the college's net price calculator gives your own number.`,
+      })
+  }
+  return out
 }
 
 /** Every pathway, so callers and tests share the level list. */

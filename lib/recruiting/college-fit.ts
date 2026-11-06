@@ -29,6 +29,8 @@ const MAJORS = majorsData.majors as Record<string, string[]>
 const spoken = (name: string) => name.replace(/\s*\([^)]*\)\s*/g, " ").trim()
 
 export type FamilyFitContext = {
+  /** The wrestler this fit is for; null for the demo family. */
+  athleteId?: string | null
   team: "mens" | "womens" | null
   among: "men" | "women" | "wrestlers"
   first: string | null
@@ -86,6 +88,7 @@ export async function loadFamilyFitContext(admin: SupabaseClient, userId: string
       : Promise.resolve(null),
   ])
   return {
+    athleteId: wrestler ? String(wrestler.id) : null,
     team,
     among: team === "womens" ? "women" : team === "mens" ? "men" : "wrestlers",
     first,
