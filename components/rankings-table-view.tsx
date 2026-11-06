@@ -1,5 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button"
+import { RecruitPeek } from "@/components/coach/recruit-peek"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ExternalLink, ChevronUp, ChevronDown, FileText, Star } from "lucide-react"
 import { Fragment, useEffect, useState } from "react"
@@ -503,6 +504,7 @@ export function RankingsTableView({
                       </TableCell>
                     )}
                     <TableCell className="pl-4">
+                      <RecruitPeek athleteId={athlete.id && isValidProfileId(athlete.id) ? athlete.id : null}>
                       <a
                         href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}
                         className={`flex items-center gap-3 leading-tight font-semibold transition-colors underline ${
@@ -513,6 +515,7 @@ export function RankingsTableView({
                       >
                         {athlete.name}
                       </a>
+                      </RecruitPeek>
                     </TableCell>
                     <TableCell
                       className={`text-center font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}

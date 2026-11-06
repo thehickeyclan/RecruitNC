@@ -1,6 +1,7 @@
 "use client"
 
 import { RankingCredentialPills } from "@/components/rankings/ranking-credential-pills"
+import { RecruitPeek } from "@/components/coach/recruit-peek"
 import { RecruitStarButton } from "@/components/rankings/recruit-star-button"
 import type { PublicRankedAthlete } from "@/lib/rankings/public-rankings-view"
 
@@ -75,12 +76,14 @@ export function RankedAthleteCard({
       ) : null}
 
       <div className="p-3 sm:p-4">
-        <a
-          href={profileHref}
-          className="block text-sm font-bold leading-snug text-white underline-offset-4 hover:text-[#D7B95A] hover:underline sm:text-base"
-        >
-          {athlete.name}
-        </a>
+        <RecruitPeek athleteId={athlete.athleteId}>
+          <a
+            href={profileHref}
+            className="block text-sm font-bold leading-snug text-white underline-offset-4 hover:text-[#D7B95A] hover:underline sm:text-base"
+          >
+            {athlete.name}
+          </a>
+        </RecruitPeek>
         <p className="mt-1 text-[11px] uppercase leading-snug tracking-[0.12em] text-white/45">{meta}</p>
         {athlete.highSchool ? (
           <p className="mt-0.5 text-[11px] leading-snug text-white/55">{athlete.highSchool}</p>
