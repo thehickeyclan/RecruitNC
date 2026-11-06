@@ -3,7 +3,7 @@
  "association": "MHSA",
  "generated": "2026-11-05",
  "generated_by": "Muse (from the MT build files: final-qualifiers/, MT-grad-years.csv, MT-mint-list.csv)",
- "purpose": "Every MT placer key that reaches no profile, named with its reason \u2014 the accounted file for the state-readiness gate.",
+ "purpose": "Every MT placer key that reaches no profile, named with its reason — the accounted file for the state-readiness gate.",
  "placers": [
   {
    "name": "Abby Zickefoose",
@@ -333,7 +333,7 @@
    "seasons_placed": "2024",
    "best_place": 5,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 5) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 5) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Ben Rodgers",
@@ -1323,7 +1323,7 @@
    "seasons_placed": "2024",
    "best_place": 6,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 6) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 6) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Eric Humphreys",
@@ -1503,7 +1503,7 @@
    "seasons_placed": "2024",
    "best_place": 6,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 6) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 6) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Gretchen Donally",
@@ -1853,7 +1853,7 @@
    "seasons_placed": "2024",
    "best_place": 3,
    "status": "outside_mint_window",
-   "reason": "class of 2028; placed 2024 (best 3) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2028; placed 2024 (best 3) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Jesse Brawley",
@@ -1933,7 +1933,7 @@
    "seasons_placed": "2024",
    "best_place": 4,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 4) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 4) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Jon Post",
@@ -1953,7 +1953,7 @@
    "seasons_placed": "2024",
    "best_place": 4,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 4) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 4) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Jordan Warner",
@@ -2573,7 +2573,7 @@
    "seasons_placed": "2024",
    "best_place": 4,
    "status": "outside_mint_window",
-   "reason": "class of 2028; placed 2024 (best 4) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2028; placed 2024 (best 4) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Maisie Barrus",
@@ -2613,7 +2613,7 @@
    "seasons_placed": "2024",
    "best_place": 3,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 3) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 3) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Manny Oldchief",
@@ -2633,7 +2633,7 @@
    "seasons_placed": "2024,2025",
    "best_place": 4,
    "status": "held_conflict",
-   "reason": "grade prints imply different class years \u2014 held blank (accuracy over completeness). Evidence: 2024: HS Senior -> 2024 (MHSA 11420595, payload+tab) | 2025: HS Senior -> 2025 (MHSA 12908026, payload+tab)"
+   "reason": "grade prints imply different class years — held blank (accuracy over completeness). Evidence: 2024: HS Senior -> 2024 (MHSA 11420595, payload+tab) | 2025: HS Senior -> 2025 (MHSA 12908026, payload+tab)"
   },
   {
    "name": "Marley Erickson",
@@ -2773,7 +2773,7 @@
    "seasons_placed": "2024",
    "best_place": 1,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 1) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 1) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Mercedes Shindurling",
@@ -2973,7 +2973,7 @@
    "seasons_placed": "2026",
    "best_place": 4,
    "status": "held_no_year",
-   "reason": "no grade print in the Flo bracket payloads or participants tabs in any season; RankWrestlers dated records probed 2026-11-05 print grade '?'/'0' \u2014 no evidence. Ships with no class year and no profile."
+   "reason": "no grade print in the Flo bracket payloads or participants tabs in any season; RankWrestlers dated records probed 2026-11-05 print grade '?'/'0' — no evidence. Ships with no class year and no profile."
   },
   {
    "name": "Olivia Post",
@@ -2993,7 +2993,7 @@
    "seasons_placed": "2024",
    "best_place": 6,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 6) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 6) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Owen Younger",
@@ -3073,7 +3073,7 @@
    "seasons_placed": "2026",
    "best_place": 2,
    "status": "held_no_year",
-   "reason": "no grade print in the Flo bracket payloads or participants tabs in any season; RankWrestlers dated records probed 2026-11-05 print grade '?'/'0' \u2014 no evidence. Ships with no class year and no profile."
+   "reason": "no grade print in the Flo bracket payloads or participants tabs in any season; RankWrestlers dated records probed 2026-11-05 print grade '?'/'0' — no evidence. Ships with no class year and no profile."
   },
   {
    "name": "Payton Cicero",
@@ -3353,7 +3353,7 @@
    "seasons_placed": "2024",
    "best_place": 4,
    "status": "outside_mint_window",
-   "reason": "class of 2028; placed 2024 (best 4) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2028; placed 2024 (best 4) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Rowdy Crump",
@@ -3533,7 +3533,7 @@
    "seasons_placed": "2024",
    "best_place": 6,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 6) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 6) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Sophi Catt",
@@ -3873,7 +3873,7 @@
    "seasons_placed": "2024",
    "best_place": 4,
    "status": "outside_mint_window",
-   "reason": "class of 2027; placed 2024 (best 4) \u2014 outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
+   "reason": "class of 2027; placed 2024 (best 4) — outside the last-two-seasons mint window (placed 2025/2026). Placement stored and linked; no profile per the mint rule."
   },
   {
    "name": "Wes Banks",
@@ -3954,6 +3954,17 @@
    "best_place": 2,
    "status": "graduated_class",
    "reason": "class of 2025; placed 2024,2025 (best 2). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "William Alves",
+   "school": "Lockwood (Billings)",
+   "gender": "boys",
+   "class_year": 2028,
+   "seasons_placed": "2024,2025,2026",
+   "best_place": 1,
+   "weight": 103,
+   "status": "adjudicated_override",
+   "reason": "Adjudicated override → class of 2028 (MT-IMPORT-NOTE). Prints: 8th 2024 → 2028 and HS Freshman 2025 → 2028 agree; the 2026 'HS Junior' print is the outlier. Montana Sports (Jan 13, 2026) reported him a sophomore in the 2026 season (\"placed as an eighth grader\" in 2024, state finalist in 2025) — the Shauna Anderson precedent (2-of-3 concordant prints + an external print). He is the 2026 Class A 103 champion and IS mint-eligible at 2028; his 2026 row ships blank (its own print contradicts the key year) while his 2024/2025 rows carry 2028 — so the championship row itself carries no year, and this entry names the ruling that covers it."
   },
   {
    "name": "William Kirkland",

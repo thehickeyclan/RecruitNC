@@ -4,7 +4,7 @@
  "generated": "2026-11-05",
  "generated_by": "Muse (from the NE build files: final-qualifiers/, NE-grad-years.csv, NE-mint-list.csv)",
  "purpose": "Every NE placer key that reaches no profile, named with its reason \u2014 the accounted file for the state-readiness gate.",
- "entries": [
+ "placers": [
   {
    "name": "Aaron Wilson",
    "school": "Cozad",
@@ -2380,6 +2380,15 @@
    "class_year": 2025,
    "status": "graduated_class",
    "detail": "class of 2025; placed 2024,2025 (best 6). Placement stored and linked; no profile per the mint rule (current classes 2027-2030 only)."
+  },
+  {
+   "name": "Isaiah Tuttle",
+   "school": "Omaha Central",
+   "gender": "boys",
+   "class_year": 2029,
+   "status": "resolved_override",
+   "reason": "class of 2029 by resolved override \u2014 a repeated freshman year, corroborated off-record; not a pre-freshman placement (TUTTLE-VERDICT-2026-11-05.md).",
+   "detail": "class of 2029; placed 2025 (4th, A106, 106 lb) and 2026 (3rd, A113, 113 lb). Tier-1 'HS Freshman' prints in BOTH seasons \u2014 2025 (NSAA 12908041, bracket payload + participants tab) and 2026 (NSAA 15046139, payload + tab) \u2014 under the same Flo personId 0DyIR4k9y9dnqIsnC across seasons. The NSAA 2026 championship program prints grade 9 for him and cites his prior placement as '4/A106/25'; KQKY's Feb 21, 2026 medal results and the North Platte Post's Feb 15, 2026 district report independently list him Fr. Reading: he repeated 9th grade, so the 2025 placement was made as a printed bona fide high-school freshman and no pre-freshman placement arises under NSAA bylaw 2.2.1."
   },
   {
    "name": "Iverson Mejia",
@@ -5097,5 +5106,12 @@
  "notes": [
   "All 995 placer keys carry a resolved class year (992 by agreeing tier-1 prints, 1 override, 2 rows from one namesake split); there are no conflict or not_found keys.",
   "359 keys are mint-eligible (358 distinct athletes by canonical_athlete_id); the 636 entries here are the rest."
+ ],
+ "preFreshmanVerified": [
+  {
+   "athleteId": "220ce60e-6d51-4094-96e9-4074d078d300",
+   "name": "Isaiah Tuttle",
+   "note": "A repeated freshman year, not a pre-freshman placement. He placed 4th in 2025 and 3rd in 2026 and is class of 2029, which reads as an 8th-grade placement in a state that does not allow one - NSAA bylaw 2.2.1 admits only bona fide high school students and the 8th-grade proposal is not effective before Aug 2026. The gate was right to stop on it and the reading is still wrong: tier-1 'HS Freshman' prints appear on BOTH surfaces in BOTH 2025 (NSAA 12908041, payload + participants tab) and 2026 (NSAA 15046139, payload + tab), under one Flo personId (0DyIR4k9y9dnqIsnC). The NSAA 2026 championship program prints grade 9 and cites his prior placement '4/A106/25'; KQKY's 21 Feb 2026 medal results and the North Platte Post's 15 Feb 2026 district report both list him Fr. A wrestler who repeats ninth grade is a bona fide high school student in both seasons, so the 2025 placement is legal and 2029 is right. Verified by Muse, TUTTLE-VERDICT-2026-11-05."
+  }
  ]
 }
