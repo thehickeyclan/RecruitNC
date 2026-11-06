@@ -84,7 +84,7 @@ const EXAMPLE = {
   strength: [
     ["7", "wins over state-ranked opponents in the last 12 months"],
     ["4", "national tournaments wrestled"],
-    ["9", "big preseason and postseason events, career"],
+    ["9", "major preseason and postseason tournaments, career"],
   ] as Array<[string, string]>,
 }
 
@@ -284,7 +284,7 @@ export default async function CommandCenterSalesPage() {
             {([
               [ListChecks, "The record", "Every tournament and every match, season by season, with the placement and the opponent. It's here even if your family has never heard of us."],
               [Award, "The wins that count", "Every big win shows who the opponent really was. Not \u201cbeat a good kid\u201d: beat the Georgia 6A state champion, 6-3, at the National Duals."],
-              [BarChart3, "Strength of competition", "Wins over ranked opponents, national tournaments wrestled, and the big preseason and postseason events. Every number traces back to a real match."],
+              [BarChart3, "Strength of competition", "Wins over ranked opponents, national tournaments wrestled, and the major preseason and postseason tournaments. Every number traces back to a real match."],
             ] as Array<[LucideIcon, string, string]>).map(([Icon, title, body]) => (
               <div key={title} className={`${card} p-6`}>
                 <Icon className="h-7 w-7" style={{ color: GOLD }} aria-hidden />
@@ -340,14 +340,14 @@ export default async function CommandCenterSalesPage() {
             </div>
             <p className="border-t border-white/10 px-5 py-3 text-xs text-white/50">
               Example wrestler and opponents, made up for this page. Every real profile is laid out the same way.{" "}
-              <Link href="/create-profile" className="font-bold underline hover:text-white/80">Look up your wrestler&apos;s</Link>.
+              <Link href="/create-profile" className="font-bold underline hover:text-white/80">Look up your wrestler&apos;s profile</Link>.
             </p>
           </div>
 
           <p className="mt-6 max-w-3xl text-base text-white/70">
-            Nobody types those opponent details in. We figure them out from{" "}
+            Those opponent details aren&apos;t typed in by hand. They come from{" "}
             <strong className="font-bold text-white">{opponentResults ? opponentResults.toLocaleString() : "over 100,000"} state tournament results across {OPPONENT_RESULT_STATES} states</strong>,
-            matched wrestler by wrestler. So a win in November shows who that opponent turned out to be in
+            matched wrestler by wrestler. A win in November shows who that opponent turned out to be in
             February, and a college coach can click any line to see where it came from.
           </p>
         </section>
@@ -437,7 +437,7 @@ export default async function CommandCenterSalesPage() {
         <Wide
           icon={Heart}
           eyebrow="What matters to your family"
-          title="Tell us what matters. Every college answers back."
+          title="Tell us what matters. Every college page checks it."
           intro="A few minutes of questions for parents and wrestlers: your goals, how far from home, what you can spend, the size and feel of the school, and the levels you're aiming for. From then on, every college page shows how that school stacks up against your answers."
           points={["Level, distance, campus and cost checked on every college page", "Good fit, stretch or concern, with the reason spelled out", "Colleges worth a look, and the suggestions get better the more you use it"]}
         >
@@ -454,7 +454,7 @@ export default async function CommandCenterSalesPage() {
           </p>
           <h2 className={`mt-3 text-4xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Find the right college, not just the biggest name.</h2>
           <p className="mt-3 max-w-2xl text-base text-white/70">
-            <span className="sm:hidden">{d.mapPreview?.total ?? "Every"} college programs, every level. Tap one to see what it holds.</span>
+            <span className="sm:hidden">{d.mapPreview?.total ?? "Every"} college programs, every level. Tap one to see more.</span>
             <span className="hidden sm:inline">Explore {d.mapPreview?.total ?? "every"} college wrestling programs across NCAA Division I, II, III, NAIA and junior college, men&apos;s and women&apos;s. Tap any college to see its coaches, its recruiting questionnaire and the wrestlers from your state who went there.</span>
           </p>
           <div className="mt-6">
@@ -523,7 +523,7 @@ export default async function CommandCenterSalesPage() {
           icon={ListChecks}
           eyebrow="Your recruiting board"
           title="Every college, every coach, and the next move."
-          intro="One board for every college on your list: where you stand with each program, how long it's been there, who wrote back, the next deadline, and the one thing to do today."
+          intro="One board for every college on your list: where you stand with each program, how long it's been in that stage, who wrote back, the next deadline, and the one thing to do today."
           points={["From interested to offer, with days in each stage", "Coach views, messages and calls on each card", "Today's to-dos: apply, email the coach, follow up"]}
         >
           <Shot src={shot("board")} alt="The recruiting board: a pipeline from interested to offer, today's moves, and a card per college with coach views, messages, notes and deadlines" caption="Real screens throughout, with an example family." />
@@ -649,14 +649,14 @@ export default async function CommandCenterSalesPage() {
           <h2 className={`text-center text-4xl ${tocDisplayClass()}`}>Questions</h2>
           <div className="mt-6 divide-y divide-white/10 rounded-2xl border border-white/10 bg-[#0b1a33]">
             {[
-              ["Where do the results come from?", `State tournaments from ${OPPONENT_RESULT_STATES} states (${opponentResults ? opponentResults.toLocaleString() : "over 100,000"} results), plus national tournaments, duals and in-season matches. Each one is matched to a wrestler, which is how a win on your wrestler's profile can show that the opponent went on to win his state. If a result is wrong or missing, any family can send a correction from the profile.`],
+              ["Where do the results come from?", `State tournaments from ${OPPONENT_RESULT_STATES} states (${opponentResults ? opponentResults.toLocaleString() : "over 100,000"} results), plus national tournaments, duals and in-season matches. Each one is matched to a wrestler, which is how a win on your wrestler's profile can show that the opponent went on to win a state title. If a result is wrong or missing, any family can send a correction from the profile.`],
               onRw
                 ? ["Which states are covered?", `Profiles and results are live for ${recruitingCoverage(true)}; rankings for ${rankingsCoverage(true)}, with more states opening one at a time. The college map, Compare, Learn, Scout and coach messages work for every family, in every state.`]
                 : ["Is it only for North Carolina?", "The rankings and results are North Carolina's. The college map, Compare, Learn and coach messages work for every family."],
               ["Does the Command Center support women's wrestling?", "Yes. Women's wrestling has its own colleges, rules and rankings, and the Command Center follows your wrestler: a daughter's map, colleges and rules are the women's ones."],
               ["Who sees my information?", "Your plan, your board, your notes and your survey answers are for your family only. Academics and contact info are seen only by verified college coaches, never the public."],
               ["Can college coaches message my wrestler?", "Yes. Verified college coaches can write to your wrestler, and parents see every message. You can turn off messages from any coach. Messages are free for every family; the Command Center puts each one on that college's card on your board."],
-              ["I'm on Insider. What happens if I upgrade?", `Insider is included in the Command Center, so your ${insiderPrice} plan is cancelled automatically when the Recruiting Command Center starts, so you never pay for both.`],
+              ["I'm on Insider. What happens if I upgrade?", `Insider is included in the Command Center. When you upgrade, your ${insiderPrice} Insider plan is canceled automatically, so you never pay for both.`],
               ["Can parents and the wrestler both use it?", "Yes. Every account linked to your wrestler gets the Command Center, and parents and wrestlers each answer their own part of the survey."],
               ["Can I cancel?", "Anytime, from your account."],
             ].map(([q, a]) => (
