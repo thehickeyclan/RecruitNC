@@ -47,7 +47,7 @@ export function welcomeSteps(brand: UserBrand, wrestler: string, ctx?: WelcomeCo
     steps.push({
       key: "priorities",
       title: "Tell us what matters to your family",
-      body: `A few minutes of questions: your goals for ${wrestler}, distance from home, cost, academics and the level you are aiming for. Your answers build a list of colleges that fit ${wrestler}.`,
+      body: `A few minutes of questions: your goals for ${wrestler}, distance from home, cost, academics and the level you are aiming for. We use your answers to point out colleges worth a look, and the suggestions get better the more you use the Command Center.`,
       cta: "Start the survey",
       href: `${url}/my-recruiting/priorities`,
     })
@@ -63,8 +63,8 @@ export function welcomeSteps(brand: UserBrand, wrestler: string, ctx?: WelcomeCo
   }
   steps.push({
     key: "map",
-    title: "Find colleges and add them to your list",
-    body: `Use the college map to see every wrestling program by state and division. Add the ones you like to ${wrestler}'s list. Each one shows the full yearly cost and how much room the team has at ${wrestler}'s weight.`,
+    title: "Research colleges and tell the coaches you're interested",
+    body: `Use the college map to find programs by state and division. Each college's page shows the full yearly cost and how much room the team has at ${wrestler}'s weight. When you like one, tap "Tell the coaches you're interested" on its page. That program's coaches see ${wrestler} on their dashboard right away. The button shows on colleges whose coaches are on ${NAME[brand]}.`,
     cta: "Open the college map",
     href: `${url}/recruiting/college-map`,
   })
