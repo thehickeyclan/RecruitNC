@@ -26,6 +26,8 @@ import { academicStrength, learnFromList, learnFromReactions, recommend, surveyF
 import { jointInputs, ownerOnlyInputs } from "@/lib/recruiting/priorities/sharing"
 import { TABLE_MISSING, loadFamilySets, respondentFor } from "@/lib/recruiting/priorities/store"
 import { zipPoint } from "@/lib/recruiting/zip-point"
+import { DEMO_SURVEY, isDemoFamily } from "@/lib/recruiting/demo-family"
+import { fitProfileFromAnswers } from "@/lib/recruiting/priorities/fit-profile"
 
 const ALL = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 const NAME_BY_ID = new Map(ALL.map((s) => [s.id, s.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()]))
@@ -261,10 +263,32 @@ export async function collegeFactsFor(
  * (recommend.ts surveyFitFor). Null until either side has finished the survey, or for anyone who is
  * not the wrestler or a linked parent.
  */
+/**
+ * The family's fit profile from their survey, once a side has finished it (Matt, 6 Nov 2026: the
+ * college page said Biology from goals typed into Compare weeks before the survey said Business and
+ * Communication). Family pages only: Scout and coach paths keep the plain context, never the answers.
+ */
+export async function withSurveyProfile(admin: SupabaseClient, viewerId: string, ctx: FamilyFitContext): Promise<FamilyFitContext> {
+  if (!ctx.athleteId || (await isDemoFamily())) return ctx
+  const viewer = await respondentFor(admin, viewerId, ctx.athleteId).catch(() => null)
+  if (!viewer) return ctx
+  const sets = await loadFamilySets(admin, ctx.athleteId).catch(() => null)
+  if (!sets || (!sets.parent?.completedAt && !sets.athlete?.completedAt)) return ctx
+  const other = viewer === "parent" ? sets.athlete : sets.parent
+  const profile = fitProfileFromAnswers([...(sets[viewer]?.answers ?? []), ...(other?.answers ?? []).filter((a) => a.sharing === "shared")])
+  return { ...ctx, profile, profileSet: true, home: zipPoint(profile.homeZip) }
+}
+
 export async function surveyFitForSchool(
   admin: SupabaseClient,
   opts: { viewerId: string; ctx: FamilyFitContext; team: "mens" | "womens" | null; schoolId: string },
 ): Promise<SurveyLine[] | null> {
+  // Product screenshots (lib/recruiting/demo-family.ts): the invented family's answers, never this account's.
+  if (await isDemoFamily()) {
+    const facts = await collegeFactsFor(admin, opts.ctx, { athleteId: "example", team: opts.team, includeViews: false, only: opts.schoolId })
+    const college = facts.colleges[0]
+    return college ? surveyFitFor({ viewer: "parent", joint: jointInputs(DEMO_SURVEY), own: ownerOnlyInputs("parent", DEMO_SURVEY), centre: facts.centre, zipPoint }, college) : null
+  }
   const athleteId = opts.ctx.athleteId
   if (!athleteId) return null
   const respondent = await respondentFor(admin, opts.viewerId, athleteId)

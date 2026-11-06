@@ -83,7 +83,8 @@ function asPipeline(r: ListRow, status: CollegeListStatus): PipelineCollege {
 const TONE: Record<FitMark["tone"], string> = {
   good: "bg-emerald-400/15 text-emerald-200",
   close: "bg-amber-300/15 text-amber-100",
-  low: "bg-white/10 text-white/70",
+  // A reach, said in orange, not a neutral grey that reads as fine (Matt, 6 Nov 2026).
+  low: "bg-orange-400/15 text-orange-200",
   none: "text-white/35",
 }
 const TABS: Array<{ key: "all" | BoardStage; label: string }> = [

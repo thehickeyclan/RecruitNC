@@ -2,6 +2,7 @@ import "server-only"
 
 import { cookies } from "next/headers"
 import type { FamilyFitProfile } from "@/lib/recruiting/family-fit"
+import type { FamilySets } from "@/lib/recruiting/priorities/sharing"
 
 /**
  * An invented family for product screenshots (Matt, 29 Oct 2026: the Command Center sales page
@@ -37,4 +38,22 @@ export const DEMO_FAMILY = {
     size: "medium",
     settings: ["suburb", "town"],
   } satisfies FamilyFitProfile,
+}
+
+/** Jordan's parent's answers to What matters to your family, for the college page's fit lines. No major: the sales page leaves majors out (Matt, 6 Nov 2026). */
+export const DEMO_SURVEY: FamilySets = {
+  parent: {
+    id: "example-parent",
+    respondent: "parent",
+    version: 1,
+    completedAt: "2026-11-01",
+    answers: [
+      { key: "divisions", value: { D1: "interested", D2: "interested", D3: "open", NAIA: "open" }, sharing: "shared", marker: null },
+      { key: "distance", value: "day", sharing: "shared", marker: null },
+      { key: "home_zip", value: DEMO_FAMILY.profile.homeZip, sharing: "private", marker: null },
+      { key: "school_feel", value: ["medium", "suburb", "town"], sharing: "shared", marker: null },
+      { key: "budget", value: "20_35", sharing: "constraint", marker: null },
+    ],
+  },
+  athlete: null,
 }
