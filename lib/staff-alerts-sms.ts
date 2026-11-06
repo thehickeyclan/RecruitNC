@@ -154,3 +154,10 @@ export async function notifyStaffUnclaimedMessage(input: { program: string | nul
     "unclaimed-message",
   )
 }
+
+/** A family sent feedback from the Command Center home. */
+export async function notifyStaffFamilyFeedback(input: { who: string; wrestler: string | null; rating: string | null; message: string }): Promise<number> {
+  const rating = input.rating ? `[${input.rating}] ` : ""
+  const about = input.wrestler ? ` (${input.wrestler})` : ""
+  return send(`Family feedback from ${input.who}${about}: ${rating}${input.message || "(no note)"}`.slice(0, 600), "family-feedback")
+}

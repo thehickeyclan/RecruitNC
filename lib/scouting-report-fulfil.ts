@@ -10,6 +10,7 @@
  */
 
 import { accountOfRow, type StripeAccount } from "@/lib/stripe-accounts"
+import { sendCommandCenterWelcome } from "@/lib/command-center-welcome"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { isAnnualKind, isSubscriptionKind, isSubscriptionLive, planTierForKind } from "@/lib/scouting-report-entitlement"
 import {
@@ -117,6 +118,13 @@ export async function fulfilScoutingReportCheckout(
       amountCents: params.amountTotal,
       interval,
     })
+    if (planTierForKind(kind) === "command_center") {
+      await sendCommandCenterWelcome(supabase, {
+        userId,
+        subscriptionRef: params.stripeSubscriptionId ?? params.sessionId ?? userId,
+        brand: account === "guild" ? "recruitwrestlers" : "ncunited",
+      })
+    }
     return { ok: true, granted: "subscription", replacedSubscriptionId: previous, replacedAccount: accountOfRow(before as { stripe_account?: string | null } | null) }
   }
 
