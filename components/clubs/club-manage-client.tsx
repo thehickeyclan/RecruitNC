@@ -168,7 +168,7 @@ export function ClubManageClient() {
                   <Input
                     value={edit.address ?? ""}
                     onChange={(e) => setDraft({ ...draft, [club.id]: { ...edit, address: e.target.value } })}
-                    placeholder="Where you practise"
+                    placeholder="Where you practice"
                     className={INPUT}
                   />
                 </Field>

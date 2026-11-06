@@ -343,7 +343,7 @@ export const LEARN_PAGES: LearnPage[] = [
         rows: [
           { label: "Core courses", value: "16: 3 English, 2 math (Algebra I or higher), 2 science, 3 more English, math or science, 2 social science, 4 additional" },
           { label: "Minimum core-course GPA", value: "2.2" },
-          { label: "If you fall short", value: "Partial qualifier: you may practise and receive aid, but not compete, in the first year" },
+          { label: "If you fall short", value: "Partial qualifier: you may practice and receive aid, but not compete, in the first year" },
           { label: "SAT or ACT", value: "Not required for NCAA eligibility since January 2023" },
         ],
         sources: ["cbsa"],

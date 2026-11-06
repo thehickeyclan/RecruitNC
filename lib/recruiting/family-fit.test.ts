@@ -17,11 +17,64 @@ describe("best fit for a family", () => {
     expect(athleticFit(champ, [champ, placer], "D1", "women").status).toBe("unknown")
   })
 
-  it("marks test scores against the middle half and flags very selective colleges", () => {
-    expect(academicFit({ sat: { score: 1350, low: 1300, high: 1460 }, act: null, gpa: null, admitRate: 40 }).status).toBe("fit")
-    expect(academicFit({ sat: { score: 1250, low: 1300, high: 1460 }, act: null, gpa: null, admitRate: 40 }).status).toBe("stretch")
-    expect(academicFit({ sat: { score: 1550, low: 1500, high: 1580 }, act: null, gpa: null, admitRate: 4 }).status).toBe("stretch")
-    expect(academicFit({ sat: null, act: null, gpa: null, admitRate: 40 }).status).toBe("unknown")
+  describe("academic fit for a recruited wrestler", () => {
+    const d1 = { levelName: "D1", gpa: 2.3, coreCourses: true, shortfall: null, twoOfThree: null, none: null }
+    const d2 = { ...d1, levelName: "D2", gpa: 2.2, shortfall: "Partial qualifier: you may practice and receive aid, but not compete, in the first year" }
+    const naia = { levelName: "NAIA", gpa: 2.3, coreCourses: false, shortfall: null, twoOfThree: { act: 18, sat: 970, gpa: 2.0 }, none: null }
+    const d3 = { levelName: "D3", gpa: null, coreCourses: false, shortfall: null, twoOfThree: null, none: "Division III has no NCAA GPA minimum. Getting admitted is the bar." }
+    const appState = { group: null, act: null, admitRate: 89 }
+    const nc = { low: 2.9, high: 4.1, count: 8, label: "NC men who went to Appalachian State" }
+
+    it("does not call a college a stretch for scores under the all-student middle half (App State, 5 Nov 2026)", () => {
+      const line = academicFit({ ...appState, floor: d1, gpa: 3.1, sat: { score: 1050, low: 1100, high: 1280 } })
+      expect(line.status).toBe("fit")
+      expect(line.text).toContain("clears the 2.3 core-course GPA D1 needs")
+      expect(line.text).toContain("SAT 1050 is below the middle half of admitted students (1100 to 1280)")
+      expect(line.text).toContain("These numbers are for all students. Coaches can often help a recruited wrestler in admissions.")
+    })
+
+    it("makes the level's eligibility minimum the only concern", () => {
+      expect(academicFit({ ...appState, floor: d1, gpa: 2.1, sat: null }).status).toBe("concern")
+      const short = academicFit({ ...appState, floor: d2, gpa: 2.0, sat: null })
+      expect(short.status).toBe("concern")
+      expect(short.text).toContain("Partial qualifier: you may practice and receive aid, but not compete, in the first year")
+      expect(academicFit({ ...appState, floor: d2, gpa: 2.2, sat: null }).status).toBe("fit")
+    })
+
+    it("lets the NAIA's two of three clear a GPA under 2.3", () => {
+      expect(academicFit({ ...appState, floor: naia, gpa: 2.1, sat: null, act: { score: 19, low: 18, high: 24 } }).status).toBe("fit")
+      expect(academicFit({ ...appState, floor: naia, gpa: 2.1, sat: null }).status).toBe("concern")
+      expect(academicFit({ ...appState, floor: naia, gpa: 1.9, sat: null, act: { score: 22, low: 18, high: 24 } }).status).toBe("concern")
+    })
+
+    it("says Division III and junior college set no GPA minimum", () => {
+      const line = academicFit({ ...appState, floor: d3, gpa: 3.0, sat: null })
+      expect(line.status).toBe("fit")
+      expect(line.text).toBe("Division III has no NCAA GPA minimum. Getting admitted is the bar.")
+    })
+
+    it("compares GPA with the lowest NC wrestler who went there, never the average", () => {
+      const inRange = academicFit({ ...appState, floor: d1, gpa: 3.0, group: nc, sat: null })
+      expect(inRange.status).toBe("fit")
+      expect(inRange.text).toBe("GPA 3.00 clears the 2.3 core-course GPA D1 needs to compete (the NCAA counts core courses only). 8 NC men who went to Appalachian State gave a GPA of 2.90 to 4.10.")
+      const below = academicFit({ ...appState, floor: d1, gpa: 2.7, group: nc, sat: null })
+      expect(below.status).toBe("stretch")
+      expect(below.text).toContain("GPA 2.70 is below all 8 NC men who went to Appalachian State who gave a GPA (lowest 2.90)")
+    })
+
+    it("holds a highly selective college to its middle half", () => {
+      const harvard = { floor: d1, gpa: 3.9, group: null, act: null }
+      expect(academicFit({ ...harvard, sat: { score: 1250, low: 1500, high: 1580 }, admitRate: 3 }).status).toBe("stretch")
+      expect(academicFit({ ...harvard, sat: { score: 1550, low: 1500, high: 1580 }, admitRate: 3 }).status).toBe("fit")
+      expect(academicFit({ ...harvard, sat: null, admitRate: 3 }).status).toBe("stretch")
+      // UNC, 19% admitted, is not held to it.
+      expect(academicFit({ ...harvard, sat: { score: 1250, low: 1370, high: 1500 }, admitRate: 19 }).status).toBe("fit")
+    })
+
+    it("says so when there is nothing to compare", () => {
+      expect(academicFit({ floor: null, gpa: null, group: null, sat: null, act: null, admitRate: 40 }).status).toBe("unknown")
+      expect(academicFit({ floor: d1, gpa: null, group: null, sat: null, act: null, admitRate: 40 }).status).toBe("unknown")
+    })
   })
 
   it("sets what families at their income paid against the budget", () => {

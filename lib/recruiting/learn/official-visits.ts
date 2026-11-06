@@ -133,7 +133,7 @@ export const VISIT_SOURCES_CHECKED = "2026-10-13"
 
 /**
  * Left out because the Learn library does not source it (for Matt, 28 Oct 2026): what to pack and
- * wear; what a visit day usually looks like; whether a wrestler may practise or work out with the
+ * wear; what a visit day usually looks like; whether a wrestler may practice or work out with the
  * team on a visit (the library covers tryouts, not visits); hosting and entertainment limits; a
  * Division I visit's length in hours (the library gives "two nights at most"); an NAIA visit's
  * length; how many family members a Division II or III college may house; and how long the
@@ -142,7 +142,7 @@ export const VISIT_SOURCES_CHECKED = "2026-10-13"
 export const NOT_INCLUDED = [
   "What to pack and wear",
   "What a visit day usually looks like",
-  "Whether a wrestler may practise or work out with the team on a visit",
+  "Whether a wrestler may practice or work out with the team on a visit",
   "Hosting and entertainment limits on a visit",
   "A Division I visit's length in hours (the library gives two nights at most)",
   "An NAIA visit's length",
