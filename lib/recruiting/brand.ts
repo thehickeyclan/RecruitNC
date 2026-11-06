@@ -53,7 +53,7 @@ export const RECRUITING_BRAND = {
     { code: "LA", name: "Louisiana", live: false },
     { code: "MS", name: "Mississippi", live: true, ranked: false },
     { code: "KY", name: "Kentucky", live: true, ranked: false },
-    { code: "IN", name: "Indiana", live: false },
+    { code: "IN", name: "Indiana", live: true, ranked: false },
     { code: "NJ", name: "New Jersey", live: true, ranked: false },
     { code: "NY", name: "New York", live: true, ranked: false },
     { code: "CT", name: "Connecticut", live: true, ranked: false },
@@ -79,7 +79,7 @@ export const RECRUITING_BRAND = {
      * and a stable wrestler id on all 3,663 entrant rows. Four championships, so four names a
      * credential card can carry (lib/athlete-state.ts).
      */
-    { code: "TX", name: "Texas", live: false },
+    { code: "TX", name: "Texas", live: true, ranked: false },
     /*
      * Arkansas clears the placer bar: 1,040 of 1,042 keys (99.8%), every champion resolved, and
      * one association - the private schools wrestle inside the AAA brackets, so there is no second
@@ -90,7 +90,7 @@ export const RECRUITING_BRAND = {
      * every bracket of every year. `state_tournament_placers` cannot hold them until its unique
      * index admits a tie, so the rows in the table are the 6 Oct build - places 1-4 only.
      */
-    { code: "AR", name: "Arkansas", live: false },
+    { code: "AR", name: "Arkansas", live: true, ranked: false },
     /*
      * Oklahoma clears the placer bar: 926 of 932 keys (99.4%), every one of its 235 champion keys
      * resolved, and all 252 champions verified against the winner of their own final. One

@@ -8,13 +8,15 @@ describe("states per address", () => {
     // (DE MN WV AL FL NH IA MA), then seven once the bar was read for both genders
     // (MS KY NJ NY CT MO MI), then the sixteen western states once they were minted from the
     // field instead of the podium - they had been held at 20-47% because only placers were
-    // minted, and --include-qualifiers took every one of them to 99.4% or better.
+    // minted, and --include-qualifiers took every one of them to 99.4% or better. Arkansas,
+    // Indiana and Texas joined on the same pass: AR had been held on a bad reading (its 8-man
+    // brackets are the full field by design, verified at source), IN and TX were podium-mints.
     expect(liveStates(true).map((s) => s.code)).toEqual(
-      ["NC", "SC", "VA", "TN", "WV", "DE", "GA", "FL", "AL", "MS", "KY", "NJ", "NY", "CT", "MA", "NH", "IA", "MO", "MI", "MN",
-       "NE", "CO", "UT", "ID", "AZ", "SD", "ND", "WA", "KS", "OR", "CA", "MT", "WY", "NV", "NM", "HI"],
+      ["NC", "SC", "VA", "TN", "WV", "DE", "GA", "FL", "AL", "MS", "KY", "IN", "NJ", "NY", "CT", "MA", "NH", "TX", "AR",
+       "IA", "MO", "MI", "MN", "NE", "CO", "UT", "ID", "AZ", "SD", "ND", "WA", "KS", "OR", "CA", "MT", "WY", "NV", "NM", "HI"],
     )
     // Past six states the names stop fitting in a sentence; see COVERAGE_NAMES_UP_TO.
-    expect(recruitingCoverage(true)).toBe("36 states")
+    expect(recruitingCoverage(true)).toBe("39 states")
     expect(isVisibleState("SC", false, true)).toBe(true)
     expect(isVisibleState("TN", false, true)).toBe(true)
     expect(isVisibleState("GA", false, true)).toBe(true)

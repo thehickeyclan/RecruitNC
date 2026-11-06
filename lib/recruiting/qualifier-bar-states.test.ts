@@ -9,11 +9,18 @@
  * at 20-47% of their qualifier field; `--include-qualifiers` created 8,854 profiles and attached
  * 32,876 bouts, taking every one of them to 99.4% or better on both genders.
  *
- * What the held states fail on is never naming. Arkansas, Maine, Wisconsin, Vermont and Rhode
- * Island hold the podium only - a median of 8 entrants per bracket where a real field is 16, so
- * the qualifiers are not in the table at all. Pennsylvania has the field but we know the class
- * year for only 76% of the boys and 64% of the girls. Louisiana has both and is held on the
- * pre-freshman gate: 21 results sit on profiles before that wrestler's freshman year.
+ * What the held states fail on is never naming, and "median 8 per bracket" is NOT by itself a
+ * podium-only hold - that reading cost Arkansas a launch. AR and ME run 8-man brackets by design
+ * (top 4 from each of two regionals), verified bracket-for-bracket against source: their fields
+ * are FULL. North Carolina's 2026 field is 8-man for the same reason - NCHSAA cut the tournament
+ * from 16 to 8 per weight for 2025-26. Measure the format before calling a field a podium.
+ * The real holds: Maine and Vermont on class years (ME boys 84%), Rhode Island on class years
+ * (19% of boys), Pennsylvania the same (76% boys / 64% girls), Wisconsin under-minted at 68.5%
+ * with bracket-code school strings in its rows, Maryland on two genuine duplicate profiles, and
+ * Illinois held by choice: it passes every gate, but its girls' field is the podium only and a
+ * full-field replacement is in flight, so launching it would report girls as complete first.
+ * Louisiana passes the bar and is held on the pre-freshman gate: 21 results sit on profiles
+ * before that wrestler's freshman year.
  *
  * The trap this file exists to hold shut: `isRankedState` treats a state with no `ranked` key as
  * ranked. Flipping `live` alone would have put thirty-one empty ranking boards into the product, since
@@ -37,9 +44,11 @@ const OPENED = [
   "MS", "KY", "NJ", "NY", "CT", "MO", "MI",
   // the third: the western wave, minted from the field instead of the podium
   "WA", "UT", "KS", "CO", "OR", "ID", "MT", "NE", "AZ", "WY", "NM", "SD", "ND", "NV", "HI", "CA",
+  // and three more once re-measured: AR was held on a bad reading, IN and TX were podium-mints
+  "AR", "IN", "TX",
 ] as const
 // Held, and the reason is in the header: podium-only holds, unknown class years, or a data gate.
-const HELD = ["RI", "LA", "MD", "WI", "AR", "ME", "VT", "PA"] as const
+const HELD = ["RI", "LA", "MD", "WI", "ME", "VT", "PA", "IL"] as const
 
 const state = (code: string) => {
   const s = RECRUITING_BRAND.states.find((x) => x.code === code)
