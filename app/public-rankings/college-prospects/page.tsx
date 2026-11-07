@@ -27,7 +27,10 @@ export const metadata: Metadata = {
     "North Carolina's top 75 college wrestling prospects from the classes of 2027 and 2028.",
 }
 
-export default async function TopHundredPage() {
+export default async function TopHundredPage({ searchParams }: { searchParams?: Promise<{ state?: string }> }) {
+  // Each state has its own list: North Carolina's Top 75, South Carolina's Top 50 (Matt, 4 Nov 2026).
+  const state = (await searchParams)?.state?.toUpperCase() === "SC" ? "SC" : "NC"
+  const stateName = state === "SC" ? "South Carolina" : "North Carolina"
   const { viewer, userId } = await resolveRankingViewer({
     supabase: await createClient(),
     admin: createAdminClient(),
@@ -45,7 +48,7 @@ export default async function TopHundredPage() {
         <div className="max-w-md text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]"><BrandName /></p>
           <h1 className="mt-3 text-3xl font-light uppercase tracking-tight text-white">
-            Top 75 College Prospects
+            Top {state === "SC" ? 50 : 75} College Prospects
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-white/60">
             This list requires rankings access.
@@ -61,14 +64,14 @@ export default async function TopHundredPage() {
     )
   }
 
-  const board = await loadTopHundred("Male")
+  const board = await loadTopHundred("Male", state)
 
   return (
     <div className="min-h-screen bg-[#061224]">
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            <BrandName /> · North Carolina prospect rankings
+            <BrandName /> · {stateName} prospect rankings
           </p>
           <h1 className="mt-3 text-center text-4xl font-light uppercase tracking-tight text-white sm:text-5xl">
             Top {board.cap} College Prospects
@@ -88,7 +91,7 @@ export default async function TopHundredPage() {
 
           <RankingsSummary athletes={board.athletes} />
 
-          <RankingsNav current="top-100" isAdmin={viewer.isAdmin === true} />
+          <RankingsNav current="top-100" isAdmin={viewer.isAdmin === true} state={state === "NC" ? undefined : state} stateYears={state === "NC" ? undefined : board.classes} stateTop={board.published} />
 
           {!board.published || board.athletes.length === 0 ? (
             <p className="mt-10 rounded-sm border border-white/10 bg-white/[0.03] p-8 text-center text-sm text-white/55">
@@ -122,7 +125,7 @@ export default async function TopHundredPage() {
                 class&apos;s published board exactly.
               </p>
               <p className="mx-auto mt-4 max-w-2xl text-center text-xs leading-relaxed text-white/40">
-                Unlike the Top 75 Ranked Prospects, this list is not limited to wrestlers ranked on their class
+                Unlike the class boards, this list is not limited to wrestlers ranked on their class
                 board &mdash; it reaches deeper into every class, so wrestlers just outside a cut
                 are included on their merits. Weight and graduating class are shown on every card.
               </p>
