@@ -19,35 +19,35 @@ describe("visibleStates", () => {
 
   it("holds on either address, because it is granted per account and per state", () => {
     // The OEM rule says what a brand reports to the public, not what a named account may open.
-    expect(isVisibleState("PA", false, false, ["PA"])).toBe(true)
+    expect(isVisibleState("MD", false, false, ["MD"])).toBe(true)
   })
 
   it("shows a named state to the account it was named for, and nothing more", () => {
-    const seen = visibleStates(false, true, ["PA"]).map((s) => s.code)
-    expect(seen).toContain("PA")
+    const seen = visibleStates(false, true, ["MD"]).map((s) => s.code)
+    expect(seen).toContain("MD")
     expect(seen).not.toContain("OH")
   })
 
   it("is not case or whitespace sensitive, because the column is typed by hand", () => {
-    expect(visibleStates(false, true, [" pa "]).map((s) => s.code)).toContain("PA")
+    expect(visibleStates(false, true, [" md "]).map((s) => s.code)).toContain("MD")
   })
 
   it("still opens everything to an admin", () => {
     expect(visibleStates(true, true).length).toBe(visibleStates(true, true, []).length)
-    expect(visibleStates(true).map((s) => s.code)).toContain("PA")
+    expect(visibleStates(true).map((s) => s.code)).toContain("MD")
   })
 
   it("gates isVisibleState the same way", () => {
-    expect(isVisibleState("PA", false)).toBe(false)
-    expect(isVisibleState("PA", false, true)).toBe(false)
-    expect(isVisibleState("PA", false, true, ["PA"])).toBe(true)
-    expect(isVisibleState("OH", false, true, ["PA"])).toBe(false)
+    expect(isVisibleState("MD", false)).toBe(false)
+    expect(isVisibleState("MD", false, true)).toBe(false)
+    expect(isVisibleState("MD", false, true, ["MD"])).toBe(true)
+    expect(isVisibleState("OH", false, true, ["MD"])).toBe(false)
   })
 })
 
 describe("previewStatesForUser", () => {
   it("reads the column when it is there", async () => {
-    expect(await previewStatesForUser(client({ data: { preview_states: ["pa", " va "] } }), "u1")).toEqual(["PA", "VA"])
+    expect(await previewStatesForUser(client({ data: { preview_states: ["md", " va "] } }), "u1")).toEqual(["MD", "VA"])
   })
 
   it("answers none when the column does not exist yet, rather than throwing", async () => {
@@ -57,6 +57,6 @@ describe("previewStatesForUser", () => {
   })
 
   it("answers none for a signed-out viewer without asking the database", async () => {
-    expect(await previewStatesForUser(client({ data: { preview_states: ["PA"] } }), null)).toEqual([])
+    expect(await previewStatesForUser(client({ data: { preview_states: ["MD"] } }), null)).toEqual([])
   })
 })
