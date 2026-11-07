@@ -201,6 +201,7 @@ export async function POST(request: NextRequest) {
   }
 
   let emailSkippedNoAddress = 0
+  let emailSkippedTestAddress = 0
   let emailSampleError: string | undefined
   if (channels.email) {
     const emailResult = await (deliveryMode === "bcc" && !testOnly ? sendAdminBccEmails : sendAdminBlastEmails)(recipients, {
@@ -212,6 +213,7 @@ export async function POST(request: NextRequest) {
     result.email.sent = emailResult.sent
     result.email.failed = emailResult.failed
     emailSkippedNoAddress = emailResult.skippedNoEmail
+    emailSkippedTestAddress = emailResult.skippedTestAddress
     emailSampleError = emailResult.sampleError
   }
 
@@ -274,6 +276,7 @@ export async function POST(request: NextRequest) {
         recipientCount: recipients.length,
         result,
         emailSkippedNoAddress,
+        emailSkippedTestAddress,
         emailSampleError,
       },
       { status: 500 },
@@ -285,6 +288,7 @@ export async function POST(request: NextRequest) {
     recipientCount: recipients.length,
     result,
     emailSkippedNoAddress,
+    emailSkippedTestAddress,
     emailSampleError,
     testOnly,
   })
