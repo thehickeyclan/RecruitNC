@@ -1,29 +1,42 @@
 /**
- * Family quotes for the sales pages (17 Oct 2026). DRAFTS written for Matt to take to each parent:
- * a quote appears on the site only once `approved` is true, which means that person has read it and
- * agreed to it word for word. Never set it on a guess, and never publish a quote someone has not
- * approved.
+ * Family quotes for the sales pages.
+ *
+ * A quote appears on the site only once `approved` is true. Never set it on a guess.
+ *
+ * The four below (3 Nov 2026) are drawn from messages each parent sent Matt directly, trimmed to
+ * the line about the platform and the recruiting, with nothing added. Matt gave the word to
+ * publish them. The wording is ours, not theirs, so if a parent asks for a change, change it
+ * here first and apologise second.
+ *
+ * These run on both brands - NC United and recruitwrestlers.com - so they name the platform and
+ * the recruiting, never a club, a camp or a weekend. Keep any new one brand-neutral.
  */
 export type Testimonial = { quote: string; name: string; detail: string; approved: boolean }
 
 export const TESTIMONIALS: Testimonial[] = [
   {
-    quote: "We were guessing at everything: which colleges to look at, when coaches could reach out, what it would really cost. Now we know what to do each month, and we can see which programs are looking at our son.",
+    quote: "This platform made a huge difference in Brieon's development and recruiting, and we are forever grateful.",
+    name: "Brittany Mayfield",
+    detail: "Wrestling parent, North Carolina",
+    approved: true,
+  },
+  {
+    quote: "You gave these kids a stage to perform on in front of all those coaches, and our kids are reaping the rewards.",
     name: "Gemma Amiott",
-    detail: "Wrestling parent",
-    approved: false,
+    detail: "Wrestling parent, North Carolina",
+    approved: true,
   },
   {
-    quote: "The college map changed how we think about recruiting. We found programs we had never heard of that fit our daughter better than the names we started with.",
-    name: "Beth Padgett",
-    detail: "Wrestling parent",
-    approved: false,
+    quote: "A lot of good information: some we had thought of and some we hadn't. You've given these young men the opportunity to sharpen their skills and show their talent.",
+    name: "Emily Thomas",
+    detail: "Wrestling parent, North Carolina",
+    approved: true,
   },
   {
-    quote: "Seeing that real college coaches were viewing his profile made it real for our family. The Command Center keeps every college, every coach and every next step in one place.",
+    quote: "What you led the wrestling community to was a new standard, and that matters. Kids' lives will change because of what you are doing.",
     name: "Chad Richards",
-    detail: "Wrestling parent",
-    approved: false,
+    detail: "Wrestling parent, North Carolina",
+    approved: true,
   },
 ]
 
