@@ -51,12 +51,12 @@ export const RECRUITING_BRAND = {
     { code: "FL", name: "Florida", live: true, ranked: false },
     { code: "AL", name: "Alabama", live: true, ranked: false },
     { code: "LA", name: "Louisiana", live: false },
-    { code: "MS", name: "Mississippi", live: false },
-    { code: "KY", name: "Kentucky", live: false },
+    { code: "MS", name: "Mississippi", live: true, ranked: false },
+    { code: "KY", name: "Kentucky", live: true, ranked: false },
     { code: "IN", name: "Indiana", live: false },
-    { code: "NJ", name: "New Jersey", live: false },
-    { code: "NY", name: "New York", live: false },
-    { code: "CT", name: "Connecticut", live: false },
+    { code: "NJ", name: "New Jersey", live: true, ranked: false },
+    { code: "NY", name: "New York", live: true, ranked: false },
+    { code: "CT", name: "Connecticut", live: true, ranked: false },
     { code: "MA", name: "Massachusetts", live: true, ranked: false },
     { code: "RI", name: "Rhode Island", live: false },
     { code: "NH", name: "New Hampshire", live: true, ranked: false },
@@ -122,7 +122,7 @@ export const RECRUITING_BRAND = {
      * was a double forfeit (MSHSAA prints it verbatim). Under the old unique podium index that
      * slice would have been refused outright. One association for both genders.
      */
-    { code: "MO", name: "Missouri", live: false },
+    { code: "MO", name: "Missouri", live: true, ranked: false },
     /*
      * Michigan: 1,504 of 1,504 placer keys resolved, all 191 champion keys among them, and all 210
      * champions verified against the winner of their own final. Top 8, 14 weights, 16-wrestler
@@ -133,7 +133,7 @@ export const RECRUITING_BRAND = {
      * literal names alone, the same 357 the build states, with no differing-name folds anywhere -
      * so unlike Texas it mints without --canonical.
      */
-    { code: "MI", name: "Michigan", live: false },
+    { code: "MI", name: "Michigan", live: true, ranked: false },
     /*
      * Minnesota is the cleanest package the pipeline has produced: 672 of 672 placer keys resolved,
      * all 114 champion keys among them, and all 156 champions verified against the winner of their

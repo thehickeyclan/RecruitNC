@@ -23,8 +23,15 @@ import {
   recruitingCoverage,
 } from "@/lib/recruiting/brand"
 
-const OPENED = ["DE", "MN", "WV", "AL", "FL", "NH", "IA", "MA"] as const
-const HELD = ["RI", "LA", "MD", "MS", "WI"] as const
+const OPENED = [
+  // the first wave, 6 November 2026
+  "DE", "MN", "WV", "AL", "FL", "NH", "IA", "MA",
+  // the second, once the bar was measured for men and women separately
+  "MS", "KY", "NJ", "NY", "CT", "MO", "MI",
+] as const
+// Held. MS KY NJ NY CT MO MI came back live on 6 Nov after the qualifier mint and are no
+// longer here; they are in OPENED below.
+const HELD = ["RI", "LA", "WI", "PA"] as const
 
 const state = (code: string) => {
   const s = RECRUITING_BRAND.states.find((x) => x.code === code)
