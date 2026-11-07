@@ -39,11 +39,33 @@ const arg = (n: string) => {
   return i > -1 ? process.argv[i + 1] : undefined
 }
 
+/**
+ * Say what actually went wrong.
+ *
+ * Supabase's errors do not stringify: `JSON.stringify(err)` on an AuthError gives "{}", so this
+ * script once failed with the words "Failed: {}" while the project was returning 522 to every
+ * call. Twenty wasted minutes. A 5xx from the platform is a different problem from a bad key or a
+ * missing account, and the message has to say which.
+ */
+function explain(err: unknown): string {
+  const e = err as { name?: string; status?: number; message?: string } | null
+  const status = e?.status
+  const name = e?.name ?? "Error"
+  const message = e?.message && e.message !== "{}" ? e.message : ""
+  if (status && status >= 500) {
+    return `${name} ${status}: Supabase did not answer. The project is unreachable or overloaded - check its dashboard, then run this again. Nothing was changed.`
+  }
+  if (status === 401 || status === 403) {
+    return `${name} ${status}: refused. SUPABASE_SERVICE_ROLE_KEY is missing or wrong in .env.local.`
+  }
+  return [name, status, message].filter(Boolean).join(" ") || "an error with no message"
+}
+
 async function everyUser() {
   const out: Array<{ id: string; email: string | null; app_metadata: Record<string, unknown> }> = []
   for (let page = 1; page < 50; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
-    if (error) throw new Error(error.message)
+    if (error) throw new Error(explain(error))
     for (const u of data.users ?? []) {
       out.push({ id: u.id, email: u.email ?? null, app_metadata: (u.app_metadata ?? {}) as Record<string, unknown> })
     }
@@ -81,7 +103,7 @@ async function main() {
 
   const { error } = await admin.auth.admin.updateUserById(user.id, { app_metadata: next })
   if (error) {
-    console.error("Failed:", error.message)
+    console.error("Failed:", explain(error))
     process.exit(1)
   }
 
@@ -96,6 +118,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error("Failed:", e instanceof Error ? e.message : e)
+  console.error("Failed:", e instanceof Error ? e.message : explain(e))
   process.exit(1)
 })
